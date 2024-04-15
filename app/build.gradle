@@ -3,8 +3,10 @@ plugins {
     id 'maven-publish'
 }
 
+def defVersion = 'v.1.3'
+
 group = 'com.github.HChenX'
-version = 'v.1.2'
+version = defVersion
 
 android {
     namespace 'com.hchen.hooktool'
@@ -52,6 +54,7 @@ tasks.register('androidSourcesJar', Jar) {
 
 dependencies {
     compileOnly libs.xposed
+    implementation libs.annotations
 }
 
 afterEvaluate {
@@ -62,7 +65,7 @@ afterEvaluate {
                 from components.release
                 groupId = 'com.github.HChenX'
                 artifactId = 'HookTool'
-                version = 'v.1.2'
+                version = defVersion
                 artifact androidSourcesJar
             }
         }

@@ -3,16 +3,29 @@ package com.hchen.hooktool;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 public class HookInit {
-    public static XC_LoadPackage.LoadPackageParam lpparam = null;
-    public static ClassLoader classLoader = null;
-    public static boolean canUseSystemClassLoader = false;
-    public static String packageName;
+    private static XC_LoadPackage.LoadPackageParam lpparam = null;
+    private static ClassLoader classLoader = null;
+    private static boolean canUseSystemClassLoader = false;
+    private static String packageName;
     private static String thisTAG = "[HChen][HookInit]: ";
-    public static String TAG = null;
+    private static String TAG = null;
+    private static int logLevel = 0;
 
     public static void setTAG(String tag) {
         thisTAG = "[HChen]" + "[" + tag + "]: ";
         TAG = tag;
+    }
+
+    public static String getTAG() {
+        return TAG;
+    }
+
+    public static void setLogLevel(int level) {
+        logLevel = level;
+    }
+
+    public static int getLogLevel() {
+        return logLevel;
     }
 
     public static void setCanUseSystemClassLoader(boolean use) {

@@ -1,27 +1,26 @@
 package com.hchen.hooktool.hc;
 
-import static com.hchen.hooktool.hc.Safe.initSafe;
+import static com.hchen.hooktool.safe.Safe.initSafe;
 
 import com.hchen.hooktool.HookInit;
 import com.hchen.hooktool.action.Action;
 import com.hchen.hooktool.callback.IAction;
-import com.hchen.hooktool.tool.MethodTool;
+import com.hchen.hooktool.safe.Safe;
+import com.hchen.hooktool.tool.ClassTool;
 
 import java.lang.reflect.Method;
 
 import de.robv.android.xposed.XposedBridge;
-import de.robv.android.xposed.XposedHelpers;
 
-public class HCHook extends MethodTool {
+public class HCHook extends ClassTool {
     static {
         if (initSafe()) {
             try {
-                TAG = HookInit.TAG;
+                TAG = HookInit.getTAG();
                 lpparam = HookInit.getLoadPackageParam();
                 classLoader = HookInit.getClassLoader();
             } catch (Throwable e) {
                 logE(TAG, e);
-
             }
         }
     }
@@ -29,25 +28,6 @@ public class HCHook extends MethodTool {
     public HCHook() {
         safe = new Safe();
         hcHook = this;
-    }
-
-    public HCHook findClass(String className) {
-        if (!initSafe()) return this;
-        try {
-            findClass = XposedHelpers.findClass(className, classLoader);
-        } catch (XposedHelpers.ClassNotFoundError e) {
-            logE(TAG, "The specified class could not be found: " + className + " e: " + e);
-            findClass = null;
-        }
-        safe.setFindClass(findClass);
-        return this;
-    }
-
-    public HCHook findClassIfExists(String className) {
-        if (!initSafe()) return this;
-        findClass = XposedHelpers.findClassIfExists(className, classLoader);
-        safe.setFindClass(findClass);
-        return this;
     }
 
     public void after(IAction iAction) {
@@ -69,10 +49,12 @@ public class HCHook extends MethodTool {
         @Override
         protected void after(MethodHookParam param) {
             if (iAction == null) {
-                logE(TAG, "The callback is null!");
+                logE(useTAG(), "The callback is null!");
                 return;
             }
-            iAction.action(param);
+            hcHook.param = param;
+            hcHook.thisObject = param.thisObject;
+            iAction.action(param, hcHook);
         }
     };
 
@@ -80,10 +62,12 @@ public class HCHook extends MethodTool {
         @Override
         protected void before(MethodHookParam param) {
             if (iAction == null) {
-                logE(TAG, "The callback is null!");
+                logE(useTAG(), "The callback is null!");
                 return;
             }
-            iAction.action(param);
+            hcHook.param = param;
+            hcHook.thisObject = param.thisObject;
+            iAction.action(param, hcHook);
         }
     };
 }
