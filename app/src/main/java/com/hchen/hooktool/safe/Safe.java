@@ -1,33 +1,17 @@
 package com.hchen.hooktool.safe;
 
-import static com.hchen.hooktool.log.XposedLog.logE;
-
 import com.hchen.hooktool.HookInit;
-
-import java.lang.reflect.Field;
+import com.hchen.hooktool.utils.Utils;
 
 /**
  * @noinspection BooleanMethodIsAlwaysInverted
  */
-public class Safe {
-    private static final String TAG = HookInit.getTAG();
-    private String mTAG = null;
-    private Class<?> findClass = null;
-    private Field findField = null;
-
+public class Safe extends Utils {
     public static boolean initSafe() {
         boolean init = HookInit.isInitDone();
         if (init) return true;
         logE(TAG, "HookInit not initialized!");
         return false;
-    }
-
-    public void setFindClass(Class<?> findClass) {
-        this.findClass = findClass;
-    }
-
-    public void setFindField(Field field) {
-        this.findField = field;
     }
 
     public boolean classSafe() {
@@ -42,12 +26,15 @@ public class Safe {
         return false;
     }
 
-    public void setMyTAG(String tag) {
-        mTAG = tag;
+    public boolean paramSafe() {
+        if (param != null) return true;
+        logE(useTAG(), "Param is null!");
+        return false;
     }
 
-    private String useTAG() {
-        if (mTAG != null) return mTAG;
-        return TAG;
+    public boolean thisObjectSafe() {
+        if (thisObject != null) return true;
+        logE(useTAG(), "ThisObject is null!");
+        return false;
     }
 }

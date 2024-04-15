@@ -20,8 +20,9 @@ public class MethodTool extends FieldTool {
     }
 
     public HCHook getMethod(String method, Class<?>... obj) {
-        if (!safe.classSafe()) return hcHook;
+        if (!classSafe()) return hcHook;
         try {
+            clear();
             methods.add(findClass.getMethod(method, obj));
             return hcHook;
         } catch (NoSuchMethodException e) {
@@ -32,8 +33,9 @@ public class MethodTool extends FieldTool {
     }
 
     public HCHook getAnyMethod(String method) {
-        if (!safe.classSafe()) return hcHook;
+        if (!classSafe()) return hcHook;
         try {
+            clear();
             Method[] methods = findClass.getDeclaredMethods();
             for (Method m : methods) {
                 if (method.equals(m.getName())) {
@@ -47,8 +49,9 @@ public class MethodTool extends FieldTool {
     }
 
     public HCHook getConstructor(Class<?>... obj) {
-        if (!safe.classSafe()) return hcHook;
+        if (!classSafe()) return hcHook;
         try {
+            clear();
             constructors.add(findClass.getConstructor(obj));
         } catch (NoSuchMethodException e) {
             logE(useTAG(), "The specified constructor could not be found: " + findClass.getName() +
@@ -58,8 +61,9 @@ public class MethodTool extends FieldTool {
     }
 
     public HCHook getAnyConstructor() {
-        if (!safe.classSafe()) return hcHook;
+        if (!classSafe()) return hcHook;
         try {
+            clear();
             Constructor<?>[] constructors = findClass.getConstructors();
             this.constructors.addAll(Arrays.asList(constructors));
         } catch (Throwable e) {
@@ -71,6 +75,7 @@ public class MethodTool extends FieldTool {
     @Nullable
     public Object callMethod(String method, Object... args) {
         try {
+            if (!thisObjectSafe()) return null;
             return XposedHelpers.callMethod(thisObject, method, args);
         } catch (Throwable e) {
             logE(useTAG(), "Error calling method: " + method + " args: " + Arrays.toString(args));
@@ -80,7 +85,7 @@ public class MethodTool extends FieldTool {
 
     @Nullable
     public Object callStaticMethod(String method, Object... args) {
-        if (!safe.classSafe()) return null;
+        if (!classSafe()) return null;
         try {
             return XposedHelpers.callStaticMethod(findClass, method, args);
         } catch (Throwable e) {
@@ -90,9 +95,8 @@ public class MethodTool extends FieldTool {
         return null;
     }
 
-    public HCHook clear() {
+    private void clear() {
         if (!methods.isEmpty()) methods.clear();
         if (!constructors.isEmpty()) constructors.clear();
-        return hcHook;
     }
 }
