@@ -1,6 +1,7 @@
 package com.hchen.hooktool;
 
 import com.hchen.hooktool.callback.IAction;
+import com.hchen.hooktool.hc.HCHook;
 
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedBridge;

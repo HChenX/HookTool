@@ -1,10 +1,11 @@
-package com.hchen.hooktool;
-
-import android.util.Log;
+package com.hchen.hooktool.log;
 
 import de.robv.android.xposed.XposedBridge;
 
-public class HookLog {
+/**
+ * 本工具的日志类。
+ */
+public class XposedLog {
     public static final String hookMain = "[HChen]";
     public static final String mHook = "[HChen:";
     public static final String other = "]";
@@ -27,21 +28,5 @@ public class HookLog {
 
     public static void logE(String tag, Throwable e) {
         XposedBridge.log(hookMain + "[" + tag + "][E]: " + e);
-    }
-
-    public static void logSI(String name, String tag, String log) {
-        Log.i(mHook + name + other, "[" + tag + "][I]: " + log);
-    }
-
-    public static void logSI(String tag, String log) {
-        Log.i(hookMain, "[" + tag + "][I]: " + log);
-    }
-
-    public static void logSW(String tag, String log) {
-        Log.w(hookMain, "[" + tag + "][W]: " + log);
-    }
-
-    public void logSE(String tag, String log) {
-        Log.e(hookMain, "[" + tag + "][E]: " + log);
     }
 }
