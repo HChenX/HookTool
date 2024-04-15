@@ -4,7 +4,7 @@ plugins {
 }
 
 group = 'com.github.HChenX'
-version = '1.0'
+version = 'v.1.1'
 
 android {
     namespace 'com.hchen.hooktool'
@@ -47,7 +47,6 @@ android {
 }
 
 tasks.register('androidSourcesJar', Jar) {
-    archiveClassifier.set('sources')
     from android.sourceSets.main.java.srcDirs
 }
 
@@ -63,7 +62,9 @@ afterEvaluate {
                 from components.release
                 groupId = 'com.github.HChenX'
                 artifactId = 'HookTool'
-                version = '1.0'
+                version = 'v.1.1'
+                artifact "$buildDir/outputs/aar/${project.name}-release.aar"
+                artifact androidSourcesJar
             }
         }
     }

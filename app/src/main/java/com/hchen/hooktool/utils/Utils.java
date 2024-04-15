@@ -14,7 +14,7 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
 /**
  * 这是字段的读写类，请不要继承重写。
  *
- * @hidden
+ * @hide
  */
 public class Utils extends XposedLog {
     protected Safe safe = null;
