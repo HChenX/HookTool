@@ -4,7 +4,7 @@ plugins {
 }
 
 group = 'com.github.HChenX'
-version = 'v.1.1'
+version = 'v.1.2'
 
 android {
     namespace 'com.hchen.hooktool'
@@ -62,7 +62,7 @@ afterEvaluate {
                 from components.release
                 groupId = 'com.github.HChenX'
                 artifactId = 'HookTool'
-                version = 'v.1.1'
+                version = 'v.1.2'
                 artifact "$buildDir/outputs/aar/${project.name}-release.aar"
                 artifact androidSourcesJar
             }
