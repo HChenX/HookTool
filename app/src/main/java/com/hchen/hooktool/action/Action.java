@@ -2,39 +2,37 @@ package com.hchen.hooktool.action;
 
 import static com.hchen.hooktool.log.XposedLog.logE;
 
-import com.hchen.hooktool.hc.HCHook;
-
 import de.robv.android.xposed.XC_MethodHook;
 
 public class Action extends XC_MethodHook {
-    private static final String TAG = HCHook.TAG;
+    private static final String TAG = null;
 
-    protected void before(MethodHookParam param) {
+    protected void before(MethodHookParam param) throws Throwable {
     }
 
-    protected void after(MethodHookParam param) {
+    protected void after(MethodHookParam param) throws Throwable {
     }
 
-    public Action() {
+    public Action(String tag) {
         super();
     }
 
-    public Action(int priority) {
+    public Action(String tag, int priority) {
         super(priority);
     }
 
     public static Action returnConstant(final Object result) {
-        return new Action(PRIORITY_DEFAULT) {
+        return new Action(TAG, PRIORITY_DEFAULT) {
             @Override
-            protected void before(MethodHookParam param) {
+            protected void before(MethodHookParam param) throws Throwable {
                 param.setResult(result);
             }
         };
     }
 
-    public static final Action DO_NOTHING = new Action(PRIORITY_HIGHEST * 2) {
+    public static final Action DO_NOTHING = new Action(TAG, PRIORITY_HIGHEST * 2) {
         @Override
-        protected void before(MethodHookParam param) {
+        protected void before(MethodHookParam param) throws Throwable {
             param.setResult(null);
         }
 

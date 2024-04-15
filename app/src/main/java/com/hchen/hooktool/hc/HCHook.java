@@ -45,7 +45,7 @@ public class HCHook extends ClassTool {
         }
     }
 
-    private final Action after = new Action() {
+    private final Action after = new Action(useTAG()) {
         @Override
         protected void after(MethodHookParam param) {
             if (iAction == null) {
@@ -58,7 +58,7 @@ public class HCHook extends ClassTool {
         }
     };
 
-    private final Action before = new Action() {
+    private final Action before = new Action(useTAG()) {
         @Override
         protected void before(MethodHookParam param) {
             if (iAction == null) {
