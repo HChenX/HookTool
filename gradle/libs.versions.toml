@@ -1,9 +1,13 @@
 [versions]
 agp = "8.3.2"
+manifoldExt = "2024.1.12"
+manifoldExtRt = "2024.1.12"
 xposed = "82"
 annotations = "28.0.0"
 
 [libraries]
+manifold-ext-rt = { module = "systems.manifold:manifold-ext-rt", version.ref = "manifoldExtRt" }
+systems-manifold-ext = { module = "systems.manifold:manifold-ext", version.ref = "manifoldExt" }
 xposed = { group = "de.robv.android.xposed", name = "api", version.ref = "xposed" }
 annotations = { group = "com.android.support", name = "support-annotations", version.ref = "annotations" }
 

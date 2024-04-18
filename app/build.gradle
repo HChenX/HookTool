@@ -52,9 +52,15 @@ tasks.register('androidSourcesJar', Jar) {
     from android.sourceSets.main.java.srcDirs
 }
 
+getTasks().withType(JavaCompile) {
+    options.compilerArgs += ['-Xplugin:Manifold']
+}
+
 dependencies {
     compileOnly libs.xposed
+    compileOnly libs.systems.manifold.ext
     implementation libs.annotations
+    implementation libs.manifold.ext.rt
 }
 
 afterEvaluate {

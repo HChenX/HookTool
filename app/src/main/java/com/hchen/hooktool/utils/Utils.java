@@ -3,6 +3,7 @@ package com.hchen.hooktool.utils;
 import com.hchen.hooktool.callback.IAction;
 import com.hchen.hooktool.hc.HCHook;
 import com.hchen.hooktool.log.XposedLog;
+import com.hchen.hooktool.tool.ClassTool;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -19,6 +20,7 @@ public class Utils extends XposedLog {
     protected static String TAG = null;
     protected String mTAG = null;
     protected HCHook hcHook = null;
+    protected ClassTool classTool = null;
     // public MethodTool methodTool = null;
     protected static XC_LoadPackage.LoadPackageParam lpparam = null;
     protected static ClassLoader classLoader = null;

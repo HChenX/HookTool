@@ -2,7 +2,6 @@ package com.hchen.hooktool.tool;
 
 import android.support.annotation.Nullable;
 
-import com.hchen.hooktool.hc.HCHook;
 import com.hchen.hooktool.safe.Safe;
 
 import java.lang.reflect.Field;
@@ -13,14 +12,14 @@ public class FieldTool extends Safe {
     public FieldTool() {
     }
 
-    public HCHook findField(String name) {
-        if (!classSafe()) return hcHook;
+    public FieldTool findField(String name) {
+        if (!classSafe()) return this;
         try {
             findField = XposedHelpers.findField(findClass, name);
         } catch (NoSuchFieldError e) {
             logE(useTAG(), "Failed to get claim field: " + name + " class: " + findClass + " e: " + e);
         }
-        return hcHook;
+        return this;
     }
 
     @Nullable

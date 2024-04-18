@@ -29,6 +29,7 @@ public class HCHook extends ClassTool {
     }
 
     public HCHook setClassLoader(ClassLoader classLoader) {
+        "hello world".echo();
         mClassLoader = classLoader;
         return hcHook;
     }

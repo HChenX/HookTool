@@ -9,6 +9,10 @@ import java.util.Arrays;
 import de.robv.android.xposed.XposedHelpers;
 
 public class ClassTool extends MethodTool {
+    public ClassTool() {
+        classTool = this;
+    }
+
     public HCHook findClass(String className) {
         if (!initSafe()) return hcHook;
         try {
