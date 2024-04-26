@@ -1,75 +1,91 @@
 package com.hchen.hooktool.tool;
 
-import android.support.annotation.Nullable;
+import static com.hchen.hooktool.log.XposedLog.logE;
 
-import com.hchen.hooktool.safe.Safe;
+import android.support.annotation.Nullable;
 
 import java.lang.reflect.Field;
 
 import de.robv.android.xposed.XposedHelpers;
 
-public class FieldTool extends Safe {
-    public FieldTool() {
+public class FieldTool {
+    private final UtilsTool utils;
+    private final SafeTool safe;
+
+    public FieldTool(UtilsTool utils) {
+        this.utils = utils;
+        this.safe = utils.safeTool;
     }
 
     public FieldTool findField(String name) {
-        if (!classSafe()) return this;
+        if (!safe.classSafe()) return getFieldTool();
         try {
-            findField = XposedHelpers.findField(findClass, name);
+            utils.findField = XposedHelpers.findField(utils.findClass, name);
         } catch (NoSuchFieldError e) {
-            logE(useTAG(), "Failed to get claim field: " + name + " class: " + findClass + " e: " + e);
+            logE(getTAG(), "Failed to get claim field: " + name + " class: " + utils.findClass + " e: " + e);
         }
-        return this;
+        return getFieldTool();
     }
 
     @Nullable
     public Field getField() {
-        return findField;
+        return utils.findField;
     }
 
     @Nullable
     public Object get() {
-        if (!fieldSafe()) return null;
+        if (!safe.fieldSafe()) return null;
         Object obj = null;
         try {
-            if (!paramSafe()) return null;
-            obj = param.thisObject;
-            return findField.get(obj);
+            if (!safe.paramSafe()) return null;
+            obj = utils.param.thisObject;
+            return utils.findField.get(obj);
         } catch (IllegalAccessException e) {
-            logE(useTAG(), "Failed to read field contents: " + findField + " obj: " + obj);
+            logE(getTAG(), "Failed to read field contents: " + utils.findField + " obj: " + obj);
         }
         return null;
     }
 
     @Nullable
     public Object getStatic() {
-        if (!fieldSafe()) return null;
+        if (!safe.fieldSafe()) return null;
         try {
-            return findField.get(null);
+            return utils.findField.get(null);
         } catch (IllegalAccessException e) {
-            logE(useTAG(), "Failed to read field contents: " + findField);
+            logE(getTAG(), "Failed to read field contents: " + utils.findField);
         }
         return null;
     }
 
     public void set(Object value) {
-        if (!fieldSafe()) return;
+        if (!safe.fieldSafe()) return;
         Object obj = null;
         try {
-            if (!paramSafe()) return;
-            obj = param.thisObject;
-            findField.set(obj, value);
+            if (!safe.paramSafe()) return;
+            obj = utils.param.thisObject;
+            utils.findField.set(obj, value);
         } catch (IllegalAccessException e) {
-            logE(useTAG(), "Failed to write field contents: " + findField + " obj: " + obj);
+            logE(getTAG(), "Failed to write field contents: " + utils.findField + " obj: " + obj);
         }
     }
 
     public void setStatic(Object value) {
-        if (!fieldSafe()) return;
+        if (!safe.fieldSafe()) return;
         try {
-            findField.set(null, value);
+            utils.findField.set(null, value);
         } catch (IllegalAccessException e) {
-            logE(useTAG(), "Failed to read field contents: " + findField);
+            logE(getTAG(), "Failed to read field contents: " + utils.findField);
         }
+    }
+
+    private String getTAG() {
+        return utils.useTAG();
+    }
+
+    private FieldTool getFieldTool() {
+        FieldTool fieldTool = utils.fieldTool;
+        if (fieldTool == null)
+            throw new RuntimeException(getTAG() + ": FieldTool is null!!");
+        return fieldTool;
     }
 }

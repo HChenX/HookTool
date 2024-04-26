@@ -1,8 +1,8 @@
 package com.hchen.hooktool.tool;
 
-import android.support.annotation.Nullable;
+import static com.hchen.hooktool.log.XposedLog.logE;
 
-import com.hchen.hooktool.hc.HCHook;
+import android.support.annotation.Nullable;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -13,90 +13,105 @@ import de.robv.android.xposed.XposedHelpers;
 /**
  * @hidden
  */
-public class MethodTool extends FieldTool {
+public class MethodTool {
+    private final UtilsTool utils;
+    private final SafeTool safe;
 
-    public MethodTool() {
+    public MethodTool(UtilsTool utils) {
+        this.utils = utils;
+        this.safe = utils.safeTool;
         // methodTool = this;
     }
 
-    public HCHook getMethod(String method, Class<?>... obj) {
-        if (!classSafe()) return hcHook;
+    public MethodTool getMethod(String method, Class<?>... obj) {
+        if (!safe.classSafe()) return getMethodTool();
         try {
             clear();
-            methods.add(findClass.getMethod(method, obj));
-            return hcHook;
+            utils.methods.add(utils.findClass.getMethod(method, obj));
+            return getMethodTool();
         } catch (NoSuchMethodException e) {
-            logE(useTAG(), "The method to get the claim failed: " + method + " obj: " +
+            logE(getTAG(), "The method to get the claim failed: " + method + " obj: " +
                     Arrays.toString(obj) + " e: " + e);
         }
-        return hcHook;
+        return getMethodTool();
     }
 
-    public HCHook getAnyMethod(String method) {
-        if (!classSafe()) return hcHook;
+    public MethodTool getAnyMethod(String method) {
+        if (!safe.classSafe()) return getMethodTool();
         try {
             clear();
-            Method[] methods = findClass.getDeclaredMethods();
+            Method[] methods = utils.findClass.getDeclaredMethods();
             for (Method m : methods) {
                 if (method.equals(m.getName())) {
-                    this.methods.add(m);
+                    utils.methods.add(m);
                 }
             }
         } catch (Throwable e) {
-            logE(useTAG(), "Error getting match method: " + method + " e: " + e);
+            logE(getTAG(), "Error getting match method: " + method + " e: " + e);
         }
-        return hcHook;
+        return getMethodTool();
     }
 
-    public HCHook getConstructor(Class<?>... obj) {
-        if (!classSafe()) return hcHook;
+    public MethodTool getConstructor(Class<?>... obj) {
+        if (!safe.classSafe()) return getMethodTool();
         try {
             clear();
-            constructors.add(findClass.getConstructor(obj));
+            utils.constructors.add(utils.findClass.getConstructor(obj));
         } catch (NoSuchMethodException e) {
-            logE(useTAG(), "The specified constructor could not be found: " + findClass.getName() +
+            logE(getTAG(), "The specified constructor could not be found: " + utils.findClass.getName() +
                     " obj: " + Arrays.toString(obj) + " e: " + e);
         }
-        return hcHook;
+        return getMethodTool();
     }
 
-    public HCHook getAnyConstructor() {
-        if (!classSafe()) return hcHook;
+    public MethodTool getAnyConstructor() {
+        if (!safe.classSafe()) return getMethodTool();
         try {
             clear();
-            Constructor<?>[] constructors = findClass.getConstructors();
-            this.constructors.addAll(Arrays.asList(constructors));
+            Constructor<?>[] constructors = utils.findClass.getConstructors();
+            utils.constructors.addAll(Arrays.asList(constructors));
         } catch (Throwable e) {
-            logE(useTAG(), "The any constructor could not be found: " + findClass.getName() + " e: " + e);
+            logE(getTAG(), "The any constructor could not be found: " + utils.findClass.getName() + " e: " + e);
         }
-        return hcHook;
+        return getMethodTool();
     }
 
     @Nullable
     public Object callMethod(String method, Object... args) {
         try {
-            if (!thisObjectSafe()) return null;
-            return XposedHelpers.callMethod(thisObject, method, args);
+            if (!safe.thisObjectSafe()) return null;
+            return XposedHelpers.callMethod(utils.thisObject, method, args);
         } catch (Throwable e) {
-            logE(useTAG(), "Error calling method: " + method + " args: " + Arrays.toString(args));
+            logE(getTAG(), "Error calling method: " + method + " args: " + Arrays.toString(args));
         }
         return null;
     }
 
     @Nullable
     public Object callStaticMethod(String method, Object... args) {
-        if (!classSafe()) return null;
+        if (!safe.classSafe()) return null;
         try {
-            return XposedHelpers.callStaticMethod(findClass, method, args);
+            return XposedHelpers.callStaticMethod(utils.findClass, method, args);
         } catch (Throwable e) {
-            logE(useTAG(), "Error calling method: " + method + " class: " + findClass
+            logE(getTAG(), "Error calling method: " + method + " class: " + utils.findClass
                     + " args: " + Arrays.toString(args));
         }
         return null;
     }
 
     private void clear() {
-        if (!methods.isEmpty()) methods.clear();
-        if (!constructors.isEmpty()) constructors.clear();
+        if (!utils.methods.isEmpty()) utils.methods.clear();
+        if (!utils.constructors.isEmpty()) utils.constructors.clear();
+    }
+
+    private String getTAG() {
+        return utils.useTAG();
+    }
+
+    private MethodTool getMethodTool() {
+        MethodTool methodTool = utils.methodTool;
+        if (methodTool == null)
+            throw new RuntimeException(getTAG() + ": MethodTool is null!!");
+        return methodTool;
     }
 }

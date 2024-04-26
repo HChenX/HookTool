@@ -1,6 +1,6 @@
 package com.hchen.hooktool.callback;
 
-import com.hchen.hooktool.hc.HCHook;
+import com.hchen.hooktool.tool.HCHook;
 
 import de.robv.android.xposed.XC_MethodHook;
 

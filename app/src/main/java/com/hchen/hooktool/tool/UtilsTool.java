@@ -1,9 +1,6 @@
-package com.hchen.hooktool.utils;
+package com.hchen.hooktool.tool;
 
 import com.hchen.hooktool.callback.IAction;
-import com.hchen.hooktool.hc.HCHook;
-import com.hchen.hooktool.log.XposedLog;
-import com.hchen.hooktool.tool.ClassTool;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -16,12 +13,14 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
 /**
  * 这是字段的读写类，请不要继承重写。
  */
-public class Utils extends XposedLog {
+public class UtilsTool {
     protected static String TAG = null;
     protected String mTAG = null;
     protected HCHook hcHook = null;
     protected ClassTool classTool = null;
-    // public MethodTool methodTool = null;
+    protected FieldTool fieldTool = null;
+    protected MethodTool methodTool = null;
+    protected SafeTool safeTool = null;
     protected static XC_LoadPackage.LoadPackageParam lpparam = null;
     protected static ClassLoader classLoader = null;
     protected ClassLoader mClassLoader = null;
@@ -34,7 +33,7 @@ public class Utils extends XposedLog {
     protected final ArrayList<Method> methods = new ArrayList<>();
     protected final ArrayList<Constructor<?>> constructors = new ArrayList<>();
 
-    public void setMyTAG(String tag) {
+    protected void setMyTAG(String tag) {
         mTAG = tag;
     }
 
