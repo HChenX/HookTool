@@ -1,30 +1,53 @@
 package com.hchen.hooktool.tool;
 
 import static com.hchen.hooktool.log.XposedLog.logE;
+import static com.hchen.hooktool.log.XposedLog.logW;
 
 import android.support.annotation.Nullable;
+
+import com.hchen.hooktool.HCHook;
+import com.hchen.hooktool.utils.DataUtils;
+import com.hchen.hooktool.utils.SafeUtils;
 
 import java.lang.reflect.Field;
 
 import de.robv.android.xposed.XposedHelpers;
 
 public class FieldTool {
-    private final UtilsTool utils;
-    private final SafeTool safe;
+    private final DataUtils utils;
+    private final SafeUtils safe;
 
-    public FieldTool(UtilsTool utils) {
+    public FieldTool(DataUtils utils) {
         this.utils = utils;
-        this.safe = utils.safeTool;
+        this.safe = utils.safeUtils;
     }
 
     public FieldTool findField(String name) {
-        if (!safe.classSafe()) return getFieldTool();
-        try {
-            utils.findField = XposedHelpers.findField(utils.findClass, name);
-        } catch (NoSuchFieldError e) {
-            logE(getTAG(), "Failed to get claim field: " + name + " class: " + utils.findClass + " e: " + e);
+        return findIndexField(0, name);
+    }
+
+    public FieldTool findIndexField(int index, String name) {
+        if (!safe.classSafe()) return utils.getFieldTool();
+        utils.findField = null;
+        if (utils.classes.isEmpty()) {
+            logE(utils.getTAG(), "The class list is empty!");
+            return utils.getFieldTool();
         }
-        return getFieldTool();
+        if (utils.classes.size() < index) {
+            logW(utils.getTAG(), "index > class size, can't find field!");
+            return utils.getFieldTool();
+        }
+        Class<?> c = utils.classes.get(index);
+        if (c == null) {
+            logW(utils.getTAG(), "findField but class is null!");
+            return utils.getFieldTool();
+        }
+        try {
+            utils.findField = XposedHelpers.findField(utils.classes.get(0), name);
+        } catch (NoSuchFieldError e) {
+            logE(utils.getTAG(), "Failed to get claim field: " + name + " class: " + utils.findClass + " e: " + e);
+        }
+        return utils.getFieldTool();
     }
 
     @Nullable
@@ -32,60 +55,15 @@ public class FieldTool {
         return utils.findField;
     }
 
-    @Nullable
-    public Object get() {
-        if (!safe.fieldSafe()) return null;
-        Object obj = null;
-        try {
-            if (!safe.paramSafe()) return null;
-            obj = utils.param.thisObject;
-            return utils.findField.get(obj);
-        } catch (IllegalAccessException e) {
-            logE(getTAG(), "Failed to read field contents: " + utils.findField + " obj: " + obj);
-        }
-        return null;
+    public HCHook hcHook() {
+        return utils.getHCHook();
     }
 
-    @Nullable
-    public Object getStatic() {
-        if (!safe.fieldSafe()) return null;
-        try {
-            return utils.findField.get(null);
-        } catch (IllegalAccessException e) {
-            logE(getTAG(), "Failed to read field contents: " + utils.findField);
-        }
-        return null;
+    public ClassTool classTool() {
+        return utils.getClassTool();
     }
 
-    public void set(Object value) {
-        if (!safe.fieldSafe()) return;
-        Object obj = null;
-        try {
-            if (!safe.paramSafe()) return;
-            obj = utils.param.thisObject;
-            utils.findField.set(obj, value);
-        } catch (IllegalAccessException e) {
-            logE(getTAG(), "Failed to write field contents: " + utils.findField + " obj: " + obj);
-        }
-    }
-
-    public void setStatic(Object value) {
-        if (!safe.fieldSafe()) return;
-        try {
-            utils.findField.set(null, value);
-        } catch (IllegalAccessException e) {
-            logE(getTAG(), "Failed to read field contents: " + utils.findField);
-        }
-    }
-
-    private String getTAG() {
-        return utils.useTAG();
-    }
-
-    private FieldTool getFieldTool() {
-        FieldTool fieldTool = utils.fieldTool;
-        if (fieldTool == null)
-            throw new RuntimeException(getTAG() + ": FieldTool is null!!");
-        return fieldTool;
+    public MethodTool methodTool() {
+        return utils.getMethodTool();
     }
 }
