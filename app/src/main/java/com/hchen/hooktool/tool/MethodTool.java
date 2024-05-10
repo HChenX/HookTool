@@ -9,7 +9,7 @@ import com.hchen.hooktool.HCHook;
 import com.hchen.hooktool.utils.DataUtils;
 import com.hchen.hooktool.utils.SafeUtils;
 
-import java.lang.reflect.Constructor;
+import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,144 +27,170 @@ public class MethodTool {
         clear();
     }
 
-    /**
-     * 适用于仅获取一个类的情况。
-     */
-    public ActionTool getMethod(String name, Class<?>... clzzs) {
-        return getIndexMethod(0, name, clzzs);
+    public MethodTool resetCount() {
+        next = 0;
+        return utils.getMethodTool();
+    }
+
+    public MethodTool next() {
+        next = next + 1;
+        return utils.getMethodTool();
+    }
+
+    public MethodTool back() {
+        next = next - 1;
+        return utils.getMethodTool();
     }
 
     /**
      * 按顺序索引类并查找方法。
      */
-    public ActionTool getNextMethod(String name, Class<?>... clzzs) {
-        if (utils.classes.size() != -1) {
-            if (utils.classes.size() < next) {
-                logW(utils.getTAG(), "no next class can get!");
-                return utils.getActionTool();
-            }
-            ActionTool actionTool = getIndexMethod(next, name, clzzs);
-            next = next + 1;
-            return actionTool;
-        } else {
-            logW(utils.getTAG(), "class count is -1, can't get next!");
-            return utils.getActionTool();
-        }
-    }
-
-    public MethodTool resetCount() {
-        next = 0;
-        return utils.getMethodTool();
+    public ActionTool getMethod(String name, Class<?>... clzzs) {
+        return getIndexMethod(next, name, clzzs);
     }
 
     /**
      * 根据索引获取指定索引类中的指定方法，请注意多次调用查找同索引类中的方法，上次查找到的方法将会被覆盖！
      */
     public ActionTool getIndexMethod(int index, String name, Class<?>... clzzs) {
-        if (!safe.classSafe()) return utils.getActionTool();
-        if (utils.classes.isEmpty()) {
-            logW(utils.getTAG(), "The class list is empty!");
+        ArrayList<Member> method = findMethod(index, name, new IMethodTool() {
+            @Override
+            public ArrayList<Member> doFindMethod(Class<?> c, String name, Class<?>... classes) {
+                ArrayList<Member> arrayList = new ArrayList<>();
+                try {
+                    arrayList.add(c.getMethod(name, classes));
+                } catch (NoSuchMethodException e) {
+                    logE(utils.getTAG(), "The method to get the claim failed name: " + name +
+                            " class: " + c + " obj: " + Arrays.toString(classes) + " e: " + e);
+                }
+                return arrayList;
+            }
+        }, clzzs);
+        if (method == null) {
             return utils.getActionTool();
         }
-        if (utils.classes.size() < index) {
-            logW(utils.getTAG(), "classes size < index! this method will is empty!");
-            // utils.methods.put(index, new ArrayList<>());
-            return utils.getActionTool();
-        }
-        ArrayList<Method> arrayList = new ArrayList<>();
-        Class<?> c = utils.classes.get(index);
-        if (c == null) {
-            logW(utils.getTAG(), "getMethod but class is null!");
-            utils.methods.put(index, new ArrayList<>());
-            return utils.getActionTool();
-        }
-        try {
-            arrayList.add(c.getMethod(name, clzzs));
-        } catch (NoSuchMethodException e) {
-            logE(utils.getTAG(), "The method to get the claim failed: " + name + " obj: " +
-                    Arrays.toString(clzzs) + " e: " + e);
-        }
-        utils.methods.put(index, arrayList);
-        utils.actionTool.methods = arrayList;
+        utils.methods.put(index, method);
+        utils.actionTool.members = method;
         return utils.getActionTool();
     }
 
+    public ActionTool getAnyMethod(String name) {
+        return getAnyMethodByIndex(next, name);
+    }
+
     /**
-     * 获取索引类中全部方法。
+     * 获取指定索引类中全部方法。
      */
-    public MethodTool getAnyMethod(String method) {
-        if (!safe.classSafe()) return utils.getMethodTool();
-        try {
-            for (int i = 0; i < utils.classes.size(); i++) {
-                Class<?> clzz = utils.classes.get(i);
-                if (clzz == null) {
-                    logW(utils.getTAG(), "getAnyMethod clzz is null, will skip " +
-                            "and method will is empty.");
-                    utils.methods.put(i, new ArrayList<>());
-                    break;
-                }
-                Method[] methods = clzz.getDeclaredMethods();
-                ArrayList<Method> list = new ArrayList<>();
+    public ActionTool getAnyMethodByIndex(int index, String name) {
+        ArrayList<Member> methods = findMethod(index, name, new IMethodTool() {
+            @Override
+            public ArrayList<Member> doFindMethod(Class<?> c, String name, Class<?>... classes) {
+                ArrayList<Member> list = new ArrayList<>();
+                Method[] methods = c.getDeclaredMethods();
                 for (Method m : methods) {
-                    if (method.equals(m.getName())) {
+                    if (name.equals(m.getName())) {
                         list.add(m);
                     }
                 }
-                utils.methods.put(i, list);
+                return list;
             }
-        } catch (Throwable e) {
-            logE(utils.getTAG(), "Error getting match method: " + method + " e: " + e);
+        });
+        if (methods == null) {
+            return utils.getActionTool();
         }
-        return utils.getMethodTool();
+        utils.methods.put(index, methods);
+        utils.actionTool.members = methods;
+        return utils.getActionTool();
     }
 
-    public MethodTool getConstructor(Class<?>... obj) {
-        if (!safe.classSafe()) return utils.getMethodTool();
+    private ArrayList<Member> findMethod(int index, String name, IMethodTool iMethodTool, Class<?>... clzzs) {
+        if (utils.classes.isEmpty()) {
+            logW(utils.getTAG(), "the class list is empty! cant find method: " + name);
+            return null;
+        }
+        if (utils.classes.size() - 1 < index) {
+            logW(utils.getTAG(), "classes size < index! this method [" + name + "] will is empty! size: " +
+                    (utils.classes.size() - 1) + " index: " + index);
+            // utils.methods.put(index, new ArrayList<>());
+            return null;
+        }
+        Class<?> c = utils.classes.get(index);
+        if (c == null) {
+            logW(utils.getTAG(), "class is null! cant find: " + name + " index: " + index);
+            // utils.methods.put(index, new ArrayList<>());
+            return new ArrayList<>();
+        }
+        return iMethodTool.doFindMethod(c, name, clzzs);
+    }
+
+    public ActionTool getConstructor(Class<?>... obj) {
+        return getConstructorByIndex(next, obj);
+    }
+
+    public ActionTool getAnyConstructor() {
+        return getConstructorByIndex(next);
+    }
+
+    public ActionTool getConstructorByIndex(int index, Class<?>... classes) {
+        ArrayList<Member> members = findConstructor(index, new IConstructorTool() {
+            @Override
+            public ArrayList<Member> doFindConstructor(Class<?> c, Class<?>... classes) {
+                ArrayList<Member> members = new ArrayList<>();
+                try {
+                    members.add(c.getConstructor(classes));
+                } catch (NoSuchMethodException e) {
+                    logE(utils.getTAG(), "The specified constructor could not be found: " + c +
+                            " classes: " + Arrays.toString(classes) + " e: " + e);
+                }
+                return members;
+            }
+        }, classes);
+        if (members == null) {
+            return utils.getActionTool();
+        }
+        utils.constructors.put(index, members.toArray(new Member[0]));
+        utils.actionTool.members = members;
+        return utils.getActionTool();
+    }
+
+    private ActionTool getAnyConstructorByIndex(int index) {
+        ArrayList<Member> members = findConstructor(index, new IConstructorTool() {
+            @Override
+            public ArrayList<Member> doFindConstructor(Class<?> c, Class<?>... classes) {
+                return new ArrayList<>(Arrays.asList(c.getDeclaredConstructors()));
+            }
+        });
+        if (members == null) {
+            return utils.getActionTool();
+        }
+        utils.constructors.put(index, members.toArray(new Member[0]));
+        utils.actionTool.members = members;
+        return utils.getActionTool();
+    }
+
+    private ArrayList<Member> findConstructor(int index, IConstructorTool iConstructorTool, Class<?>... classes) {
         if (utils.classes.isEmpty()) {
             logW(utils.getTAG(), "The class list is empty!");
-            return utils.getMethodTool();
+            return null;
+        }
+        if (utils.classes.size() - 1 < index) {
+            logW(utils.getTAG(), "classes size < index! this constructor will is empty! size: " +
+                    (utils.classes.size() - 1) + " index: " + index);
+            // utils.methods.put(index, new ArrayList<>());
+            return null;
         }
         // utils.constructors.add(utils.classes.get(0).getConstructor(obj));
-        Class<?> c = utils.classes.get(0);
+        Class<?> c = utils.classes.get(index);
         if (c == null) {
-            logW(utils.getTAG(), "getConstructor but class is null!");
-            utils.constructors.put(new Constructor[]{});
-            return utils.getMethodTool();
+            logW(utils.getTAG(), "class is null! index: " + index);
+            // utils.constructors.put(new Constructor[]{});
+            return new ArrayList<>();
         }
-        Constructor<?> constructor = null;
-        try {
-            constructor = c.getConstructor(obj);
-        } catch (NoSuchMethodException e) {
-            logE(utils.getTAG(), "The specified constructor could not be found: " + utils.classes.get(0).getName() +
-                    " obj: " + Arrays.toString(obj) + " e: " + e);
-        }
-        utils.constructors.put(new Constructor[]{constructor});
-        return utils.getMethodTool();
-    }
-
-    public MethodTool getAnyConstructor() {
-        if (!safe.classSafe()) return utils.getMethodTool();
-        try {
-            for (int i = 0; i < utils.classes.size(); i++) {
-                Class<?> clzz = utils.classes.get(i);
-                if (clzz == null) {
-                    logW(utils.getTAG(), "getAnyConstructor clzz is null, will skip " +
-                            "and method will is empty.");
-                    utils.constructors.put(i, new Constructor[]{});
-                    break;
-                }
-                Constructor<?>[] constructors = clzz.getConstructors();
-                utils.constructors.put(i, constructors);
-            }
-        } catch (Throwable e) {
-            logE(utils.getTAG(), "The any constructor could not be found: " + e);
-        }
-        return utils.getMethodTool();
+        return iConstructorTool.doFindConstructor(c, classes);
     }
 
     @Nullable
     public Object callStaticMethod(String method, Object... args) {
-        if (!safe.classSafe()) return null;
         try {
             if (utils.classes.isEmpty()) {
                 logE(utils.getTAG(), "The class list is empty!");
@@ -197,5 +223,13 @@ public class MethodTool {
     public void clear() {
         if (!utils.methods.isEmpty()) utils.methods.clear();
         if (!utils.constructors.isEmpty()) utils.constructors.clear();
+    }
+
+    interface IMethodTool {
+        ArrayList<Member> doFindMethod(Class<?> c, String name, Class<?>... classes);
+    }
+
+    interface IConstructorTool {
+        ArrayList<Member> doFindConstructor(Class<?> c, Class<?>... classes);
     }
 }

@@ -6,9 +6,8 @@ import com.hchen.hooktool.tool.ClassTool;
 import com.hchen.hooktool.tool.FieldTool;
 import com.hchen.hooktool.tool.MethodTool;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
+import java.lang.reflect.Member;
 import java.util.ArrayList;
 
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
@@ -34,8 +33,8 @@ public class DataUtils {
     public ArrayList<Object> newInstances = new ArrayList<>();
     public Field findField = null;
     // private Method method = null;
-    public final MapUtils<ArrayList<Method>> methods = new MapUtils<>();
-    public final MapUtils<Constructor<?>[]> constructors = new MapUtils<>();
+    public final MapUtils<ArrayList<Member>> methods = new MapUtils<>();
+    public final MapUtils<Member[]> constructors = new MapUtils<>();
 
     public HCHook getHCHook() {
         HCHook hcHook = this.hcHook;

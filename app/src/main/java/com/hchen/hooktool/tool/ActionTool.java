@@ -8,18 +8,17 @@ import com.hchen.hooktool.action.Action;
 import com.hchen.hooktool.callback.IAction;
 import com.hchen.hooktool.callback.IAllAction;
 import com.hchen.hooktool.utils.DataUtils;
-import com.hchen.hooktool.utils.MapUtils;
 import com.hchen.hooktool.utils.SafeUtils;
 
-import java.lang.reflect.Method;
+import java.lang.reflect.Member;
 import java.util.ArrayList;
 
 import de.robv.android.xposed.XposedBridge;
 
 public class ActionTool {
-    private DataUtils utils;
+    private final DataUtils utils;
     private final SafeUtils safe;
-    protected ArrayList<Method> methods = null;
+    protected ArrayList<Member> members = null;
 
     public ActionTool(DataUtils data) {
         this.utils = data;
@@ -34,8 +33,8 @@ public class ActionTool {
         if (safe.actionSafe("iAllAction", iAllAction)) {
             hookTool("allAction", index, new IActionTool() {
                 @Override
-                public Action action(Method method) {
-                    return allActionTool(method, iAllAction);
+                public Action action(Member member) {
+                    return allActionTool(member, iAllAction);
                 }
             });
         }
@@ -50,8 +49,8 @@ public class ActionTool {
         if (safe.actionSafe("iAction after", iAction)) {
             hookTool("after", index, new IActionTool() {
                 @Override
-                public Action action(Method method) {
-                    return afterTool(method, iAction);
+                public Action action(Member member) {
+                    return afterTool(member, iAction);
                 }
             });
         }
@@ -66,49 +65,59 @@ public class ActionTool {
         if (safe.actionSafe("iAction before", iAction)) {
             hookTool("before", index, new IActionTool() {
                 @Override
-                public Action action(Method method) {
-                    return beforeTool(method, iAction);
+                public Action action(Member member) {
+                    return beforeTool(member, iAction);
                 }
             });
         }
         return utils.getMethodTool();
     }
 
-    public void returnConstant(final Object result) {
-        for (MapUtils<ArrayList<Method>> m : utils.methods) {
-            XposedBridge.hookMethod(m,
-                    new Action(utils.getTAG()) {
-                        @Override
-                        protected void before(MethodHookParam param) {
-                            param.setResult(result);
-                        }
+    public void returnResult(final Object result) {
+        returnResult(-1, result);
+    }
+
+    public void returnResult(int index, final Object result) {
+        hookTool("returnResult", index, new IActionTool() {
+            @Override
+            public Action action(Member member) {
+                return new Action(utils.getTAG()) {
+                    @Override
+                    protected void before(MethodHookParam param) {
+                        param.setResult(result);
                     }
-            );
-        }
+                };
+            }
+        });
     }
 
     public void doNothing() {
-        for (MapUtils<ArrayList<Method>> m : utils.methods) {
-            XposedBridge.hookMethod(m, DO_NOTHING);
-        }
+        doNothing(-1);
     }
 
-    private final Action DO_NOTHING = new Action(utils.getTAG(), PRIORITY_HIGHEST * 2) {
-        @Override
-        protected void before(MethodHookParam param) {
-            param.setResult(null);
-        }
-    };
+    public void doNothing(int index) {
+        hookTool("doNothing", index, new IActionTool() {
+            @Override
+            public Action action(Member member) {
+                return new Action(utils.getTAG(), PRIORITY_HIGHEST * 2) {
+                    @Override
+                    protected void before(MethodHookParam param) {
+                        param.setResult(null);
+                    }
+                };
+            }
+        });
+    }
 
     private void hookTool(String name, int index, IActionTool tool) {
         if (index == -1) {
-            if (methods != null) {
-                if (!methods.isEmpty()) {
-                    for (Method method : methods) {
+            if (members != null) {
+                if (!members.isEmpty()) {
+                    for (Member member : members) {
                         try {
-                            XposedBridge.hookMethod(method, tool.action(method));
+                            XposedBridge.hookMethod(member, tool.action(member));
                         } catch (Throwable e) {
-                            logE(utils.getTAG(), name + " hook method: " + method + " e: " + e);
+                            logE(utils.getTAG(), name + " hook method: " + member + " e: " + e);
                         }
                     }
                 } else {
@@ -117,17 +126,17 @@ public class ActionTool {
             } else {
                 logW(utils.getTAG(), name + " methods is null, cant use this action.");
             }
-            methods = null;
+            members = null;
             return;
         }
         if (utils.methods.size() > index) {
-            ArrayList<Method> methods = utils.methods.get(index);
+            ArrayList<Member> methods = utils.methods.get(index);
             if (!methods.isEmpty()) {
-                for (Method method : methods) {
+                for (Member member : methods) {
                     try {
-                        XposedBridge.hookMethod(method, tool.action(method));
+                        XposedBridge.hookMethod(member, tool.action(member));
                     } catch (Throwable e) {
-                        logE(utils.getTAG(), name + " hook method: " + method + " e: " + e);
+                        logE(utils.getTAG(), name + " hook method: " + member + " e: " + e);
                     }
                 }
             } else {
@@ -138,7 +147,7 @@ public class ActionTool {
         }
     }
 
-    private Action allActionTool(Method method, IAllAction iAllAction) {
+    private Action allActionTool(Member member, IAllAction iAllAction) {
         ParamTool paramTool = new ParamTool(utils.getTAG());
         return new Action(utils.getTAG()) {
             @Override
@@ -155,7 +164,7 @@ public class ActionTool {
         };
     }
 
-    private Action afterTool(Method method, IAction iAction) {
+    private Action afterTool(Member member, IAction iAction) {
         ParamTool paramTool = new ParamTool(utils.getTAG());
         return new Action(utils.getTAG()) {
             @Override
@@ -166,7 +175,7 @@ public class ActionTool {
         };
     }
 
-    private Action beforeTool(Method method, IAction iAction) {
+    private Action beforeTool(Member member, IAction iAction) {
         ParamTool paramTool = new ParamTool(utils.getTAG());
         return new Action(utils.getTAG()) {
             @Override
@@ -178,7 +187,7 @@ public class ActionTool {
     }
 
     interface IActionTool {
-        Action action(Method method);
+        Action action(Member member);
     }
 
     public MethodTool methodTool() {

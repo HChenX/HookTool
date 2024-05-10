@@ -66,7 +66,6 @@ public class ClassTool {
      */
     @Nullable
     public Object newInstance(int index, Object... args) {
-        if (!safe.classSafe()) return null;
         try {
             if (utils.classes.size() < index || index < 0) {
                 logE(utils.getTAG(), "The index is out of range!");
@@ -84,7 +83,6 @@ public class ClassTool {
      * 不建议使用。
      */
     public ArrayList<Object> newInstanceAll(MapUtils<Object[]> mapUtils) {
-        if (!safe.classSafe()) return null;
         utils.newInstances.clear();
         if (utils.newInstances.size() != mapUtils.getHashMap().size()) {
             logE(utils.getTAG(), "The length of the instance parameter list is inconsistent!");

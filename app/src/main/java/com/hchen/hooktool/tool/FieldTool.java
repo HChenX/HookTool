@@ -27,7 +27,6 @@ public class FieldTool {
     }
 
     public FieldTool findIndexField(int index, String name) {
-        if (!safe.classSafe()) return utils.getFieldTool();
         utils.findField = null;
         if (utils.classes.isEmpty()) {
             logE(utils.getTAG(), "The class list is empty!");

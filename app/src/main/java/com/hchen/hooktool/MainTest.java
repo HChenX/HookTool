@@ -8,9 +8,10 @@ public class MainTest {
         new HCHook().classTool().findClass("")
                 .findClass("")
                 .findClass("")
-                .methodTool().getNextMethod("").after(
+                .methodTool().getMethod("").after(
                         null
-                ).getNextMethod("").allAction(new IAllAction() {
+                ).next().getMethod("").allAction(new IAllAction() {
+
                     @Override
                     public void before(ParamTool param) throws Throwable {
 
@@ -20,6 +21,6 @@ public class MainTest {
                     public void after(ParamTool param) throws Throwable {
 
                     }
-                });
+                }).getAnyConstructor().doNothing();
     }
 }

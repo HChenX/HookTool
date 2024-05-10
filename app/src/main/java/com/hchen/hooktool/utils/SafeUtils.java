@@ -28,13 +28,6 @@ public class SafeUtils {
         return false;
     }
 
-    public boolean classSafe() {
-        // if (utils.findClass != null) return true;
-        if (!utils.classes.isEmpty()) return true;
-        logE(utils.getTAG(), "Class is null!");
-        return false;
-    }
-
     public boolean fieldSafe() {
         if (utils.findField != null) return true;
         logE(utils.getTAG(), "Field is null!");
