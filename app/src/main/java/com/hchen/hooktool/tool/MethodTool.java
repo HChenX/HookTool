@@ -27,25 +27,28 @@ public class MethodTool {
         clear();
     }
 
-    public MethodTool getMethod(String name, Class<?>... clzzs) {
+    /**
+     * 适用于仅获取一个类的情况。
+     */
+    public ActionTool getMethod(String name, Class<?>... clzzs) {
         return getIndexMethod(0, name, clzzs);
     }
 
     /**
      * 按顺序索引类并查找方法。
      */
-    public MethodTool getNextMethod(String name, Class<?>... clzzs) {
+    public ActionTool getNextMethod(String name, Class<?>... clzzs) {
         if (utils.classes.size() != -1) {
             if (utils.classes.size() < next) {
                 logW(utils.getTAG(), "no next class can get!");
-                return utils.getMethodTool();
+                return utils.getActionTool();
             }
-            MethodTool methodTool = getIndexMethod(next, name, clzzs);
+            ActionTool actionTool = getIndexMethod(next, name, clzzs);
             next = next + 1;
-            return methodTool;
+            return actionTool;
         } else {
             logW(utils.getTAG(), "class count is -1, can't get next!");
-            return utils.getMethodTool();
+            return utils.getActionTool();
         }
     }
 
@@ -56,29 +59,24 @@ public class MethodTool {
 
     /**
      * 根据索引获取指定索引类中的指定方法，请注意多次调用查找同索引类中的方法，上次查找到的方法将会被覆盖！
-     *
-     * @param index 索引
-     * @param name  类名
-     * @param clzzs 参数
-     * @return this
      */
-    public MethodTool getIndexMethod(int index, String name, Class<?>... clzzs) {
-        if (!safe.classSafe()) return utils.getMethodTool();
+    public ActionTool getIndexMethod(int index, String name, Class<?>... clzzs) {
+        if (!safe.classSafe()) return utils.getActionTool();
         if (utils.classes.isEmpty()) {
             logW(utils.getTAG(), "The class list is empty!");
-            return utils.getMethodTool();
+            return utils.getActionTool();
         }
         if (utils.classes.size() < index) {
             logW(utils.getTAG(), "classes size < index! this method will is empty!");
             // utils.methods.put(index, new ArrayList<>());
-            return utils.getMethodTool();
+            return utils.getActionTool();
         }
         ArrayList<Method> arrayList = new ArrayList<>();
         Class<?> c = utils.classes.get(index);
         if (c == null) {
             logW(utils.getTAG(), "getMethod but class is null!");
             utils.methods.put(index, new ArrayList<>());
-            return utils.getMethodTool();
+            return utils.getActionTool();
         }
         try {
             arrayList.add(c.getMethod(name, clzzs));
@@ -87,7 +85,8 @@ public class MethodTool {
                     Arrays.toString(clzzs) + " e: " + e);
         }
         utils.methods.put(index, arrayList);
-        return utils.getMethodTool();
+        utils.actionTool.methods = arrayList;
+        return utils.getActionTool();
     }
 
     /**
@@ -181,6 +180,10 @@ public class MethodTool {
 
     public HCHook hcHook() {
         return utils.getHCHook();
+    }
+
+    public ActionTool actionTool() {
+        return utils.getActionTool();
     }
 
     public ClassTool classTool() {

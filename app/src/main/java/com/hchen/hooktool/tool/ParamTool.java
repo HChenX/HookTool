@@ -16,7 +16,7 @@ public class ParamTool extends ParamUtils {
         TAG = tag;
     }
 
-    protected void setParam(XC_MethodHook.MethodHookParam param) {
+    public void setParam(XC_MethodHook.MethodHookParam param) {
         this.param = param;
     }
 

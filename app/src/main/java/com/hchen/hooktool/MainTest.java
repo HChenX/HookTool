@@ -1,6 +1,6 @@
 package com.hchen.hooktool;
 
-import com.hchen.hooktool.callback.IAction;
+import com.hchen.hooktool.callback.IAllAction;
 import com.hchen.hooktool.tool.ParamTool;
 
 public class MainTest {
@@ -8,9 +8,17 @@ public class MainTest {
         new HCHook().classTool().findClass("")
                 .findClass("")
                 .findClass("")
-                .methodTool().getNextMethod("").hcHook().after(new IAction() {
+                .methodTool().getNextMethod("").after(
+                        null
+                ).getNextMethod("").allAction(new IAllAction() {
                     @Override
-                    public void action(ParamTool param) {
+                    public void before(ParamTool param) throws Throwable {
+
+                    }
+
+                    @Override
+                    public void after(ParamTool param) throws Throwable {
+
                     }
                 });
     }

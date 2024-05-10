@@ -1,11 +1,13 @@
 [versions]
-agp = "8.2.0"
+agp = "8.2.2"
+annotationsVersion = "23.0.0"
 manifoldExt = "2024.1.12"
 manifoldExtRt = "2024.1.12"
 xposed = "82"
 annotations = "28.0.0"
 
 [libraries]
+jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "annotationsVersion" }
 manifold-ext-rt = { module = "systems.manifold:manifold-ext-rt", version.ref = "manifoldExtRt" }
 systems-manifold-ext = { module = "systems.manifold:manifold-ext", version.ref = "manifoldExt" }
 xposed = { group = "de.robv.android.xposed", name = "api", version.ref = "xposed" }

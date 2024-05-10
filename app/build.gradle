@@ -60,6 +60,7 @@ dependencies {
     compileOnly libs.xposed
     // compileOnly libs.systems.manifold.ext
     implementation libs.annotations
+    // implementation libs.jetbrains.annotations
     // implementation libs.manifold.ext.rt
 }
 

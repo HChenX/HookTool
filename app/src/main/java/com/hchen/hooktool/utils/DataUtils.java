@@ -1,7 +1,7 @@
 package com.hchen.hooktool.utils;
 
 import com.hchen.hooktool.HCHook;
-import com.hchen.hooktool.callback.IAction;
+import com.hchen.hooktool.tool.ActionTool;
 import com.hchen.hooktool.tool.ClassTool;
 import com.hchen.hooktool.tool.FieldTool;
 import com.hchen.hooktool.tool.MethodTool;
@@ -23,6 +23,7 @@ public class DataUtils {
     public ClassTool classTool = null;
     public FieldTool fieldTool = null;
     public MethodTool methodTool = null;
+    public ActionTool actionTool = null;
     public SafeUtils safeUtils = null;
     public static XC_LoadPackage.LoadPackageParam lpparam = null;
     public static ClassLoader classLoader = null;
@@ -33,7 +34,6 @@ public class DataUtils {
     public ArrayList<Object> newInstances = new ArrayList<>();
     public Field findField = null;
     // private Method method = null;
-    public IAction iAction = null;
     public final MapUtils<ArrayList<Method>> methods = new MapUtils<>();
     public final MapUtils<Constructor<?>[]> constructors = new MapUtils<>();
 
@@ -42,6 +42,13 @@ public class DataUtils {
         if (hcHook == null)
             throw new RuntimeException(getTAG() + ": HCHook is null!!");
         return hcHook;
+    }
+
+    public ActionTool getActionTool() {
+        ActionTool actionTool = this.actionTool;
+        if (actionTool == null)
+            throw new RuntimeException(getTAG() + ": ActionTool is null!!");
+        return actionTool;
     }
 
     public ClassTool getClassTool() {

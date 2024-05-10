@@ -1,6 +1,7 @@
 package com.hchen.hooktool.utils;
 
 import static com.hchen.hooktool.log.XposedLog.logE;
+import static com.hchen.hooktool.log.XposedLog.logW;
 import static com.hchen.hooktool.utils.DataUtils.TAG;
 
 import com.hchen.hooktool.HookInit;
@@ -38,5 +39,13 @@ public class SafeUtils {
         if (utils.findField != null) return true;
         logE(utils.getTAG(), "Field is null!");
         return false;
+    }
+
+    public boolean actionSafe(String name, Object iAction) {
+        if (iAction == null) {
+            logW(utils.getTAG(), name + " is null!");
+            return false;
+        }
+        return true;
     }
 }
