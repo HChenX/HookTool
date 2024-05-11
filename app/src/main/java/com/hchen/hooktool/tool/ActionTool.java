@@ -179,10 +179,16 @@ public class ActionTool {
             case "before", "returnResult", "doNothing" -> {
                 return data.before;
             }
+            case "allAction" -> {
+                if (data.after || data.before) {
+                    return true;
+                }
+            }
             default -> {
                 return false;
             }
         }
+        return false;
     }
 
     private void setState(String name, MemberData data) {
