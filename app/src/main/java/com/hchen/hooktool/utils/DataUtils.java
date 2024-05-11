@@ -26,7 +26,7 @@ public class DataUtils {
     public SafeUtils safeUtils = null;
     public static XC_LoadPackage.LoadPackageParam lpparam = null;
     public static ClassLoader classLoader = null;
-    public ClassLoader mClassLoader = null;
+    public ClassLoader mCustomClassLoader = null;
     public Class<?> findClass = null;
     public MapUtils<Class<?>> classes = new MapUtils<>();
     // public ArrayList<Class<?>> classes = new ArrayList<>();
@@ -35,6 +35,11 @@ public class DataUtils {
     // private Method method = null;
     public final MapUtils<ArrayList<Member>> methods = new MapUtils<>();
     public final MapUtils<Member[]> constructors = new MapUtils<>();
+
+    public ClassLoader getClassLoader() {
+        if (mCustomClassLoader != null) return mCustomClassLoader;
+        return classLoader;
+    }
 
     public HCHook getHCHook() {
         HCHook hcHook = this.hcHook;

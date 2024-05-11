@@ -11,7 +11,7 @@ import com.hchen.hooktool.utils.DataUtils;
 import com.hchen.hooktool.utils.SafeUtils;
 
 public class HCHook {
-    private DataUtils utils;
+    private final DataUtils utils;
 
     static {
         if (SafeUtils.initSafe()) {
@@ -51,7 +51,7 @@ public class HCHook {
     }
 
     public HCHook setClassLoader(ClassLoader classLoader) {
-        utils.mClassLoader = classLoader;
+        utils.mCustomClassLoader = classLoader;
         return utils.getHCHook();
     }
 }

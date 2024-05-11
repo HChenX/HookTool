@@ -25,10 +25,16 @@ public class ActionTool {
         this.safe = data.safeUtils;
     }
 
+    /**
+     * {@link ActionTool#allAction(int, IAllAction)}
+     */
     public MethodTool allAction(IAllAction iAllAction) {
         return allAction(-1, iAllAction);
     }
 
+    /**
+     * 使用全部回调接口
+     */
     public MethodTool allAction(int index, IAllAction iAllAction) {
         if (safe.actionSafe("iAllAction", iAllAction)) {
             hookTool("allAction", index, new IActionTool() {
@@ -41,10 +47,16 @@ public class ActionTool {
         return utils.getMethodTool();
     }
 
+    /**
+     * {@link ActionTool#after(int, IAction)}
+     */
     public MethodTool after(IAction iAction) {
         return after(-1, iAction);
     }
 
+    /**
+     * 使用 after
+     */
     public MethodTool after(int index, IAction iAction) {
         if (safe.actionSafe("iAction after", iAction)) {
             hookTool("after", index, new IActionTool() {
@@ -57,10 +69,16 @@ public class ActionTool {
         return utils.getMethodTool();
     }
 
+    /**
+     * {@link ActionTool#before(int, IAction)}
+     */
     public MethodTool before(IAction iAction) {
         return before(-1, iAction);
     }
 
+    /**
+     * 使用 before
+     */
     public MethodTool before(int index, IAction iAction) {
         if (safe.actionSafe("iAction before", iAction)) {
             hookTool("before", index, new IActionTool() {
@@ -73,10 +91,16 @@ public class ActionTool {
         return utils.getMethodTool();
     }
 
+    /**
+     * {@link ActionTool#returnResult(int, Object)}
+     */
     public void returnResult(final Object result) {
         returnResult(-1, result);
     }
 
+    /**
+     * 直接返回指定值
+     */
     public void returnResult(int index, final Object result) {
         hookTool("returnResult", index, new IActionTool() {
             @Override
@@ -91,10 +115,16 @@ public class ActionTool {
         });
     }
 
+    /**
+     * {@link ActionTool#doNothing(int)}
+     */
     public void doNothing() {
         doNothing(-1);
     }
 
+    /**
+     * 是 hook 方法失效
+     */
     public void doNothing(int index) {
         hookTool("doNothing", index, new IActionTool() {
             @Override
@@ -148,40 +178,43 @@ public class ActionTool {
     }
 
     private Action allActionTool(Member member, IAllAction iAllAction) {
-        ParamTool paramTool = new ParamTool(utils.getTAG());
+        ParamTool paramTool = new ParamTool(member, utils.getTAG());
+        StaticTool staticTool = new StaticTool(utils.getClassLoader(), utils.getTAG());
         return new Action(utils.getTAG()) {
             @Override
             protected void before(MethodHookParam param) throws Throwable {
                 paramTool.setParam(param);
-                iAllAction.before(paramTool);
+                iAllAction.before(paramTool, staticTool);
             }
 
             @Override
             protected void after(MethodHookParam param) throws Throwable {
                 paramTool.setParam(param);
-                iAllAction.after(paramTool);
+                iAllAction.after(paramTool, staticTool);
             }
         };
     }
 
     private Action afterTool(Member member, IAction iAction) {
-        ParamTool paramTool = new ParamTool(utils.getTAG());
+        ParamTool paramTool = new ParamTool(member, utils.getTAG());
+        StaticTool staticTool = new StaticTool(utils.getClassLoader(), utils.getTAG());
         return new Action(utils.getTAG()) {
             @Override
             protected void after(MethodHookParam param) throws Throwable {
                 paramTool.setParam(param);
-                iAction.action(paramTool);
+                iAction.action(paramTool, staticTool);
             }
         };
     }
 
     private Action beforeTool(Member member, IAction iAction) {
-        ParamTool paramTool = new ParamTool(utils.getTAG());
+        ParamTool paramTool = new ParamTool(member, utils.getTAG());
+        StaticTool staticTool = new StaticTool(utils.getClassLoader(), utils.getTAG());
         return new Action(utils.getTAG()) {
             @Override
             protected void before(MethodHookParam param) throws Throwable {
                 paramTool.setParam(param);
-                iAction.action(paramTool);
+                iAction.action(paramTool, staticTool);
             }
         };
     }

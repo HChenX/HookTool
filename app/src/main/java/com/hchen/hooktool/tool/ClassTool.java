@@ -29,17 +29,22 @@ public class ClassTool {
 
     public ClassTool findClass(String className) {
         if (!initSafe()) return utils.getClassTool();
+        if (utils.findClass != null) utils.findClass = null;
         try {
             utils.findClass = XposedHelpers.findClass(className,
-                    utils.mClassLoader == null ? classLoader : utils.mClassLoader);
+                    utils.mCustomClassLoader == null ? classLoader : utils.mCustomClassLoader);
         } catch (XposedHelpers.ClassNotFoundError e) {
             logE(utils.getTAG(), "The specified class could not be found: " + className + " e: " + e);
             utils.findClass = null;
         }
         // utils.classes.add(utils.findClass);
         utils.classes.put(utils.findClass);
-        utils.findClass = null;
         return utils.getClassTool();
+    }
+
+    @Nullable
+    public Class<?> get() {
+        return utils.findClass;
     }
 
     public int size() {

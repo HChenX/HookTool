@@ -1,5 +1,7 @@
 package com.hchen.hooktool;
 
+import android.support.annotation.Nullable;
+
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 public class HookInit {
@@ -46,12 +48,17 @@ public class HookInit {
         throw new Throwable("Failed to obtain LoadPackageParam, it is null!");
     }
 
-    public static ClassLoader getClassLoader() throws Throwable {
+    public static ClassLoader getClassLoader() {
         if (classLoader != null) return classLoader;
         if (canUseSystemClassLoader) {
             return getSystemClassLoader();
         }
-        throw new Throwable("Failed to obtain ClassLoader! It is null!");
+        throw new RuntimeException("Failed to obtain ClassLoader! It is null!");
+    }
+
+    @Nullable
+    public static ClassLoader getClassLoaderIfExists() {
+        return classLoader;
     }
 
     public static ClassLoader getSystemClassLoader() {
