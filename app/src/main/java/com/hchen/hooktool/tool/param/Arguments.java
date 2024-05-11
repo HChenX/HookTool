@@ -2,7 +2,7 @@ package com.hchen.hooktool.tool.param;
 
 import static com.hchen.hooktool.log.XposedLog.logE;
 
-import android.support.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Member;
 

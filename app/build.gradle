@@ -59,7 +59,9 @@ tasks.register('androidSourcesJar', Jar) {
 dependencies {
     compileOnly libs.xposed
     // compileOnly libs.systems.manifold.ext
-    implementation libs.annotations
+    // implementation libs.annotations
+    implementation libs.annotations.v130
+    // implementation libs.androidx.annotation.jvm
     // implementation libs.jetbrains.annotations
     // implementation libs.manifold.ext.rt
 }

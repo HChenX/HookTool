@@ -1,8 +1,8 @@
 package com.hchen.hooktool.tool;
 
-import android.support.annotation.Nullable;
-
 import com.hchen.hooktool.tool.param.Arguments;
+
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Member;
 

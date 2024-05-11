@@ -5,12 +5,12 @@ import static com.hchen.hooktool.log.XposedLog.logE;
 import static com.hchen.hooktool.log.XposedLog.logW;
 import static com.hchen.hooktool.utils.DataUtils.classLoader;
 
-import android.support.annotation.Nullable;
-
 import com.hchen.hooktool.HCHook;
 import com.hchen.hooktool.data.MemberData;
 import com.hchen.hooktool.utils.DataUtils;
 import com.hchen.hooktool.utils.MapUtils;
+
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
