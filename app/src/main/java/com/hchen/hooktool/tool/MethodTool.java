@@ -102,7 +102,6 @@ public class MethodTool {
         if (data == null) {
             logW(utils.getTAG(), "memberData is null, cant find: " + name + " index: " + index);
             utils.members.put(index, null);
-            utils.actionTool.members = null;
             return utils.getActionTool();
         }
         Class<?> c = data.mClass;
@@ -110,14 +109,12 @@ public class MethodTool {
             logW(utils.getTAG(), "class is null! cant find: " + name + " index: " + index);
             // utils.methods.put(index, new ArrayList<>());
             utils.members.put(index, data);
-            utils.actionTool.members = null;
             return utils.getActionTool();
         }
         data.mMethod = iMethodTool.doFindMethod(c, name, clzzs);
         data.isHooked = false;
         data.mConstructor = null;
         utils.members.put(index, data);
-        utils.actionTool.members = data.mMethod;
         return utils.getActionTool();
     }
 
@@ -184,13 +181,11 @@ public class MethodTool {
         if (data == null) {
             logW(utils.getTAG(), "memberData is null, index: " + index);
             utils.members.put(index, null);
-            utils.actionTool.members = null;
             return utils.getActionTool();
         }
         Class<?> c = data.mClass;
         if (c == null) {
             logW(utils.getTAG(), "class is null! index: " + index);
-            utils.actionTool.members = null;
             utils.members.put(index, data);
             // utils.constructors.put(new Constructor[]{});
             return utils.getActionTool();
@@ -200,7 +195,6 @@ public class MethodTool {
         data.mMethod = null;
         data.isHooked = false;
         utils.members.put(index, data);
-        utils.actionTool.members = members;
         return utils.getActionTool();
     }
 

@@ -5,12 +5,15 @@ import static com.hchen.hooktool.log.XposedLog.logW;
 
 import android.support.annotation.Nullable;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+
 import de.robv.android.xposed.XposedHelpers;
 
 /**
  * 静态操作专用工具。
  */
-public class StaticTool {
+public class StaticTool<T> {
     private final String TAG;
     private ClassLoader classLoader;
     private Class<?> findClass = null;
@@ -24,12 +27,17 @@ public class StaticTool {
         this.classLoader = classLoader;
     }
 
-    public StaticTool setClassLoader(ClassLoader classLoader) {
+    public StaticTool<T> setClassLoader(ClassLoader classLoader) {
         this.classLoader = classLoader;
         return this;
     }
 
-    public StaticTool findClass(String name) {
+    public StaticTool<T> setClass(Class<?> clzz) {
+        findClass = clzz;
+        return this;
+    }
+
+    public StaticTool<T> findClass(String name) {
         try {
             if (classLoader == null) {
                 logE(TAG, "classLoader is null!");
@@ -44,15 +52,20 @@ public class StaticTool {
     }
 
     @Nullable
+    public Class<?> getFindClass() {
+        return findClass;
+    }
+
+    @Nullable
     public Class<?> get() {
         return findClass;
     }
 
     @Nullable
-    public Object newInstance(Object... objects) {
+    public Object newInstance(T... objects) {
         if (findClass != null) {
             try {
-                return XposedHelpers.newInstance(findClass, objects);
+                return XposedHelpers.newInstance(findClass, tToObject(objects));
             } catch (Throwable e) {
                 logE(TAG, "new instance: " + e);
             }
@@ -61,10 +74,10 @@ public class StaticTool {
     }
 
     @Nullable
-    public <T> T callStaticMethod(String name, Object... objects) {
+    public T callStaticMethod(String name, T... objs) {
         if (findClass != null) {
             try {
-                return (T) XposedHelpers.callStaticMethod(findClass, name, objects);
+                return (T) XposedHelpers.callStaticMethod(findClass, name, tToObject(objs));
             } catch (Throwable e) {
                 logE(TAG, "call static method: " + e);
             }
@@ -75,7 +88,7 @@ public class StaticTool {
     }
 
     @Nullable
-    public <T> T getStaticField(String name) {
+    public T getStaticField(String name) {
         if (findClass != null) {
             try {
                 return (T) XposedHelpers.getStaticObjectField(findClass, name);
@@ -111,7 +124,7 @@ public class StaticTool {
     }
 
     @Nullable
-    public <T> T getAdditionalStaticField(String key) {
+    public T getAdditionalStaticField(String key) {
         if (findClass != null) {
             try {
                 return (T) XposedHelpers.getAdditionalStaticField(findClass, key);
@@ -133,5 +146,10 @@ public class StaticTool {
         } else
             logW(TAG, "class is null, cant remove additional: " + key);
         return false;
+    }
+
+    private Object[] tToObject(T... ts) {
+        ArrayList<Object> list = new ArrayList<>(Arrays.asList(ts));
+        return list.toArray(new Object[ts.length]);
     }
 }

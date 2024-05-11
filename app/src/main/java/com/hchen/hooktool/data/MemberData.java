@@ -10,6 +10,10 @@ public class MemberData {
     public ArrayList<Member> mConstructor;
     public Field mField;
     public boolean isHooked;
+    public boolean allAction;
+
+    public boolean after;
+    public boolean before;
 
     public MemberData(Class<?> mClass) {
         this.mClass = mClass;

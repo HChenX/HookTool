@@ -17,7 +17,7 @@ import de.robv.android.xposed.XposedBridge;
 
 public class ActionTool {
     private final DataUtils utils;
-    protected ArrayList<Member> members = null;
+    // protected ArrayList<Member> members = null;
 
     public ActionTool(DataUtils data) {
         this.utils = data;
@@ -27,7 +27,7 @@ public class ActionTool {
      * {@link ActionTool#allAction(int, IAllAction)}
      */
     public MethodTool allAction(IAllAction iAllAction) {
-        return allAction(-1, iAllAction);
+        return allAction(utils.getCount(), iAllAction);
     }
 
     /**
@@ -49,7 +49,7 @@ public class ActionTool {
      * {@link ActionTool#after(int, IAction)}
      */
     public MethodTool after(IAction iAction) {
-        return after(-1, iAction);
+        return after(utils.getCount(), iAction);
     }
 
     /**
@@ -71,7 +71,7 @@ public class ActionTool {
      * {@link ActionTool#before(int, IAction)}
      */
     public MethodTool before(IAction iAction) {
-        return before(-1, iAction);
+        return before(utils.getCount(), iAction);
     }
 
     /**
@@ -93,7 +93,7 @@ public class ActionTool {
      * {@link ActionTool#returnResult(int, Object)}
      */
     public void returnResult(final Object result) {
-        returnResult(-1, result);
+        returnResult(utils.getCount(), result);
     }
 
     /**
@@ -117,7 +117,7 @@ public class ActionTool {
      * {@link ActionTool#doNothing(int)}
      */
     public void doNothing() {
-        doNothing(-1);
+        doNothing(utils.getCount());
     }
 
     /**
@@ -138,25 +138,6 @@ public class ActionTool {
     }
 
     private void hookTool(String name, int index, IActionTool tool) {
-        if (index == -1) {
-            if (members != null) {
-                if (!members.isEmpty()) {
-                    for (Member member : members) {
-                        try {
-                            XposedBridge.hookMethod(member, tool.action(member));
-                        } catch (Throwable e) {
-                            logE(utils.getTAG(), name + " hook method: " + member + " e: " + e);
-                        }
-                    }
-                } else {
-                    logW(utils.getTAG(), name + " members is empty, hook nothing.");
-                }
-            } else {
-                logW(utils.getTAG(), name + " members is null, cant use this action.");
-            }
-            members = null;
-            return;
-        }
         if (utils.members.size() > index) {
             MemberData data = utils.members.get(index);
             if (data != null) {
@@ -168,9 +149,8 @@ public class ActionTool {
                     logW(utils.getTAG(), name + " don't have anything can hook.");
                     return;
                 }
-                boolean isHooked = data.isHooked;
-                if (isHooked) {
-                    logW(utils.getTAG(), "this method or constructor is hooked! members: " + members);
+                if (isHooked(name, data)) {
+                    logW(utils.getTAG(), "this method or constructor is hooked [" + name + "]! members: " + members);
                     return;
                 }
                 for (Member member : members) {
@@ -180,7 +160,7 @@ public class ActionTool {
                         logE(utils.getTAG(), name + " hook method: " + member + " e: " + e);
                     }
                 }
-                data.isHooked = true;
+                setState(name, data);
                 utils.members.put(index, data);
             } else {
                 logW(utils.getTAG(), name + " member data is null!");
@@ -190,9 +170,32 @@ public class ActionTool {
         }
     }
 
+    private boolean isHooked(String name, MemberData data) {
+        if (data.allAction) return true;
+        switch (name) {
+            case "after" -> {
+                return data.after;
+            }
+            case "before", "returnResult", "doNothing" -> {
+                return data.before;
+            }
+            default -> {
+                return false;
+            }
+        }
+    }
+
+    private void setState(String name, MemberData data) {
+        switch (name) {
+            case "after" -> data.after = true;
+            case "before", "returnResult", "doNothing" -> data.before = true;
+            case "allAction" -> data.allAction = true;
+        }
+    }
+
     private Action allActionTool(Member member, IAllAction iAllAction) {
-        ParamTool paramTool = new ParamTool(member, utils.getTAG());
-        StaticTool staticTool = new StaticTool(utils.getClassLoader(), utils.getTAG());
+        ParamTool<Object> paramTool = new ParamTool<>(member, utils.getTAG());
+        StaticTool<Object> staticTool = new StaticTool<>(utils.getClassLoader(), utils.getTAG());
         return new Action(utils.getTAG()) {
             @Override
             protected void before(MethodHookParam param) throws Throwable {
@@ -209,8 +212,8 @@ public class ActionTool {
     }
 
     private Action afterTool(Member member, IAction iAction) {
-        ParamTool paramTool = new ParamTool(member, utils.getTAG());
-        StaticTool staticTool = new StaticTool(utils.getClassLoader(), utils.getTAG());
+        ParamTool<Object> paramTool = new ParamTool<>(member, utils.getTAG());
+        StaticTool<Object> staticTool = new StaticTool<>(utils.getClassLoader(), utils.getTAG());
         return new Action(utils.getTAG()) {
             @Override
             protected void after(MethodHookParam param) throws Throwable {
@@ -221,8 +224,8 @@ public class ActionTool {
     }
 
     private Action beforeTool(Member member, IAction iAction) {
-        ParamTool paramTool = new ParamTool(member, utils.getTAG());
-        StaticTool staticTool = new StaticTool(utils.getClassLoader(), utils.getTAG());
+        ParamTool<Object> paramTool = new ParamTool<>(member, utils.getTAG());
+        StaticTool<Object> staticTool = new StaticTool<>(utils.getClassLoader(), utils.getTAG());
         return new Action(utils.getTAG()) {
             @Override
             protected void before(MethodHookParam param) throws Throwable {

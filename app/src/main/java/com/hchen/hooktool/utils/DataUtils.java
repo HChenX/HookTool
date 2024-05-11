@@ -41,6 +41,10 @@ public class DataUtils {
         return classLoader;
     }
 
+    public int getCount() {
+        return next;
+    }
+
     public void reset() {
         next = 0;
     }

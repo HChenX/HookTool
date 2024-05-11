@@ -4,7 +4,7 @@ import com.hchen.hooktool.tool.ParamTool;
 import com.hchen.hooktool.tool.StaticTool;
 
 public interface IAllAction {
-    void before(ParamTool param, StaticTool staticTool) throws Throwable;
+    void before(ParamTool<Object> param, StaticTool<Object> staticTool) throws Throwable;
 
-    void after(ParamTool param, StaticTool staticTool) throws Throwable;
+    void after(ParamTool<Object> param, StaticTool<Object> staticTool) throws Throwable;
 }
