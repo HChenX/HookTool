@@ -7,8 +7,8 @@ import static de.robv.android.xposed.callbacks.XCallback.PRIORITY_HIGHEST;
 import com.hchen.hooktool.action.Action;
 import com.hchen.hooktool.callback.IAction;
 import com.hchen.hooktool.callback.IAllAction;
+import com.hchen.hooktool.data.MemberData;
 import com.hchen.hooktool.utils.DataUtils;
-import com.hchen.hooktool.utils.SafeUtils;
 
 import java.lang.reflect.Member;
 import java.util.ArrayList;
@@ -17,12 +17,10 @@ import de.robv.android.xposed.XposedBridge;
 
 public class ActionTool {
     private final DataUtils utils;
-    private final SafeUtils safe;
     protected ArrayList<Member> members = null;
 
     public ActionTool(DataUtils data) {
         this.utils = data;
-        this.safe = data.safeUtils;
     }
 
     /**
@@ -36,7 +34,7 @@ public class ActionTool {
      * 使用全部回调接口
      */
     public MethodTool allAction(int index, IAllAction iAllAction) {
-        if (safe.actionSafe("iAllAction", iAllAction)) {
+        if (actionSafe("iAllAction", iAllAction)) {
             hookTool("allAction", index, new IActionTool() {
                 @Override
                 public Action action(Member member) {
@@ -58,7 +56,7 @@ public class ActionTool {
      * 使用 after
      */
     public MethodTool after(int index, IAction iAction) {
-        if (safe.actionSafe("iAction after", iAction)) {
+        if (actionSafe("iAction after", iAction)) {
             hookTool("after", index, new IActionTool() {
                 @Override
                 public Action action(Member member) {
@@ -80,7 +78,7 @@ public class ActionTool {
      * 使用 before
      */
     public MethodTool before(int index, IAction iAction) {
-        if (safe.actionSafe("iAction before", iAction)) {
+        if (actionSafe("iAction before", iAction)) {
             hookTool("before", index, new IActionTool() {
                 @Override
                 public Action action(Member member) {
@@ -151,29 +149,44 @@ public class ActionTool {
                         }
                     }
                 } else {
-                    logW(utils.getTAG(), name + " methods is empty, hook nothing.");
+                    logW(utils.getTAG(), name + " members is empty, hook nothing.");
                 }
             } else {
-                logW(utils.getTAG(), name + " methods is null, cant use this action.");
+                logW(utils.getTAG(), name + " members is null, cant use this action.");
             }
             members = null;
             return;
         }
-        if (utils.methods.size() > index) {
-            ArrayList<Member> methods = utils.methods.get(index);
-            if (!methods.isEmpty()) {
-                for (Member member : methods) {
+        if (utils.members.size() > index) {
+            MemberData data = utils.members.get(index);
+            if (data != null) {
+                ArrayList<Member> members = data.mMethod;
+                if (members == null) {
+                    members = data.mConstructor;
+                }
+                if (members == null) {
+                    logW(utils.getTAG(), name + " don't have anything can hook.");
+                    return;
+                }
+                boolean isHooked = data.isHooked;
+                if (isHooked) {
+                    logW(utils.getTAG(), "this method or constructor is hooked! members: " + members);
+                    return;
+                }
+                for (Member member : members) {
                     try {
                         XposedBridge.hookMethod(member, tool.action(member));
                     } catch (Throwable e) {
                         logE(utils.getTAG(), name + " hook method: " + member + " e: " + e);
                     }
                 }
+                data.isHooked = true;
+                utils.members.put(index, data);
             } else {
-                logW(utils.getTAG(), name + " methods is empty!");
+                logW(utils.getTAG(), name + " member data is null!");
             }
         } else {
-            logW(utils.getTAG(), name + " methods size < index!");
+            logW(utils.getTAG(), name + " members size < index!");
         }
     }
 
@@ -217,6 +230,14 @@ public class ActionTool {
                 iAction.action(paramTool, staticTool);
             }
         };
+    }
+
+    public boolean actionSafe(String name, Object iAction) {
+        if (iAction == null) {
+            logW(utils.getTAG(), name + " is null!");
+            return false;
+        }
+        return true;
     }
 
     interface IActionTool {

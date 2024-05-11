@@ -3,42 +3,35 @@ package com.hchen.hooktool.tool;
 import static com.hchen.hooktool.log.XposedLog.logE;
 import static com.hchen.hooktool.log.XposedLog.logW;
 
-import android.support.annotation.Nullable;
-
 import com.hchen.hooktool.HCHook;
+import com.hchen.hooktool.data.MemberData;
 import com.hchen.hooktool.utils.DataUtils;
-import com.hchen.hooktool.utils.SafeUtils;
 
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import de.robv.android.xposed.XposedHelpers;
-
 public class MethodTool {
     private final DataUtils utils;
-    private final SafeUtils safe;
-    private int next = 0;
 
     public MethodTool(DataUtils utils) {
         this.utils = utils;
-        this.safe = utils.safeUtils;
         clear();
     }
 
-    public MethodTool resetCount() {
-        next = 0;
+    public MethodTool reset() {
+        utils.reset();
         return utils.getMethodTool();
     }
 
     public MethodTool next() {
-        next = next + 1;
+        utils.next();
         return utils.getMethodTool();
     }
 
     public MethodTool back() {
-        next = next - 1;
+        utils.back();
         return utils.getMethodTool();
     }
 
@@ -46,14 +39,14 @@ public class MethodTool {
      * 按顺序索引类并查找方法。
      */
     public ActionTool getMethod(String name, Class<?>... clzzs) {
-        return getIndexMethod(next, name, clzzs);
+        return getIndexMethod(utils.next, name, clzzs);
     }
 
     /**
      * 根据索引获取指定索引类中的指定方法，请注意多次调用查找同索引类中的方法，上次查找到的方法将会被覆盖！
      */
     public ActionTool getIndexMethod(int index, String name, Class<?>... clzzs) {
-        ArrayList<Member> method = findMethod(index, name, new IMethodTool() {
+        return findMethod(index, name, new IMethodTool() {
             @Override
             public ArrayList<Member> doFindMethod(Class<?> c, String name, Class<?>... classes) {
                 ArrayList<Member> arrayList = new ArrayList<>();
@@ -61,32 +54,29 @@ public class MethodTool {
                     arrayList.add(c.getMethod(name, classes));
                 } catch (NoSuchMethodException e) {
                     logE(utils.getTAG(), "The method to get the claim failed name: " + name +
-                            " class: " + c + " obj: " + Arrays.toString(classes) + " e: " + e);
+                            " class: " + c + " classes: " + Arrays.toString(classes) + " \ne: " + e);
                 }
                 return arrayList;
             }
         }, clzzs);
-        if (method == null) {
-            return utils.getActionTool();
-        }
-        utils.methods.put(index, method);
-        utils.actionTool.members = method;
-        return utils.getActionTool();
-    }
-
-    public ActionTool getAnyMethod(String name) {
-        return getAnyMethodByIndex(next, name);
     }
 
     /**
-     * 获取指定索引类中全部方法。
+     * 查找全部名称匹配方法。
+     */
+    public ActionTool getAnyMethod(String name) {
+        return getAnyMethodByIndex(utils.next, name);
+    }
+
+    /**
+     * 获取指定索引类中全部名称匹配方法。
      */
     public ActionTool getAnyMethodByIndex(int index, String name) {
-        ArrayList<Member> methods = findMethod(index, name, new IMethodTool() {
+        return findMethod(index, name, new IMethodTool() {
             @Override
             public ArrayList<Member> doFindMethod(Class<?> c, String name, Class<?>... classes) {
                 ArrayList<Member> list = new ArrayList<>();
-                Method[] methods = c.getDeclaredMethods();
+                Method[] methods = c.getMethods();
                 for (Method m : methods) {
                     if (name.equals(m.getName())) {
                         list.add(m);
@@ -95,44 +85,63 @@ public class MethodTool {
                 return list;
             }
         });
-        if (methods == null) {
-            return utils.getActionTool();
-        }
-        utils.methods.put(index, methods);
-        utils.actionTool.members = methods;
-        return utils.getActionTool();
     }
 
-    private ArrayList<Member> findMethod(int index, String name, IMethodTool iMethodTool, Class<?>... clzzs) {
+    private ActionTool findMethod(int index, String name, IMethodTool iMethodTool, Class<?>... clzzs) {
         if (utils.classes.isEmpty()) {
             logW(utils.getTAG(), "the class list is empty! cant find method: " + name);
-            return null;
+            return utils.getActionTool();
         }
         if (utils.classes.size() - 1 < index) {
-            logW(utils.getTAG(), "classes size < index! this method [" + name + "] will is empty! size: " +
+            logW(utils.getTAG(), "classes size < index! the method [" + name + "] cant find! size: " +
                     (utils.classes.size() - 1) + " index: " + index);
             // utils.methods.put(index, new ArrayList<>());
-            return null;
+            return utils.getActionTool();
         }
-        Class<?> c = utils.classes.get(index);
+        MemberData data = utils.classes.get(index);
+        if (data == null) {
+            logW(utils.getTAG(), "memberData is null, cant find: " + name + " index: " + index);
+            utils.members.put(index, null);
+            utils.actionTool.members = null;
+            return utils.getActionTool();
+        }
+        Class<?> c = data.mClass;
         if (c == null) {
             logW(utils.getTAG(), "class is null! cant find: " + name + " index: " + index);
             // utils.methods.put(index, new ArrayList<>());
-            return new ArrayList<>();
+            utils.members.put(index, data);
+            utils.actionTool.members = null;
+            return utils.getActionTool();
         }
-        return iMethodTool.doFindMethod(c, name, clzzs);
+        data.mMethod = iMethodTool.doFindMethod(c, name, clzzs);
+        data.isHooked = false;
+        data.mConstructor = null;
+        utils.members.put(index, data);
+        utils.actionTool.members = data.mMethod;
+        return utils.getActionTool();
     }
 
+    //--------------------构造函数---------------------
+
+    /**
+     * 按顺序获取指定构造函数。
+     */
     public ActionTool getConstructor(Class<?>... obj) {
-        return getConstructorByIndex(next, obj);
+        return getConstructorByIndex(utils.next, obj);
     }
 
+    /**
+     * 按顺序获取全部构造函数。
+     */
     public ActionTool getAnyConstructor() {
-        return getConstructorByIndex(next);
+        return getAnyConstructorByIndex(utils.next);
     }
 
+    /**
+     * 按索引获取指定构造函数。
+     */
     public ActionTool getConstructorByIndex(int index, Class<?>... classes) {
-        ArrayList<Member> members = findConstructor(index, new IConstructorTool() {
+        return findConstructor(index, new IConstructorTool() {
             @Override
             public ArrayList<Member> doFindConstructor(Class<?> c, Class<?>... classes) {
                 ArrayList<Member> members = new ArrayList<>();
@@ -145,63 +154,54 @@ public class MethodTool {
                 return members;
             }
         }, classes);
-        if (members == null) {
-            return utils.getActionTool();
-        }
-        utils.constructors.put(index, members.toArray(new Member[0]));
-        utils.actionTool.members = members;
-        return utils.getActionTool();
     }
 
+    /**
+     * 按索引获取全部构造函数。
+     */
     private ActionTool getAnyConstructorByIndex(int index) {
-        ArrayList<Member> members = findConstructor(index, new IConstructorTool() {
+        return findConstructor(index, new IConstructorTool() {
             @Override
             public ArrayList<Member> doFindConstructor(Class<?> c, Class<?>... classes) {
                 return new ArrayList<>(Arrays.asList(c.getDeclaredConstructors()));
             }
         });
-        if (members == null) {
-            return utils.getActionTool();
-        }
-        utils.constructors.put(index, members.toArray(new Member[0]));
-        utils.actionTool.members = members;
-        return utils.getActionTool();
     }
 
-    private ArrayList<Member> findConstructor(int index, IConstructorTool iConstructorTool, Class<?>... classes) {
+    private ActionTool findConstructor(int index, IConstructorTool iConstructorTool, Class<?>... classes) {
         if (utils.classes.isEmpty()) {
             logW(utils.getTAG(), "The class list is empty!");
-            return null;
+            return utils.getActionTool();
         }
         if (utils.classes.size() - 1 < index) {
-            logW(utils.getTAG(), "classes size < index! this constructor will is empty! size: " +
+            logW(utils.getTAG(), "classes size < index! the constructor cant find! size: " +
                     (utils.classes.size() - 1) + " index: " + index);
             // utils.methods.put(index, new ArrayList<>());
-            return null;
+            return utils.getActionTool();
         }
         // utils.constructors.add(utils.classes.get(0).getConstructor(obj));
-        Class<?> c = utils.classes.get(index);
+        MemberData data = utils.classes.get(index);
+        if (data == null) {
+            logW(utils.getTAG(), "memberData is null, index: " + index);
+            utils.members.put(index, null);
+            utils.actionTool.members = null;
+            return utils.getActionTool();
+        }
+        Class<?> c = data.mClass;
         if (c == null) {
             logW(utils.getTAG(), "class is null! index: " + index);
+            utils.actionTool.members = null;
+            utils.members.put(index, data);
             // utils.constructors.put(new Constructor[]{});
-            return new ArrayList<>();
+            return utils.getActionTool();
         }
-        return iConstructorTool.doFindConstructor(c, classes);
-    }
-
-    @Nullable
-    public Object callStaticMethod(String method, Object... args) {
-        try {
-            if (utils.classes.isEmpty()) {
-                logE(utils.getTAG(), "The class list is empty!");
-                return utils.getMethodTool();
-            }
-            return XposedHelpers.callStaticMethod(utils.classes.get(0), method, args);
-        } catch (Throwable e) {
-            logE(utils.getTAG(), "Error calling method: " + method + " class: " + utils.findClass
-                    + " args: " + Arrays.toString(args));
-        }
-        return null;
+        ArrayList<Member> members = iConstructorTool.doFindConstructor(c, classes);
+        data.mConstructor = members;
+        data.mMethod = null;
+        data.isHooked = false;
+        utils.members.put(index, data);
+        utils.actionTool.members = members;
+        return utils.getActionTool();
     }
 
     public HCHook hcHook() {
@@ -221,8 +221,7 @@ public class MethodTool {
     }
 
     public void clear() {
-        if (!utils.methods.isEmpty()) utils.methods.clear();
-        if (!utils.constructors.isEmpty()) utils.constructors.clear();
+        if (!utils.members.isEmpty()) utils.members.clear();
     }
 
     interface IMethodTool {

@@ -1,13 +1,13 @@
 package com.hchen.hooktool.utils;
 
 import com.hchen.hooktool.HCHook;
+import com.hchen.hooktool.data.MemberData;
 import com.hchen.hooktool.tool.ActionTool;
 import com.hchen.hooktool.tool.ClassTool;
 import com.hchen.hooktool.tool.FieldTool;
 import com.hchen.hooktool.tool.MethodTool;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.Member;
 import java.util.ArrayList;
 
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
@@ -17,28 +17,40 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
  */
 public class DataUtils {
     public static String TAG = null;
-    public String mTAG = null;
+    public String mCustomTAG = null;
     public HCHook hcHook = null;
     public ClassTool classTool = null;
     public FieldTool fieldTool = null;
     public MethodTool methodTool = null;
     public ActionTool actionTool = null;
-    public SafeUtils safeUtils = null;
     public static XC_LoadPackage.LoadPackageParam lpparam = null;
     public static ClassLoader classLoader = null;
     public ClassLoader mCustomClassLoader = null;
     public Class<?> findClass = null;
-    public MapUtils<Class<?>> classes = new MapUtils<>();
+    public MapUtils<MemberData> classes = new MapUtils<>();
     // public ArrayList<Class<?>> classes = new ArrayList<>();
     public ArrayList<Object> newInstances = new ArrayList<>();
     public Field findField = null;
+    public int next = 0;
     // private Method method = null;
-    public final MapUtils<ArrayList<Member>> methods = new MapUtils<>();
-    public final MapUtils<Member[]> constructors = new MapUtils<>();
+    public final MapUtils<MemberData> members = new MapUtils<>();
+    // public final MapUtils<MemberData> constructors = new MapUtils<>();
 
     public ClassLoader getClassLoader() {
         if (mCustomClassLoader != null) return mCustomClassLoader;
         return classLoader;
+    }
+
+    public void reset() {
+        next = 0;
+    }
+
+    public void next() {
+        next = next + 1;
+    }
+
+    public void back() {
+        next = next - 1;
     }
 
     public HCHook getHCHook() {
@@ -76,12 +88,12 @@ public class DataUtils {
         return fieldTool;
     }
 
-    public void setMyTAG(String tag) {
-        mTAG = tag;
+    public void setCustomTAG(String tag) {
+        mCustomTAG = tag;
     }
 
     public String getTAG() {
-        if (mTAG != null) return mTAG;
+        if (mCustomTAG != null) return mCustomTAG;
         return TAG;
     }
 }

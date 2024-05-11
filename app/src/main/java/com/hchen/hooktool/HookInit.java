@@ -1,9 +1,14 @@
 package com.hchen.hooktool;
 
+import static com.hchen.hooktool.log.XposedLog.logI;
+
 import android.support.annotation.Nullable;
 
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
+/**
+ * 初始化类，请在 Hook 入口处初始化本类。
+ */
 public class HookInit {
     private static XC_LoadPackage.LoadPackageParam lpparam = null;
     private static ClassLoader classLoader = null;
@@ -22,6 +27,7 @@ public class HookInit {
         return TAG;
     }
 
+    /* 日志等级 */
     public static void setLogLevel(int level) {
         logLevel = level;
     }
@@ -30,6 +36,9 @@ public class HookInit {
         return logLevel;
     }
 
+    /**
+     * 设置在 classLoader 为 null 时允许使用系统 classLoader
+     */
     public static void setCanUseSystemClassLoader(boolean use) {
         canUseSystemClassLoader = use;
     }
@@ -41,14 +50,15 @@ public class HookInit {
         lpparam = loadPackageParam;
         classLoader = loadPackageParam.classLoader;
         packageName = lpparam.packageName;
+        logI(TAG, "init lpparam: " + lpparam + " classLoader: " + classLoader + " pkgName: " + packageName);
     }
 
-    public static XC_LoadPackage.LoadPackageParam getLoadPackageParam() throws Throwable {
+    protected static XC_LoadPackage.LoadPackageParam getLoadPackageParam() throws Throwable {
         if (lpparam != null) return lpparam;
         throw new Throwable("Failed to obtain LoadPackageParam, it is null!");
     }
 
-    public static ClassLoader getClassLoader() {
+    protected static ClassLoader getClassLoader() {
         if (classLoader != null) return classLoader;
         if (canUseSystemClassLoader) {
             return getSystemClassLoader();
@@ -57,11 +67,11 @@ public class HookInit {
     }
 
     @Nullable
-    public static ClassLoader getClassLoaderIfExists() {
+    private static ClassLoader getClassLoaderIfExists() {
         return classLoader;
     }
 
-    public static ClassLoader getSystemClassLoader() {
+    private static ClassLoader getSystemClassLoader() {
         return ClassLoader.getSystemClassLoader();
     }
 

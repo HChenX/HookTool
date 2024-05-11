@@ -3,7 +3,7 @@ plugins {
     id 'maven-publish'
 }
 
-def defVersion = 'v.1.3'
+def defVersion = 'v.0.1'
 
 group = 'com.github.HChenX'
 version = defVersion
@@ -16,11 +16,11 @@ android {
         minSdk 29
         targetSdk 34
         versionCode 1
-        versionName "1.0"
-        ndk {
-            // noinspection ChromeOsAbiSupport
-            abiFilters 'arm64-v8a', 'armeabi-v7a'
-        }
+        versionName defVersion
+        // ndk {
+        //   noinspection ChromeOsAbiSupport
+        //   abiFilters 'arm64-v8a', 'armeabi-v7a'
+        // }
     }
 
     buildTypes {

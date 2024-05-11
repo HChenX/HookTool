@@ -7,6 +7,9 @@ import android.support.annotation.Nullable;
 
 import de.robv.android.xposed.XposedHelpers;
 
+/**
+ * 静态操作专用工具。
+ */
 public class StaticTool {
     private final String TAG;
     private ClassLoader classLoader;

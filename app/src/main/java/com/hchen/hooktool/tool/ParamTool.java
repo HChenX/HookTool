@@ -32,6 +32,9 @@ public class ParamTool extends ParamUtils {
         return null;
     }
 
+    /**
+     * 获取原 Xposed param 参数。
+     */
     public XC_MethodHook.MethodHookParam originalParam() {
         return param;
     }

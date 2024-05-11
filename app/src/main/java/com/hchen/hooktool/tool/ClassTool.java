@@ -1,15 +1,16 @@
 package com.hchen.hooktool.tool;
 
+import static com.hchen.hooktool.HCHook.initSafe;
 import static com.hchen.hooktool.log.XposedLog.logE;
+import static com.hchen.hooktool.log.XposedLog.logW;
 import static com.hchen.hooktool.utils.DataUtils.classLoader;
-import static com.hchen.hooktool.utils.SafeUtils.initSafe;
 
 import android.support.annotation.Nullable;
 
 import com.hchen.hooktool.HCHook;
+import com.hchen.hooktool.data.MemberData;
 import com.hchen.hooktool.utils.DataUtils;
 import com.hchen.hooktool.utils.MapUtils;
-import com.hchen.hooktool.utils.SafeUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -18,17 +19,18 @@ import de.robv.android.xposed.XposedHelpers;
 
 public class ClassTool {
     private final DataUtils utils;
-    private final SafeUtils safe;
 
     public ClassTool(DataUtils utils) {
         this.utils = utils;
-        this.safe = utils.safeUtils;
         utils.classes.clear();
         utils.classTool = this;
     }
 
+    /**
+     * 查找指定类
+     */
     public ClassTool findClass(String className) {
-        if (!initSafe()) return utils.getClassTool();
+        initSafe();
         if (utils.findClass != null) utils.findClass = null;
         try {
             utils.findClass = XposedHelpers.findClass(className,
@@ -38,10 +40,11 @@ public class ClassTool {
             utils.findClass = null;
         }
         // utils.classes.add(utils.findClass);
-        utils.classes.put(utils.findClass);
+        utils.classes.put(new MemberData(utils.findClass));
         return utils.getClassTool();
     }
 
+    /* 获取本次查找到的类，必须在下次查找前调用才能获取本次。 */
     @Nullable
     public Class<?> get() {
         return utils.findClass;
@@ -53,9 +56,6 @@ public class ClassTool {
 
     /**
      * 实例列表第一个类。
-     *
-     * @param args 参数
-     * @return 实例
      */
     @Nullable
     public Object newInstance(Object... args) {
@@ -64,10 +64,6 @@ public class ClassTool {
 
     /**
      * 实例指定索引类，索引从 0 开始。
-     *
-     * @param index 索引
-     * @param args  参数
-     * @return 实例
      */
     @Nullable
     public Object newInstance(int index, Object... args) {
@@ -76,7 +72,10 @@ public class ClassTool {
                 logE(utils.getTAG(), "The index is out of range!");
                 return null;
             }
-            return XposedHelpers.newInstance(utils.classes.get(index), args);
+            MemberData memberData = utils.classes.get(index);
+            if (memberData != null && memberData.mClass != null) {
+                return XposedHelpers.newInstance(memberData.mClass, args);
+            } else logW(utils.getTAG(), "class is null, cant new instance. index: " + index);
         } catch (Throwable e) {
             logE(utils.getTAG(), "Error creating instance: " + utils.findClass + " args: " + Arrays.toString(args));
         }

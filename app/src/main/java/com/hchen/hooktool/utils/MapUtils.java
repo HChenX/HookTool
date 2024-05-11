@@ -23,6 +23,11 @@ public class MapUtils<V> {
         return this;
     }
 
+    // public MapUtils<K, V> put(K key, V value) {
+    //     hashMap.put(key, value);
+    //     return this;
+    // }
+
     public MapUtils<V> put(Integer key, V value) {
         if (count == -1) {
             hashMap.put(key, value);
@@ -40,6 +45,10 @@ public class MapUtils<V> {
 
     public V get(Integer key) {
         return hashMap.get(key);
+    }
+
+    public void remove(Integer key) {
+        hashMap.remove(key);
     }
 
     public boolean isEmpty() {
