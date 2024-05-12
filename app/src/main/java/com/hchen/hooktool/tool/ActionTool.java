@@ -221,6 +221,7 @@ public class ActionTool {
                 } else {
                     members = data.memberMap.get(0);
                     data.count = 0;
+                    // count = 1;
                 }
                 if (members == null) {
                     logW(utils.getTAG(), name + " don't have anything can hook. class is: " + data.mClass);
@@ -237,7 +238,7 @@ public class ActionTool {
                         logE(utils.getTAG(), name + " hook method: " + member + " e: " + e);
                     }
                 }
-                if (useMethodIndex) data.count = count + 1;
+                if (!useMethodIndex) data.count = count + 1;
                 setState(name, data, members);
                 utils.members.put(classIndex, data);
             } else {
