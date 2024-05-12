@@ -24,6 +24,7 @@ public class Arguments<T> extends ActAchieve<T> {
         return (T) param.args[index];
     }
 
+    // ------- 提供五个快捷获取 ---------
     @Nullable
     public T one() {
         return get(0);
@@ -62,6 +63,7 @@ public class Arguments<T> extends ActAchieve<T> {
         return this;
     }
 
+    // ------- 提供五个快捷设置 ---------
     @Nullable
     public Arguments<T> one(T value) {
         return set(0, value);

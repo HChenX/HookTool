@@ -8,6 +8,7 @@ import com.hchen.hooktool.action.Action;
 import com.hchen.hooktool.callback.IAction;
 import com.hchen.hooktool.callback.IAllAction;
 import com.hchen.hooktool.data.MemberData;
+import com.hchen.hooktool.data.StateEnum;
 import com.hchen.hooktool.utils.DataUtils;
 
 import java.lang.reflect.Member;
@@ -17,6 +18,8 @@ import de.robv.android.xposed.XposedBridge;
 
 public class ActionTool {
     private final DataUtils utils;
+    private int count = 0;
+    private int lastIndex = -1;
     // protected ArrayList<Member> members = null;
 
     public ActionTool(DataUtils data) {
@@ -34,8 +37,15 @@ public class ActionTool {
      * 使用全部回调接口
      */
     public MethodTool allAction(int index, IAllAction iAllAction) {
+        return allAction(index, -1, iAllAction);
+    }
+
+    /**
+     * {@link ActionTool#allAction(int, IAllAction)}
+     */
+    public MethodTool allAction(int classIndex, int methodIndex, IAllAction iAllAction) {
         if (actionSafe("iAllAction", iAllAction)) {
-            hookTool("allAction", index, new IActionTool() {
+            hookTool("allAction", classIndex, methodIndex, new IActionTool() {
                 @Override
                 public Action action(Member member) {
                     return allActionTool(member, iAllAction);
@@ -56,8 +66,16 @@ public class ActionTool {
      * 使用 after
      */
     public MethodTool after(int index, IAction iAction) {
+        return after(index, -1, iAction);
+    }
+
+
+    /**
+     * {@link ActionTool#after(int, IAction)}
+     */
+    public MethodTool after(int classIndex, int methodIndex, IAction iAction) {
         if (actionSafe("iAction after", iAction)) {
-            hookTool("after", index, new IActionTool() {
+            hookTool("after", classIndex, methodIndex, new IActionTool() {
                 @Override
                 public Action action(Member member) {
                     return afterTool(member, iAction);
@@ -78,8 +96,15 @@ public class ActionTool {
      * 使用 before
      */
     public MethodTool before(int index, IAction iAction) {
+        return before(index, -1, iAction);
+    }
+
+    /**
+     * {@link ActionTool#before(int, IAction)}
+     */
+    public MethodTool before(int classIndex, int methodIndex, IAction iAction) {
         if (actionSafe("iAction before", iAction)) {
-            hookTool("before", index, new IActionTool() {
+            hookTool("before", classIndex, methodIndex, new IActionTool() {
                 @Override
                 public Action action(Member member) {
                     return beforeTool(member, iAction);
@@ -88,6 +113,7 @@ public class ActionTool {
         }
         return utils.getMethodTool();
     }
+
 
     /**
      * {@link ActionTool#returnResult(int, Object)}
@@ -100,7 +126,14 @@ public class ActionTool {
      * 直接返回指定值
      */
     public void returnResult(int index, final Object result) {
-        hookTool("returnResult", index, new IActionTool() {
+        returnResult(index, -1, result);
+    }
+
+    /**
+     * {@link ActionTool#returnResult(int, Object)}
+     */
+    public void returnResult(int classIndex, int methodIndex, final Object result) {
+        hookTool("returnResult", classIndex, methodIndex, new IActionTool() {
             @Override
             public Action action(Member member) {
                 return new Action(utils.getTAG()) {
@@ -124,7 +157,14 @@ public class ActionTool {
      * 是 hook 方法失效
      */
     public void doNothing(int index) {
-        hookTool("doNothing", index, new IActionTool() {
+        doNothing(index, -1);
+    }
+
+    /**
+     * {@link ActionTool#doNothing(int)}
+     */
+    public void doNothing(int classIndex, int methodIndex) {
+        hookTool("doNothing", classIndex, methodIndex, new IActionTool() {
             @Override
             public Action action(Member member) {
                 return new Action(utils.getTAG(), PRIORITY_HIGHEST * 2) {
@@ -136,20 +176,41 @@ public class ActionTool {
             }
         });
     }
-
-    private void hookTool(String name, int index, IActionTool tool) {
-        if (utils.members.size() > index) {
-            MemberData data = utils.members.get(index);
+    
+    private void hookTool(String name, int classIndex, int methodIndex, IActionTool tool) {
+        boolean useMethodIndex = methodIndex != -1;
+        if (utils.members.size() > classIndex) {
+            MemberData data = utils.members.get(classIndex);
             if (data != null) {
-                ArrayList<Member> members = data.mMethod;
-                if (members == null) {
-                    members = data.mConstructor;
+                if (data.mClass == null) {
+                    logW(utils.getTAG(), "index: " + classIndex + " this data class is null!");
+                }
+                if (lastIndex == -1) lastIndex = classIndex;
+                else if (lastIndex != classIndex) {
+                    lastIndex = classIndex;
+                    count = 0;
+                }
+                int size = data.memberMap.size();
+                ArrayList<Member> members = null;
+                if (size > 2) {
+                    if (count + 1 > size) {
+                        logW(utils.getTAG(), name + " count > index, cant get memberMap! calss: " + data.mClass + "index: "
+                                + classIndex + " size: " + size + " count: " + count);
+                        return;
+                    }
+                    count = data.count;
+                    // utils.setMethodCount(data.count);
+                    members = data.memberMap.get(useMethodIndex ? methodIndex : count);
+                    // count = count + 1;
+                } else {
+                    members = data.memberMap.get(0);
+                    data.count = 0;
                 }
                 if (members == null) {
-                    logW(utils.getTAG(), name + " don't have anything can hook.");
+                    logW(utils.getTAG(), name + " don't have anything can hook. class is: " + data.mClass);
                     return;
                 }
-                if (isHooked(name, data)) {
+                if (isHooked(name, data, members)) {
                     logW(utils.getTAG(), "this method or constructor is hooked [" + name + "]! members: " + members);
                     return;
                 }
@@ -160,8 +221,9 @@ public class ActionTool {
                         logE(utils.getTAG(), name + " hook method: " + member + " e: " + e);
                     }
                 }
-                setState(name, data);
-                utils.members.put(index, data);
+                if (useMethodIndex) data.count = count + 1;
+                setState(name, data, members);
+                utils.members.put(classIndex, data);
             } else {
                 logW(utils.getTAG(), name + " member data is null!");
             }
@@ -170,17 +232,22 @@ public class ActionTool {
         }
     }
 
-    private boolean isHooked(String name, MemberData data) {
-        if (data.allAction) return true;
+    private void hookTool(String name, int classIndex, IActionTool tool) {
+        hookTool(name, classIndex, -1, tool);
+    }
+
+    private boolean isHooked(String name, MemberData data, ArrayList<Member> members) {
+        if (data.stateMap.get(members) == StateEnum.ALL) return true;
         switch (name) {
             case "after" -> {
-                return data.after;
+                return data.stateMap.get(members) == StateEnum.AFTER;
             }
             case "before", "returnResult", "doNothing" -> {
-                return data.before;
+                return data.stateMap.get(members) == StateEnum.BEFORE;
             }
             case "allAction" -> {
-                if (data.after || data.before) {
+                if (data.stateMap.get(members) == StateEnum.AFTER ||
+                        data.stateMap.get(members) == StateEnum.BEFORE) {
                     return true;
                 }
             }
@@ -191,11 +258,14 @@ public class ActionTool {
         return false;
     }
 
-    private void setState(String name, MemberData data) {
+    private void setState(String name, MemberData data, ArrayList<Member> members) {
         switch (name) {
-            case "after" -> data.after = true;
-            case "before", "returnResult", "doNothing" -> data.before = true;
-            case "allAction" -> data.allAction = true;
+            case "after" -> {
+                data.stateMap.put(members, StateEnum.AFTER);
+            }
+            case "before", "returnResult", "doNothing" ->
+                    data.stateMap.put(members, StateEnum.BEFORE);
+            case "allAction" -> data.stateMap.put(members, StateEnum.ALL);
         }
     }
 

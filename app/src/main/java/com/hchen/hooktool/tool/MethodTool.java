@@ -111,9 +111,10 @@ public class MethodTool {
             utils.members.put(index, data);
             return utils.getActionTool();
         }
-        data.mMethod = iMethodTool.doFindMethod(c, name, clzzs);
+        ArrayList<Member> members = iMethodTool.doFindMethod(c, name, clzzs);
+        data.memberMap.put(members);
         // data.isHooked = false;
-        data.mConstructor = null;
+        // data.mConstructor = null;
         utils.members.put(index, data);
         return utils.getActionTool();
     }
@@ -191,8 +192,9 @@ public class MethodTool {
             return utils.getActionTool();
         }
         ArrayList<Member> members = iConstructorTool.doFindConstructor(c, classes);
-        data.mConstructor = members;
-        data.mMethod = null;
+        data.memberMap.put(members);
+        // data.mConstructor = members;
+        // data.mMethod = null;
         // data.isHooked = false;
         utils.members.put(index, data);
         return utils.getActionTool();

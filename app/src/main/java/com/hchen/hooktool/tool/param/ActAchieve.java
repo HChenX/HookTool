@@ -36,7 +36,7 @@ public class ActAchieve<T> {
     }
 
     @Nullable
-    public T getObjectField(String name) {
+    public T getField(String name) {
         paramSafe();
         try {
             return (T) XposedHelpers.getObjectField(param.thisObject, name);
@@ -46,7 +46,7 @@ public class ActAchieve<T> {
         return null;
     }
 
-    public boolean setObjectField(String name, T key) {
+    public boolean setField(String name, T key) {
         paramSafe();
         try {
             XposedHelpers.setObjectField(param.thisObject, name, key);

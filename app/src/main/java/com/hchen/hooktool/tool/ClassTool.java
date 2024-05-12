@@ -26,6 +26,11 @@ public class ClassTool {
         utils.classTool = this;
     }
 
+    public MethodTool next() {
+        utils.next();
+        return utils.getMethodTool();
+    }
+
     /**
      * 查找指定类
      */
