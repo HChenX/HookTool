@@ -123,6 +123,11 @@ public class FieldTool {
         return utils.getClassTool();
     }
 
+    // 更棒的无缝衔接
+    public ClassTool findClass(String name) {
+        return utils.getClassTool().findClass(name);
+    }
+
     public MethodTool methodTool() {
         return utils.getMethodTool();
     }

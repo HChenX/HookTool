@@ -291,13 +291,13 @@ public class ActionTool {
         StaticTool<Object> staticTool = new StaticTool<>(utils.getClassLoader(), utils.getTAG());
         return new Action(utils.getTAG()) {
             @Override
-            protected void before(MethodHookParam param) throws Throwable {
+            protected void before(MethodHookParam param) {
                 paramTool.setParam(param);
                 iAllAction.before(paramTool, staticTool);
             }
 
             @Override
-            protected void after(MethodHookParam param) throws Throwable {
+            protected void after(MethodHookParam param) {
                 paramTool.setParam(param);
                 iAllAction.after(paramTool, staticTool);
             }
@@ -309,7 +309,7 @@ public class ActionTool {
         StaticTool<Object> staticTool = new StaticTool<>(utils.getClassLoader(), utils.getTAG());
         return new Action(utils.getTAG()) {
             @Override
-            protected void after(MethodHookParam param) throws Throwable {
+            protected void after(MethodHookParam param) {
                 paramTool.setParam(param);
                 iAction.action(paramTool, staticTool);
             }
@@ -321,7 +321,7 @@ public class ActionTool {
         StaticTool<Object> staticTool = new StaticTool<>(utils.getClassLoader(), utils.getTAG());
         return new Action(utils.getTAG()) {
             @Override
-            protected void before(MethodHookParam param) throws Throwable {
+            protected void before(MethodHookParam param) {
                 paramTool.setParam(param);
                 iAction.action(paramTool, staticTool);
             }

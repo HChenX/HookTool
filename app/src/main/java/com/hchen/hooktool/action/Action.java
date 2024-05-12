@@ -7,10 +7,10 @@ import de.robv.android.xposed.XC_MethodHook;
 public class Action extends XC_MethodHook {
     private String TAG = null;
 
-    protected void before(MethodHookParam param) throws Throwable {
+    protected void before(MethodHookParam param) {
     }
 
-    protected void after(MethodHookParam param) throws Throwable {
+    protected void after(MethodHookParam param) {
     }
 
     public Action(String tag) {

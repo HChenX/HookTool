@@ -3,6 +3,8 @@ package com.hchen.hooktool.tool;
 import static com.hchen.hooktool.log.XposedLog.logE;
 import static com.hchen.hooktool.log.XposedLog.logW;
 
+import com.hchen.hooktool.callback.IAction;
+import com.hchen.hooktool.callback.IAllAction;
 import com.hchen.hooktool.data.MemberData;
 import com.hchen.hooktool.utils.DataUtils;
 
@@ -223,9 +225,8 @@ public class MethodTool {
         return utils.getActionTool();
     }
 
-    // 更棒的无缝衔接
-    public ClassTool findClass(String name) {
-        return utils.getClassTool().findClass(name);
+    public ClassTool classTool() {
+        return utils.getClassTool();
     }
 
     public FieldTool fieldTool() {
@@ -235,6 +236,24 @@ public class MethodTool {
     /* 不建议使用 clear 本工具应该是一次性的。 */
     private void clear() {
         if (!utils.members.isEmpty()) utils.members.clear();
+    }
+
+    // 更棒的无缝衔接
+    public ClassTool findClass(String name) {
+        return utils.getClassTool().findClass(name);
+    }
+
+    // 优化调用，只提供基本用法，详细用法请获取工具类对象
+    public MethodTool allAction(IAllAction iAllAction) {
+        return utils.getActionTool().allAction(iAllAction);
+    }
+
+    public MethodTool before(IAction iAction) {
+        return utils.getActionTool().before(iAction);
+    }
+
+    public MethodTool after(IAction iAction) {
+        return utils.getActionTool().after(iAction);
     }
 
     private interface IMethodTool {
