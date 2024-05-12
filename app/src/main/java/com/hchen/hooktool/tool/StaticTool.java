@@ -57,11 +57,6 @@ public class StaticTool<T> {
     }
 
     @Nullable
-    public Class<?> get() {
-        return findClass;
-    }
-
-    @Nullable
     public Object newInstance(T... objects) {
         if (findClass != null) {
             try {

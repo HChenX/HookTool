@@ -3,9 +3,10 @@ package com.hchen.hooktool.tool;
 import static com.hchen.hooktool.log.XposedLog.logE;
 import static com.hchen.hooktool.log.XposedLog.logW;
 
-import com.hchen.hooktool.HCHook;
 import com.hchen.hooktool.data.MemberData;
 import com.hchen.hooktool.utils.DataUtils;
+
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
@@ -14,6 +15,8 @@ import java.util.Arrays;
 
 public class MethodTool {
     private final DataUtils utils;
+
+    private ArrayList<Member> findMember = null;
 
     public MethodTool(DataUtils utils) {
         this.utils = utils;
@@ -36,14 +39,23 @@ public class MethodTool {
     }
 
     /**
-     * 按顺序索引类并查找方法。
+     * 获取本次查找到的方法，下次查找方法将会覆盖本次。<br/>
+     * 可能是构造函数，也可能是方法。
      */
-    public ActionTool getMethod(String name, Class<?>... clzzs) {
-        return getIndexMethod(utils.next, name, clzzs);
+    @Nullable
+    public ArrayList<Member> getFindMember() {
+        return findMember;
     }
 
     /**
-     * 根据索引获取指定索引类中的指定方法，请注意多次调用查找同索引类中的方法，上次查找到的方法将会被覆盖！
+     * 按顺序索引类并查找方法。
+     */
+    public ActionTool getMethod(String name, Class<?>... clzzs) {
+        return getIndexMethod(utils.getCount(), name, clzzs);
+    }
+
+    /**
+     * 根据索引获取指定索引类中的指定方法.
      */
     public ActionTool getIndexMethod(int index, String name, Class<?>... clzzs) {
         return findMethod(index, name, new IMethodTool() {
@@ -65,7 +77,7 @@ public class MethodTool {
      * 查找全部名称匹配方法。
      */
     public ActionTool getAnyMethod(String name) {
-        return getAnyMethodByIndex(utils.next, name);
+        return getAnyMethodByIndex(utils.getCount(), name);
     }
 
     /**
@@ -101,7 +113,7 @@ public class MethodTool {
         MemberData data = utils.classes.get(index);
         if (data == null) {
             logW(utils.getTAG(), "memberData is null, cant find: " + name + " index: " + index);
-            utils.members.put(index, null);
+            utils.members.put(index, data);
             return utils.getActionTool();
         }
         Class<?> c = data.mClass;
@@ -112,6 +124,7 @@ public class MethodTool {
             return utils.getActionTool();
         }
         ArrayList<Member> members = iMethodTool.doFindMethod(c, name, clzzs);
+        findMember = members;
         data.memberMap.put(members);
         // data.isHooked = false;
         // data.mConstructor = null;
@@ -125,14 +138,14 @@ public class MethodTool {
      * 按顺序获取指定构造函数。
      */
     public ActionTool getConstructor(Class<?>... obj) {
-        return getConstructorByIndex(utils.next, obj);
+        return getConstructorByIndex(utils.getCount(), obj);
     }
 
     /**
      * 按顺序获取全部构造函数。
      */
     public ActionTool getAnyConstructor() {
-        return getAnyConstructorByIndex(utils.next);
+        return getAnyConstructorByIndex(utils.getCount());
     }
 
     /**
@@ -192,6 +205,7 @@ public class MethodTool {
             return utils.getActionTool();
         }
         ArrayList<Member> members = iConstructorTool.doFindConstructor(c, classes);
+        findMember = members;
         data.memberMap.put(members);
         // data.mConstructor = members;
         // data.mMethod = null;
@@ -200,31 +214,34 @@ public class MethodTool {
         return utils.getActionTool();
     }
 
-    public HCHook hcHook() {
-        return utils.getHCHook();
-    }
+    /* 不需要再回到此类 */
+    // public HCHook hcHook() {
+    //     return utils.getHCHook();
+    // }
 
     public ActionTool actionTool() {
         return utils.getActionTool();
     }
 
-    public ClassTool classTool() {
-        return utils.getClassTool();
+    // 更棒的无缝衔接
+    public ClassTool findClass(String name) {
+        return utils.getClassTool().findClass(name);
     }
 
     public FieldTool fieldTool() {
         return utils.getFieldTool();
     }
 
-    public void clear() {
+    /* 不建议使用 clear 本工具应该是一次性的。 */
+    private void clear() {
         if (!utils.members.isEmpty()) utils.members.clear();
     }
 
-    interface IMethodTool {
+    private interface IMethodTool {
         ArrayList<Member> doFindMethod(Class<?> c, String name, Class<?>... classes);
     }
 
-    interface IConstructorTool {
+    private interface IConstructorTool {
         ArrayList<Member> doFindConstructor(Class<?> c, Class<?>... classes);
     }
 }

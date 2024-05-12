@@ -35,19 +35,13 @@ public class HCHook {
         utils.methodTool = new MethodTool(utils);
     }
 
+    /* 因为 class tool 是本工具基准入口，所以初始化使用必须进入此类。 */
     public ClassTool classTool() {
         return utils.getClassTool();
     }
 
-    public MethodTool methodTool() {
-        return utils.getMethodTool();
-    }
-
-    public FieldTool fieldTool() {
-        return utils.getFieldTool();
-    }
-
-    /* 设置自定义 ClassLoader */
+    /* 设置自定义 ClassLoader
+     * 这应该是在使用工具开始就指定的，设置后不能更改。 */
     public HCHook setClassLoader(ClassLoader classLoader) {
         utils.mCustomClassLoader = classLoader;
         return utils.getHCHook();

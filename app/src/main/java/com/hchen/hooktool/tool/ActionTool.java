@@ -249,8 +249,8 @@ public class ActionTool {
         }
     }
 
-    private void hookTool(String name, int classIndex, IActionTool tool) {
-        hookTool(name, classIndex, -1, tool);
+    private void hookTool(String name, int methodIndex, IActionTool tool) {
+        hookTool(name, utils.getCount(), methodIndex, tool);
     }
 
     private boolean isHooked(String name, MemberData data, ArrayList<Member> members) {
@@ -336,7 +336,7 @@ public class ActionTool {
         return true;
     }
 
-    interface IActionTool {
+    private interface IActionTool {
         Action action(Member member);
     }
 

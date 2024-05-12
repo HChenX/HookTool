@@ -3,7 +3,6 @@ package com.hchen.hooktool.tool;
 import static com.hchen.hooktool.log.XposedLog.logE;
 import static com.hchen.hooktool.log.XposedLog.logW;
 
-import com.hchen.hooktool.HCHook;
 import com.hchen.hooktool.data.MemberData;
 import com.hchen.hooktool.utils.DataUtils;
 
@@ -40,7 +39,7 @@ public class FieldTool {
      * 按顺序获取指定字段。
      */
     public FieldTool findField(String name) {
-        return findIndexField(utils.next, name);
+        return findIndexField(utils.getCount(), name);
     }
 
     /**
@@ -53,8 +52,8 @@ public class FieldTool {
             logW(utils.getTAG(), "The class list is empty!");
             return utils.getFieldTool();
         }
-        if (utils.classes.size() < index) {
-            logW(utils.getTAG(), "index > class size, can't find field!");
+        if (utils.classes.size() - 1 < index) {
+            logW(utils.getTAG(), "index > class size, can't find field: " + name);
             return utils.getFieldTool();
         }
         MemberData data = utils.classes.get(index);
@@ -115,9 +114,10 @@ public class FieldTool {
         return null;
     }
 
-    public HCHook hcHook() {
-        return utils.getHCHook();
-    }
+    /* 不需要再回到此类 */
+    // public HCHook hcHook() {
+    //     return utils.getHCHook();
+    // }
 
     public ClassTool classTool() {
         return utils.getClassTool();

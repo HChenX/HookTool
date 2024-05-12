@@ -5,7 +5,6 @@ import static com.hchen.hooktool.log.XposedLog.logE;
 import static com.hchen.hooktool.log.XposedLog.logW;
 import static com.hchen.hooktool.utils.DataUtils.classLoader;
 
-import com.hchen.hooktool.HCHook;
 import com.hchen.hooktool.data.MemberData;
 import com.hchen.hooktool.utils.DataUtils;
 import com.hchen.hooktool.utils.MapUtils;
@@ -13,7 +12,6 @@ import com.hchen.hooktool.utils.MapUtils;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import de.robv.android.xposed.XposedHelpers;
 
@@ -22,7 +20,7 @@ public class ClassTool {
 
     public ClassTool(DataUtils utils) {
         this.utils = utils;
-        utils.classes.clear();
+        clear();
         utils.classTool = this;
     }
 
@@ -59,12 +57,15 @@ public class ClassTool {
         return utils.classes.size();
     }
 
+
+    // ---------- 实例方法 -----------
+
     /**
-     * 实例列表第一个类。
+     * 实例当前索引类。
      */
     @Nullable
     public Object newInstance(Object... args) {
-        return newInstance(0, args);
+        return newInstance(utils.getCount(), args);
     }
 
     /**
@@ -72,18 +73,18 @@ public class ClassTool {
      */
     @Nullable
     public Object newInstance(int index, Object... args) {
-        try {
-            if (utils.classes.size() < index || index < 0) {
-                logE(utils.getTAG(), "The index is out of range!");
-                return null;
-            }
-            MemberData memberData = utils.classes.get(index);
-            if (memberData != null && memberData.mClass != null) {
-                return XposedHelpers.newInstance(memberData.mClass, args);
-            } else logW(utils.getTAG(), "class is null, cant new instance. index: " + index);
-        } catch (Throwable e) {
-            logE(utils.getTAG(), "Error creating instance: " + utils.findClass + " args: " + Arrays.toString(args));
+        if (utils.classes.size() - 1 < index || index < 0) {
+            logE(utils.getTAG(), "The index is out of range!");
+            return null;
         }
+        MemberData memberData = utils.classes.get(index);
+        if (memberData != null && memberData.mClass != null) {
+            try {
+                return XposedHelpers.newInstance(memberData.mClass, args);
+            } catch (Throwable e) {
+                logE(utils.getTAG(), "new instance class: " + memberData.mClass + " e: " + e);
+            }
+        } else logW(utils.getTAG(), "class is null, cant new instance. index: " + index);
         return null;
     }
 
@@ -103,9 +104,10 @@ public class ClassTool {
         return utils.newInstances;
     }
 
-    public HCHook hcHook() {
-        return utils.getHCHook();
-    }
+    // 无需再回归此类。
+    // public HCHook hcHook() {
+    //     return utils.getHCHook();
+    // }
 
     public MethodTool methodTool() {
         return utils.getMethodTool();
@@ -115,8 +117,8 @@ public class ClassTool {
         return utils.getFieldTool();
     }
 
-    public ClassTool clear() {
+    /* 不建议使用 clear 本工具应该是一次性的。 */
+    private void clear() {
         utils.classes.clear();
-        return utils.getClassTool();
     }
 }

@@ -93,4 +93,7 @@ public class Arguments<T> extends ActAchieve<T> {
         paramSafe();
         return param.args.length;
     }
+
+    // ------- 不常用工具 ----------
+
 }

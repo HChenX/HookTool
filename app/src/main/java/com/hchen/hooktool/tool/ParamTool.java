@@ -25,7 +25,6 @@ public class ParamTool<T> extends Arguments<T> {
     public T thisObject() {
         paramSafe();
         return (T) param.thisObject;
-
     }
 
     public Member method() {

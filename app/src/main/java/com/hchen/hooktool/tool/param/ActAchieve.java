@@ -25,6 +25,39 @@ public class ActAchieve<T> {
     }
 
     @Nullable
+    public T getResult() {
+        paramSafe();
+        return (T) param.getResult();
+    }
+
+    public void setResult(T value) {
+        paramSafe();
+        param.setResult(value);
+    }
+
+    public boolean hasThrowable() {
+        paramSafe();
+        return param.hasThrowable();
+    }
+
+    @Nullable
+    public Throwable getThrowable() {
+        paramSafe();
+        return param.getThrowable();
+    }
+
+    public void setThrowable(Throwable t) {
+        paramSafe();
+        param.setThrowable(t);
+    }
+
+    @Nullable
+    public T getResultOrThrowable() throws Throwable {
+        paramSafe();
+        return (T) param.getResultOrThrowable();
+    }
+
+    @Nullable
     public T callMethod(String name, T... ts) {
         paramSafe();
         try {
