@@ -348,4 +348,8 @@ public class ActionTool {
     public ActionTool getMethod(String name, Class<?>... clzzs) {
         return utils.getMethodTool().getMethod(name, clzzs);
     }
+
+    public ActionTool getConstructor(Class<?>... obj) {
+        return utils.getMethodTool().getConstructor(obj);
+    }
 }

@@ -126,4 +126,7 @@ public class ClassTool {
         return utils.getMethodTool().getMethod(name, clzzs);
     }
 
+    public ActionTool getConstructor(Class<?>... obj) {
+        return utils.getMethodTool().getConstructor(obj);
+    }
 }
