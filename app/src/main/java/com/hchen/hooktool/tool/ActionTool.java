@@ -20,6 +20,7 @@ public class ActionTool {
     private final DataUtils utils;
     private int count = 0;
     private int lastIndex = -1;
+    private int classIndex = -1;
     // protected ArrayList<Member> members = null;
 
     public ActionTool(DataUtils data) {
@@ -27,17 +28,29 @@ public class ActionTool {
     }
 
     /**
+     * 不太建议修改，因为会持久化设置，除非手动设置 -1 使此设置失效。
+     */
+    public ActionTool setClassIndex(int index) {
+        if (index < 0) {
+            logE(utils.getTAG(), "class index cant < 0!");
+            return utils.getActionTool();
+        }
+        classIndex = index;
+        return utils.getActionTool();
+    }
+
+    /**
      * {@link ActionTool#allAction(int, IAllAction)}
      */
     public MethodTool allAction(IAllAction iAllAction) {
-        return allAction(utils.getCount(), iAllAction);
+        return allAction(-1, iAllAction);
     }
 
     /**
      * 使用全部回调接口
      */
-    public MethodTool allAction(int index, IAllAction iAllAction) {
-        return allAction(index, -1, iAllAction);
+    public MethodTool allAction(int methodIndex, IAllAction iAllAction) {
+        return allAction(utils.getCount(), methodIndex, iAllAction);
     }
 
     /**
@@ -59,14 +72,14 @@ public class ActionTool {
      * {@link ActionTool#after(int, IAction)}
      */
     public MethodTool after(IAction iAction) {
-        return after(utils.getCount(), iAction);
+        return after(-1, iAction);
     }
 
     /**
      * 使用 after
      */
-    public MethodTool after(int index, IAction iAction) {
-        return after(index, -1, iAction);
+    public MethodTool after(int methodIndex, IAction iAction) {
+        return after(utils.getCount(), methodIndex, iAction);
     }
 
 
@@ -89,14 +102,14 @@ public class ActionTool {
      * {@link ActionTool#before(int, IAction)}
      */
     public MethodTool before(IAction iAction) {
-        return before(utils.getCount(), iAction);
+        return before(-1, iAction);
     }
 
     /**
      * 使用 before
      */
-    public MethodTool before(int index, IAction iAction) {
-        return before(index, -1, iAction);
+    public MethodTool before(int methodIndex, IAction iAction) {
+        return before(utils.getCount(), methodIndex, iAction);
     }
 
     /**
@@ -119,14 +132,14 @@ public class ActionTool {
      * {@link ActionTool#returnResult(int, Object)}
      */
     public void returnResult(final Object result) {
-        returnResult(utils.getCount(), result);
+        returnResult(-1, result);
     }
 
     /**
      * 直接返回指定值
      */
-    public void returnResult(int index, final Object result) {
-        returnResult(index, -1, result);
+    public void returnResult(int methodIndex, final Object result) {
+        returnResult(utils.getCount(), methodIndex, result);
     }
 
     /**
@@ -150,14 +163,14 @@ public class ActionTool {
      * {@link ActionTool#doNothing(int)}
      */
     public void doNothing() {
-        doNothing(utils.getCount());
+        doNothing(-1);
     }
 
     /**
      * 是 hook 方法失效
      */
-    public void doNothing(int index) {
-        doNothing(index, -1);
+    public void doNothing(int methodIndex) {
+        doNothing(utils.getCount(), methodIndex);
     }
 
     /**
@@ -176,9 +189,12 @@ public class ActionTool {
             }
         });
     }
-    
+
     private void hookTool(String name, int classIndex, int methodIndex, IActionTool tool) {
         boolean useMethodIndex = methodIndex != -1;
+        if (this.classIndex != -1) {
+            classIndex = this.classIndex;
+        }
         if (utils.members.size() > classIndex) {
             MemberData data = utils.members.get(classIndex);
             if (data != null) {
@@ -192,7 +208,7 @@ public class ActionTool {
                 }
                 int size = data.memberMap.size();
                 ArrayList<Member> members = null;
-                if (size > 2) {
+                if (size >= 2) {
                     if (count + 1 > size) {
                         logW(utils.getTAG(), name + " count > index, cant get memberMap! calss: " + data.mClass + "index: "
                                 + classIndex + " size: " + size + " count: " + count);
