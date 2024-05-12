@@ -343,4 +343,9 @@ public class ActionTool {
     public MethodTool methodTool() {
         return utils.getMethodTool();
     }
+
+    // 优化调用，只提供基本用法，详细用法请获取工具类对象
+    public ActionTool getMethod(String name, Class<?>... clzzs) {
+        return utils.getMethodTool().getMethod(name, clzzs);
+    }
 }
