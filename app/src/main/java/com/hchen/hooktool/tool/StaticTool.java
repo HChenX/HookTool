@@ -5,15 +5,12 @@ import static com.hchen.hooktool.log.XposedLog.logW;
 
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-
 import de.robv.android.xposed.XposedHelpers;
 
 /**
  * 静态操作专用工具。
  */
-public class StaticTool<T> {
+public class StaticTool {
     private final String TAG;
     private ClassLoader classLoader;
     private Class<?> findClass = null;
@@ -27,17 +24,17 @@ public class StaticTool<T> {
         this.classLoader = classLoader;
     }
 
-    public StaticTool<T> setClassLoader(ClassLoader classLoader) {
+    public StaticTool setClassLoader(ClassLoader classLoader) {
         this.classLoader = classLoader;
         return this;
     }
 
-    public StaticTool<T> setClass(Class<?> clzz) {
+    public StaticTool setClass(Class<?> clzz) {
         findClass = clzz;
         return this;
     }
 
-    public StaticTool<T> findClass(String name) {
+    public StaticTool findClass(String name) {
         try {
             if (classLoader == null) {
                 logE(TAG, "classLoader is null!");
@@ -56,8 +53,13 @@ public class StaticTool<T> {
         return findClass;
     }
 
+    /**
+     * 请使用 new Object[]{} 传入参数。<br/>
+     * 如果仅传入一个参数可以不使用 new Object[]{}<br/>
+     * 这是为了规避泛型与可变参数的冲突。
+     */
     @Nullable
-    public Object newInstance(T... objects) {
+    public <T> Object newInstance(T objects) {
         if (findClass != null) {
             try {
                 return XposedHelpers.newInstance(findClass, tToObject(objects));
@@ -68,11 +70,16 @@ public class StaticTool<T> {
         return null;
     }
 
+    /**
+     * 请使用 new Object[]{} 传入参数。<br/>
+     * 如果仅传入一个参数可以不使用 new Object[]{}<br/>
+     * 这是为了规避泛型与可变参数的冲突。
+     */
     @Nullable
-    public T callStaticMethod(String name, T... objs) {
+    public <T, R> R callStaticMethod(String name, T objs) {
         if (findClass != null) {
             try {
-                return (T) XposedHelpers.callStaticMethod(findClass, name, tToObject(objs));
+                return (R) XposedHelpers.callStaticMethod(findClass, name, tToObject(objs));
             } catch (Throwable e) {
                 logE(TAG, "call static method: " + e);
             }
@@ -83,7 +90,7 @@ public class StaticTool<T> {
     }
 
     @Nullable
-    public T getStaticField(String name) {
+    public <T> T getStaticField(String name) {
         if (findClass != null) {
             try {
                 return (T) XposedHelpers.getStaticObjectField(findClass, name);
@@ -119,7 +126,7 @@ public class StaticTool<T> {
     }
 
     @Nullable
-    public T getAdditionalStaticField(String key) {
+    public <T> T getAdditionalStaticField(String key) {
         if (findClass != null) {
             try {
                 return (T) XposedHelpers.getAdditionalStaticField(findClass, key);
@@ -143,8 +150,10 @@ public class StaticTool<T> {
         return false;
     }
 
-    private Object[] tToObject(T... ts) {
-        ArrayList<Object> list = new ArrayList<>(Arrays.asList(ts));
-        return list.toArray(new Object[ts.length]);
+    private <T> Object[] tToObject(T ts) {
+        if (ts instanceof Object[] objects) {
+            return objects;
+        }
+        return new Object[]{ts};
     }
 }

@@ -4,5 +4,9 @@ import com.hchen.hooktool.tool.ParamTool;
 import com.hchen.hooktool.tool.StaticTool;
 
 public interface IAction {
-    void action(ParamTool<Object> param, StaticTool<Object> staticTool);
+    default void before(ParamTool param, StaticTool staticTool) {
+    }
+
+    default void after(ParamTool param, StaticTool staticTool) {
+    }
 }

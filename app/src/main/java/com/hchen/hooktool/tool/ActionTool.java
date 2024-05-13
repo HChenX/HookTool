@@ -6,17 +6,17 @@ import static de.robv.android.xposed.callbacks.XCallback.PRIORITY_HIGHEST;
 
 import com.hchen.hooktool.action.Action;
 import com.hchen.hooktool.callback.IAction;
-import com.hchen.hooktool.callback.IAllAction;
 import com.hchen.hooktool.data.MemberData;
 import com.hchen.hooktool.data.StateEnum;
 import com.hchen.hooktool.utils.DataUtils;
+import com.hchen.hooktool.utils.Optimize;
 
 import java.lang.reflect.Member;
 import java.util.ArrayList;
 
 import de.robv.android.xposed.XposedBridge;
 
-public class ActionTool {
+public class ActionTool extends Optimize {
     private final DataUtils utils;
     private int count = 0;
     private int lastIndex = -1;
@@ -24,6 +24,7 @@ public class ActionTool {
     // protected ArrayList<Member> members = null;
 
     public ActionTool(DataUtils data) {
+        super(data);
         this.utils = data;
     }
 
@@ -40,93 +41,33 @@ public class ActionTool {
     }
 
     /**
-     * {@link ActionTool#allAction(int, IAllAction)}
+     * {@link ActionTool#hook(int, IAction)}
      */
-    public MethodTool allAction(IAllAction iAllAction) {
-        return allAction(-1, iAllAction);
+    public MethodTool hook(IAction iAction) {
+        return hook(-1, iAction);
     }
 
     /**
      * 使用全部回调接口
      */
-    public MethodTool allAction(int methodIndex, IAllAction iAllAction) {
-        return allAction(utils.getCount(), methodIndex, iAllAction);
+    public MethodTool hook(int methodIndex, IAction iAction) {
+        return hook(utils.getCount(), methodIndex, iAction);
     }
 
     /**
-     * {@link ActionTool#allAction(int, IAllAction)}
+     * {@link ActionTool#hook(int, IAction)}
      */
-    public MethodTool allAction(int classIndex, int methodIndex, IAllAction iAllAction) {
-        if (actionSafe("iAllAction", iAllAction)) {
-            hookTool("allAction", classIndex, methodIndex, new IActionTool() {
+    public MethodTool hook(int classIndex, int methodIndex, IAction iAction) {
+        if (actionSafe("hook", iAction)) {
+            hookTool("hook", classIndex, methodIndex, new IActionTool() {
                 @Override
                 public Action action(Member member) {
-                    return allActionTool(member, iAllAction);
+                    return hookTool(member, iAction);
                 }
             });
         }
         return utils.getMethodTool();
     }
-
-    /**
-     * {@link ActionTool#after(int, IAction)}
-     */
-    public MethodTool after(IAction iAction) {
-        return after(-1, iAction);
-    }
-
-    /**
-     * 使用 after
-     */
-    public MethodTool after(int methodIndex, IAction iAction) {
-        return after(utils.getCount(), methodIndex, iAction);
-    }
-
-
-    /**
-     * {@link ActionTool#after(int, IAction)}
-     */
-    public MethodTool after(int classIndex, int methodIndex, IAction iAction) {
-        if (actionSafe("iAction after", iAction)) {
-            hookTool("after", classIndex, methodIndex, new IActionTool() {
-                @Override
-                public Action action(Member member) {
-                    return afterTool(member, iAction);
-                }
-            });
-        }
-        return utils.getMethodTool();
-    }
-
-    /**
-     * {@link ActionTool#before(int, IAction)}
-     */
-    public MethodTool before(IAction iAction) {
-        return before(-1, iAction);
-    }
-
-    /**
-     * 使用 before
-     */
-    public MethodTool before(int methodIndex, IAction iAction) {
-        return before(utils.getCount(), methodIndex, iAction);
-    }
-
-    /**
-     * {@link ActionTool#before(int, IAction)}
-     */
-    public MethodTool before(int classIndex, int methodIndex, IAction iAction) {
-        if (actionSafe("iAction before", iAction)) {
-            hookTool("before", classIndex, methodIndex, new IActionTool() {
-                @Override
-                public Action action(Member member) {
-                    return beforeTool(member, iAction);
-                }
-            });
-        }
-        return utils.getMethodTool();
-    }
-
 
     /**
      * {@link ActionTool#returnResult(int, Object)}
@@ -286,44 +227,20 @@ public class ActionTool {
         }
     }
 
-    private Action allActionTool(Member member, IAllAction iAllAction) {
-        ParamTool<Object> paramTool = new ParamTool<>(member, utils.getTAG());
-        StaticTool<Object> staticTool = new StaticTool<>(utils.getClassLoader(), utils.getTAG());
+    private Action hookTool(Member member, IAction iAction) {
+        ParamTool paramTool = new ParamTool(member, utils.getTAG());
+        StaticTool staticTool = new StaticTool(utils.getClassLoader(), utils.getTAG());
         return new Action(utils.getTAG()) {
             @Override
             protected void before(MethodHookParam param) {
                 paramTool.setParam(param);
-                iAllAction.before(paramTool, staticTool);
+                iAction.before(paramTool, staticTool);
             }
 
             @Override
             protected void after(MethodHookParam param) {
                 paramTool.setParam(param);
-                iAllAction.after(paramTool, staticTool);
-            }
-        };
-    }
-
-    private Action afterTool(Member member, IAction iAction) {
-        ParamTool<Object> paramTool = new ParamTool<>(member, utils.getTAG());
-        StaticTool<Object> staticTool = new StaticTool<>(utils.getClassLoader(), utils.getTAG());
-        return new Action(utils.getTAG()) {
-            @Override
-            protected void after(MethodHookParam param) {
-                paramTool.setParam(param);
-                iAction.action(paramTool, staticTool);
-            }
-        };
-    }
-
-    private Action beforeTool(Member member, IAction iAction) {
-        ParamTool<Object> paramTool = new ParamTool<>(member, utils.getTAG());
-        StaticTool<Object> staticTool = new StaticTool<>(utils.getClassLoader(), utils.getTAG());
-        return new Action(utils.getTAG()) {
-            @Override
-            protected void before(MethodHookParam param) {
-                paramTool.setParam(param);
-                iAction.action(paramTool, staticTool);
+                iAction.after(paramTool, staticTool);
             }
         };
     }
@@ -342,14 +259,5 @@ public class ActionTool {
 
     public MethodTool methodTool() {
         return utils.getMethodTool();
-    }
-
-    // 优化调用，只提供基本用法，详细用法请获取工具类对象
-    public ActionTool getMethod(String name, Class<?>... clzzs) {
-        return utils.getMethodTool().getMethod(name, clzzs);
-    }
-
-    public ActionTool getConstructor(Class<?>... obj) {
-        return utils.getMethodTool().getConstructor(obj);
     }
 }

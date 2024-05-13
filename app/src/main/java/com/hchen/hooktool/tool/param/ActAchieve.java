@@ -5,13 +5,11 @@ import static com.hchen.hooktool.log.XposedLog.logE;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Member;
-import java.util.ArrayList;
-import java.util.Arrays;
 
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedHelpers;
 
-public class ActAchieve<T> {
+public class ActAchieve {
     protected XC_MethodHook.MethodHookParam param;
     protected final Member member;
     protected final String TAG;
@@ -25,12 +23,12 @@ public class ActAchieve<T> {
     }
 
     @Nullable
-    public T getResult() {
+    public <T> T getResult() {
         paramSafe();
         return (T) param.getResult();
     }
 
-    public void setResult(T value) {
+    public <T> void setResult(T value) {
         paramSafe();
         param.setResult(value);
     }
@@ -52,16 +50,21 @@ public class ActAchieve<T> {
     }
 
     @Nullable
-    public T getResultOrThrowable() throws Throwable {
+    public <T> T getResultOrThrowable() throws Throwable {
         paramSafe();
         return (T) param.getResultOrThrowable();
     }
 
+    /**
+     * 请使用 new Object[]{} 传入参数。<br/>
+     * 如果仅传入一个参数可以不使用 new Object[]{}<br/>
+     * 这是为了规避泛型与可变参数的冲突。
+     */
     @Nullable
-    public T callMethod(String name, T... ts) {
+    public <T, R> R callMethod(String name, T ts) {
         paramSafe();
         try {
-            return (T) XposedHelpers.callMethod(param.thisObject, name, tToObject(ts));
+            return (R) XposedHelpers.callMethod(param.thisObject, name, tToObject((Object[]) ts));
         } catch (Throwable e) {
             logE(TAG, "call method: " + e);
         }
@@ -69,7 +72,7 @@ public class ActAchieve<T> {
     }
 
     @Nullable
-    public T getField(String name) {
+    public <T> T getField(String name) {
         paramSafe();
         try {
             return (T) XposedHelpers.getObjectField(param.thisObject, name);
@@ -79,7 +82,7 @@ public class ActAchieve<T> {
         return null;
     }
 
-    public boolean setField(String name, T key) {
+    public <T> boolean setField(String name, T key) {
         paramSafe();
         try {
             XposedHelpers.setObjectField(param.thisObject, name, key);
@@ -90,7 +93,7 @@ public class ActAchieve<T> {
         return false;
     }
 
-    public boolean setAdditionalInstanceField(String name, T key) {
+    public <T> boolean setAdditionalInstanceField(String name, T key) {
         paramSafe();
         try {
             XposedHelpers.setAdditionalInstanceField(param.thisObject, name, key);
@@ -102,7 +105,7 @@ public class ActAchieve<T> {
     }
 
     @Nullable
-    public T setAdditionalInstanceField(String name) {
+    public <T> T setAdditionalInstanceField(String name) {
         paramSafe();
         try {
             return (T) XposedHelpers.getAdditionalInstanceField(param.thisObject, name);
@@ -123,15 +126,16 @@ public class ActAchieve<T> {
         return false;
     }
 
-    private Object[] tToObject(T... ts) {
-        ArrayList<Object> list = new ArrayList<>(Arrays.asList(ts));
-        return list.toArray(new Object[ts.length]);
-    }
-
     protected void paramSafe() {
         if (param == null) {
             throw new RuntimeException(TAG + " param is null! member: " + member.getName());
         }
     }
 
+    private <T> Object[] tToObject(T ts) {
+        if (ts instanceof Object[] objects) {
+            return objects;
+        }
+        return new Object[]{ts};
+    }
 }

@@ -6,14 +6,14 @@ import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Member;
 
-public class Arguments<T> extends ActAchieve<T> {
+public class Arguments extends ActAchieve {
 
     public Arguments(Member member, String tag) {
         super(member, tag);
     }
 
     @Nullable
-    public T get(int index) {
+    public <T> T get(int index) {
         if (size() == -1) {
             return null;
         } else if (size() < index + 1) {
@@ -25,33 +25,34 @@ public class Arguments<T> extends ActAchieve<T> {
     }
 
     // ------- 提供五个快捷获取 ---------
+
     @Nullable
-    public T one() {
+    public <T> T first() {
         return get(0);
     }
 
     @Nullable
-    public T two() {
+    public <T> T second() {
         return get(1);
     }
 
     @Nullable
-    public T three() {
+    public <T> T third() {
         return get(2);
     }
 
     @Nullable
-    public T four() {
+    public <T> T fourth() {
         return get(3);
     }
 
     @Nullable
-    public T five() {
+    public <T> T fifth() {
         return get(4);
     }
 
     @Nullable
-    public Arguments<T> set(int index, T value) {
+    public <T> Arguments set(int index, T value) {
         if (size() == -1) {
             return this;
         } else if (size() < index + 1) {
@@ -65,27 +66,27 @@ public class Arguments<T> extends ActAchieve<T> {
 
     // ------- 提供五个快捷设置 ---------
     @Nullable
-    public Arguments<T> one(T value) {
+    public <T> Arguments first(T value) {
         return set(0, value);
     }
 
     @Nullable
-    public Arguments<T> two(T value) {
+    public <T> Arguments second(T value) {
         return set(1, value);
     }
 
     @Nullable
-    public Arguments<T> three(T value) {
+    public <T> Arguments third(T value) {
         return set(2, value);
     }
 
     @Nullable
-    public Arguments<T> four(T value) {
+    public <T> Arguments fourth(T value) {
         return set(3, value);
     }
 
     @Nullable
-    public Arguments<T> five(T value) {
+    public <T> Arguments fifth(T value) {
         return set(4, value);
     }
 
@@ -93,7 +94,4 @@ public class Arguments<T> extends ActAchieve<T> {
         paramSafe();
         return param.args.length;
     }
-
-    // ------- 不常用工具 ----------
-
 }

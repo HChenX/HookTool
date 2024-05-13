@@ -8,6 +8,7 @@ import static com.hchen.hooktool.utils.DataUtils.classLoader;
 import com.hchen.hooktool.data.MemberData;
 import com.hchen.hooktool.utils.DataUtils;
 import com.hchen.hooktool.utils.MapUtils;
+import com.hchen.hooktool.utils.Optimize;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -15,10 +16,11 @@ import java.util.ArrayList;
 
 import de.robv.android.xposed.XposedHelpers;
 
-public class ClassTool {
+public class ClassTool extends Optimize {
     private final DataUtils utils;
 
     public ClassTool(DataUtils utils) {
+        super(utils);
         this.utils = utils;
         clear();
         utils.classTool = this;
@@ -119,14 +121,5 @@ public class ClassTool {
     /* 不建议使用 clear 本工具应该是一次性的。 */
     private void clear() {
         utils.classes.clear();
-    }
-
-    // 优化调用，只提供基本用法，详细用法请获取工具类对象
-    public ActionTool getMethod(String name, Class<?>... clzzs) {
-        return utils.getMethodTool().getMethod(name, clzzs);
-    }
-
-    public ActionTool getConstructor(Class<?>... obj) {
-        return utils.getMethodTool().getConstructor(obj);
     }
 }

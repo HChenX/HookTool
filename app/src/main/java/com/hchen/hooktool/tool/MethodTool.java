@@ -4,7 +4,6 @@ import static com.hchen.hooktool.log.XposedLog.logE;
 import static com.hchen.hooktool.log.XposedLog.logW;
 
 import com.hchen.hooktool.callback.IAction;
-import com.hchen.hooktool.callback.IAllAction;
 import com.hchen.hooktool.data.MemberData;
 import com.hchen.hooktool.utils.DataUtils;
 
@@ -172,7 +171,7 @@ public class MethodTool {
     /**
      * 按索引获取全部构造函数。
      */
-    private ActionTool getAnyConstructorByIndex(int index) {
+    public ActionTool getAnyConstructorByIndex(int index) {
         return findConstructor(index, new IConstructorTool() {
             @Override
             public ArrayList<Member> doFindConstructor(Class<?> c, Class<?>... classes) {
@@ -244,16 +243,8 @@ public class MethodTool {
     }
 
     // 优化调用，只提供基本用法，详细用法请获取工具类对象
-    public MethodTool allAction(IAllAction iAllAction) {
-        return utils.getActionTool().allAction(iAllAction);
-    }
-
-    public MethodTool before(IAction iAction) {
-        return utils.getActionTool().before(iAction);
-    }
-
-    public MethodTool after(IAction iAction) {
-        return utils.getActionTool().after(iAction);
+    public MethodTool hook(IAction iAction) {
+        return utils.getActionTool().hook(iAction);
     }
 
     private interface IMethodTool {

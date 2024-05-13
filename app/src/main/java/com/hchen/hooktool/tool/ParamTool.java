@@ -8,7 +8,7 @@ import java.lang.reflect.Member;
 
 import de.robv.android.xposed.XC_MethodHook;
 
-public class ParamTool<T> extends Arguments<T> {
+public class ParamTool extends Arguments {
     public Class<?> mClass;
 
     public ParamTool(Member member, String tag) {
@@ -22,7 +22,7 @@ public class ParamTool<T> extends Arguments<T> {
     }
 
     @Nullable
-    public T thisObject() {
+    public <T> T thisObject() {
         paramSafe();
         return (T) param.thisObject;
     }
