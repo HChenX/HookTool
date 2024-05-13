@@ -64,7 +64,7 @@ public class ActAchieve {
     public <T, R> R callMethod(String name, T ts) {
         paramSafe();
         try {
-            return (R) XposedHelpers.callMethod(param.thisObject, name, tToObject((Object[]) ts));
+            return (R) XposedHelpers.callMethod(param.thisObject, name, tToObject(ts));
         } catch (Throwable e) {
             logE(TAG, "call method: " + e);
         }
