@@ -166,21 +166,26 @@ public class ActionTool extends Optimize {
                 }
                 if (members == null) {
                     logW(utils.getTAG(), name + " don't have anything can hook. class is: " + data.mClass);
-                    return;
-                }
-                if (isHooked(name, data, members)) {
-                    logW(utils.getTAG(), "this method or constructor is hooked [" + name + "]! members: " + members);
-                    return;
-                }
-                for (Member member : members) {
-                    try {
-                        XposedBridge.hookMethod(member, tool.action(member));
-                    } catch (Throwable e) {
-                        logE(utils.getTAG(), name + " hook method: " + member + " e: " + e);
+                } else {
+                    if (isHooked(name, data, members)) {
+                        logW(utils.getTAG(), "this method or constructor is hooked [" + name + "]! members: " + members);
+                    } else {
+                        for (Member member : members) {
+                            try {
+                                XposedBridge.hookMethod(member, tool.action(member));
+                            } catch (Throwable e) {
+                                logE(utils.getTAG(), name + " hook method: " + member + " e: " + e);
+                            }
+                        }
+                        setState(name, data, members);
                     }
                 }
-                if (!useMethodIndex) data.count = count + 1;
-                setState(name, data, members);
+                if (!useMethodIndex) {
+                    if (count + 1 < size)
+                        data.count = count + 1;
+                    else
+                        logW(utils.getTAG(), "this is a list can hook member: " + members);
+                }
                 utils.members.put(classIndex, data);
             } else {
                 logW(utils.getTAG(), name + " member data is null!");
@@ -195,35 +200,21 @@ public class ActionTool extends Optimize {
     }
 
     private boolean isHooked(String name, MemberData data, ArrayList<Member> members) {
-        if (data.stateMap.get(members) == StateEnum.ALL) return true;
         switch (name) {
-            case "after" -> {
-                return data.stateMap.get(members) == StateEnum.AFTER;
-            }
-            case "before", "returnResult", "doNothing" -> {
-                return data.stateMap.get(members) == StateEnum.BEFORE;
-            }
-            case "allAction" -> {
-                if (data.stateMap.get(members) == StateEnum.AFTER ||
-                        data.stateMap.get(members) == StateEnum.BEFORE) {
-                    return true;
-                }
+            case "hook", "doNothing", "returnResult" -> {
+                return data.stateMap.get(members) == StateEnum.HOOK;
             }
             default -> {
                 return false;
             }
         }
-        return false;
     }
 
     private void setState(String name, MemberData data, ArrayList<Member> members) {
         switch (name) {
-            case "after" -> {
-                data.stateMap.put(members, StateEnum.AFTER);
+            case "hook", "doNothing", "returnResult" -> {
+                data.stateMap.put(members, StateEnum.HOOK);
             }
-            case "before", "returnResult", "doNothing" ->
-                    data.stateMap.put(members, StateEnum.BEFORE);
-            case "allAction" -> data.stateMap.put(members, StateEnum.ALL);
         }
     }
 
