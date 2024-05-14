@@ -5,6 +5,7 @@ import static com.hchen.hooktool.log.XposedLog.logW;
 
 import com.hchen.hooktool.callback.IAction;
 import com.hchen.hooktool.data.MemberData;
+import com.hchen.hooktool.data.StateEnum;
 import com.hchen.hooktool.utils.DataUtils;
 
 import org.jetbrains.annotations.Nullable;
@@ -95,6 +96,8 @@ public class MethodTool {
                         list.add(m);
                     }
                 }
+                if (list.isEmpty())
+                    logW(utils.getTAG(), "find any method, but list is empty! class: " + c + " member: " + name);
                 return list;
             }
         });
@@ -126,7 +129,10 @@ public class MethodTool {
         }
         ArrayList<Member> members = iMethodTool.doFindMethod(c, name, clzzs);
         findMember = members;
-        data.memberMap.put(members);
+        if (data.stateMap.get(members) == null) {
+            data.memberMap.put(members);
+            data.stateMap.put(members, StateEnum.NONE);
+        }
         // data.isHooked = false;
         // data.mConstructor = null;
         utils.members.put(classIndex, data);
@@ -207,7 +213,10 @@ public class MethodTool {
         }
         ArrayList<Member> members = iConstructorTool.doFindConstructor(c, classes);
         findMember = members;
-        data.memberMap.put(members);
+        if (data.stateMap.get(members) == null) {
+            data.memberMap.put(members);
+            data.stateMap.put(members, StateEnum.NONE);
+        }
         // data.mConstructor = members;
         // data.mMethod = null;
         // data.isHooked = false;

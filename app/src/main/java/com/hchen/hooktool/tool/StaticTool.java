@@ -29,11 +29,17 @@ public class StaticTool {
         return this;
     }
 
+    /**
+     * 直接设置类
+     */
     public StaticTool setClass(Class<?> clzz) {
         findClass = clzz;
         return this;
     }
 
+    /**
+     * 查找指定的类
+     */
     public StaticTool findClass(String name) {
         try {
             if (classLoader == null) {
