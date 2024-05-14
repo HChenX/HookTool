@@ -28,6 +28,11 @@ public class ActAchieve {
         return (T) param.getResult();
     }
 
+    public void returnNull() {
+        paramSafe();
+        param.setResult(null);
+    }
+
     public <T> void setResult(T value) {
         paramSafe();
         param.setResult(value);
