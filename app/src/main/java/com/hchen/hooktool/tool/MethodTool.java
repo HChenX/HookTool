@@ -247,6 +247,14 @@ public class MethodTool {
         return utils.getActionTool().hook(iAction);
     }
 
+    public MethodTool hook(int methodIndex, IAction iAction) {
+        return utils.getActionTool().hook(methodIndex, iAction);
+    }
+
+    public MethodTool hook(int classIndex, int methodIndex, IAction iAction) {
+        return utils.getActionTool().hook(classIndex, methodIndex, iAction);
+    }
+
     private interface IMethodTool {
         ArrayList<Member> doFindMethod(Class<?> c, String name, Class<?>... classes);
     }
