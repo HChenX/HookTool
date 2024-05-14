@@ -6,27 +6,32 @@ import de.robv.android.xposed.XposedBridge;
  * 本工具的日志类。
  */
 public class XposedLog {
-    public static final String hookMain = "[HChen]";
-    public static final String mHook = "[HChen:";
-    public static final String other = "]";
 
-    public static void logI(String tag, String Log) {
-        XposedBridge.log(hookMain + "[" + tag + "][I]: " + Log);
+    public static void logI(String tag, String log) {
+        XposedBridge.log(tag + "[I]: " + log);
     }
 
-    public static void logI(String name, String tag, String Log) {
-        XposedBridge.log(mHook + name + other + "[" + tag + "][I]: " + Log);
+    public static void logI(String tag, String pkg, String log) {
+        XposedBridge.log(tag + "[" + pkg + "][I]: " + log);
     }
 
-    public static void logW(String tag, String Log) {
-        XposedBridge.log(hookMain + "[" + tag + "][W]: " + Log);
+    public static void logW(String tag, String log) {
+        XposedBridge.log(tag + "[W]: " + log);
     }
 
-    public static void logE(String tag, String Log) {
-        XposedBridge.log(hookMain + "[" + tag + "][E]: " + Log);
+    public static void logE(String tag, String log) {
+        XposedBridge.log(tag + "[E]: " + log);
     }
 
     public static void logE(String tag, Throwable e) {
-        XposedBridge.log(hookMain + "[" + tag + "][E]: " + e);
+        XposedBridge.log(tag + "[E]: " + e);
+    }
+
+    public static void logD(String tag, Throwable e) {
+        XposedBridge.log(tag + "[D]: " + e);
+    }
+
+    public static void logD(String tag, String e) {
+        XposedBridge.log(tag + "[D]: " + e);
     }
 }

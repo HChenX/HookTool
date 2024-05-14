@@ -1,5 +1,6 @@
 package com.hchen.hooktool.tool;
 
+import static com.hchen.hooktool.log.XposedLog.logD;
 import static com.hchen.hooktool.log.XposedLog.logE;
 import static com.hchen.hooktool.log.XposedLog.logW;
 import static de.robv.android.xposed.callbacks.XCallback.PRIORITY_HIGHEST;
@@ -170,14 +171,21 @@ public class ActionTool extends Optimize {
                     if (isHooked(name, data, members)) {
                         logW(utils.getTAG(), "this method or constructor is hooked [" + name + "]! members: " + members);
                     } else {
-                        for (Member member : members) {
-                            try {
-                                XposedBridge.hookMethod(member, tool.action(member));
-                            } catch (Throwable e) {
-                                logE(utils.getTAG(), name + " hook method: " + member + " e: " + e);
+                        if (members.isEmpty()) {
+                            logW(utils.getTAG(), "this members is empty! cant hook anything, will skip! class: "
+                                    + data.mClass + " index: " + classIndex + " count: " + count);
+                        } else {
+                            for (Member member : members) {
+                                try {
+                                    XposedBridge.hookMethod(member, tool.action(member));
+                                    logD(utils.getTAG(), "success hook: " + member + " class: " + data.mClass
+                                            + " index: " + classIndex + " count: " + count);
+                                } catch (Throwable e) {
+                                    logE(utils.getTAG(), name + " hook method: " + member + " e: " + e);
+                                }
                             }
+                            setState(name, data, members);
                         }
-                        setState(name, data, members);
                     }
                 }
                 if (!useMethodIndex) {

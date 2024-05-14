@@ -1,22 +1,24 @@
 package com.hchen.hooktool.log;
 
+import android.util.Log;
+
+/**
+ * 没啥用的安卓日志类
+ */
 public class AndroidLog {
-    public static final String hookMain = "[HChen]";
-    public static final String mHook = "[HChen:";
-    public static final String other = "]";
-    public static void logSI(String name, String tag, String log) {
-        android.util.Log.i(mHook + name + other, "[" + tag + "][I]: " + log);
+    public static void logI(String tag, String pkg, String log) {
+        Log.i(tag, "[" + pkg + "][I]: " + log);
     }
 
-    public static void logSI(String tag, String log) {
-        android.util.Log.i(hookMain, "[" + tag + "][I]: " + log);
+    public static void logI(String tag, String log) {
+        Log.i(tag, "[I]: " + log);
     }
 
-    public static void logSW(String tag, String log) {
-        android.util.Log.w(hookMain, "[" + tag + "][W]: " + log);
+    public static void logW(String tag, String log) {
+        Log.w(tag, "[W]: " + log);
     }
 
-    public void logSE(String tag, String log) {
-        android.util.Log.e(hookMain, "[" + tag + "][E]: " + log);
+    public void logE(String tag, String log) {
+        Log.e(tag, "[E]: " + log);
     }
 }

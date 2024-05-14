@@ -17,7 +17,7 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
  */
 public class DataUtils {
     public static String TAG = null;
-    public String mCustomTAG = null;
+    public String mThisTag = null;
     public HCHook hcHook = null;
     public ClassTool classTool = null;
     public FieldTool fieldTool = null;
@@ -92,12 +92,8 @@ public class DataUtils {
         return fieldTool;
     }
 
-    public void setCustomTAG(String tag) {
-        mCustomTAG = tag;
-    }
-
     public String getTAG() {
-        if (mCustomTAG != null) return mCustomTAG;
+        if (mThisTag != null) return mThisTag;
         return TAG;
     }
 }

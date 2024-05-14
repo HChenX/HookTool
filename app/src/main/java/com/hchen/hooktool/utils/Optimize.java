@@ -15,7 +15,7 @@ public class Optimize {
     }
 
     public ActionTool getIndexMethod(int index, String name, Class<?>... clzzs) {
-        return utils.getMethodTool().getIndexMethod(index, name, clzzs);
+        return utils.getMethodTool().getMethodByIndex(index, name, clzzs);
     }
 
     public ActionTool getAnyMethod(String name) {

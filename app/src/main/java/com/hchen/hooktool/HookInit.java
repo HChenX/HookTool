@@ -14,13 +14,13 @@ public class HookInit {
     private static ClassLoader classLoader = null;
     private static boolean canUseSystemClassLoader = false;
     private static String packageName;
-    private static String thisTAG = "[HChen][HookInit]: ";
-    private static String TAG = null;
+    private static String TAG = "Unknown";
+    public static String spareTag = "Unknown";
     private static int logLevel = 0;
 
     public static void setTAG(String tag) {
-        thisTAG = "[HChen]" + "[" + tag + "]: ";
-        TAG = tag;
+        TAG = "[" + tag + "]";
+        spareTag = tag;
     }
 
     public static String getTAG() {
