@@ -10,18 +10,18 @@ import com.hchen.hooktool.callback.IAction;
 import com.hchen.hooktool.data.MemberData;
 import com.hchen.hooktool.data.StateEnum;
 import com.hchen.hooktool.utils.DataUtils;
-import com.hchen.hooktool.utils.Optimize;
+import com.hchen.hooktool.utils.MethodOpt;
 
 import java.lang.reflect.Member;
 import java.util.ArrayList;
 
 import de.robv.android.xposed.XposedBridge;
 
-public class ActionTool extends Optimize {
+public class ActionTool extends MethodOpt {
     private final DataUtils utils;
     private int count = 0;
-    private int lastIndex = -1;
-    private int classIndex = -1;
+    private Enum<?> lastEnum = null;
+    // private int classIndex = -1;
     // protected ArrayList<Member> members = null;
 
     public ActionTool(DataUtils data) {
@@ -30,14 +30,10 @@ public class ActionTool extends Optimize {
     }
 
     /**
-     * 不太建议修改，因为会持久化设置，除非手动设置 -1 使此设置失效。
+     * 指定类 TAG
      */
-    public ActionTool setClassIndex(int index) {
-        if (index < 0) {
-            logE(utils.getTAG(), "class index cant < 0!");
-            return utils.getActionTool();
-        }
-        classIndex = index;
+    public ActionTool to(Enum<?> enumTag) {
+        utils.getClassTool().to(enumTag);
         return utils.getActionTool();
     }
 
@@ -49,18 +45,11 @@ public class ActionTool extends Optimize {
     }
 
     /**
-     * 使用全部回调接口
+     * 执行 hook
      */
     public MethodTool hook(int methodIndex, IAction iAction) {
-        return hook(utils.getCount(), methodIndex, iAction);
-    }
-
-    /**
-     * {@link ActionTool#hook(int, IAction)}
-     */
-    public MethodTool hook(int classIndex, int methodIndex, IAction iAction) {
         if (actionSafe("hook", iAction)) {
-            hookTool("hook", classIndex, methodIndex, new IActionTool() {
+            hookTool("hook", methodIndex, new IActionTool() {
                 @Override
                 public Action action(Member member) {
                     return hookTool(member, iAction);
@@ -81,14 +70,7 @@ public class ActionTool extends Optimize {
      * 直接返回指定值
      */
     public void returnResult(int methodIndex, final Object result) {
-        returnResult(utils.getCount(), methodIndex, result);
-    }
-
-    /**
-     * {@link ActionTool#returnResult(int, Object)}
-     */
-    public void returnResult(int classIndex, int methodIndex, final Object result) {
-        hookTool("returnResult", classIndex, methodIndex, new IActionTool() {
+        hookTool("returnResult", methodIndex, new IActionTool() {
             @Override
             public Action action(Member member) {
                 return new Action(utils.getTAG()) {
@@ -109,17 +91,10 @@ public class ActionTool extends Optimize {
     }
 
     /**
-     * 是 hook 方法失效
+     * 使 hook 方法失效
      */
     public void doNothing(int methodIndex) {
-        doNothing(utils.getCount(), methodIndex);
-    }
-
-    /**
-     * {@link ActionTool#doNothing(int)}
-     */
-    public void doNothing(int classIndex, int methodIndex) {
-        hookTool("doNothing", classIndex, methodIndex, new IActionTool() {
+        hookTool("doNothing", methodIndex, new IActionTool() {
             @Override
             public Action action(Member member) {
                 return new Action(utils.getTAG(), PRIORITY_HIGHEST * 2) {
@@ -132,79 +107,69 @@ public class ActionTool extends Optimize {
         });
     }
 
-    private void hookTool(String name, int classIndex, int methodIndex, IActionTool tool) {
-        boolean useMethodIndex = methodIndex != -1;
-        if (this.classIndex != -1) {
-            classIndex = this.classIndex;
-        }
-        if (utils.members.size() > classIndex) {
-            MemberData data = utils.members.get(classIndex);
-            if (data != null) {
-                if (data.mClass == null) {
-                    logW(utils.getTAG(), "index: " + classIndex + " this data class is null!");
-                }
-                if (lastIndex == -1) lastIndex = classIndex;
-                else if (lastIndex != classIndex) {
-                    lastIndex = classIndex;
-                    count = 0;
-                }
-                int size = data.memberMap.size();
-                ArrayList<Member> members = null;
-                if (size >= 2) {
-                    if (count + 1 > size) {
-                        logW(utils.getTAG(), name + " count > index, cant get memberMap! calss: " + data.mClass + "index: "
-                                + classIndex + " size: " + size + " count: " + count);
-                        return;
-                    }
-                    count = data.count;
-                    // utils.setMethodCount(data.count);
-                    members = data.memberMap.get(useMethodIndex ? methodIndex : count);
-                    // count = count + 1;
-                } else {
-                    members = data.memberMap.get(0);
-                    data.count = 0;
-                    // count = 1;
-                }
-                if (members == null) {
-                    logW(utils.getTAG(), name + " don't have anything can hook. class is: " + data.mClass);
-                } else {
-                    if (isHooked(name, data, members)) {
-                        logW(utils.getTAG(), "this method or constructor is hooked [" + name + "]! members: " + members);
-                    } else {
-                        if (members.isEmpty()) {
-                            logW(utils.getTAG(), "this members is empty! cant hook anything, will skip! class: "
-                                    + data.mClass + " index: " + classIndex + " count: " + count);
-                        } else {
-                            for (Member member : members) {
-                                try {
-                                    XposedBridge.hookMethod(member, tool.action(member));
-                                    logD(utils.getTAG(), "success hook: " + member + " class: " + data.mClass
-                                            + " index: " + classIndex + " count: " + count);
-                                } catch (Throwable e) {
-                                    logE(utils.getTAG(), name + " hook method: " + member + " e: " + e);
-                                }
-                            }
-                            setState(name, data, members);
-                        }
-                    }
-                }
-                if (!useMethodIndex) {
-                    if (count + 1 < size)
-                        data.count = count + 1;
-                    else
-                        logW(utils.getTAG(), "this is a list can hook member: " + members);
-                }
-                utils.members.put(classIndex, data);
-            } else {
-                logW(utils.getTAG(), name + " member data is null!");
-            }
-        } else {
-            logW(utils.getTAG(), name + " members size < index!");
-        }
-    }
-
     private void hookTool(String name, int methodIndex, IActionTool tool) {
-        hookTool(name, utils.getCount(), methodIndex, tool);
+        boolean useMethodIndex = methodIndex != -1;
+        Enum<?> mEnum = utils.getEnum();
+        MemberData data = utils.members.get(mEnum);
+        if (data != null) {
+            if (data.mClass == null) {
+                logW(utils.getTAG(), "mEnum: " + mEnum + " this data class is null!");
+            }
+            if (lastEnum == null) lastEnum = mEnum;
+            else if (lastEnum != mEnum) {
+                lastEnum = mEnum;
+                count = 0;
+            }
+            int size = data.memberMap.size();
+            ArrayList<Member> members = null;
+            if (size >= 2) {
+                if (count + 1 > size) {
+                    logW(utils.getTAG(), name + " count > index, cant get memberMap! calss: " + data.mClass + "mEnum: "
+                            + mEnum + " size: " + size + " count: " + count);
+                    return;
+                }
+                count = data.count;
+                // utils.setMethodCount(data.count);
+                members = data.memberMap.get(useMethodIndex ? methodIndex : count);
+                // count = count + 1;
+            } else {
+                members = data.memberMap.get(0);
+                data.count = 0;
+                // count = 1;
+            }
+            if (members == null) {
+                logW(utils.getTAG(), name + " don't have anything can hook. class is: " + data.mClass);
+            } else {
+                if (isHooked(name, data, members)) {
+                    logW(utils.getTAG(), "this method or constructor is hooked [" + name + "]! members: " + members);
+                } else {
+                    if (members.isEmpty()) {
+                        logW(utils.getTAG(), "this members is empty! cant hook anything, will skip! class: "
+                                + data.mClass + " mEnum: " + mEnum + " count: " + count);
+                    } else {
+                        for (Member member : members) {
+                            try {
+                                XposedBridge.hookMethod(member, tool.action(member));
+                                logD(utils.getTAG(), "success hook: " + member + " class: " + data.mClass
+                                        + " mEnum: " + mEnum + " count: " + count);
+                            } catch (Throwable e) {
+                                logE(utils.getTAG(), name + " hook method: " + member + " e: " + e);
+                            }
+                        }
+                        setState(name, data, members);
+                    }
+                }
+            }
+            if (!useMethodIndex) {
+                if (count + 1 < size)
+                    data.count = count + 1;
+                else
+                    logW(utils.getTAG(), "this is a list can hook member: " + members);
+            }
+            utils.members.put(mEnum, data);
+        } else {
+            logW(utils.getTAG(), name + " member data is null!");
+        }
     }
 
     private boolean isHooked(String name, MemberData data, ArrayList<Member> members) {

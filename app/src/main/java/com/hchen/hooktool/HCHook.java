@@ -40,14 +40,17 @@ public class HCHook {
         return utils.getHCHook();
     }
 
-    /* 因为 class tool 是本工具基准入口，所以初始化使用必须进入此类。 */
-    public ClassTool classTool() {
-        return utils.getClassTool();
+    // 更棒的无缝衔接
+    public ClassTool findClass(Enum<?> enumTag, String className) {
+        return utils.getClassTool().findClass(enumTag, className);
     }
 
-    /* 优化调用 */
-    public ClassTool findClass(String name) {
-        utils.getClassTool().findClass(name);
+    public ClassTool findClass(Enum<?> enumTag, String className, ClassLoader classLoader) {
+        return utils.getClassTool().findClass(enumTag, className, classLoader);
+    }
+
+    /* 因为 class tool 是本工具基准入口，所以初始化使用必须进入此类。 */
+    public ClassTool classTool() {
         return utils.getClassTool();
     }
 

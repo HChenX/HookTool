@@ -20,45 +20,25 @@ public class FieldTool {
         this.utils = utils;
     }
 
-    public FieldTool reset() {
-        utils.reset();
-        return utils.getFieldTool();
-    }
-
-    public FieldTool next() {
-        utils.next();
-        return utils.getFieldTool();
-    }
-
-    public FieldTool back() {
-        utils.back();
+    public FieldTool to(Enum<?> enumTag) {
+        utils.getClassTool().to(enumTag);
         return utils.getFieldTool();
     }
 
     /**
-     * 按顺序获取指定字段。
+     * 按 TAG 获取指定字段。
      */
-    public FieldTool findField(String name) {
-        return findIndexField(utils.getCount(), name);
-    }
-
-    /**
-     * 按索引获取指定字段。
-     */
-    public FieldTool findIndexField(int index, String name) {
+    public FieldTool findIndexField(String name) {
         utils.findField = null;
         toClass = null;
-        if (utils.classes.isEmpty()) {
+        if (utils.enumClasses.isEmpty()) {
             logW(utils.getTAG(), "The class list is empty!");
             return utils.getFieldTool();
         }
-        if (utils.classes.size() - 1 < index) {
-            logW(utils.getTAG(), "index > class size, can't find field: " + name);
-            return utils.getFieldTool();
-        }
-        MemberData data = utils.classes.get(index);
+        Enum<?> mEnum = utils.getEnum();
+        MemberData data = utils.enumClasses.get(mEnum);
         if (data == null) {
-            logW(utils.getTAG(), "data is null, cant find field: " + name + " index: " + index);
+            logW(utils.getTAG(), "data is null, cant find field: " + name + " mEnum: " + mEnum);
             return utils.getFieldTool();
         }
         Class<?> c = data.mClass;
@@ -124,8 +104,12 @@ public class FieldTool {
     }
 
     // 更棒的无缝衔接
-    public ClassTool findClass(String name) {
-        return utils.getClassTool().findClass(name);
+    public ClassTool findClass(Enum<?> enumTag, String className) {
+        return utils.getClassTool().findClass(enumTag, className);
+    }
+
+    public ClassTool findClass(Enum<?> enumTag, String className, ClassLoader classLoader) {
+        return utils.getClassTool().findClass(enumTag, className, classLoader);
     }
 
     public MethodTool methodTool() {

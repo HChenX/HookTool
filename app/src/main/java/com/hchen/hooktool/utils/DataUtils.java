@@ -9,6 +9,7 @@ import com.hchen.hooktool.tool.MethodTool;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
@@ -27,13 +28,15 @@ public class DataUtils {
     public static ClassLoader classLoader = null;
     public ClassLoader mCustomClassLoader = null;
     public Class<?> findClass = null;
-    public MapUtils<MemberData> classes = new MapUtils<>();
+    // public MapUtils<MemberData> classes = new MapUtils<>();
+    public HashMap<Enum<?>, MemberData> enumClasses = new HashMap<>();
     // public ArrayList<Class<?>> classes = new ArrayList<>();
     public ArrayList<Object> newInstances = new ArrayList<>();
     public Field findField = null;
-    public int next = 0;
+    public Enum<?> mEnum = null;
+    // public int next = 0;
     // private Method method = null;
-    public final MapUtils<MemberData> members = new MapUtils<>();
+    public final HashMap<Enum<?>, MemberData> members = new HashMap<>();
     // public final MapUtils<MemberData> constructors = new MapUtils<>();
 
     public ClassLoader getClassLoader() {
@@ -41,7 +44,15 @@ public class DataUtils {
         return classLoader;
     }
 
-    public int getCount() {
+    public void setEnum(Enum<?> mEnum) {
+        this.mEnum = mEnum;
+    }
+
+    public Enum<?> getEnum() {
+        return mEnum;
+    }
+
+    /* public int getCount() {
         return next;
     }
 
@@ -55,7 +66,7 @@ public class DataUtils {
 
     public void back() {
         next = next - 1;
-    }
+    } */
 
     public HCHook getHCHook() {
         HCHook hcHook = this.hcHook;

@@ -10,6 +10,7 @@ import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedHelpers;
 
 public class MainTest {
+
     public void test() {
         new XC_MethodHook() {
             @Override

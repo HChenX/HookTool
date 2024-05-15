@@ -7,16 +7,13 @@ import static com.hchen.hooktool.utils.DataUtils.classLoader;
 
 import com.hchen.hooktool.data.MemberData;
 import com.hchen.hooktool.utils.DataUtils;
-import com.hchen.hooktool.utils.MapUtils;
-import com.hchen.hooktool.utils.Optimize;
+import com.hchen.hooktool.utils.MethodOpt;
 
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-
 import de.robv.android.xposed.XposedHelpers;
 
-public class ClassTool extends Optimize {
+public class ClassTool extends MethodOpt {
     private final DataUtils utils;
 
     public ClassTool(DataUtils utils) {
@@ -26,37 +23,84 @@ public class ClassTool extends Optimize {
         utils.classTool = this;
     }
 
-    public MethodTool next() {
-        utils.next();
+    public MethodTool to(Enum<?> enumTag) {
+        utils.setEnum(enumTag);
         return utils.getMethodTool();
     }
 
+    // -------- 传统索引形式 ----------
+
     /**
-     * 查找指定类
+     * 查找指定类，通过索引。<br/>
+     * 旧实现。
      */
-    public ClassTool findClass(String className) {
+    /*public ClassTool findClass(String className) {
+        return findClass(className, utils.mCustomClassLoader == null ? classLoader : utils.mCustomClassLoader);
+    }
+
+    public ClassTool findClass(String className, boolean add) {
+        return findClass(className, add, utils.mCustomClassLoader == null ? classLoader : utils.mCustomClassLoader);
+    }
+
+    public ClassTool findClass(String className, ClassLoader classLoader) {
+        return findClass(className, true, classLoader);
+    }
+
+    public ClassTool findClass(String className, boolean add, ClassLoader classLoader) {
         initSafe();
         if (utils.findClass != null) utils.findClass = null;
         try {
             utils.findClass = XposedHelpers.findClass(className,
-                    utils.mCustomClassLoader == null ? classLoader : utils.mCustomClassLoader);
+                    classLoader);
         } catch (XposedHelpers.ClassNotFoundError e) {
             logE(utils.getTAG(), "The specified class could not be found: " + className + " e: " + e);
             utils.findClass = null;
         }
         // utils.classes.add(utils.findClass);
-        utils.classes.put(new MemberData(utils.findClass));
+        if (add) utils.classes.put(new MemberData(utils.findClass));
+        return utils.getClassTool();
+    }*/
+
+    // ---------- 枚举形式 ------------
+    public ClassTool findClass(Enum<?> enumTag, String className) {
+        return findClass(enumTag, className,
+                utils.mCustomClassLoader == null ? classLoader : utils.mCustomClassLoader);
+    }
+
+    public ClassTool findClass(Enum<?> enumTag, String className, ClassLoader classLoader) {
+        initSafe();
+        if (utils.findClass != null) utils.findClass = null;
+        try {
+            utils.findClass = XposedHelpers.findClass(className,
+                    classLoader);
+        } catch (XposedHelpers.ClassNotFoundError e) {
+            logE(utils.getTAG(), "The specified class could not be found: " + className + " e: " + e);
+            utils.findClass = null;
+        }
+        // utils.classes.add(utils.findClass);
+        utils.enumClasses.put(enumTag, new MemberData(utils.findClass));
+        utils.setEnum(enumTag);
         return utils.getClassTool();
     }
 
-    /* 获取本次查找到的类，必须在下次查找前调用才能获取本次。 */
+    /* 获取本次得到的类 */
     @Nullable
     public Class<?> get() {
         return utils.findClass;
     }
 
+    /* 获取指定枚举标签的类。 */
+    @Nullable
+    public Class<?> get(Enum<?> enumTAg) {
+        MemberData data = utils.enumClasses.get(enumTAg);
+        if (data != null) {
+            return data.mClass;
+        }
+        return null;
+    }
+
     public int size() {
-        return utils.classes.size();
+        return utils.enumClasses.size();
     }
 
     // ---------- 实例方法 -----------
@@ -66,34 +110,31 @@ public class ClassTool extends Optimize {
      */
     @Nullable
     public Object newInstance(Object... args) {
-        return newInstance(utils.getCount(), args);
+        return newInstance(utils.getEnum(), args);
     }
 
     /**
      * 实例指定索引类，索引从 0 开始。
      */
     @Nullable
-    public Object newInstance(int index, Object... args) {
-        if (utils.classes.size() - 1 < index || index < 0) {
-            logE(utils.getTAG(), "The index is out of range!");
-            return null;
-        }
-        MemberData memberData = utils.classes.get(index);
+    public Object newInstance(Enum<?> enumTag, Object... args) {
+        MemberData memberData = utils.enumClasses.get(enumTag);
         if (memberData != null && memberData.mClass != null) {
             try {
                 return XposedHelpers.newInstance(memberData.mClass, args);
             } catch (Throwable e) {
                 logE(utils.getTAG(), "new instance class: " + memberData.mClass + " e: " + e);
             }
-        } else logW(utils.getTAG(), "class is null, cant new instance. index: " + index);
+        } else logW(utils.getTAG(), "class is null, cant new instance. enum: " + enumTag);
         return null;
     }
 
     /**
      * 实例全部类。
-     * 不建议使用。
+     * 不建议使用。<br/>
+     * 已经报废。
      */
-    public ArrayList<Object> newInstanceAll(MapUtils<Object[]> mapUtils) {
+    /* public ArrayList<Object> newInstanceAll(MapUtils<Object[]> mapUtils) {
         utils.newInstances.clear();
         if (utils.newInstances.size() != mapUtils.getHashMap().size()) {
             logE(utils.getTAG(), "The length of the instance parameter list is inconsistent!");
@@ -103,13 +144,12 @@ public class ClassTool extends Optimize {
             utils.newInstances.add(newInstance(i, mapUtils.get(i)));
         }
         return utils.newInstances;
-    }
+    } */
 
     // 无需再回归此类。
     // public HCHook hcHook() {
     //     return utils.getHCHook();
     // }
-
     public MethodTool methodTool() {
         return utils.getMethodTool();
     }
@@ -120,6 +160,6 @@ public class ClassTool extends Optimize {
 
     /* 不建议使用 clear 本工具应该是一次性的。 */
     private void clear() {
-        utils.classes.clear();
+        utils.enumClasses.clear();
     }
 }
