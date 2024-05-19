@@ -2,7 +2,7 @@
 agp = "8.2.2"
 annotationJvm = "1.7.1"
 annotationsVersion = "23.0.0"
-jetbrainsAnnotations = "23.0.0"
+dexkit = "2.0.1"
 manifoldExt = "2024.1.12"
 manifoldExtRt = "2024.1.12"
 xposed = "82"
@@ -10,7 +10,7 @@ annotations = "28.0.0"
 
 [libraries]
 androidx-annotation-jvm = { module = "androidx.annotation:annotation-jvm", version.ref = "annotationJvm" }
-annotations-v130 = { module = "org.jetbrains:annotations", version.ref = "jetbrainsAnnotations" }
+dexkit = { module = "org.luckypray:dexkit", version.ref = "dexkit" }
 jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "annotationsVersion" }
 manifold-ext-rt = { module = "systems.manifold:manifold-ext-rt", version.ref = "manifoldExtRt" }
 systems-manifold-ext = { module = "systems.manifold:manifold-ext", version.ref = "manifoldExt" }

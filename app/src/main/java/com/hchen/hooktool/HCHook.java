@@ -8,11 +8,13 @@ import com.hchen.hooktool.tool.FieldTool;
 import com.hchen.hooktool.tool.INDTool;
 import com.hchen.hooktool.tool.MethodTool;
 import com.hchen.hooktool.tool.hook.ActionTool;
+import com.hchen.hooktool.tool.hook.DexkitTool;
 import com.hchen.hooktool.utils.DataUtils;
 
 public class HCHook {
     private final DataUtils utils;
     private final INDTool indTool;
+    private final DexkitTool dexkitTool;
 
     static {
         initSafe();
@@ -36,6 +38,7 @@ public class HCHook {
         utils.fieldTool = new FieldTool(utils);
         utils.methodTool = new MethodTool(utils);
         indTool = new INDTool(utils);
+        dexkitTool = new DexkitTool(utils);
     }
 
     public HCHook setThisTag(String tag) {
@@ -67,6 +70,10 @@ public class HCHook {
 
     public INDTool indTool() {
         return indTool;
+    }
+
+    public DexkitTool dexkitTool() {
+        return dexkitTool;
     }
 
     /* 设置自定义 ClassLoader

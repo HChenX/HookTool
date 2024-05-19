@@ -3,7 +3,7 @@ plugins {
     id 'maven-publish'
 }
 
-def defVersion = 'v.0.6'
+def defVersion = 'v.0.6.1'
 
 group = 'com.github.HChenX'
 version = defVersion
@@ -58,7 +58,8 @@ tasks.register('androidSourcesJar', Jar) {
 
 dependencies {
     compileOnly libs.xposed
-    implementation libs.annotations.v130
+    implementation libs.dexkit
+    implementation libs.jetbrains.annotations
     // compileOnly libs.systems.manifold.ext
     // implementation libs.annotations
     // implementation libs.androidx.annotation.jvm
