@@ -3,14 +3,16 @@ package com.hchen.hooktool;
 import static com.hchen.hooktool.log.XposedLog.logE;
 import static com.hchen.hooktool.utils.DataUtils.TAG;
 
-import com.hchen.hooktool.tool.ActionTool;
 import com.hchen.hooktool.tool.ClassTool;
 import com.hchen.hooktool.tool.FieldTool;
+import com.hchen.hooktool.tool.INDTool;
 import com.hchen.hooktool.tool.MethodTool;
+import com.hchen.hooktool.tool.hook.ActionTool;
 import com.hchen.hooktool.utils.DataUtils;
 
 public class HCHook {
     private final DataUtils utils;
+    private final INDTool indTool;
 
     static {
         initSafe();
@@ -33,6 +35,7 @@ public class HCHook {
         utils.classTool = new ClassTool(utils);
         utils.fieldTool = new FieldTool(utils);
         utils.methodTool = new MethodTool(utils);
+        indTool = new INDTool(utils);
     }
 
     public HCHook setThisTag(String tag) {
@@ -60,6 +63,10 @@ public class HCHook {
 
     public FieldTool fieldTool() {
         return utils.getFieldTool();
+    }
+
+    public INDTool indTool() {
+        return indTool;
     }
 
     /* 设置自定义 ClassLoader

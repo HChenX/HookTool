@@ -2,10 +2,10 @@ package com.hchen.hooktool.utils;
 
 import com.hchen.hooktool.HCHook;
 import com.hchen.hooktool.data.MemberData;
-import com.hchen.hooktool.tool.ActionTool;
 import com.hchen.hooktool.tool.ClassTool;
 import com.hchen.hooktool.tool.FieldTool;
 import com.hchen.hooktool.tool.MethodTool;
+import com.hchen.hooktool.tool.hook.ActionTool;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -29,14 +29,14 @@ public class DataUtils {
     public ClassLoader mCustomClassLoader = null;
     public Class<?> findClass = null;
     // public MapUtils<MemberData> classes = new MapUtils<>();
-    public HashMap<Enum<?>, MemberData> enumClasses = new HashMap<>();
+    public HashMap<Object, MemberData> labelClasses = new HashMap<>();
     // public ArrayList<Class<?>> classes = new ArrayList<>();
     public ArrayList<Object> newInstances = new ArrayList<>();
     public Field findField = null;
-    public Enum<?> mEnum = null;
+    public Object mLabel = null;
     // public int next = 0;
     // private Method method = null;
-    public final HashMap<Enum<?>, MemberData> members = new HashMap<>();
+    public final HashMap<Object, MemberData> members = new HashMap<>();
     // public final MapUtils<MemberData> constructors = new MapUtils<>();
 
     public ClassLoader getClassLoader() {
@@ -44,12 +44,12 @@ public class DataUtils {
         return classLoader;
     }
 
-    public void setEnum(Enum<?> mEnum) {
-        this.mEnum = mEnum;
+    public void setLabel(Object label) {
+        this.mLabel = label;
     }
 
-    public Enum<?> getEnum() {
-        return mEnum;
+    public Object getLabel() {
+        return mLabel;
     }
 
     /* public int getCount() {

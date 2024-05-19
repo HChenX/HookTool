@@ -1,4 +1,4 @@
-package com.hchen.hooktool.tool.param;
+package com.hchen.hooktool.tool.hook.param;
 
 import static com.hchen.hooktool.log.XposedLog.logE;
 
@@ -77,6 +77,11 @@ public class ActAchieve {
     }
 
     @Nullable
+    public <R> R callMethod(String name) {
+        return callMethod(name, new Object[]{});
+    }
+
+    @Nullable
     public <T> T getField(String name) {
         paramSafe();
         try {
@@ -87,7 +92,7 @@ public class ActAchieve {
         return null;
     }
 
-    public <T> boolean setField(String name, T key) {
+    public boolean setField(String name, Object key) {
         paramSafe();
         try {
             XposedHelpers.setObjectField(param.thisObject, name, key);
@@ -98,7 +103,7 @@ public class ActAchieve {
         return false;
     }
 
-    public <T> boolean setAdditionalInstanceField(String name, T key) {
+    public boolean setAdditionalInstanceField(String name, Object key) {
         paramSafe();
         try {
             XposedHelpers.setAdditionalInstanceField(param.thisObject, name, key);

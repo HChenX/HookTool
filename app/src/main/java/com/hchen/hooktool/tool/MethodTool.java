@@ -6,6 +6,7 @@ import static com.hchen.hooktool.log.XposedLog.logW;
 import com.hchen.hooktool.callback.IAction;
 import com.hchen.hooktool.data.MemberData;
 import com.hchen.hooktool.data.StateEnum;
+import com.hchen.hooktool.tool.hook.ActionTool;
 import com.hchen.hooktool.utils.DataUtils;
 
 import org.jetbrains.annotations.Nullable;
@@ -25,8 +26,8 @@ public class MethodTool {
         clear();
     }
 
-    public MethodTool to(Enum<?> enumTag) {
-        utils.getClassTool().to(enumTag);
+    public MethodTool to(Object label) {
+        utils.getClassTool().to(label);
         return utils.getMethodTool();
     }
 
@@ -80,22 +81,22 @@ public class MethodTool {
     }
 
     private ActionTool findMethod(String name, IMethodTool iMethodTool, Class<?>... clzzs) {
-        if (utils.enumClasses.isEmpty()) {
+        if (utils.labelClasses.isEmpty()) {
             logW(utils.getTAG(), "the class list is empty! cant find method: " + name);
             return utils.getActionTool();
         }
-        Enum<?> mEnum = utils.getEnum();
-        MemberData data = utils.members.get(mEnum);
+        Object label = utils.getLabel();
+        MemberData data = utils.members.get(label);
         if (data == null) {
-            logW(utils.getTAG(), "memberData is null, cant find: " + name + " mEnum: " + mEnum);
-            utils.members.put(mEnum, data);
+            logW(utils.getTAG(), "memberData is null, cant find: " + name + " label: " + label);
+            utils.members.put(label, data);
             return utils.getActionTool();
         }
         Class<?> c = data.mClass;
         if (c == null) {
-            logW(utils.getTAG(), "class is null! cant find: " + name + " mEnum: " + mEnum);
+            logW(utils.getTAG(), "class is null! cant find: " + name + " label: " + label);
             // utils.methods.put(index, new ArrayList<>());
-            utils.members.put(mEnum, data);
+            utils.members.put(label, data);
             return utils.getActionTool();
         }
         ArrayList<Member> members = iMethodTool.doFindMethod(c, name, clzzs);
@@ -106,7 +107,7 @@ public class MethodTool {
         }
         // data.isHooked = false;
         // data.mConstructor = null;
-        utils.members.put(mEnum, data);
+        utils.members.put(label, data);
         return utils.getActionTool();
     }
 
@@ -144,22 +145,22 @@ public class MethodTool {
     }
 
     private ActionTool findConstructor(IConstructorTool iConstructorTool, Class<?>... classes) {
-        if (utils.enumClasses.isEmpty()) {
+        if (utils.labelClasses.isEmpty()) {
             logW(utils.getTAG(), "The class list is empty!");
             return utils.getActionTool();
         }
-        Enum<?> mEnum = utils.getEnum();
+        Object label = utils.getLabel();
         // utils.constructors.add(utils.classes.get(0).getConstructor(obj));
-        MemberData data = utils.enumClasses.get(mEnum);
+        MemberData data = utils.labelClasses.get(label);
         if (data == null) {
-            logW(utils.getTAG(), "memberData is null, mEnum: " + mEnum);
-            utils.members.put(mEnum, null);
+            logW(utils.getTAG(), "memberData is null, label: " + label);
+            utils.members.put(label, null);
             return utils.getActionTool();
         }
         Class<?> c = data.mClass;
         if (c == null) {
-            logW(utils.getTAG(), "class is null! mEnum: " + mEnum);
-            utils.members.put(mEnum, data);
+            logW(utils.getTAG(), "class is null! label: " + label);
+            utils.members.put(label, data);
             // utils.constructors.put(new Constructor[]{});
             return utils.getActionTool();
         }
@@ -172,7 +173,7 @@ public class MethodTool {
         // data.mConstructor = members;
         // data.mMethod = null;
         // data.isHooked = false;
-        utils.members.put(mEnum, data);
+        utils.members.put(label, data);
         return utils.getActionTool();
     }
 
@@ -199,12 +200,12 @@ public class MethodTool {
     }
 
     // 更棒的无缝衔接
-    public ClassTool findClass(Enum<?> enumTag, String className) {
-        return utils.getClassTool().findClass(enumTag, className);
+    public ClassTool findClass(Object label, String className) {
+        return utils.getClassTool().findClass(label, className);
     }
 
-    public ClassTool findClass(Enum<?> enumTag, String className, ClassLoader classLoader) {
-        return utils.getClassTool().findClass(enumTag, className, classLoader);
+    public ClassTool findClass(Object label, String className, ClassLoader classLoader) {
+        return utils.getClassTool().findClass(label, className, classLoader);
     }
 
     // 优化调用，只提供基本用法，详细用法请获取工具类对象

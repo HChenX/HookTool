@@ -1,4 +1,4 @@
-package com.hchen.hooktool.tool;
+package com.hchen.hooktool.tool.hook;
 
 import static com.hchen.hooktool.log.XposedLog.logD;
 import static com.hchen.hooktool.log.XposedLog.logE;
@@ -9,6 +9,7 @@ import com.hchen.hooktool.action.Action;
 import com.hchen.hooktool.callback.IAction;
 import com.hchen.hooktool.data.MemberData;
 import com.hchen.hooktool.data.StateEnum;
+import com.hchen.hooktool.tool.MethodTool;
 import com.hchen.hooktool.utils.DataUtils;
 import com.hchen.hooktool.utils.MethodOpt;
 
@@ -20,7 +21,7 @@ import de.robv.android.xposed.XposedBridge;
 public class ActionTool extends MethodOpt {
     private final DataUtils utils;
     private int count = 0;
-    private Enum<?> lastEnum = null;
+    private Object lastLabel = null;
     // private int classIndex = -1;
     // protected ArrayList<Member> members = null;
 
@@ -32,8 +33,8 @@ public class ActionTool extends MethodOpt {
     /**
      * 指定类 TAG
      */
-    public ActionTool to(Enum<?> enumTag) {
-        utils.getClassTool().to(enumTag);
+    public ActionTool to(Object label) {
+        utils.getClassTool().to(label);
         return utils.getActionTool();
     }
 
@@ -109,23 +110,23 @@ public class ActionTool extends MethodOpt {
 
     private void hookTool(String name, int methodIndex, IActionTool tool) {
         boolean useMethodIndex = methodIndex != -1;
-        Enum<?> mEnum = utils.getEnum();
-        MemberData data = utils.members.get(mEnum);
+        Object label = utils.getLabel();
+        MemberData data = utils.members.get(label);
         if (data != null) {
             if (data.mClass == null) {
-                logW(utils.getTAG(), "mEnum: " + mEnum + " this data class is null!");
+                logW(utils.getTAG(), "label: " + label + " this data class is null!");
             }
-            if (lastEnum == null) lastEnum = mEnum;
-            else if (lastEnum != mEnum) {
-                lastEnum = mEnum;
+            if (lastLabel == null) lastLabel = label;
+            else if (lastLabel != label) {
+                lastLabel = label;
                 count = 0;
             }
             int size = data.memberMap.size();
             ArrayList<Member> members = null;
             if (size >= 2) {
                 if (count + 1 > size) {
-                    logW(utils.getTAG(), name + " count > index, cant get memberMap! calss: " + data.mClass + "mEnum: "
-                            + mEnum + " size: " + size + " count: " + count);
+                    logW(utils.getTAG(), name + " count > index, cant get memberMap! calss: " + data.mClass + "label: "
+                            + label + " size: " + size + " count: " + count);
                     return;
                 }
                 count = data.count;
@@ -145,13 +146,13 @@ public class ActionTool extends MethodOpt {
                 } else {
                     if (members.isEmpty()) {
                         logW(utils.getTAG(), "this members is empty! cant hook anything, will skip! class: "
-                                + data.mClass + " mEnum: " + mEnum + " count: " + count);
+                                + data.mClass + " label: " + label + " count: " + count);
                     } else {
                         for (Member member : members) {
                             try {
                                 XposedBridge.hookMethod(member, tool.action(member));
                                 logD(utils.getTAG(), "success hook: " + member + " class: " + data.mClass
-                                        + " mEnum: " + mEnum + " count: " + count);
+                                        + " label: " + label + " count: " + count);
                             } catch (Throwable e) {
                                 logE(utils.getTAG(), name + " hook method: " + member + " e: " + e);
                             }
@@ -166,7 +167,7 @@ public class ActionTool extends MethodOpt {
                 else
                     logW(utils.getTAG(), "this is a list can hook member: " + members);
             }
-            utils.members.put(mEnum, data);
+            utils.members.put(label, data);
         } else {
             logW(utils.getTAG(), name + " member data is null!");
         }

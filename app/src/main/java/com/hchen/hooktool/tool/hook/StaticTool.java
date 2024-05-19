@@ -1,4 +1,4 @@
-package com.hchen.hooktool.tool;
+package com.hchen.hooktool.tool.hook;
 
 import static com.hchen.hooktool.log.XposedLog.logE;
 import static com.hchen.hooktool.log.XposedLog.logW;
@@ -65,15 +65,20 @@ public class StaticTool {
      * 这是为了规避泛型与可变参数的冲突。
      */
     @Nullable
-    public <T> Object newInstance(T objects) {
+    public <T, R> R newInstance(T objects) {
         if (findClass != null) {
             try {
-                return XposedHelpers.newInstance(findClass, tToObject(objects));
+                return (R) XposedHelpers.newInstance(findClass, tToObject(objects));
             } catch (Throwable e) {
                 logE(TAG, "new instance: " + e);
             }
         } else logW(TAG, "class is null, cant new instance.");
         return null;
+    }
+
+    @Nullable
+    public <R> R newInstance() {
+        return newInstance(new Object[]{});
     }
 
     /**
@@ -93,6 +98,11 @@ public class StaticTool {
             logW(TAG, "class is null, cant call: " + name);
         }
         return null;
+    }
+
+    @Nullable
+    public <R> R callStaticMethod(String name) {
+        return callStaticMethod(name, new Object[]{});
     }
 
     @Nullable

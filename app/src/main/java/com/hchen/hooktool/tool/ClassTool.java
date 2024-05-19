@@ -23,8 +23,8 @@ public class ClassTool extends MethodOpt {
         utils.classTool = this;
     }
 
-    public MethodTool to(Enum<?> enumTag) {
-        utils.setEnum(enumTag);
+    public MethodTool to(Object label) {
+        utils.setLabel(label);
         return utils.getMethodTool();
     }
 
@@ -62,12 +62,12 @@ public class ClassTool extends MethodOpt {
     }*/
 
     // ---------- 枚举形式 ------------
-    public ClassTool findClass(Enum<?> enumTag, String className) {
-        return findClass(enumTag, className,
+    public ClassTool findClass(Object label, String className) {
+        return findClass(label, className,
                 utils.mCustomClassLoader == null ? classLoader : utils.mCustomClassLoader);
     }
 
-    public ClassTool findClass(Enum<?> enumTag, String className, ClassLoader classLoader) {
+    public ClassTool findClass(Object label, String className, ClassLoader classLoader) {
         initSafe();
         if (utils.findClass != null) utils.findClass = null;
         try {
@@ -78,8 +78,8 @@ public class ClassTool extends MethodOpt {
             utils.findClass = null;
         }
         // utils.classes.add(utils.findClass);
-        utils.enumClasses.put(enumTag, new MemberData(utils.findClass));
-        utils.setEnum(enumTag);
+        utils.labelClasses.put(label, new MemberData(utils.findClass));
+        utils.setLabel(label);
         return utils.getClassTool();
     }
 
@@ -91,8 +91,8 @@ public class ClassTool extends MethodOpt {
 
     /* 获取指定枚举标签的类。 */
     @Nullable
-    public Class<?> get(Enum<?> enumTAg) {
-        MemberData data = utils.enumClasses.get(enumTAg);
+    public Class<?> get(Object label) {
+        MemberData data = utils.labelClasses.get(label);
         if (data != null) {
             return data.mClass;
         }
@@ -100,7 +100,7 @@ public class ClassTool extends MethodOpt {
     }
 
     public int size() {
-        return utils.enumClasses.size();
+        return utils.labelClasses.size();
     }
 
     // ---------- 实例方法 -----------
@@ -110,22 +110,22 @@ public class ClassTool extends MethodOpt {
      */
     @Nullable
     public Object newInstance(Object... args) {
-        return newInstance(utils.getEnum(), args);
+        return newInstance(utils.getLabel(), args);
     }
 
     /**
      * 实例指定索引类，索引从 0 开始。
      */
     @Nullable
-    public Object newInstance(Enum<?> enumTag, Object... args) {
-        MemberData memberData = utils.enumClasses.get(enumTag);
+    public Object newInstance(Object label, Object... args) {
+        MemberData memberData = utils.labelClasses.get(label);
         if (memberData != null && memberData.mClass != null) {
             try {
                 return XposedHelpers.newInstance(memberData.mClass, args);
             } catch (Throwable e) {
                 logE(utils.getTAG(), "new instance class: " + memberData.mClass + " e: " + e);
             }
-        } else logW(utils.getTAG(), "class is null, cant new instance. enum: " + enumTag);
+        } else logW(utils.getTAG(), "class is null, cant new instance. label: " + label);
         return null;
     }
 
@@ -160,6 +160,6 @@ public class ClassTool extends MethodOpt {
 
     /* 不建议使用 clear 本工具应该是一次性的。 */
     private void clear() {
-        utils.enumClasses.clear();
+        utils.labelClasses.clear();
     }
 }

@@ -73,18 +73,16 @@ public void test() {
 # 💡链式调用
 
 - 本工具支持链式调用，获取一次`Class`终身使用 (bushi) 。
-- ⚠️对`Class`的定位获取需要借助 Enum 枚举来辅助。
+- ⚠️对`Class`的定位获取需要借助标签来辅助。
+- 标签类型为 Object，所以可以随便写。
 - 代码示例:
 
 ```java
 // Method 的链式调用
 public class MainTest {
     public void test() {
-        enum Enum {
-            Main
-        }
         HCHook hcHook = new HCHook();
-        hcHook.findClass(Enum.Main, "com.demo.Main").
+        hcHook.findClass("main", "com.demo.Main").
                 getMethod("test1").getMethod("test2").getMethod("test3"); // 即可持续的获取方法。
         // 什么？怎么 Hook ？同样简单！
         hcHook.methodTool().hook(new IAction() {
@@ -106,24 +104,39 @@ public class MainTest {
 // Class 的链式调用
 public class MainTest {
     public void test() {
-        enum Enum {
-            Main1, Main2, Main3
-        }
         HCHook hcHook = new HCHook();
-        hcHook.findClass(Enum.Main1, "com.demo.Main1").findClass(Enum.Main2, "com.demo.Main2")
-                .findClass(Enum.Main3, "com.demo.Main3")
+        hcHook.findClass("main1", "com.demo.Main1").findClass("main2", "com.demo.Main2")
+                .findClass("main3", "com.demo.Main3")
                 .getMethod("main1").hook(new IAction() {
                     //......
-                }).to(Enum.Main2) // 调用 to() 则会转为使用指定枚举对象的类进行方法查找与Hook。
+                }).to("main2") // 调用 to() 则会转为使用指定枚举对象的类进行方法查找与Hook。
                 .getMethod("main2").hook(new IAction() {
                     //......
-                }).to(Enum.Main3) // 调用 to() 则会转为使用指定枚举对象的类进行方法查找与Hook。
+                }).to("main3") // 调用 to() 则会转为使用指定枚举对象的类进行方法查找与Hook。
                 .getMethod("main3").hook(new IAction() {
                     //......
-                }).to(Enum.Main2) // 调用 to() 则会转为使用指定枚举对象的类进行方法查找与Hook。
+                }).to("main2") // 调用 to() 则会转为使用指定枚举对象的类进行方法查找与Hook。
                 .getMethod("main2-1").hook(new IAction() {
                     //......
                 });
+    }
+}
+```
+
+```java
+// 独立工具
+public class MainTest {
+    public void test() {
+        Object object = null;
+        Class<?> clazz = null;
+        HCHook hcHook = new HCHook();
+        INDTool indTool = hcHook.indTool();
+        indTool.callMethod(object, "call", new Object[]{});
+        indTool.setField(object, "field", null);
+        indTool.getField(object, "field");
+        indTool.callStaticMethod(clazz, "callStatic");
+        indTool.setStaticField(clazz, "fieldStatic", null);
+        indTool.getStaticField(clazz, "fieldStatic");
     }
 }
 ```

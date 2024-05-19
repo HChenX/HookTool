@@ -20,8 +20,8 @@ public class FieldTool {
         this.utils = utils;
     }
 
-    public FieldTool to(Enum<?> enumTag) {
-        utils.getClassTool().to(enumTag);
+    public FieldTool to(Object label) {
+        utils.getClassTool().to(label);
         return utils.getFieldTool();
     }
 
@@ -31,14 +31,14 @@ public class FieldTool {
     public FieldTool findIndexField(String name) {
         utils.findField = null;
         toClass = null;
-        if (utils.enumClasses.isEmpty()) {
+        if (utils.labelClasses.isEmpty()) {
             logW(utils.getTAG(), "The class list is empty!");
             return utils.getFieldTool();
         }
-        Enum<?> mEnum = utils.getEnum();
-        MemberData data = utils.enumClasses.get(mEnum);
+        Object label = utils.getLabel();
+        MemberData data = utils.labelClasses.get(label);
         if (data == null) {
-            logW(utils.getTAG(), "data is null, cant find field: " + name + " mEnum: " + mEnum);
+            logW(utils.getTAG(), "data is null, cant find field: " + name + " label: " + label);
             return utils.getFieldTool();
         }
         Class<?> c = data.mClass;
@@ -104,12 +104,12 @@ public class FieldTool {
     }
 
     // 更棒的无缝衔接
-    public ClassTool findClass(Enum<?> enumTag, String className) {
-        return utils.getClassTool().findClass(enumTag, className);
+    public ClassTool findClass(Object label, String className) {
+        return utils.getClassTool().findClass(label, className);
     }
 
-    public ClassTool findClass(Enum<?> enumTag, String className, ClassLoader classLoader) {
-        return utils.getClassTool().findClass(enumTag, className, classLoader);
+    public ClassTool findClass(Object label, String className, ClassLoader classLoader) {
+        return utils.getClassTool().findClass(label, className, classLoader);
     }
 
     public MethodTool methodTool() {

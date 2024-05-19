@@ -1,4 +1,4 @@
-package com.hchen.hooktool.tool.param;
+package com.hchen.hooktool.tool.hook.param;
 
 import static com.hchen.hooktool.log.XposedLog.logE;
 
