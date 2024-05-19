@@ -41,7 +41,7 @@ public class MethodTool {
     }
 
     /**
-     * 根据 TAG 获取指定索引类中的指定方法.
+     * 获取标签类内的指定方法。
      */
     public ActionTool getMethod(String name, Class<?>... clzzs) {
         return findMethod(name, new IMethodTool() {
@@ -60,7 +60,7 @@ public class MethodTool {
     }
 
     /**
-     * 获取指定 TAG 类中全部名称匹配方法。
+     * 获取标签类中全部名称匹配方法。
      */
     public ActionTool getAnyMethod(String name) {
         return findMethod(name, new IMethodTool() {
@@ -114,7 +114,7 @@ public class MethodTool {
     //--------------------构造函数---------------------
 
     /**
-     * 按 TAG 获取指定构造函数。
+     * 按标签类获取指定构造函数。
      */
     public ActionTool getConstructor(Class<?>... classes) {
         return findConstructor(new IConstructorTool() {
@@ -133,7 +133,7 @@ public class MethodTool {
     }
 
     /**
-     * 按 TAG 获取全部构造函数。
+     * 按标签类获取全部构造函数。
      */
     public ActionTool getAnyConstructor() {
         return findConstructor(new IConstructorTool() {

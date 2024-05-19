@@ -9,6 +9,7 @@ import com.hchen.hooktool.data.MemberData;
 import com.hchen.hooktool.utils.DataUtils;
 import com.hchen.hooktool.utils.MethodOpt;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import de.robv.android.xposed.XposedHelpers;
@@ -23,7 +24,7 @@ public class ClassTool extends MethodOpt {
         utils.classTool = this;
     }
 
-    public MethodTool to(Object label) {
+    public MethodTool to(@NotNull Object label) {
         utils.setLabel(label);
         return utils.getMethodTool();
     }
@@ -61,13 +62,17 @@ public class ClassTool extends MethodOpt {
         return utils.getClassTool();
     }*/
 
-    // ---------- 枚举形式 ------------
-    public ClassTool findClass(Object label, String className) {
+    // ---------- 标签形式 ------------
+
+    /**
+     * 查找指定类，并为其设置独有的标签。
+     */
+    public ClassTool findClass(@NotNull Object label, String className) {
         return findClass(label, className,
                 utils.mCustomClassLoader == null ? classLoader : utils.mCustomClassLoader);
     }
 
-    public ClassTool findClass(Object label, String className, ClassLoader classLoader) {
+    public ClassTool findClass(@NotNull Object label, String className, ClassLoader classLoader) {
         initSafe();
         if (utils.findClass != null) utils.findClass = null;
         try {

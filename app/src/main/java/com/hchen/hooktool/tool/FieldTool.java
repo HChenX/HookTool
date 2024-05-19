@@ -26,7 +26,7 @@ public class FieldTool {
     }
 
     /**
-     * 按 TAG 获取指定字段。
+     * 按标签类获取指定字段。
      */
     public FieldTool findIndexField(String name) {
         utils.findField = null;

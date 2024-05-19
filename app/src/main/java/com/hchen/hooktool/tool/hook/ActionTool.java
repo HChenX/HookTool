@@ -31,7 +31,7 @@ public class ActionTool extends MethodOpt {
     }
 
     /**
-     * 指定类 TAG
+     * 指定类标签
      */
     public ActionTool to(Object label) {
         utils.getClassTool().to(label);
@@ -117,7 +117,7 @@ public class ActionTool extends MethodOpt {
                 logW(utils.getTAG(), "label: " + label + " this data class is null!");
             }
             if (lastLabel == null) lastLabel = label;
-            else if (lastLabel != label) {
+            else if ((lastLabel != label) || !(lastLabel.equals(label))) {
                 lastLabel = label;
                 count = 0;
             }

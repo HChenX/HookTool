@@ -53,7 +53,7 @@ public class INDTool {
     }
 
     @Nullable
-    public <T, R> R callMethod(Object instance, String name) {
+    public <R> R callMethod(Object instance, String name) {
         return callMethod(instance, name, new Object[]{});
     }
 

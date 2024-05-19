@@ -44,12 +44,12 @@ public class HCHook {
     }
 
     // 更棒的无缝衔接
-    public ClassTool findClass(Enum<?> enumTag, String className) {
-        return utils.getClassTool().findClass(enumTag, className);
+    public ClassTool findClass(Object label, String className) {
+        return utils.getClassTool().findClass(label, className);
     }
 
-    public ClassTool findClass(Enum<?> enumTag, String className, ClassLoader classLoader) {
-        return utils.getClassTool().findClass(enumTag, className, classLoader);
+    public ClassTool findClass(Object label, String className, ClassLoader classLoader) {
+        return utils.getClassTool().findClass(label, className, classLoader);
     }
 
     /* 因为 class tool 是本工具基准入口，所以初始化使用必须进入此类。 */
