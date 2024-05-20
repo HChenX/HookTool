@@ -16,6 +16,8 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import de.robv.android.xposed.XposedHelpers;
+
 public class MethodTool {
     private final DataUtils utils;
 
@@ -40,10 +42,23 @@ public class MethodTool {
         return findMember;
     }
 
+    @Nullable
+    private Class<?> findClass(String name) {
+        try {
+            return XposedHelpers.findClass(name,
+                    utils.getClassLoader());
+        } catch (XposedHelpers.ClassNotFoundError e) {
+            logE(utils.getTAG(), "The specified class could not be found: " + name + " e: " + e);
+        }
+        return null;
+    }
+
     /**
      * 获取标签类内的指定方法。
      */
-    public ActionTool getMethod(String name, Class<?>... clzzs) {
+    public ActionTool getMethod(String name, Object... objs) {
+        Class<?>[] clist = objsToClist(objs);
+        if (clist == null) return utils.getActionTool();
         return findMethod(name, new IMethodTool() {
             @Override
             public ArrayList<Member> doFindMethod(Class<?> c, String name, Class<?>... classes) {
@@ -56,7 +71,7 @@ public class MethodTool {
                 }
                 return arrayList;
             }
-        }, clzzs);
+        }, clist);
     }
 
     /**
@@ -116,7 +131,9 @@ public class MethodTool {
     /**
      * 按标签类获取指定构造函数。
      */
-    public ActionTool getConstructor(Class<?>... classes) {
+    public ActionTool getConstructor(Object... objs) {
+        Class<?>[] clist = objsToClist(objs);
+        if (clist == null) return utils.getActionTool();
         return findConstructor(new IConstructorTool() {
             @Override
             public ArrayList<Member> doFindConstructor(Class<?> c, Class<?>... classes) {
@@ -129,7 +146,7 @@ public class MethodTool {
                 }
                 return members;
             }
-        }, classes);
+        }, clist);
     }
 
     /**
@@ -175,6 +192,26 @@ public class MethodTool {
         // data.isHooked = false;
         utils.members.put(label, data);
         return utils.getActionTool();
+    }
+
+    private Class<?>[] objsToClist(Object... objs) {
+        ArrayList<Class<?>> classes = new ArrayList<>();
+        for (Object o : objs) {
+            if (o instanceof Class<?> c) {
+                classes.add(c);
+            } else if (o instanceof String s) {
+                Class<?> ct = findClass(s);
+                if (ct == null) {
+                    logW(utils.getTAG(), "this string to class is null: " + s);
+                    return null;
+                }
+                classes.add(ct);
+            } else {
+                logW(utils.getTAG(), "unknown type: " + o);
+                return null;
+            }
+        }
+        return classes.toArray(new Class<?>[classes.size()]);
     }
 
     /* 不需要再回到此类 */

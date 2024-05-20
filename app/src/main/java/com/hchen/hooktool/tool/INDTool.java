@@ -7,6 +7,8 @@ import com.hchen.hooktool.utils.DataUtils;
 
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.reflect.Field;
+
 import de.robv.android.xposed.XposedHelpers;
 
 public class INDTool {
@@ -67,9 +69,31 @@ public class INDTool {
         return null;
     }
 
+    @Nullable
+    public <T> T getField(Object instance, Field field) {
+        try {
+            field.setAccessible(true);
+            return (T) field.get(instance);
+        } catch (Throwable e) {
+            logE(data.getTAG(), "get field: " + e);
+        }
+        return null;
+    }
+
     public boolean setField(Object instance, String name, Object key) {
         try {
             XposedHelpers.setObjectField(instance, name, key);
+            return true;
+        } catch (Throwable e) {
+            logE(data.getTAG(), "set field: " + e);
+        }
+        return false;
+    }
+
+    public boolean setField(Object instance, Field field, Object key) {
+        try {
+            field.setAccessible(true);
+            field.set(instance, key);
             return true;
         } catch (Throwable e) {
             logE(data.getTAG(), "set field: " + e);
@@ -168,6 +192,17 @@ public class INDTool {
         return null;
     }
 
+    @Nullable
+    public <T> T getStaticField(Field field) {
+        try {
+            field.setAccessible(true);
+            return (T) field.get(null);
+        } catch (Throwable e) {
+            logE(data.getTAG(), "get static field: " + e);
+        }
+        return null;
+    }
+
     public boolean setStaticField(Class<?> clz, String name, Object value) {
         if (clz != null) {
             try {
@@ -177,6 +212,17 @@ public class INDTool {
                 logE(data.getTAG(), "set static field: " + e);
             }
         } else logW(data.getTAG(), "class is null, cant set field: " + name);
+        return false;
+    }
+
+    public boolean setStaticField(Field field, Object value) {
+        try {
+            field.setAccessible(true);
+            field.set(null, value);
+            return true;
+        } catch (Throwable e) {
+            logE(data.getTAG(), "set static field: " + e);
+        }
         return false;
     }
 

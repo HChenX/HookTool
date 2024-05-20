@@ -83,6 +83,10 @@ public class HCHook {
         return utils.getHCHook();
     }
 
+    public ClassLoader getClassLoader() {
+        return utils.getClassLoader();
+    }
+
     public static void initSafe() {
         if (!HookInit.isInitDone())
             throw new RuntimeException(HookInit.getTAG() + " HookInit not initialized!");

@@ -22,6 +22,14 @@ public class DexkitTool {
         this.utils = utils;
     }
 
+    public void hookMethod(Member member, IAction iAction) {
+        try {
+            hook(member, iAction);
+        } catch (Throwable e) {
+            logE(utils.getTAG(), "dexkit hook member: " + e);
+        }
+    }
+
     public void hookMethod(MethodData methodData, IAction iAction) {
         try {
             Method method = methodData.getMethodInstance(utils.getClassLoader());

@@ -10,16 +10,16 @@ public class MethodOpt {
         this.utils = utils;
     }
 
-    public ActionTool getMethod(String name, Class<?>... clzzs) {
-        return utils.getMethodTool().getMethod(name, clzzs);
+    public ActionTool getMethod(String name, Object... objs) {
+        return utils.getMethodTool().getMethod(name, objs);
     }
 
     public ActionTool getAnyMethod(String name) {
         return utils.getMethodTool().getAnyMethod(name);
     }
 
-    public ActionTool getConstructor(Class<?>... obj) {
-        return utils.getMethodTool().getConstructor(obj);
+    public ActionTool getConstructor(Object... objs) {
+        return utils.getMethodTool().getConstructor(objs);
     }
 
     public ActionTool getAnyConstructor() {

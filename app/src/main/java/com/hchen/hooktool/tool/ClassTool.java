@@ -3,7 +3,6 @@ package com.hchen.hooktool.tool;
 import static com.hchen.hooktool.HCHook.initSafe;
 import static com.hchen.hooktool.log.XposedLog.logE;
 import static com.hchen.hooktool.log.XposedLog.logW;
-import static com.hchen.hooktool.utils.DataUtils.classLoader;
 
 import com.hchen.hooktool.data.MemberData;
 import com.hchen.hooktool.utils.DataUtils;
@@ -69,7 +68,7 @@ public class ClassTool extends MethodOpt {
      */
     public ClassTool findClass(@NotNull Object label, String className) {
         return findClass(label, className,
-                utils.mCustomClassLoader == null ? classLoader : utils.mCustomClassLoader);
+                utils.getClassLoader());
     }
 
     public ClassTool findClass(@NotNull Object label, String className, ClassLoader classLoader) {

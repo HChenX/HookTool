@@ -66,9 +66,14 @@ public class StaticTool {
      */
     @Nullable
     public <T, R> R newInstance(T objects) {
-        if (findClass != null) {
+        return newInstance(findClass, objects);
+    }
+
+    @Nullable
+    public <T, R> R newInstance(Class<?> claz, T objs) {
+        if (claz != null) {
             try {
-                return (R) XposedHelpers.newInstance(findClass, tToObject(objects));
+                return (R) XposedHelpers.newInstance(claz, tToObject(objs));
             } catch (Throwable e) {
                 logE(TAG, "new instance: " + e);
             }
@@ -81,6 +86,11 @@ public class StaticTool {
         return newInstance(new Object[]{});
     }
 
+    @Nullable
+    public <R> R newInstance(Class<?> clz) {
+        return newInstance(clz, new Object[]{});
+    }
+
     /**
      * 请使用 new Object[]{} 传入参数。<br/>
      * 如果仅传入一个参数可以不使用 new Object[]{}<br/>
@@ -88,9 +98,14 @@ public class StaticTool {
      */
     @Nullable
     public <T, R> R callStaticMethod(String name, T objs) {
-        if (findClass != null) {
+        return callStaticMethod(findClass, name, objs);
+    }
+
+    @Nullable
+    public <T, R> R callStaticMethod(Class<?> clz, String name, T objs) {
+        if (clz != null) {
             try {
-                return (R) XposedHelpers.callStaticMethod(findClass, name, tToObject(objs));
+                return (R) XposedHelpers.callStaticMethod(clz, name, tToObject(objs));
             } catch (Throwable e) {
                 logE(TAG, "call static method: " + e);
             }
@@ -106,10 +121,20 @@ public class StaticTool {
     }
 
     @Nullable
+    public <R> R callStaticMethod(Class<?> clz, String name) {
+        return callStaticMethod(clz, name, new Object[]{});
+    }
+
+    @Nullable
     public <T> T getStaticField(String name) {
-        if (findClass != null) {
+        return getStaticField(findClass, name);
+    }
+
+    @Nullable
+    public <T> T getStaticField(Class<?> clz, String name) {
+        if (clz != null) {
             try {
-                return (T) XposedHelpers.getStaticObjectField(findClass, name);
+                return (T) XposedHelpers.getStaticObjectField(clz, name);
             } catch (Throwable e) {
                 logE(TAG, "get static field: " + e);
             }
@@ -118,9 +143,13 @@ public class StaticTool {
     }
 
     public boolean setStaticField(String name, Object value) {
-        if (findClass != null) {
+        return setStaticField(findClass, name, value);
+    }
+
+    public boolean setStaticField(Class<?> clz, String name, Object value) {
+        if (clz != null) {
             try {
-                XposedHelpers.setStaticObjectField(findClass, name, value);
+                XposedHelpers.setStaticObjectField(clz, name, value);
                 return true;
             } catch (Throwable e) {
                 logE(TAG, "set static field: " + e);
@@ -130,9 +159,13 @@ public class StaticTool {
     }
 
     public boolean setAdditionalStaticField(String key, Object value) {
-        if (findClass != null) {
+        return setAdditionalStaticField(findClass, key, value);
+    }
+
+    public boolean setAdditionalStaticField(Class<?> clz, String key, Object value) {
+        if (clz != null) {
             try {
-                XposedHelpers.setAdditionalStaticField(findClass, key, value);
+                XposedHelpers.setAdditionalStaticField(clz, key, value);
                 return true;
             } catch (Throwable e) {
                 logE(TAG, "set additional static field: " + e);
@@ -143,9 +176,14 @@ public class StaticTool {
 
     @Nullable
     public <T> T getAdditionalStaticField(String key) {
-        if (findClass != null) {
+        return getAdditionalStaticField(findClass, key);
+    }
+
+    @Nullable
+    public <T> T getAdditionalStaticField(Class<?> clz, String key) {
+        if (clz != null) {
             try {
-                return (T) XposedHelpers.getAdditionalStaticField(findClass, key);
+                return (T) XposedHelpers.getAdditionalStaticField(clz, key);
             } catch (Throwable e) {
                 logE(TAG, "get additional static field: " + e);
             }
@@ -154,9 +192,13 @@ public class StaticTool {
     }
 
     public boolean removeAdditionalStaticField(String key) {
-        if (findClass != null) {
+        return removeAdditionalStaticField(findClass, key);
+    }
+
+    public boolean removeAdditionalStaticField(Class<?> clz, String key) {
+        if (clz != null) {
             try {
-                XposedHelpers.removeAdditionalStaticField(findClass, key);
+                XposedHelpers.removeAdditionalStaticField(clz, key);
                 return true;
             } catch (Throwable e) {
                 logE(TAG, "remove additional static field: " + e);
