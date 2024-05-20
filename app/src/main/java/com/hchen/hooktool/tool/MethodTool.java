@@ -101,7 +101,7 @@ public class MethodTool {
             return utils.getActionTool();
         }
         Object label = utils.getLabel();
-        MemberData data = utils.members.get(label);
+        MemberData data = utils.labelClasses.get(label);
         if (data == null) {
             logW(utils.getTAG(), "memberData is null, cant find: " + name + " label: " + label);
             utils.members.put(label, data);
