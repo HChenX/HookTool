@@ -1,25 +1,49 @@
 package com.hchen.hooktool.tool.hook;
 
 import static com.hchen.hooktool.log.XposedLog.logE;
+import static com.hchen.hooktool.log.XposedLog.logW;
 
 import com.hchen.hooktool.action.Action;
 import com.hchen.hooktool.callback.IAction;
 import com.hchen.hooktool.utils.DataUtils;
 
+import org.jetbrains.annotations.Nullable;
 import org.luckypray.dexkit.result.ClassData;
 import org.luckypray.dexkit.result.MethodData;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 
 import de.robv.android.xposed.XposedBridge;
+import de.robv.android.xposed.XposedHelpers;
 
 public class DexkitTool {
     private final DataUtils utils;
 
     public DexkitTool(DataUtils utils) {
         this.utils = utils;
+    }
+
+    @Nullable
+    public Method getMethod(Class<?> clz, String name, Object... obs) {
+        try {
+            return clz.getMethod(name, objsToClist(obs));
+        } catch (NoSuchMethodException e) {
+            logE(utils.getTAG(), "get method: " + e);
+        }
+        return null;
+    }
+
+    @Nullable
+    public Constructor<?> getConstructor(Class<?> clz, Object... obs) {
+        try {
+            return clz.getConstructor(objsToClist(obs));
+        } catch (NoSuchMethodException e) {
+            logE(utils.getTAG(), "get constructor: " + e);
+        }
+        return null;
     }
 
     public void hookMethod(Member member, IAction iAction) {
@@ -69,5 +93,36 @@ public class DexkitTool {
                 iAction.after(paramTool, staticTool);
             }
         };
+    }
+
+    @Nullable
+    private Class<?> findClass(String name) {
+        try {
+            return XposedHelpers.findClass(name,
+                    utils.getClassLoader());
+        } catch (XposedHelpers.ClassNotFoundError e) {
+            logE(utils.getTAG(), "The specified class could not be found: " + name + " e: " + e);
+        }
+        return null;
+    }
+
+    private Class<?>[] objsToClist(Object... objs) {
+        ArrayList<Class<?>> classes = new ArrayList<>();
+        for (Object o : objs) {
+            if (o instanceof Class<?> c) {
+                classes.add(c);
+            } else if (o instanceof String s) {
+                Class<?> ct = findClass(s);
+                if (ct == null) {
+                    logW(utils.getTAG(), "this string to class is null: " + s);
+                    return null;
+                }
+                classes.add(ct);
+            } else {
+                logW(utils.getTAG(), "unknown type: " + o);
+                return null;
+            }
+        }
+        return classes.toArray(new Class<?>[classes.size()]);
     }
 }
