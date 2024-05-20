@@ -63,10 +63,10 @@ public class DexkitTool {
         }
     }
 
-    public void hookMethod(ClassData classData, IAction iAction, Class<?>... clzs) {
+    public void hookMethod(ClassData classData, IAction iAction, Object... objs) {
         try {
             Class<?> clzz = classData.getInstance(utils.getClassLoader());
-            Constructor<?> constructor = clzz.getConstructor(clzs);
+            Constructor<?> constructor = clzz.getConstructor(objsToClist(objs));
             hook(constructor, iAction);
         } catch (Throwable e) {
             logE(utils.getTAG(), "dexkit instance constructor: " + e);
