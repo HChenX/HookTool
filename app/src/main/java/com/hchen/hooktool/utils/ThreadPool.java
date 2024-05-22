@@ -21,6 +21,9 @@ package com.hchen.hooktool.utils;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+/**
+ * 此类为线程池类，为辅助上下文类使用，项目不应该使用本类。
+ */
 public class ThreadPool {
     private static final int NUM_THREADS = 5; // 定义线程池中线程的数量
     private static volatile ExecutorService executor;

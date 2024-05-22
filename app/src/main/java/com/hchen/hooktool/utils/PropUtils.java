@@ -22,6 +22,9 @@ import static com.hchen.hooktool.log.AndroidLog.logE;
 
 import android.content.Context;
 
+/**
+ * 本类为 prop 工具，可以获取或者写入系统 prop 条目。
+ */
 public class PropUtils {
     private static final String TAG = "PropUtils";
 

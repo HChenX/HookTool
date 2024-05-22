@@ -26,6 +26,9 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashMap;
 
+/**
+ * 本类为反射工具，提供简易的反射功能。
+ */
 public class InvokeUtils {
     private static final HashMap<String, Method> methodCache = new HashMap<>();
     private static final HashMap<String, Field> fieldCache = new HashMap<>();
