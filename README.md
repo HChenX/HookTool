@@ -3,8 +3,8 @@
 
 ![stars](https://img.shields.io/github/stars/HChenX/HookTool?style=flat)
 ![Github repo size](https://img.shields.io/github/repo-size/HChenX/HookTool)
-[![GitHub release (latest by date)](https://img.shields.io/github/v/release/HChenX/HookTool)](https://github.com/HChenX/RegularlyClean/releases)
-[![GitHub Release Date](https://img.shields.io/github/release-date/HChenX/HookTool)](https://github.com/HChenX/RegularlyClean/releases)
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/HChenX/HookTool)](https://github.com/HChenX/HookTool/releases)
+[![GitHub Release Date](https://img.shields.io/github/release-date/HChenX/HookTool)](https://github.com/HChenX/HookTool/releases)
 ![last commit](https://img.shields.io/github/last-commit/HChenX/HookTool?style=flat)
 ![language](https://img.shields.io/badge/language-java-purple)
 
