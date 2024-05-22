@@ -4,12 +4,12 @@ import static com.hchen.hooktool.HCHook.initSafe;
 import static com.hchen.hooktool.log.XposedLog.logE;
 import static com.hchen.hooktool.log.XposedLog.logW;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.hchen.hooktool.data.MemberData;
 import com.hchen.hooktool.utils.DataUtils;
 import com.hchen.hooktool.utils.MethodOpt;
-
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import de.robv.android.xposed.XposedHelpers;
 
@@ -23,7 +23,7 @@ public class ClassTool extends MethodOpt {
         utils.classTool = this;
     }
 
-    public MethodTool to(@NotNull Object label) {
+    public MethodTool to(@NonNull Object label) {
         utils.setLabel(label);
         return utils.getMethodTool();
     }
@@ -66,12 +66,12 @@ public class ClassTool extends MethodOpt {
     /**
      * 查找指定类，并为其设置独有的标签。
      */
-    public ClassTool findClass(@NotNull Object label, String className) {
+    public ClassTool findClass(@NonNull Object label, String className) {
         return findClass(label, className,
                 utils.getClassLoader());
     }
 
-    public ClassTool findClass(@NotNull Object label, String className, ClassLoader classLoader) {
+    public ClassTool findClass(@NonNull Object label, String className, ClassLoader classLoader) {
         initSafe();
         if (utils.findClass != null) utils.findClass = null;
         try {

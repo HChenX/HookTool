@@ -3,36 +3,36 @@ package com.hchen.hooktool.tool;
 import static com.hchen.hooktool.log.XposedLog.logE;
 import static com.hchen.hooktool.log.XposedLog.logW;
 
-import com.hchen.hooktool.utils.DataUtils;
+import androidx.annotation.Nullable;
 
-import org.jetbrains.annotations.Nullable;
+import com.hchen.hooktool.utils.DataUtils;
 
 import java.lang.reflect.Field;
 
 import de.robv.android.xposed.XposedHelpers;
 
 public class ExpandTool {
-    private final DataUtils data;
+    private final DataUtils utils;
 
     public ExpandTool(DataUtils dataUtils) {
-        data = dataUtils;
+        utils = dataUtils;
     }
 
     @Nullable
     public Class<?> findClass(String name) {
-        return findClass(name, data.getClassLoader());
+        return findClass(name, utils.getClassLoader());
     }
 
     @Nullable
     public Class<?> findClass(String name, ClassLoader classLoader) {
         try {
             if (classLoader == null) {
-                logE(data.getTAG(), "classLoader is null!");
+                logE(utils.getTAG(), "classLoader is null!");
                 return null;
             }
             return XposedHelpers.findClass(name, classLoader);
         } catch (XposedHelpers.ClassNotFoundError e) {
-            logE(data.getTAG(), e);
+            logE(utils.getTAG(), e);
         }
         return null;
     }
@@ -49,7 +49,7 @@ public class ExpandTool {
         try {
             return (R) XposedHelpers.callMethod(instance, name, tToObject(ts));
         } catch (Throwable e) {
-            logE(data.getTAG(), "call method: " + e);
+            logE(utils.getTAG(), "call method: " + e);
         }
         return null;
     }
@@ -64,7 +64,7 @@ public class ExpandTool {
         try {
             return (T) XposedHelpers.getObjectField(instance, name);
         } catch (Throwable e) {
-            logE(data.getTAG(), "get field: " + name);
+            logE(utils.getTAG(), "get field: " + name);
         }
         return null;
     }
@@ -75,7 +75,7 @@ public class ExpandTool {
             field.setAccessible(true);
             return (T) field.get(instance);
         } catch (Throwable e) {
-            logE(data.getTAG(), "get field: " + e);
+            logE(utils.getTAG(), "get field: " + e);
         }
         return null;
     }
@@ -85,7 +85,7 @@ public class ExpandTool {
             XposedHelpers.setObjectField(instance, name, key);
             return true;
         } catch (Throwable e) {
-            logE(data.getTAG(), "set field: " + e);
+            logE(utils.getTAG(), "set field: " + e);
         }
         return false;
     }
@@ -96,7 +96,7 @@ public class ExpandTool {
             field.set(instance, key);
             return true;
         } catch (Throwable e) {
-            logE(data.getTAG(), "set field: " + e);
+            logE(utils.getTAG(), "set field: " + e);
         }
         return false;
     }
@@ -106,7 +106,7 @@ public class ExpandTool {
             XposedHelpers.setAdditionalInstanceField(instance, name, key);
             return true;
         } catch (Throwable e) {
-            logE(data.getTAG(), "set additional: " + name + " e: " + e);
+            logE(utils.getTAG(), "set additional: " + name + " e: " + e);
         }
         return false;
     }
@@ -116,7 +116,7 @@ public class ExpandTool {
         try {
             return (T) XposedHelpers.getAdditionalInstanceField(instance, name);
         } catch (Throwable e) {
-            logE(data.getTAG(), "get additional: " + name + " e: " + e);
+            logE(utils.getTAG(), "get additional: " + name + " e: " + e);
         }
         return null;
     }
@@ -126,7 +126,7 @@ public class ExpandTool {
             XposedHelpers.removeAdditionalInstanceField(instance, name);
             return true;
         } catch (Throwable e) {
-            logE(data.getTAG(), "remove additional: " + name + " e: " + e);
+            logE(utils.getTAG(), "remove additional: " + name + " e: " + e);
         }
         return false;
     }
@@ -145,9 +145,9 @@ public class ExpandTool {
             try {
                 return (R) XposedHelpers.newInstance(clz, tToObject(objects));
             } catch (Throwable e) {
-                logE(data.getTAG(), "new instance: " + e);
+                logE(utils.getTAG(), "new instance: " + e);
             }
-        } else logW(data.getTAG(), "class is null, cant new instance.");
+        } else logW(utils.getTAG(), "class is null, cant new instance.");
         return null;
     }
 
@@ -167,10 +167,10 @@ public class ExpandTool {
             try {
                 return (R) XposedHelpers.callStaticMethod(clz, name, tToObject(objs));
             } catch (Throwable e) {
-                logE(data.getTAG(), "call static method: " + e);
+                logE(utils.getTAG(), "call static method: " + e);
             }
         } else {
-            logW(data.getTAG(), "class is null, cant call: " + name);
+            logW(utils.getTAG(), "class is null, cant call: " + name);
         }
         return null;
     }
@@ -186,9 +186,9 @@ public class ExpandTool {
             try {
                 return (T) XposedHelpers.getStaticObjectField(clz, name);
             } catch (Throwable e) {
-                logE(data.getTAG(), "get static field: " + e);
+                logE(utils.getTAG(), "get static field: " + e);
             }
-        } else logW(data.getTAG(), "class is null, cant get field: " + name);
+        } else logW(utils.getTAG(), "class is null, cant get field: " + name);
         return null;
     }
 
@@ -198,7 +198,7 @@ public class ExpandTool {
             field.setAccessible(true);
             return (T) field.get(null);
         } catch (Throwable e) {
-            logE(data.getTAG(), "get static field: " + e);
+            logE(utils.getTAG(), "get static field: " + e);
         }
         return null;
     }
@@ -209,9 +209,9 @@ public class ExpandTool {
                 XposedHelpers.setStaticObjectField(clz, name, value);
                 return true;
             } catch (Throwable e) {
-                logE(data.getTAG(), "set static field: " + e);
+                logE(utils.getTAG(), "set static field: " + e);
             }
-        } else logW(data.getTAG(), "class is null, cant set field: " + name);
+        } else logW(utils.getTAG(), "class is null, cant set field: " + name);
         return false;
     }
 
@@ -221,7 +221,7 @@ public class ExpandTool {
             field.set(null, value);
             return true;
         } catch (Throwable e) {
-            logE(data.getTAG(), "set static field: " + e);
+            logE(utils.getTAG(), "set static field: " + e);
         }
         return false;
     }
@@ -232,9 +232,9 @@ public class ExpandTool {
                 XposedHelpers.setAdditionalStaticField(clz, key, value);
                 return true;
             } catch (Throwable e) {
-                logE(data.getTAG(), "set additional static field: " + e);
+                logE(utils.getTAG(), "set additional static field: " + e);
             }
-        } else logW(data.getTAG(), "class is null, cant additional: " + key);
+        } else logW(utils.getTAG(), "class is null, cant additional: " + key);
         return false;
     }
 
@@ -244,9 +244,9 @@ public class ExpandTool {
             try {
                 return (T) XposedHelpers.getAdditionalStaticField(clz, key);
             } catch (Throwable e) {
-                logE(data.getTAG(), "get additional static field: " + e);
+                logE(utils.getTAG(), "get additional static field: " + e);
             }
-        } else logW(data.getTAG(), "class is null, cant get additional: " + key);
+        } else logW(utils.getTAG(), "class is null, cant get additional: " + key);
         return null;
     }
 
@@ -256,10 +256,10 @@ public class ExpandTool {
                 XposedHelpers.removeAdditionalStaticField(clz, key);
                 return true;
             } catch (Throwable e) {
-                logE(data.getTAG(), "remove additional static field: " + e);
+                logE(utils.getTAG(), "remove additional static field: " + e);
             }
         } else
-            logW(data.getTAG(), "class is null, cant remove additional: " + key);
+            logW(utils.getTAG(), "class is null, cant remove additional: " + key);
         return false;
     }
 

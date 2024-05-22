@@ -3,7 +3,7 @@ package com.hchen.hooktool.tool;
 import static com.hchen.hooktool.log.XposedLog.logE;
 import static com.hchen.hooktool.log.XposedLog.logW;
 
-import org.jetbrains.annotations.Nullable;
+import androidx.annotation.Nullable;
 
 import de.robv.android.xposed.XposedHelpers;
 

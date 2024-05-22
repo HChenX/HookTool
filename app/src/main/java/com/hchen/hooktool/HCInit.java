@@ -2,7 +2,7 @@ package com.hchen.hooktool;
 
 import static com.hchen.hooktool.log.XposedLog.logI;
 
-import org.jetbrains.annotations.Nullable;
+import androidx.annotation.Nullable;
 
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
@@ -50,7 +50,7 @@ public class HCInit {
         lpparam = loadPackageParam;
         classLoader = loadPackageParam.classLoader;
         packageName = lpparam.packageName;
-        logI(TAG, "init lpparam: " + lpparam + " classLoader: " + classLoader + " pkgName: " + packageName);
+        logI(spareTag, "init lpparam: " + lpparam + " classLoader: " + classLoader + " pkgName: " + packageName);
     }
 
     protected static XC_LoadPackage.LoadPackageParam getLoadPackageParam() throws Throwable {

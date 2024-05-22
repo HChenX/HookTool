@@ -3,12 +3,12 @@ package com.hchen.hooktool.tool;
 import static com.hchen.hooktool.log.XposedLog.logE;
 import static com.hchen.hooktool.log.XposedLog.logW;
 
+import androidx.annotation.Nullable;
+
 import com.hchen.hooktool.callback.IAction;
 import com.hchen.hooktool.data.MemberData;
 import com.hchen.hooktool.data.StateEnum;
 import com.hchen.hooktool.utils.DataUtils;
-
-import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;

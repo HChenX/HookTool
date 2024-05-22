@@ -1,8 +1,8 @@
 package com.hchen.hooktool.data;
 
-import com.hchen.hooktool.utils.MapUtils;
+import androidx.annotation.Nullable;
 
-import org.jetbrains.annotations.Nullable;
+import com.hchen.hooktool.utils.MapUtils;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;

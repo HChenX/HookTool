@@ -19,7 +19,7 @@ public class HCHook {
     static {
         initSafe();
         try {
-            TAG = HCInit.getTAG();
+            TAG = HCInit.spareTag;
             DataUtils.lpparam = HCInit.getLoadPackageParam();
             DataUtils.classLoader = HCInit.getClassLoader();
         } catch (Throwable e) {
@@ -42,7 +42,7 @@ public class HCHook {
     }
 
     public HCHook setThisTag(String tag) {
-        utils.mThisTag = TAG + "[" + tag + "]";
+        utils.mThisTag = tag;
         return utils.getHCHook();
     }
 
