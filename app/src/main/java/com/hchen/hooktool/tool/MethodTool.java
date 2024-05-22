@@ -6,7 +6,6 @@ import static com.hchen.hooktool.log.XposedLog.logW;
 import com.hchen.hooktool.callback.IAction;
 import com.hchen.hooktool.data.MemberData;
 import com.hchen.hooktool.data.StateEnum;
-import com.hchen.hooktool.tool.hook.ActionTool;
 import com.hchen.hooktool.utils.DataUtils;
 
 import org.jetbrains.annotations.Nullable;

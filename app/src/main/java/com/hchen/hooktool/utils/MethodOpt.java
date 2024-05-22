@@ -1,6 +1,6 @@
 package com.hchen.hooktool.utils;
 
-import com.hchen.hooktool.tool.hook.ActionTool;
+import com.hchen.hooktool.tool.ActionTool;
 
 // 优化调用，只提供基本用法，详细用法请获取工具类对象
 public class MethodOpt {

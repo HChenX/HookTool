@@ -3,8 +3,8 @@ package com.hchen.hooktool;
 import android.content.Context;
 
 import com.hchen.hooktool.callback.IAction;
-import com.hchen.hooktool.tool.hook.ParamTool;
-import com.hchen.hooktool.tool.hook.StaticTool;
+import com.hchen.hooktool.tool.ParamTool;
+import com.hchen.hooktool.tool.StaticTool;
 
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedHelpers;

@@ -3,25 +3,25 @@ package com.hchen.hooktool;
 import static com.hchen.hooktool.log.XposedLog.logE;
 import static com.hchen.hooktool.utils.DataUtils.TAG;
 
+import com.hchen.hooktool.tool.ActionTool;
 import com.hchen.hooktool.tool.ClassTool;
+import com.hchen.hooktool.tool.DexkitTool;
+import com.hchen.hooktool.tool.ExpandTool;
 import com.hchen.hooktool.tool.FieldTool;
-import com.hchen.hooktool.tool.INDTool;
 import com.hchen.hooktool.tool.MethodTool;
-import com.hchen.hooktool.tool.hook.ActionTool;
-import com.hchen.hooktool.tool.hook.DexkitTool;
 import com.hchen.hooktool.utils.DataUtils;
 
 public class HCHook {
     private final DataUtils utils;
-    private final INDTool indTool;
+    private final ExpandTool expandTool;
     private final DexkitTool dexkitTool;
 
     static {
         initSafe();
         try {
-            TAG = HookInit.getTAG();
-            DataUtils.lpparam = HookInit.getLoadPackageParam();
-            DataUtils.classLoader = HookInit.getClassLoader();
+            TAG = HCInit.getTAG();
+            DataUtils.lpparam = HCInit.getLoadPackageParam();
+            DataUtils.classLoader = HCInit.getClassLoader();
         } catch (Throwable e) {
             logE(TAG, e);
         }
@@ -37,7 +37,7 @@ public class HCHook {
         utils.classTool = new ClassTool(utils);
         utils.fieldTool = new FieldTool(utils);
         utils.methodTool = new MethodTool(utils);
-        indTool = new INDTool(utils);
+        expandTool = new ExpandTool(utils);
         dexkitTool = new DexkitTool(utils);
     }
 
@@ -68,8 +68,8 @@ public class HCHook {
         return utils.getFieldTool();
     }
 
-    public INDTool indTool() {
-        return indTool;
+    public ExpandTool expandTool() {
+        return expandTool;
     }
 
     public DexkitTool dexkitTool() {
@@ -88,7 +88,7 @@ public class HCHook {
     }
 
     public static void initSafe() {
-        if (!HookInit.isInitDone())
-            throw new RuntimeException(HookInit.getTAG() + " HookInit not initialized!");
+        if (!HCInit.isInitDone())
+            throw new RuntimeException(HCInit.getTAG() + " HookInit not initialized!");
     }
 }

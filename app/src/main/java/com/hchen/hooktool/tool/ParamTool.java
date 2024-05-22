@@ -1,6 +1,6 @@
-package com.hchen.hooktool.tool.hook;
+package com.hchen.hooktool.tool;
 
-import com.hchen.hooktool.tool.hook.param.Arguments;
+import com.hchen.hooktool.tool.param.Arguments;
 
 import org.jetbrains.annotations.Nullable;
 

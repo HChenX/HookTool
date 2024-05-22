@@ -11,10 +11,10 @@ import java.lang.reflect.Field;
 
 import de.robv.android.xposed.XposedHelpers;
 
-public class INDTool {
+public class ExpandTool {
     private final DataUtils data;
 
-    public INDTool(DataUtils dataUtils) {
+    public ExpandTool(DataUtils dataUtils) {
         data = dataUtils;
     }
 

@@ -1,4 +1,4 @@
-package com.hchen.hooktool.tool.hook;
+package com.hchen.hooktool.tool;
 
 import static com.hchen.hooktool.log.XposedLog.logD;
 import static com.hchen.hooktool.log.XposedLog.logE;
@@ -9,7 +9,6 @@ import com.hchen.hooktool.action.Action;
 import com.hchen.hooktool.callback.IAction;
 import com.hchen.hooktool.data.MemberData;
 import com.hchen.hooktool.data.StateEnum;
-import com.hchen.hooktool.tool.MethodTool;
 import com.hchen.hooktool.utils.DataUtils;
 import com.hchen.hooktool.utils.MethodOpt;
 
@@ -165,7 +164,7 @@ public class ActionTool extends MethodOpt {
                 if (count + 1 < size)
                     data.count = count + 1;
                 else
-                    logW(utils.getTAG(), "this is a list can hook member: " + members);
+                    logW(utils.getTAG(), "this is a last can hook member: " + members);
             }
             utils.members.put(label, data);
         } else {

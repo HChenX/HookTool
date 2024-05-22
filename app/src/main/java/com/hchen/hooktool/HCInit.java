@@ -9,7 +9,7 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
 /**
  * 初始化类，请在 Hook 入口处初始化本类。
  */
-public class HookInit {
+public class HCInit {
     private static XC_LoadPackage.LoadPackageParam lpparam = null;
     private static ClassLoader classLoader = null;
     private static boolean canUseSystemClassLoader = false;
