@@ -40,7 +40,7 @@ dependencyResolutionManagement {
 
 ```groovy
 dependencies {
-    implementation 'com.github.HChenX:HookTool:v.0.5'
+    implementation 'com.github.HChenX:HookTool:v.0.7.0'
 }
 ```
 
@@ -200,6 +200,52 @@ public class MainTest {
 # 📌一次性使用
 
 - 工具追求在目标类内实例化一次即可执行完全部需要执行的操作，拒绝多次重复实例。
+
+# 🔥工具附加提供
+
+- ContextUtils 类:
+- 更方便的获取 context 。
+
+```java
+public class MainTest {
+
+    public void test() {
+        // 即可最简单的获取 context
+        Context context = ContextUtils.getContext(ContextUtils.FLAG_ALL);
+    }
+}
+```
+
+- InvokeUtils 类:
+- 更方便稳健的反射类。
+
+```java
+public class MainTest {
+
+    public void test() {
+        // 即可反射调用方法，其他反射操作同理。
+        InvokeUtils.callMethod("com.hchen.hooktool.MainTest",
+                getClass().getClassLoader(), "test", new Class[]{});
+    }
+}
+```
+
+- PropUtils 类:
+- 更方便的 prop 读取修改工具。
+
+```java
+public class MainTest {
+
+    public void test() {
+        // 只能在系统核心中调用才能设置 prop
+        PropUtils.setProp("ro.test.prop", "1");
+        // 获取可以随意
+        String result = PropUtils.getProp("ro.test.prop");
+    }
+}
+```
+
+- 其他更多精彩正在加载···
 
 # 📢项目声明
 
