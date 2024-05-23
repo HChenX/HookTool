@@ -20,11 +20,13 @@ package com.hchen.hooktool.utils;
 
 import static com.hchen.hooktool.log.AndroidLog.logE;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 
 /**
  * 本类为 prop 工具，可以获取或者写入系统 prop 条目。
  */
+@SuppressLint("PrivateApi")
 public class PropUtils {
     private static final String TAG = "PropUtils";
 
@@ -39,7 +41,7 @@ public class PropUtils {
 
     public static boolean getProp(String name, boolean def) {
         try {
-            Class<?> cls = Class.forName("android.os.SystemProperties");
+            @SuppressLint("PrivateApi") Class<?> cls = Class.forName("android.os.SystemProperties");
             return Boolean.TRUE.equals(invokeMethod(cls, "getBoolean", new Class[]{String.class, boolean.class}, name, def));
         } catch (Throwable e) {
             logE(TAG, "get prop int", e);
