@@ -31,7 +31,8 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
  */
 public abstract class BaseHC {
     public String TAG = getClass().getSimpleName();
-    public static XC_LoadPackage.LoadPackageParam lpparam;
+    // 直接调用是 null，必须 onCreate 初始化一次。
+    public static XC_LoadPackage.LoadPackageParam lpparam = getLpparam();
     public static HCHook hcHook;
     public static ClassTool classTool;
     public static MethodTool methodTool;
@@ -41,15 +42,21 @@ public abstract class BaseHC {
 
     public abstract void init();
 
-    public void onCreate(HCHook hcHook, XC_LoadPackage.LoadPackageParam lpparam) {
-        BaseHC.hcHook = hcHook;
+    public void onCreate() {
+        BaseHC.hcHook = new HCHook();
         BaseHC.classTool = hcHook.classTool();
         BaseHC.methodTool = hcHook.methodTool();
         BaseHC.fieldTool = hcHook.fieldTool();
         BaseHC.dexkitTool = hcHook.dexkitTool();
         BaseHC.expandTool = hcHook.expandTool();
-        BaseHC.lpparam = lpparam;
         BaseHC.hcHook.setThisTag(TAG);
         init();
+    }
+
+    private static XC_LoadPackage.LoadPackageParam getLpparam() {
+        if (hcHook != null) {
+            return hcHook.getLpparam();
+        }
+        return null;
     }
 }

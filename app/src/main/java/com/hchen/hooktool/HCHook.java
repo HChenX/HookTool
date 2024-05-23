@@ -29,6 +29,8 @@ import com.hchen.hooktool.tool.FieldTool;
 import com.hchen.hooktool.tool.MethodTool;
 import com.hchen.hooktool.utils.DataUtils;
 
+import de.robv.android.xposed.callbacks.XC_LoadPackage;
+
 public class HCHook {
     private final DataUtils utils;
     private final ExpandTool expandTool;
@@ -99,6 +101,16 @@ public class HCHook {
     public HCHook setClassLoader(ClassLoader classLoader) {
         utils.mCustomClassLoader = classLoader;
         return utils.getHCHook();
+    }
+
+    public HCHook setLpparam(XC_LoadPackage.LoadPackageParam lpparam) {
+        DataUtils.lpparam = lpparam;
+        setClassLoader(lpparam.classLoader);
+        return utils.getHCHook();
+    }
+
+    public XC_LoadPackage.LoadPackageParam getLpparam() {
+        return DataUtils.lpparam;
     }
 
     public ClassLoader getClassLoader() {
