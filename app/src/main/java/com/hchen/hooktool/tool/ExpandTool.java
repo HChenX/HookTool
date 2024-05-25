@@ -56,7 +56,6 @@ public class ExpandTool {
     }
 
     // ---------- 非静态 -----------
-
     /**
      * 请使用 new Object[]{} 传入参数。<br/>
      * 如果仅传入一个参数可以不使用 new Object[]{}<br/>
@@ -149,9 +148,7 @@ public class ExpandTool {
         return false;
     }
 
-
     // ---------- 静态 ------------
-
     /**
      * 请使用 new Object[]{} 传入参数。<br/>
      * 如果仅传入一个参数可以不使用 new Object[]{}<br/>

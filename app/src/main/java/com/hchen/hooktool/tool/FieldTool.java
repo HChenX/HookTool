@@ -46,7 +46,7 @@ public class FieldTool {
     /**
      * 按标签类获取指定字段。
      */
-    public FieldTool findIndexField(String name) {
+    public FieldTool findField(String name) {
         utils.findField = null;
         toClass = null;
         if (utils.labelClasses.isEmpty()) {

@@ -107,13 +107,13 @@ public class ClassTool extends MethodOpt {
 
     /* 获取本次得到的类 */
     @Nullable
-    public Class<?> get() {
+    public Class<?> getFindClass() {
         return utils.findClass;
     }
 
     /* 获取指定枚举标签的类。 */
     @Nullable
-    public Class<?> get(Object label) {
+    public Class<?> getClassByLabel(Object label) {
         MemberData data = utils.labelClasses.get(label);
         if (data != null) {
             return data.mClass;

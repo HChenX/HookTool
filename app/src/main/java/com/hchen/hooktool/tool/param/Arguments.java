@@ -31,7 +31,7 @@ public class Arguments extends ActAchieve {
     }
 
     @Nullable
-    public <T> T get(int index) {
+    public <T> T getParam(int index) {
         if (size() == -1) {
             return null;
         } else if (size() < index + 1) {
@@ -46,31 +46,31 @@ public class Arguments extends ActAchieve {
 
     @Nullable
     public <T> T first() {
-        return get(0);
+        return getParam(0);
     }
 
     @Nullable
     public <T> T second() {
-        return get(1);
+        return getParam(1);
     }
 
     @Nullable
     public <T> T third() {
-        return get(2);
+        return getParam(2);
     }
 
     @Nullable
     public <T> T fourth() {
-        return get(3);
+        return getParam(3);
     }
 
     @Nullable
     public <T> T fifth() {
-        return get(4);
+        return getParam(4);
     }
 
     @Nullable
-    public <T> Arguments set(int index, T value) {
+    public <T> Arguments setParam(int index, T value) {
         if (size() == -1) {
             return this;
         } else if (size() < index + 1) {
@@ -85,27 +85,27 @@ public class Arguments extends ActAchieve {
     // ------- 提供五个快捷设置 ---------
     @Nullable
     public <T> Arguments first(T value) {
-        return set(0, value);
+        return setParam(0, value);
     }
 
     @Nullable
     public <T> Arguments second(T value) {
-        return set(1, value);
+        return setParam(1, value);
     }
 
     @Nullable
     public <T> Arguments third(T value) {
-        return set(2, value);
+        return setParam(2, value);
     }
 
     @Nullable
     public <T> Arguments fourth(T value) {
-        return set(3, value);
+        return setParam(3, value);
     }
 
     @Nullable
     public <T> Arguments fifth(T value) {
-        return set(4, value);
+        return setParam(4, value);
     }
 
     public int size() {

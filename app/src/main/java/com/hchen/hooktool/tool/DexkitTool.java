@@ -114,7 +114,6 @@ public class DexkitTool {
         };
     }
 
-    @Nullable
     private Class<?> findClass(String name) {
         try {
             return XposedHelpers.findClass(name,
@@ -133,7 +132,6 @@ public class DexkitTool {
             } else if (o instanceof String s) {
                 Class<?> ct = findClass(s);
                 if (ct == null) {
-                    logW(utils.getTAG(), "this string to class is null: " + s);
                     return null;
                 }
                 classes.add(ct);

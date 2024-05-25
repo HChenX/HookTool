@@ -59,7 +59,6 @@ public class MethodTool {
         return findMember;
     }
 
-    @Nullable
     private Class<?> findClass(String name) {
         try {
             return XposedHelpers.findClass(name,
@@ -144,7 +143,6 @@ public class MethodTool {
     }
 
     //--------------------构造函数---------------------
-
     /**
      * 按标签类获取指定构造函数。
      */
@@ -219,7 +217,6 @@ public class MethodTool {
             } else if (o instanceof String s) {
                 Class<?> ct = findClass(s);
                 if (ct == null) {
-                    logW(utils.getTAG(), "this string to class is null: " + s);
                     return null;
                 }
                 classes.add(ct);
