@@ -130,7 +130,7 @@ public class ExpandTool {
     }
 
     @Nullable
-    public <T> T setAdditionalInstanceField(Object instance, String name) {
+    public <T> T getAdditionalInstanceField(Object instance, String name) {
         try {
             return (T) XposedHelpers.getAdditionalInstanceField(instance, name);
         } catch (Throwable e) {

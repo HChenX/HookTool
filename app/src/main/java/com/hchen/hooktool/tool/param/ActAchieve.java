@@ -133,7 +133,7 @@ public class ActAchieve {
     }
 
     @Nullable
-    public <T> T setAdditionalInstanceField(String name) {
+    public <T> T getAdditionalInstanceField(String name) {
         paramSafe();
         try {
             return (T) XposedHelpers.getAdditionalInstanceField(param.thisObject, name);
