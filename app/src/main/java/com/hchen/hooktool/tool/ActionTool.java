@@ -111,8 +111,8 @@ public class ActionTool extends MethodOpt {
             if (data.mClass == null) {
                 logW(utils.getTAG(), "label: [" + label + "] this data class is null!");
             }
-            int count = data.memberMap.size() - 1;
-            if (count == -1) {
+            int count = data.memberMap.size();
+            if (count == 0) {
                 logW(utils.getTAG(), name + " member map is empty! class: " + data.mClass);
             } else {
                 ArrayList<Member> members = new ArrayList<>();
