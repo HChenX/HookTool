@@ -64,7 +64,7 @@ public class MethodTool {
             return XposedHelpers.findClass(name,
                     utils.getClassLoader());
         } catch (XposedHelpers.ClassNotFoundError e) {
-            logE(utils.getTAG(), "The specified class could not be found: " + name + " e: " + e);
+            logE(utils.getTAG(), "The specified class could not be found!", e);
         }
         return null;
     }
@@ -80,10 +80,10 @@ public class MethodTool {
             public ArrayList<Member> doFindMethod(Class<?> c, String name, Class<?>... classes) {
                 ArrayList<Member> arrayList = new ArrayList<>();
                 try {
-                    arrayList.add(c.getMethod(name, classes));
+                    arrayList.add(c.getDeclaredMethod(name, classes));
                 } catch (NoSuchMethodException e) {
-                    logE(utils.getTAG(), "The method to get the claim failed name: " + name +
-                            " class: " + c + " classes: " + Arrays.toString(classes) + " \ne: " + e);
+                    logE(utils.getTAG(), "The method to get the claim failed name: [" + name +
+                            "] class: [" + c + "] classes: " + Arrays.toString(classes), e);
                 }
                 return arrayList;
             }
@@ -98,14 +98,14 @@ public class MethodTool {
             @Override
             public ArrayList<Member> doFindMethod(Class<?> c, String name, Class<?>... classes) {
                 ArrayList<Member> list = new ArrayList<>();
-                Method[] methods = c.getMethods();
+                Method[] methods = c.getDeclaredMethods();
                 for (Method m : methods) {
                     if (name.equals(m.getName())) {
                         list.add(m);
                     }
                 }
                 if (list.isEmpty())
-                    logW(utils.getTAG(), "find any method, but list is empty! class: " + c + " member: " + name);
+                    logW(utils.getTAG(), "find any method, but list is empty! class: [" + c + "] member: " + name);
                 return list;
             }
         });
@@ -119,13 +119,13 @@ public class MethodTool {
         Object label = utils.getLabel();
         MemberData data = utils.labelClasses.get(label);
         if (data == null) {
-            logW(utils.getTAG(), "memberData is null, cant find: " + name + " label: " + label);
+            logW(utils.getTAG(), "memberData is null, cant find: [" + name + "] label: " + label);
             utils.members.put(label, data);
             return utils.getActionTool();
         }
         Class<?> c = data.mClass;
         if (c == null) {
-            logW(utils.getTAG(), "class is null! cant find: " + name + " label: " + label);
+            logW(utils.getTAG(), "class is null! cant find: [" + name + "] label: " + label);
             // utils.methods.put(index, new ArrayList<>());
             utils.members.put(label, data);
             return utils.getActionTool();
@@ -143,6 +143,7 @@ public class MethodTool {
     }
 
     //--------------------构造函数---------------------
+
     /**
      * 按标签类获取指定构造函数。
      */
@@ -154,10 +155,10 @@ public class MethodTool {
             public ArrayList<Member> doFindConstructor(Class<?> c, Class<?>... classes) {
                 ArrayList<Member> members = new ArrayList<>();
                 try {
-                    members.add(c.getConstructor(classes));
+                    members.add(c.getDeclaredConstructor(classes));
                 } catch (NoSuchMethodException e) {
-                    logE(utils.getTAG(), "The specified constructor could not be found: " + c +
-                            " classes: " + Arrays.toString(classes) + " e: " + e);
+                    logE(utils.getTAG(), "The specified constructor could not be found: [" + c +
+                            "] classes: " + Arrays.toString(classes), e);
                 }
                 return members;
             }
@@ -264,8 +265,12 @@ public class MethodTool {
         return utils.getActionTool().hook(iAction);
     }
 
-    public MethodTool hook(int methodIndex, IAction iAction) {
-        return utils.getActionTool().hook(methodIndex, iAction);
+    public MethodTool returnResult(final Object result) {
+        return utils.getActionTool().returnResult(result);
+    }
+
+    public MethodTool doNothing() {
+        return utils.getMethodTool().doNothing();
     }
 
     private interface IMethodTool {

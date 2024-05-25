@@ -46,7 +46,7 @@ public class Action extends XC_MethodHook {
         try {
             before(param);
         } catch (Throwable e) {
-            logE(TAG + ":" + "before", e.toString());
+            logE(TAG + ":" + "before", e);
         }
     }
 
@@ -55,7 +55,7 @@ public class Action extends XC_MethodHook {
         try {
             after(param);
         } catch (Throwable e) {
-            logE(TAG + ":" + "after", e.toString());
+            logE(TAG + ":" + "after", e);
         }
     }
 }

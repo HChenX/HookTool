@@ -56,7 +56,7 @@ public class ContextUtils {
         try {
             return invokeMethod(flag);
         } catch (Throwable e) {
-            logE(TAG, "getContext: " + e);
+            logE(TAG, "get context failed!", e);
             return null;
         }
     }

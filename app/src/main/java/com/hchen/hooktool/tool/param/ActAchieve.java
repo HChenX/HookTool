@@ -89,7 +89,7 @@ public class ActAchieve {
         try {
             return (R) XposedHelpers.callMethod(param.thisObject, name, tToObject(ts));
         } catch (Throwable e) {
-            logE(TAG, "call method: " + e);
+            logE(TAG, "call method failed!", e);
         }
         return null;
     }
@@ -105,7 +105,7 @@ public class ActAchieve {
         try {
             return (T) XposedHelpers.getObjectField(param.thisObject, name);
         } catch (Throwable e) {
-            logE(TAG, "get field: " + name);
+            logE(TAG, "get field failed!", e);
         }
         return null;
     }
@@ -116,7 +116,7 @@ public class ActAchieve {
             XposedHelpers.setObjectField(param.thisObject, name, key);
             return true;
         } catch (Throwable e) {
-            logE(TAG, "set field: " + e);
+            logE(TAG, "set field failed!", e);
         }
         return false;
     }
@@ -127,7 +127,7 @@ public class ActAchieve {
             XposedHelpers.setAdditionalInstanceField(param.thisObject, name, key);
             return true;
         } catch (Throwable e) {
-            logE(TAG, "set additional: " + name + " e: " + e);
+            logE(TAG, "set additional failed!", e);
         }
         return false;
     }
@@ -138,7 +138,7 @@ public class ActAchieve {
         try {
             return (T) XposedHelpers.getAdditionalInstanceField(param.thisObject, name);
         } catch (Throwable e) {
-            logE(TAG, "get additional: " + name + " e: " + e);
+            logE(TAG, "get additional failed!", e);
         }
         return null;
     }
@@ -149,7 +149,7 @@ public class ActAchieve {
             XposedHelpers.removeAdditionalInstanceField(param.thisObject, name);
             return true;
         } catch (Throwable e) {
-            logE(TAG, "remove additional: " + name + " e: " + e);
+            logE(TAG, "remove additional failed!", e);
         }
         return false;
     }

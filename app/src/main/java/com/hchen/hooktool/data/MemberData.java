@@ -33,7 +33,6 @@ public class MemberData {
     // public ArrayList<Member> mMethod;
     // public ArrayList<Member> mConstructor;
     public Field mField;
-    public int count = 0; // 计数
     // public boolean isHooked;
     // public boolean allAction;
     // public boolean after;

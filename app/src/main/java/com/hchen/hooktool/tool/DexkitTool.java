@@ -50,7 +50,7 @@ public class DexkitTool {
         try {
             return clz.getMethod(name, objsToClist(obs));
         } catch (NoSuchMethodException e) {
-            logE(utils.getTAG(), "get method: " + e);
+            logE(utils.getTAG(), "get method failed!", e);
         }
         return null;
     }
@@ -60,7 +60,7 @@ public class DexkitTool {
         try {
             return clz.getConstructor(objsToClist(obs));
         } catch (NoSuchMethodException e) {
-            logE(utils.getTAG(), "get constructor: " + e);
+            logE(utils.getTAG(), "get constructor failed!", e);
         }
         return null;
     }
@@ -69,7 +69,7 @@ public class DexkitTool {
         try {
             hook(member, iAction);
         } catch (Throwable e) {
-            logE(utils.getTAG(), "dexkit hook member: " + e);
+            logE(utils.getTAG(), "dexkit hook member failed!", e);
         }
     }
 
@@ -78,7 +78,7 @@ public class DexkitTool {
             Method method = methodData.getMethodInstance(utils.getClassLoader());
             hook(method, iAction);
         } catch (Throwable e) {
-            logE(utils.getTAG(), "dexkit instance method: " + e);
+            logE(utils.getTAG(), "dexkit instance method failed!", e);
         }
     }
 
@@ -88,7 +88,7 @@ public class DexkitTool {
             Constructor<?> constructor = clzz.getConstructor(objsToClist(objs));
             hook(constructor, iAction);
         } catch (Throwable e) {
-            logE(utils.getTAG(), "dexkit instance constructor: " + e);
+            logE(utils.getTAG(), "dexkit instance constructor failed!", e);
         }
     }
 
@@ -119,7 +119,7 @@ public class DexkitTool {
             return XposedHelpers.findClass(name,
                     utils.getClassLoader());
         } catch (XposedHelpers.ClassNotFoundError e) {
-            logE(utils.getTAG(), "The specified class could not be found: " + name + " e: " + e);
+            logE(utils.getTAG(), "The specified class could not be found!", e);
         }
         return null;
     }

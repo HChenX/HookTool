@@ -19,5 +19,5 @@
 package com.hchen.hooktool.data;
 
 public enum StateEnum {
-    NONE, HOOK
+    NONE, HOOK, Failed
 }

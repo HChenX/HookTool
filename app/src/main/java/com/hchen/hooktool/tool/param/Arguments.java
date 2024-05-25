@@ -35,8 +35,8 @@ public class Arguments extends ActAchieve {
         if (size() == -1) {
             return null;
         } else if (size() < index + 1) {
-            logE(TAG, "method: " + member.getName() +
-                    " param max size: " + size() + " index: " + index + " !");
+            logE(TAG, "method: [" + member.getName() +
+                    "] param max size: [" + size() + "] index: [" + index + "] !");
             return null;
         }
         return (T) param.args[index];
@@ -74,8 +74,8 @@ public class Arguments extends ActAchieve {
         if (size() == -1) {
             return this;
         } else if (size() < index + 1) {
-            logE(TAG, "method: " + member.getName() +
-                    " param max size: " + size() + " index: " + index + " !");
+            logE(TAG, "method: [" + member.getName() +
+                    "] param max size: [" + size() + "] index: [" + index + "] !");
             return this;
         }
         param.args[index] = value;

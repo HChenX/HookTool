@@ -56,6 +56,7 @@ public class ExpandTool {
     }
 
     // ---------- 非静态 -----------
+
     /**
      * 请使用 new Object[]{} 传入参数。<br/>
      * 如果仅传入一个参数可以不使用 new Object[]{}<br/>
@@ -66,7 +67,7 @@ public class ExpandTool {
         try {
             return (R) XposedHelpers.callMethod(instance, name, tToObject(ts));
         } catch (Throwable e) {
-            logE(utils.getTAG(), "call method: " + e);
+            logE(utils.getTAG(), "call method failed!", e);
         }
         return null;
     }
@@ -81,7 +82,7 @@ public class ExpandTool {
         try {
             return (T) XposedHelpers.getObjectField(instance, name);
         } catch (Throwable e) {
-            logE(utils.getTAG(), "get field: " + name);
+            logE(utils.getTAG(), "get field failed!", e);
         }
         return null;
     }
@@ -92,7 +93,7 @@ public class ExpandTool {
             field.setAccessible(true);
             return (T) field.get(instance);
         } catch (Throwable e) {
-            logE(utils.getTAG(), "get field: " + e);
+            logE(utils.getTAG(), "get field failed!", e);
         }
         return null;
     }
@@ -102,7 +103,7 @@ public class ExpandTool {
             XposedHelpers.setObjectField(instance, name, key);
             return true;
         } catch (Throwable e) {
-            logE(utils.getTAG(), "set field: " + e);
+            logE(utils.getTAG(), "set field failed!", e);
         }
         return false;
     }
@@ -113,7 +114,7 @@ public class ExpandTool {
             field.set(instance, key);
             return true;
         } catch (Throwable e) {
-            logE(utils.getTAG(), "set field: " + e);
+            logE(utils.getTAG(), "set field failed!", e);
         }
         return false;
     }
@@ -123,7 +124,7 @@ public class ExpandTool {
             XposedHelpers.setAdditionalInstanceField(instance, name, key);
             return true;
         } catch (Throwable e) {
-            logE(utils.getTAG(), "set additional: " + name + " e: " + e);
+            logE(utils.getTAG(), "set additional failed!", e);
         }
         return false;
     }
@@ -133,7 +134,7 @@ public class ExpandTool {
         try {
             return (T) XposedHelpers.getAdditionalInstanceField(instance, name);
         } catch (Throwable e) {
-            logE(utils.getTAG(), "get additional: " + name + " e: " + e);
+            logE(utils.getTAG(), "get additional failed!", e);
         }
         return null;
     }
@@ -143,12 +144,13 @@ public class ExpandTool {
             XposedHelpers.removeAdditionalInstanceField(instance, name);
             return true;
         } catch (Throwable e) {
-            logE(utils.getTAG(), "remove additional: " + name + " e: " + e);
+            logE(utils.getTAG(), "remove additional failed!", e);
         }
         return false;
     }
 
     // ---------- 静态 ------------
+
     /**
      * 请使用 new Object[]{} 传入参数。<br/>
      * 如果仅传入一个参数可以不使用 new Object[]{}<br/>
@@ -160,7 +162,7 @@ public class ExpandTool {
             try {
                 return (R) XposedHelpers.newInstance(clz, tToObject(objects));
             } catch (Throwable e) {
-                logE(utils.getTAG(), "new instance: " + e);
+                logE(utils.getTAG(), "new instance failed!", e);
             }
         } else logW(utils.getTAG(), "class is null, cant new instance.");
         return null;
@@ -182,7 +184,7 @@ public class ExpandTool {
             try {
                 return (R) XposedHelpers.callStaticMethod(clz, name, tToObject(objs));
             } catch (Throwable e) {
-                logE(utils.getTAG(), "call static method: " + e);
+                logE(utils.getTAG(), "call static method failed!", e);
             }
         } else {
             logW(utils.getTAG(), "class is null, cant call: " + name);
@@ -201,7 +203,7 @@ public class ExpandTool {
             try {
                 return (T) XposedHelpers.getStaticObjectField(clz, name);
             } catch (Throwable e) {
-                logE(utils.getTAG(), "get static field: " + e);
+                logE(utils.getTAG(), "get static field failed!", e);
             }
         } else logW(utils.getTAG(), "class is null, cant get field: " + name);
         return null;
@@ -213,7 +215,7 @@ public class ExpandTool {
             field.setAccessible(true);
             return (T) field.get(null);
         } catch (Throwable e) {
-            logE(utils.getTAG(), "get static field: " + e);
+            logE(utils.getTAG(), "get static field failed!", e);
         }
         return null;
     }
@@ -224,7 +226,7 @@ public class ExpandTool {
                 XposedHelpers.setStaticObjectField(clz, name, value);
                 return true;
             } catch (Throwable e) {
-                logE(utils.getTAG(), "set static field: " + e);
+                logE(utils.getTAG(), "set static field failed!", e);
             }
         } else logW(utils.getTAG(), "class is null, cant set field: " + name);
         return false;
@@ -236,7 +238,7 @@ public class ExpandTool {
             field.set(null, value);
             return true;
         } catch (Throwable e) {
-            logE(utils.getTAG(), "set static field: " + e);
+            logE(utils.getTAG(), "set static field failed!", e);
         }
         return false;
     }
@@ -247,7 +249,7 @@ public class ExpandTool {
                 XposedHelpers.setAdditionalStaticField(clz, key, value);
                 return true;
             } catch (Throwable e) {
-                logE(utils.getTAG(), "set additional static field: " + e);
+                logE(utils.getTAG(), "set additional static field failed!", e);
             }
         } else logW(utils.getTAG(), "class is null, cant additional: " + key);
         return false;
@@ -259,7 +261,7 @@ public class ExpandTool {
             try {
                 return (T) XposedHelpers.getAdditionalStaticField(clz, key);
             } catch (Throwable e) {
-                logE(utils.getTAG(), "get additional static field: " + e);
+                logE(utils.getTAG(), "get additional static field failed!", e);
             }
         } else logW(utils.getTAG(), "class is null, cant get additional: " + key);
         return null;
@@ -271,7 +273,7 @@ public class ExpandTool {
                 XposedHelpers.removeAdditionalStaticField(clz, key);
                 return true;
             } catch (Throwable e) {
-                logE(utils.getTAG(), "remove additional static field: " + e);
+                logE(utils.getTAG(), "remove additional static field failed!", e);
             }
         } else
             logW(utils.getTAG(), "class is null, cant remove additional: " + key);

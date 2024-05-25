@@ -48,6 +48,10 @@ public class XposedLog {
         XposedBridge.log(rootTag + "[" + tag + "]" + "[E]: " + e);
     }
 
+    public static void logE(String tag, String log, Throwable e) {
+        XposedBridge.log(rootTag + "[" + tag + "]" + "[E]: " + log + " \nError Msg: " + e);
+    }
+
     public static void logD(String tag, Throwable e) {
         XposedBridge.log(rootTag + "[" + tag + "]" + "[D]: " + e);
     }

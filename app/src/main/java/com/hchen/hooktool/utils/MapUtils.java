@@ -18,8 +18,6 @@
  */
 package com.hchen.hooktool.utils;
 
-import com.hchen.hooktool.log.XposedLog;
-
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -38,26 +36,6 @@ public class MapUtils<V> {
     public MapUtils<V> put(V value) {
         count = count + 1;
         hashMap.put(count, value);
-        return this;
-    }
-
-    // public MapUtils<K, V> put(K key, V value) {
-    //     hashMap.put(key, value);
-    //     return this;
-    // }
-
-    public MapUtils<V> put(Integer key, V value) {
-        if (count == -1) {
-            hashMap.put(key, value);
-        } else {
-            if (!hashMap.isEmpty()) {
-                clear();
-                count = -1;
-                put(key, value);
-                XposedLog.logE("MapUtils", "count is changed, will clear map, " +
-                        "and writ new key and value.");
-            }
-        }
         return this;
     }
 

@@ -96,7 +96,7 @@ public class ClassTool extends MethodOpt {
             utils.findClass = XposedHelpers.findClass(className,
                     classLoader);
         } catch (XposedHelpers.ClassNotFoundError e) {
-            logE(utils.getTAG(), "The specified class could not be found: " + className + " e: " + e);
+            logE(utils.getTAG(), "the class not found!", e);
             utils.findClass = null;
         }
         // utils.classes.add(utils.findClass);
@@ -145,7 +145,7 @@ public class ClassTool extends MethodOpt {
             try {
                 return XposedHelpers.newInstance(memberData.mClass, args);
             } catch (Throwable e) {
-                logE(utils.getTAG(), "new instance class: " + memberData.mClass + " e: " + e);
+                logE(utils.getTAG(), "new instance class: " + memberData.mClass, e);
             }
         } else logW(utils.getTAG(), "class is null, cant new instance. label: " + label);
         return null;

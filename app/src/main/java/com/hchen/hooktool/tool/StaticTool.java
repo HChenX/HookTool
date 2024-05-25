@@ -93,7 +93,7 @@ public class StaticTool {
             try {
                 return (R) XposedHelpers.newInstance(claz, tToObject(objs));
             } catch (Throwable e) {
-                logE(TAG, "new instance: " + e);
+                logE(TAG, "new instance failed!", e);
             }
         } else logW(TAG, "class is null, cant new instance.");
         return null;
@@ -125,7 +125,7 @@ public class StaticTool {
             try {
                 return (R) XposedHelpers.callStaticMethod(clz, name, tToObject(objs));
             } catch (Throwable e) {
-                logE(TAG, "call static method: " + e);
+                logE(TAG, "call static method failed!", e);
             }
         } else {
             logW(TAG, "class is null, cant call: " + name);
@@ -154,7 +154,7 @@ public class StaticTool {
             try {
                 return (T) XposedHelpers.getStaticObjectField(clz, name);
             } catch (Throwable e) {
-                logE(TAG, "get static field: " + e);
+                logE(TAG, "get static field failed!", e);
             }
         } else logW(TAG, "class is null, cant get field: " + name);
         return null;
@@ -170,7 +170,7 @@ public class StaticTool {
                 XposedHelpers.setStaticObjectField(clz, name, value);
                 return true;
             } catch (Throwable e) {
-                logE(TAG, "set static field: " + e);
+                logE(TAG, "set static field failed!", e);
             }
         } else logW(TAG, "class is null, cant set field: " + name);
         return false;
@@ -186,7 +186,7 @@ public class StaticTool {
                 XposedHelpers.setAdditionalStaticField(clz, key, value);
                 return true;
             } catch (Throwable e) {
-                logE(TAG, "set additional static field: " + e);
+                logE(TAG, "set additional static field failed!", e);
             }
         } else logW(TAG, "class is null, cant additional: " + key);
         return false;
@@ -203,7 +203,7 @@ public class StaticTool {
             try {
                 return (T) XposedHelpers.getAdditionalStaticField(clz, key);
             } catch (Throwable e) {
-                logE(TAG, "get additional static field: " + e);
+                logE(TAG, "get additional static field failed!", e);
             }
         } else logW(TAG, "class is null, cant get additional: " + key);
         return null;
@@ -219,7 +219,7 @@ public class StaticTool {
                 XposedHelpers.removeAdditionalStaticField(clz, key);
                 return true;
             } catch (Throwable e) {
-                logE(TAG, "remove additional static field: " + e);
+                logE(TAG, "remove additional static field failed!", e);
             }
         } else
             logW(TAG, "class is null, cant remove additional: " + key);

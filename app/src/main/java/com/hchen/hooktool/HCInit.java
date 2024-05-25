@@ -68,7 +68,7 @@ public class HCInit {
         lpparam = loadPackageParam;
         classLoader = loadPackageParam.classLoader;
         packageName = lpparam.packageName;
-        logI(spareTag, "init lpparam: " + lpparam + " classLoader: " + classLoader + " pkgName: " + packageName);
+        logI(spareTag, "init lpparam: [" + lpparam + "] classLoader: [" + classLoader + "] pkgName: " + packageName);
     }
 
     protected static XC_LoadPackage.LoadPackageParam getLoadPackageParam() throws Throwable {
