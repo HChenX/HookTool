@@ -19,6 +19,7 @@
 package com.hchen.hooktool.tool;
 
 import static com.hchen.hooktool.log.XposedLog.logE;
+import static com.hchen.hooktool.log.XposedLog.logI;
 import static com.hchen.hooktool.log.XposedLog.logW;
 
 import androidx.annotation.Nullable;
@@ -94,6 +95,7 @@ public class DexkitTool {
 
     private void hook(Member member, IAction iAction) throws Throwable {
         XposedBridge.hookMethod(member, hookTool(member, iAction));
+        logI(utils.getTAG(), "success to hook: " + member);
     }
 
     private Action hookTool(Member member, IAction iAction) {

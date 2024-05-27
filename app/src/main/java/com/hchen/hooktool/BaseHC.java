@@ -18,6 +18,8 @@
  */
 package com.hchen.hooktool;
 
+import static com.hchen.hooktool.log.XposedLog.logE;
+
 import com.hchen.hooktool.tool.ClassTool;
 import com.hchen.hooktool.tool.DexkitTool;
 import com.hchen.hooktool.tool.ExpandTool;
@@ -42,6 +44,9 @@ public abstract class BaseHC {
 
     public abstract void init();
 
+    /**
+     * 执行 Hook 应该调用此方法。
+     */
     public void onCreate() {
         BaseHC.hcHook = new HCHook();
         BaseHC.classTool = hcHook.classTool();
@@ -50,7 +55,11 @@ public abstract class BaseHC {
         BaseHC.dexkitTool = hcHook.dexkitTool();
         BaseHC.expandTool = hcHook.expandTool();
         BaseHC.hcHook.setThisTag(TAG);
-        init();
+        try {
+            init();
+        } catch (Throwable e) {
+            logE(TAG, e);
+        }
     }
 
     private static XC_LoadPackage.LoadPackageParam getLpparam() {

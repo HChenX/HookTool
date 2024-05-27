@@ -104,13 +104,13 @@ public class HCHook {
     }
 
     public HCHook setLpparam(XC_LoadPackage.LoadPackageParam lpparam) {
-        DataUtils.lpparam = lpparam;
+        utils.mCustomLpparam = lpparam;
         setClassLoader(lpparam.classLoader);
         return utils.getHCHook();
     }
 
     public XC_LoadPackage.LoadPackageParam getLpparam() {
-        return DataUtils.lpparam;
+        return utils.getLpparam();
     }
 
     public ClassLoader getClassLoader() {

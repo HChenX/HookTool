@@ -1,0 +1,124 @@
+package com.hchen.hooktool.utils;
+
+import static com.hchen.hooktool.log.XposedLog.logE;
+import static com.hchen.hooktool.log.XposedLog.logW;
+
+import android.content.Context;
+import android.content.pm.PackageManager;
+import android.content.res.Configuration;
+import android.content.res.Resources;
+import android.content.res.loader.ResourcesLoader;
+import android.content.res.loader.ResourcesProvider;
+import android.os.Build;
+import android.os.ParcelFileDescriptor;
+
+import androidx.annotation.RequiresApi;
+
+import java.io.File;
+import java.io.IOException;
+
+/**
+ * 资源注入工具，
+ * 可能不是痕稳定。
+ */
+public class ResHelper {
+    private static ResourcesLoader resourcesLoader = null;
+    private static final String TAG = "ResHelper";
+    private static String mModulePath;
+    private static String mProjectPkg;
+
+    /**
+     * 请在 initZygote 中初始化。
+     *
+     * @param modulePath startupParam.modulePath 即可
+     * @param projectPkg 本项目包名。
+     */
+    public static void initResHelper(String modulePath, String projectPkg) {
+        mModulePath = modulePath;
+        mProjectPkg = projectPkg;
+    }
+
+    /**
+     * 来自 QA 的方法
+     */
+    @RequiresApi(api = Build.VERSION_CODES.R)
+    private static boolean loadResAboveApi30(Context context) {
+        if (resourcesLoader == null) {
+            try (ParcelFileDescriptor pfd = ParcelFileDescriptor.open(new File(mModulePath),
+                    ParcelFileDescriptor.MODE_READ_ONLY)) {
+                ResourcesProvider provider = ResourcesProvider.loadFromApk(pfd);
+                ResourcesLoader loader = new ResourcesLoader();
+                loader.addProvider(provider);
+                resourcesLoader = loader;
+            } catch (IOException e) {
+                logE(TAG, "Failed to add resource!: " + e);
+                return false;
+            }
+        }
+        // if (Looper.myLooper() == Looper.getMainLooper()) {
+        context.getResources().addLoaders(resourcesLoader);
+        // } else {
+        //     if (mHandler != null) {
+        //         mHandler.post(() -> context.getResources().addLoaders(resourcesLoader));
+        //     } else {
+        //         return false;
+        //     }
+        // }
+        return true;
+    }
+
+    /**
+     * 把本项目资源注入目标作用域上下文。一般调用本方法即可。<br/>
+     * 请在 build.gradle 添加如下代码。
+     * <pre> {@code
+     * Kotlin Gradle DSL:
+     *
+     * androidResources.additionalParameters("--allow-reserved-package-id", "--package-id", "0x64")
+     *
+     * Groovy:
+     *
+     * aaptOptions.additionalParameters '--allow-reserved-package-id', '--package-id', '0x64'
+     *
+     * }<br/>
+     * `0x64` is the resource id, you can change it to any value you want.(recommended [0x30 to 0x6F])
+     * @noinspection UnusedReturnValue
+     */
+    public static Resources loadModuleRes(Context context) {
+        boolean load = false;
+        if (context == null) {
+            logE(TAG, "context can't is null!!");
+            return null;
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            load = loadResAboveApi30(context);
+        }
+        if (!load) {
+            logW(TAG, "loadModuleRes return 0, It may have failed. Try the second method ...");
+            try {
+                return getModuleRes(context);
+            } catch (PackageManager.NameNotFoundException e) {
+                logE(TAG, "Failed to load resource!Critical error!!Scope may crash!!", e);
+            }
+        }
+        return context.getResources();
+    }
+
+    public static Context getModuleContext(Context context)
+            throws PackageManager.NameNotFoundException {
+        return getModuleContext(context, null);
+    }
+
+    public static Context getModuleContext(Context context, Configuration config)
+            throws PackageManager.NameNotFoundException {
+        Context mModuleContext;
+        mModuleContext = context.createPackageContext(mProjectPkg, Context.CONTEXT_IGNORE_SECURITY).createDeviceProtectedStorageContext();
+        return config == null ? mModuleContext : mModuleContext.createConfigurationContext(config);
+    }
+
+    public static Resources getModuleRes(Context context)
+            throws PackageManager.NameNotFoundException {
+        Configuration config = context.getResources().getConfiguration();
+        Context moduleContext = getModuleContext(context);
+        return (config == null ? moduleContext.getResources() : moduleContext.createConfigurationContext(config).getResources());
+    }
+}

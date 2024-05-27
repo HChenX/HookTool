@@ -43,6 +43,7 @@ public class DataUtils {
     public MethodTool methodTool = null;
     public ActionTool actionTool = null;
     public static XC_LoadPackage.LoadPackageParam lpparam = null;
+    public XC_LoadPackage.LoadPackageParam mCustomLpparam = null;
     public static ClassLoader classLoader = null;
     public ClassLoader mCustomClassLoader = null;
     public Class<?> findClass = null;
@@ -60,6 +61,11 @@ public class DataUtils {
     public ClassLoader getClassLoader() {
         if (mCustomClassLoader != null) return mCustomClassLoader;
         return classLoader;
+    }
+
+    public XC_LoadPackage.LoadPackageParam getLpparam() {
+        if (mCustomLpparam != null) return mCustomLpparam;
+        return lpparam;
     }
 
     public void setLabel(Object label) {
