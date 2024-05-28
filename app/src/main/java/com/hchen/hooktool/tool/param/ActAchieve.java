@@ -18,23 +18,17 @@
  */
 package com.hchen.hooktool.tool.param;
 
-import static com.hchen.hooktool.log.XposedLog.logE;
-
 import androidx.annotation.Nullable;
 
-import java.lang.reflect.Member;
+import com.hchen.hooktool.utils.DataUtils;
 
 import de.robv.android.xposed.XC_MethodHook;
-import de.robv.android.xposed.XposedHelpers;
 
-public class ActAchieve {
+public class ActAchieve extends StaticAct {
     protected XC_MethodHook.MethodHookParam param;
-    protected final Member member;
-    protected final String TAG;
 
-    public ActAchieve(Member member, String tag) {
-        this.member = member;
-        TAG = tag;
+    public ActAchieve(DataUtils utils) {
+        super(utils);
     }
 
     protected void setParam(XC_MethodHook.MethodHookParam param) {
@@ -86,84 +80,44 @@ public class ActAchieve {
     @Nullable
     public <T, R> R callMethod(String name, T ts) {
         paramSafe();
-        try {
-            return (R) XposedHelpers.callMethod(param.thisObject, name, tToObject(ts));
-        } catch (Throwable e) {
-            logE(TAG, "call method failed!", e);
-        }
-        return null;
+        return iDynamic.callMethod(param.thisObject, name, genericToObjectArray(ts));
     }
 
     @Nullable
     public <R> R callMethod(String name) {
-        return callMethod(name, new Object[]{});
+        return iDynamic.callMethod(param.thisObject, name);
     }
 
     @Nullable
     public <T> T getField(String name) {
         paramSafe();
-        try {
-            return (T) XposedHelpers.getObjectField(param.thisObject, name);
-        } catch (Throwable e) {
-            logE(TAG, "get field failed!", e);
-        }
-        return null;
+        return iDynamic.getField(param.thisObject, name);
     }
 
     public boolean setField(String name, Object key) {
         paramSafe();
-        try {
-            XposedHelpers.setObjectField(param.thisObject, name, key);
-            return true;
-        } catch (Throwable e) {
-            logE(TAG, "set field failed!", e);
-        }
-        return false;
+        return iDynamic.setField(param.thisObject, name, key);
     }
 
     public boolean setAdditionalInstanceField(String name, Object key) {
         paramSafe();
-        try {
-            XposedHelpers.setAdditionalInstanceField(param.thisObject, name, key);
-            return true;
-        } catch (Throwable e) {
-            logE(TAG, "set additional failed!", e);
-        }
-        return false;
+        return iDynamic.setAdditionalInstanceField(param.thisObject, name, key);
     }
 
     @Nullable
     public <T> T getAdditionalInstanceField(String name) {
         paramSafe();
-        try {
-            return (T) XposedHelpers.getAdditionalInstanceField(param.thisObject, name);
-        } catch (Throwable e) {
-            logE(TAG, "get additional failed!", e);
-        }
-        return null;
+        return iDynamic.getAdditionalInstanceField(param.thisObject, name);
     }
 
     public boolean removeAdditionalInstanceField(String name) {
         paramSafe();
-        try {
-            XposedHelpers.removeAdditionalInstanceField(param.thisObject, name);
-            return true;
-        } catch (Throwable e) {
-            logE(TAG, "remove additional failed!", e);
-        }
-        return false;
+        return iDynamic.removeAdditionalInstanceField(param.thisObject, name);
     }
 
     protected void paramSafe() {
         if (param == null) {
-            throw new RuntimeException(TAG + " param is null! member: " + member.getName());
+            throw new RuntimeException(utils.getTAG() + " param is null! member: " + param.method.getName());
         }
-    }
-
-    private <T> Object[] tToObject(T ts) {
-        if (ts instanceof Object[] objects) {
-            return objects;
-        }
-        return new Object[]{ts};
     }
 }

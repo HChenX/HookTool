@@ -130,13 +130,13 @@ public class MainTest {
         Object object = null;
         Class<?> clazz = null;
         HCHook hcHook = new HCHook();
-        INDTool indTool = hcHook.indTool();
-        indTool.callMethod(object, "call", new Object[]{});
-        indTool.setField(object, "field", null);
-        indTool.getField(object, "field");
-        indTool.callStaticMethod(clazz, "callStatic");
-        indTool.setStaticField(clazz, "fieldStatic", null);
-        indTool.getStaticField(clazz, "fieldStatic");
+        ExpandTool expandTool = new HCHook().expandTool();
+        expandTool.callMethod(object, "call", new Object[]{});
+        expandTool.setField(object, "field", null);
+        expandTool.getField(object, "field");
+        expandTool.callStaticMethod(clazz, "callStatic");
+        expandTool.setStaticField(clazz, "fieldStatic", null);
+        expandTool.getStaticField(clazz, "fieldStatic");
     }
 }
 ```
@@ -170,14 +170,14 @@ public class MainTest {
         // HookTool 代码
         new IAction() {
             @Override
-            public void before(ParamTool param, StaticTool staticTool) {
+            public void before(ParamTool param) {
                 Context context = param.thisObject(); // 无显性转换
                 String string = param.first(); // 简单且无需显性转换
                 param.second(1); // 直达式设置
                 String result = param.callMethod("call", new Object[]{param.thisObject(), param.first()});
-                staticTool.findClass("com.demo.Main"); // 一次获取多次使用
-                staticTool.callStaticMethod("callStatic", new Object[]{param.thisObject(), param.second()});
-                int i = staticTool.getStaticField("field");
+                param.callStaticMethod(param.findClass("com.demo.Main"),
+                        "callStatic", new Object[]{param.thisObject(), param.second()});
+                int i = param.getStaticField(param.findClass("com.demo.Main"), "field");
             }
         };
         // 是不是方便了许多呢？

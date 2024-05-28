@@ -60,8 +60,8 @@ public class ActionTool extends MethodOpt {
         if (actionSafe("hook", iAction)) {
             hookTool("hook", new IActionTool() {
                 @Override
-                public Action action(Member member) {
-                    return hookTool(member, iAction);
+                public Action action() {
+                    return hookTool(iAction);
                 }
             });
         }
@@ -74,7 +74,7 @@ public class ActionTool extends MethodOpt {
     public MethodTool returnResult(final Object result) {
         hookTool("returnResult", new IActionTool() {
             @Override
-            public Action action(Member member) {
+            public Action action() {
                 return new Action(utils.getTAG()) {
                     @Override
                     protected void before(MethodHookParam param) {
@@ -92,7 +92,7 @@ public class ActionTool extends MethodOpt {
     public MethodTool doNothing() {
         hookTool("doNothing", new IActionTool() {
             @Override
-            public Action action(Member member) {
+            public Action action() {
                 return new Action(utils.getTAG(), PRIORITY_HIGHEST * 2) {
                     @Override
                     protected void before(MethodHookParam param) {
@@ -132,7 +132,7 @@ public class ActionTool extends MethodOpt {
                     } else {
                         for (Member member : members) {
                             try {
-                                XposedBridge.hookMethod(member, tool.action(member));
+                                XposedBridge.hookMethod(member, tool.action());
                                 logD(utils.getTAG(), "success hook: [" + member + "] class: [" + data.mClass
                                         + "] label: [" + label + "] count: " + count);
                                 setState(name, data, members, true);
@@ -171,25 +171,24 @@ public class ActionTool extends MethodOpt {
         }
     }
 
-    private Action hookTool(Member member, IAction iAction) {
-        ParamTool paramTool = new ParamTool(member, utils.getTAG());
-        StaticTool staticTool = new StaticTool(utils.getClassLoader(), utils.getTAG());
+    private Action hookTool(IAction iAction) {
+        ParamTool paramTool = new ParamTool(utils);
         return new Action(utils.getTAG()) {
             @Override
             protected void before(MethodHookParam param) {
                 paramTool.setParam(param);
-                iAction.before(paramTool, staticTool);
+                iAction.before(paramTool);
             }
 
             @Override
             protected void after(MethodHookParam param) {
                 paramTool.setParam(param);
-                iAction.after(paramTool, staticTool);
+                iAction.after(paramTool);
             }
         };
     }
 
-    public boolean actionSafe(String name, Object iAction) {
+    private boolean actionSafe(String name, Object iAction) {
         if (iAction == null) {
             logW(utils.getTAG(), name + " is null!");
             return false;
@@ -198,7 +197,7 @@ public class ActionTool extends MethodOpt {
     }
 
     private interface IActionTool {
-        Action action(Member member);
+        Action action();
     }
 
     public MethodTool methodTool() {

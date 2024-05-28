@@ -20,12 +20,10 @@ package com.hchen.hooktool.tool;
 
 import static com.hchen.hooktool.log.XposedLog.logE;
 import static com.hchen.hooktool.log.XposedLog.logI;
-import static com.hchen.hooktool.log.XposedLog.logW;
-
-import androidx.annotation.Nullable;
 
 import com.hchen.hooktool.action.Action;
 import com.hchen.hooktool.callback.IAction;
+import com.hchen.hooktool.utils.ConvertHelper;
 import com.hchen.hooktool.utils.DataUtils;
 
 import org.luckypray.dexkit.result.ClassData;
@@ -34,36 +32,15 @@ import org.luckypray.dexkit.result.MethodData;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 
 import de.robv.android.xposed.XposedBridge;
-import de.robv.android.xposed.XposedHelpers;
 
-public class DexkitTool {
+public class DexkitTool extends ConvertHelper {
     private final DataUtils utils;
 
     public DexkitTool(DataUtils utils) {
+        super(utils);
         this.utils = utils;
-    }
-
-    @Nullable
-    public Method getMethod(Class<?> clz, String name, Object... obs) {
-        try {
-            return clz.getMethod(name, objsToClist(obs));
-        } catch (NoSuchMethodException e) {
-            logE(utils.getTAG(), "get method failed!", e);
-        }
-        return null;
-    }
-
-    @Nullable
-    public Constructor<?> getConstructor(Class<?> clz, Object... obs) {
-        try {
-            return clz.getConstructor(objsToClist(obs));
-        } catch (NoSuchMethodException e) {
-            logE(utils.getTAG(), "get constructor failed!", e);
-        }
-        return null;
     }
 
     public void hookMethod(Member member, IAction iAction) {
@@ -86,7 +63,7 @@ public class DexkitTool {
     public void hookMethod(ClassData classData, IAction iAction, Object... objs) {
         try {
             Class<?> clzz = classData.getInstance(utils.getClassLoader());
-            Constructor<?> constructor = clzz.getConstructor(objsToClist(objs));
+            Constructor<?> constructor = clzz.getConstructor(objectArrayToClassArray(objs));
             hook(constructor, iAction);
         } catch (Throwable e) {
             logE(utils.getTAG(), "dexkit instance constructor failed!", e);
@@ -94,54 +71,24 @@ public class DexkitTool {
     }
 
     private void hook(Member member, IAction iAction) throws Throwable {
-        XposedBridge.hookMethod(member, hookTool(member, iAction));
+        XposedBridge.hookMethod(member, hookTool(iAction));
         logI(utils.getTAG(), "success to hook: " + member);
     }
 
-    private Action hookTool(Member member, IAction iAction) {
-        ParamTool paramTool = new ParamTool(member, utils.getTAG());
-        StaticTool staticTool = new StaticTool(utils.getClassLoader(), utils.getTAG());
+    private Action hookTool(IAction iAction) {
+        ParamTool paramTool = new ParamTool(utils);
         return new Action(utils.getTAG()) {
             @Override
             protected void before(MethodHookParam param) {
                 paramTool.setParam(param);
-                iAction.before(paramTool, staticTool);
+                iAction.before(paramTool);
             }
 
             @Override
             protected void after(MethodHookParam param) {
                 paramTool.setParam(param);
-                iAction.after(paramTool, staticTool);
+                iAction.after(paramTool);
             }
         };
-    }
-
-    private Class<?> findClass(String name) {
-        try {
-            return XposedHelpers.findClass(name,
-                    utils.getClassLoader());
-        } catch (XposedHelpers.ClassNotFoundError e) {
-            logE(utils.getTAG(), "The specified class could not be found!", e);
-        }
-        return null;
-    }
-
-    private Class<?>[] objsToClist(Object... objs) {
-        ArrayList<Class<?>> classes = new ArrayList<>();
-        for (Object o : objs) {
-            if (o instanceof Class<?> c) {
-                classes.add(c);
-            } else if (o instanceof String s) {
-                Class<?> ct = findClass(s);
-                if (ct == null) {
-                    return null;
-                }
-                classes.add(ct);
-            } else {
-                logW(utils.getTAG(), "unknown type: " + o);
-                return null;
-            }
-        }
-        return classes.toArray(new Class<?>[classes.size()]);
     }
 }

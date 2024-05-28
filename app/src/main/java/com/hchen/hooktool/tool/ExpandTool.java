@@ -23,16 +23,20 @@ import static com.hchen.hooktool.log.XposedLog.logW;
 
 import androidx.annotation.Nullable;
 
+import com.hchen.hooktool.itool.IDynamic;
+import com.hchen.hooktool.itool.IStatic;
+import com.hchen.hooktool.utils.ConvertHelper;
 import com.hchen.hooktool.utils.DataUtils;
 
 import java.lang.reflect.Field;
 
 import de.robv.android.xposed.XposedHelpers;
 
-public class ExpandTool {
+public class ExpandTool extends ConvertHelper implements IDynamic, IStatic {
     private final DataUtils utils;
 
     public ExpandTool(DataUtils dataUtils) {
+        super(dataUtils);
         utils = dataUtils;
     }
 
@@ -56,7 +60,6 @@ public class ExpandTool {
     }
 
     // ---------- 非静态 -----------
-
     /**
      * 请使用 new Object[]{} 传入参数。<br/>
      * 如果仅传入一个参数可以不使用 new Object[]{}<br/>
@@ -65,7 +68,7 @@ public class ExpandTool {
     @Nullable
     public <T, R> R callMethod(Object instance, String name, T ts) {
         try {
-            return (R) XposedHelpers.callMethod(instance, name, tToObject(ts));
+            return (R) XposedHelpers.callMethod(instance, name, genericToObjectArray(ts));
         } catch (Throwable e) {
             logE(utils.getTAG(), "call method failed!", e);
         }
@@ -150,7 +153,6 @@ public class ExpandTool {
     }
 
     // ---------- 静态 ------------
-
     /**
      * 请使用 new Object[]{} 传入参数。<br/>
      * 如果仅传入一个参数可以不使用 new Object[]{}<br/>
@@ -160,7 +162,7 @@ public class ExpandTool {
     public <T, R> R newInstance(Class<?> clz, T objects) {
         if (clz != null) {
             try {
-                return (R) XposedHelpers.newInstance(clz, tToObject(objects));
+                return (R) XposedHelpers.newInstance(clz, genericToObjectArray(objects));
             } catch (Throwable e) {
                 logE(utils.getTAG(), "new instance failed!", e);
             }
@@ -169,7 +171,7 @@ public class ExpandTool {
     }
 
     @Nullable
-    public <R> Object newInstance(Class<?> clz) {
+    public <R> R newInstance(Class<?> clz) {
         return newInstance(clz, new Object[]{});
     }
 
@@ -182,7 +184,7 @@ public class ExpandTool {
     public <T, R> R callStaticMethod(Class<?> clz, String name, T objs) {
         if (clz != null) {
             try {
-                return (R) XposedHelpers.callStaticMethod(clz, name, tToObject(objs));
+                return (R) XposedHelpers.callStaticMethod(clz, name, genericToObjectArray(objs));
             } catch (Throwable e) {
                 logE(utils.getTAG(), "call static method failed!", e);
             }
@@ -278,12 +280,5 @@ public class ExpandTool {
         } else
             logW(utils.getTAG(), "class is null, cant remove additional: " + key);
         return false;
-    }
-
-    private <T> Object[] tToObject(T ts) {
-        if (ts instanceof Object[] objects) {
-            return objects;
-        }
-        return new Object[]{ts};
     }
 }

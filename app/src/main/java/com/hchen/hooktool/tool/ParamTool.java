@@ -21,6 +21,7 @@ package com.hchen.hooktool.tool;
 import androidx.annotation.Nullable;
 
 import com.hchen.hooktool.tool.param.Arguments;
+import com.hchen.hooktool.utils.DataUtils;
 
 import java.lang.reflect.Member;
 
@@ -29,14 +30,14 @@ import de.robv.android.xposed.XC_MethodHook;
 public class ParamTool extends Arguments {
     public Class<?> mClass;
 
-    public ParamTool(Member member, String tag) {
-        super(member, tag);
-        mClass = member.getDeclaringClass();
+    public ParamTool(DataUtils utils) {
+        super(utils);
     }
 
     @Override
     protected void setParam(XC_MethodHook.MethodHookParam param) {
         this.param = param;
+        mClass = param.method.getDeclaringClass();
     }
 
     @Nullable
@@ -46,9 +47,7 @@ public class ParamTool extends Arguments {
     }
 
     public Member method() {
-        if (param == null) {
-            return member;
-        }
+        paramSafe();
         return param.method;
     }
 

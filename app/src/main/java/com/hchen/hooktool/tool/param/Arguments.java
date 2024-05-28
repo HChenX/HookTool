@@ -22,12 +22,12 @@ import static com.hchen.hooktool.log.XposedLog.logE;
 
 import androidx.annotation.Nullable;
 
-import java.lang.reflect.Member;
+import com.hchen.hooktool.utils.DataUtils;
 
 public class Arguments extends ActAchieve {
 
-    public Arguments(Member member, String tag) {
-        super(member, tag);
+    public Arguments(DataUtils utils) {
+        super(utils);
     }
 
     @Nullable
@@ -35,7 +35,7 @@ public class Arguments extends ActAchieve {
         if (size() == -1) {
             return null;
         } else if (size() < index + 1) {
-            logE(TAG, "method: [" + member.getName() +
+            logE(utils.getTAG(), "method: [" + param.method.getName() +
                     "] param max size: [" + size() + "] index: [" + index + "] !");
             return null;
         }
@@ -74,7 +74,7 @@ public class Arguments extends ActAchieve {
         if (size() == -1) {
             return this;
         } else if (size() < index + 1) {
-            logE(TAG, "method: [" + member.getName() +
+            logE(utils.getTAG(), "method: [" + param.method.getName() +
                     "] param max size: [" + size() + "] index: [" + index + "] !");
             return this;
         }

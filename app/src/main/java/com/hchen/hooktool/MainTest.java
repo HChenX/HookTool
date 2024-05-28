@@ -22,7 +22,6 @@ import android.content.Context;
 
 import com.hchen.hooktool.callback.IAction;
 import com.hchen.hooktool.tool.ParamTool;
-import com.hchen.hooktool.tool.StaticTool;
 
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedHelpers;
@@ -47,14 +46,14 @@ public class MainTest {
 
         new IAction() {
             @Override
-            public void before(ParamTool param, StaticTool staticTool) {
+            public void before(ParamTool param) {
                 Context context = param.thisObject();
                 String string = param.first();
                 param.second(1);
                 String result = param.callMethod("call", new Object[]{param.thisObject(), param.first()});
-                staticTool.findClass("com.demo.Main");
-                staticTool.callStaticMethod("callStatic", new Object[]{param.thisObject(), param.second()});
-                int i = staticTool.getStaticField("field");
+                param.callStaticMethod(param.findClass("com.demo.Main"),
+                        "callStatic", new Object[]{param.thisObject(), param.second()});
+                int i = param.getStaticField(param.findClass("com.demo.Main"), "field");
             }
         };
     }

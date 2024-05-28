@@ -1,23 +1,13 @@
 [versions]
 agp = "8.2.2"
-annotationJvm = "1.8.0"
-annotationsVersion = "23.0.0"
 dexkit = "2.0.1"
 annotation = "1.8.0"
-manifoldExt = "2024.1.12"
-manifoldExtRt = "2024.1.12"
 xposed = "82"
-annotations = "28.0.0"
 
 [libraries]
-androidx-annotation-jvm = { module = "androidx.annotation:annotation-jvm", version.ref = "annotationJvm" }
 dexkit = { module = "org.luckypray:dexkit", version.ref = "dexkit" }
 annotation = { module = "androidx.annotation:annotation", version.ref = "annotation" }
-jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "annotationsVersion" }
-manifold-ext-rt = { module = "systems.manifold:manifold-ext-rt", version.ref = "manifoldExtRt" }
-systems-manifold-ext = { module = "systems.manifold:manifold-ext", version.ref = "manifoldExt" }
 xposed = { group = "de.robv.android.xposed", name = "api", version.ref = "xposed" }
-annotations = { group = "com.android.support", name = "support-annotations", version.ref = "annotations" }
 
 [plugins]
 library = { id = "com.android.library", version.ref = "agp" }
