@@ -36,18 +36,17 @@ public class ParamTool extends Arguments {
 
     @Override
     protected void setParam(XC_MethodHook.MethodHookParam param) {
+        if (param == null) throw new RuntimeException(utils.getTAG() + " param is null!!");
         this.param = param;
         mClass = param.method.getDeclaringClass();
     }
 
     @Nullable
     public <T> T thisObject() {
-        paramSafe();
         return (T) param.thisObject;
     }
 
     public Member method() {
-        paramSafe();
         return param.method;
     }
 

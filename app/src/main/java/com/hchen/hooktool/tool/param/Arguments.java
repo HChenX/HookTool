@@ -109,7 +109,6 @@ public class Arguments extends ActAchieve {
     }
 
     public int size() {
-        paramSafe();
         return param.args.length;
     }
 }

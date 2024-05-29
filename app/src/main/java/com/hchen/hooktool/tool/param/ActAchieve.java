@@ -36,39 +36,32 @@ public class ActAchieve extends StaticAct {
 
     @Nullable
     public <T> T getResult() {
-        paramSafe();
         return (T) param.getResult();
     }
 
     public void returnNull() {
-        paramSafe();
         param.setResult(null);
     }
 
     public <T> void setResult(T value) {
-        paramSafe();
         param.setResult(value);
     }
 
     public boolean hasThrowable() {
-        paramSafe();
         return param.hasThrowable();
     }
 
     @Nullable
     public Throwable getThrowable() {
-        paramSafe();
         return param.getThrowable();
     }
 
     public void setThrowable(Throwable t) {
-        paramSafe();
         param.setThrowable(t);
     }
 
     @Nullable
     public <T> T getResultOrThrowable() throws Throwable {
-        paramSafe();
         return (T) param.getResultOrThrowable();
     }
 
@@ -79,7 +72,6 @@ public class ActAchieve extends StaticAct {
      */
     @Nullable
     public <T, R> R callMethod(String name, T ts) {
-        paramSafe();
         return iDynamic.callMethod(param.thisObject, name, genericToObjectArray(ts));
     }
 
@@ -90,34 +82,23 @@ public class ActAchieve extends StaticAct {
 
     @Nullable
     public <T> T getField(String name) {
-        paramSafe();
         return iDynamic.getField(param.thisObject, name);
     }
 
     public boolean setField(String name, Object key) {
-        paramSafe();
         return iDynamic.setField(param.thisObject, name, key);
     }
 
     public boolean setAdditionalInstanceField(String name, Object key) {
-        paramSafe();
         return iDynamic.setAdditionalInstanceField(param.thisObject, name, key);
     }
 
     @Nullable
     public <T> T getAdditionalInstanceField(String name) {
-        paramSafe();
         return iDynamic.getAdditionalInstanceField(param.thisObject, name);
     }
 
     public boolean removeAdditionalInstanceField(String name) {
-        paramSafe();
         return iDynamic.removeAdditionalInstanceField(param.thisObject, name);
-    }
-
-    protected void paramSafe() {
-        if (param == null) {
-            throw new RuntimeException(utils.getTAG() + " param is null! member: " + param.method.getName());
-        }
     }
 }
