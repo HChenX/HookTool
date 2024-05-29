@@ -18,8 +18,6 @@
  */
 package com.hchen.hooktool.tool;
 
-import androidx.annotation.Nullable;
-
 import com.hchen.hooktool.tool.param.Arguments;
 import com.hchen.hooktool.utils.DataUtils;
 
@@ -41,7 +39,6 @@ public class ParamTool extends Arguments {
         mClass = param.method.getDeclaringClass();
     }
 
-    @Nullable
     public <T> T thisObject() {
         return (T) param.thisObject;
     }

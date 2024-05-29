@@ -23,7 +23,6 @@ import static com.hchen.hooktool.log.XposedLog.logE;
 import static com.hchen.hooktool.log.XposedLog.logW;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.hchen.hooktool.data.MemberData;
 import com.hchen.hooktool.utils.DataUtils;
@@ -106,13 +105,11 @@ public class ClassTool extends MethodOpt {
     }
 
     /* 获取本次得到的类 */
-    @Nullable
     public Class<?> getFindClass() {
         return utils.findClass;
     }
 
     /* 获取指定枚举标签的类。 */
-    @Nullable
     public Class<?> getClassByLabel(Object label) {
         MemberData data = utils.labelClasses.get(label);
         if (data != null) {
@@ -130,7 +127,6 @@ public class ClassTool extends MethodOpt {
     /**
      * 实例当前索引类。
      */
-    @Nullable
     public Object newInstance(Object... args) {
         return newInstance(utils.getLabel(), args);
     }
@@ -138,7 +134,6 @@ public class ClassTool extends MethodOpt {
     /**
      * 实例指定索引类，索引从 0 开始。
      */
-    @Nullable
     public Object newInstance(Object label, Object... args) {
         MemberData memberData = utils.labelClasses.get(label);
         if (memberData != null && memberData.mClass != null) {

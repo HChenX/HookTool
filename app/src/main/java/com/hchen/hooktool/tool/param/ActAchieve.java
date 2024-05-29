@@ -18,8 +18,6 @@
  */
 package com.hchen.hooktool.tool.param;
 
-import androidx.annotation.Nullable;
-
 import com.hchen.hooktool.utils.DataUtils;
 
 import de.robv.android.xposed.XC_MethodHook;
@@ -34,7 +32,6 @@ public class ActAchieve extends StaticAct {
     protected void setParam(XC_MethodHook.MethodHookParam param) {
     }
 
-    @Nullable
     public <T> T getResult() {
         return (T) param.getResult();
     }
@@ -51,7 +48,6 @@ public class ActAchieve extends StaticAct {
         return param.hasThrowable();
     }
 
-    @Nullable
     public Throwable getThrowable() {
         return param.getThrowable();
     }
@@ -60,27 +56,34 @@ public class ActAchieve extends StaticAct {
         param.setThrowable(t);
     }
 
-    @Nullable
     public <T> T getResultOrThrowable() throws Throwable {
         return (T) param.getResultOrThrowable();
     }
 
+    // --------- 调用方法 --------------
     /**
      * 请使用 new Object[]{} 传入参数。<br/>
      * 如果仅传入一个参数可以不使用 new Object[]{}<br/>
      * 这是为了规避泛型与可变参数的冲突。
      */
-    @Nullable
     public <T, R> R callMethod(String name, T ts) {
         return iDynamic.callMethod(param.thisObject, name, genericToObjectArray(ts));
     }
 
-    @Nullable
     public <R> R callMethod(String name) {
         return iDynamic.callMethod(param.thisObject, name);
     }
 
-    @Nullable
+    public <T, R> R callMethod(Object instance, String name, T ts) {
+        return iDynamic.callMethod(instance, name, genericToObjectArray(ts));
+    }
+
+    public <R> R callMethod(Object instance, String name) {
+        return iDynamic.callMethod(instance, name);
+    }
+
+    // ----------- 获取/修改 字段 -------------
+
     public <T> T getField(String name) {
         return iDynamic.getField(param.thisObject, name);
     }
@@ -89,16 +92,36 @@ public class ActAchieve extends StaticAct {
         return iDynamic.setField(param.thisObject, name, key);
     }
 
+    public <T> T getField(Object instance, String name) {
+        return iDynamic.getField(instance, name);
+    }
+
+    public boolean setField(Object instance, String name, Object key) {
+        return iDynamic.setField(instance, name, key);
+    }
+
+    // ---------- 设置自定义字段 --------------
     public boolean setAdditionalInstanceField(String name, Object key) {
         return iDynamic.setAdditionalInstanceField(param.thisObject, name, key);
     }
 
-    @Nullable
     public <T> T getAdditionalInstanceField(String name) {
         return iDynamic.getAdditionalInstanceField(param.thisObject, name);
     }
 
     public boolean removeAdditionalInstanceField(String name) {
         return iDynamic.removeAdditionalInstanceField(param.thisObject, name);
+    }
+
+    public boolean setAdditionalInstanceField(Object instance, String name, Object key) {
+        return iDynamic.setAdditionalInstanceField(instance, name, key);
+    }
+
+    public <T> T getAdditionalInstanceField(Object instance, String name) {
+        return iDynamic.getAdditionalInstanceField(instance, name);
+    }
+
+    public boolean removeAdditionalInstanceField(Object instance, String name) {
+        return iDynamic.removeAdditionalInstanceField(instance, name);
     }
 }

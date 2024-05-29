@@ -20,8 +20,6 @@ package com.hchen.hooktool;
 
 import static com.hchen.hooktool.log.XposedLog.logI;
 
-import androidx.annotation.Nullable;
-
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 /**
@@ -84,7 +82,6 @@ public class HCInit {
         throw new RuntimeException("Failed to obtain ClassLoader! It is null!");
     }
 
-    @Nullable
     private static ClassLoader getClassLoaderIfExists() {
         return classLoader;
     }

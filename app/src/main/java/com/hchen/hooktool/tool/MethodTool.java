@@ -21,8 +21,6 @@ package com.hchen.hooktool.tool;
 import static com.hchen.hooktool.log.XposedLog.logE;
 import static com.hchen.hooktool.log.XposedLog.logW;
 
-import androidx.annotation.Nullable;
-
 import com.hchen.hooktool.callback.IAction;
 import com.hchen.hooktool.data.MemberData;
 import com.hchen.hooktool.data.StateEnum;
@@ -54,7 +52,6 @@ public class MethodTool extends ConvertHelper {
      * 获取本次查找到的方法，下次查找方法将会覆盖本次。<br/>
      * 可能是构造函数，也可能是方法。
      */
-    @Nullable
     public ArrayList<Member> getFindMember() {
         return findMember;
     }
@@ -217,11 +214,6 @@ public class MethodTool extends ConvertHelper {
         return utils.getFieldTool();
     }
 
-    /* 不建议使用 clear 本工具应该是一次性的。 */
-    private void clear() {
-        if (!utils.members.isEmpty()) utils.members.clear();
-    }
-
     // 更棒的无缝衔接
     public ClassTool findClass(Object label, String className) {
         return utils.getClassTool().findClass(label, className);
@@ -242,6 +234,11 @@ public class MethodTool extends ConvertHelper {
 
     public MethodTool doNothing() {
         return utils.getMethodTool().doNothing();
+    }
+
+    /* 不建议使用 clear 本工具应该是一次性的。 */
+    private void clear() {
+        if (!utils.members.isEmpty()) utils.members.clear();
     }
 
     private interface IMethodTool {

@@ -18,8 +18,6 @@
  */
 package com.hchen.hooktool.tool.param;
 
-import androidx.annotation.Nullable;
-
 import com.hchen.hooktool.itool.IDynamic;
 import com.hchen.hooktool.itool.IStatic;
 import com.hchen.hooktool.tool.ExpandTool;
@@ -58,12 +56,10 @@ public class StaticAct extends ConvertHelper {
      * 如果仅传入一个参数可以不使用 new Object[]{}<br/>
      * 这是为了规避泛型与可变参数的冲突。
      */
-    @Nullable
     public <T, R> R newInstance(Class<?> claz, T objs) {
         return iStatic.newInstance(claz, objs);
     }
 
-    @Nullable
     public <R> R newInstance(Class<?> clz) {
         return iStatic.newInstance(clz);
     }
@@ -73,17 +69,14 @@ public class StaticAct extends ConvertHelper {
      * 如果仅传入一个参数可以不使用 new Object[]{}<br/>
      * 这是为了规避泛型与可变参数的冲突。
      */
-    @Nullable
     public <T, R> R callStaticMethod(Class<?> clz, String name, T objs) {
         return iStatic.callStaticMethod(clz, name, objs);
     }
 
-    @Nullable
     public <R> R callStaticMethod(Class<?> clz, String name) {
         return iStatic.callStaticMethod(clz, name);
     }
 
-    @Nullable
     public <T> T getStaticField(Class<?> clz, String name) {
         return iStatic.getStaticField(clz, name);
     }
@@ -96,7 +89,6 @@ public class StaticAct extends ConvertHelper {
         return iStatic.setAdditionalStaticField(clz, key, value);
     }
 
-    @Nullable
     public <T> T getAdditionalStaticField(Class<?> clz, String key) {
         return iStatic.getAdditionalStaticField(clz, key);
     }

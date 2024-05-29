@@ -21,8 +21,6 @@ package com.hchen.hooktool.tool;
 import static com.hchen.hooktool.log.XposedLog.logE;
 import static com.hchen.hooktool.log.XposedLog.logW;
 
-import androidx.annotation.Nullable;
-
 import com.hchen.hooktool.itool.IDynamic;
 import com.hchen.hooktool.itool.IStatic;
 import com.hchen.hooktool.utils.ConvertHelper;
@@ -40,12 +38,10 @@ public class ExpandTool extends ConvertHelper implements IDynamic, IStatic {
         utils = dataUtils;
     }
 
-    @Nullable
     public Class<?> findClass(String name) {
         return findClass(name, utils.getClassLoader());
     }
 
-    @Nullable
     public Class<?> findClass(String name, ClassLoader classLoader) {
         try {
             if (classLoader == null) {
@@ -66,7 +62,6 @@ public class ExpandTool extends ConvertHelper implements IDynamic, IStatic {
      * 如果仅传入一个参数可以不使用 new Object[]{}<br/>
      * 这是为了规避泛型与可变参数的冲突。
      */
-    @Nullable
     public <T, R> R callMethod(Object instance, String name, T ts) {
         try {
             return (R) XposedHelpers.callMethod(instance, name, genericToObjectArray(ts));
@@ -76,12 +71,10 @@ public class ExpandTool extends ConvertHelper implements IDynamic, IStatic {
         return null;
     }
 
-    @Nullable
     public <R> R callMethod(Object instance, String name) {
         return callMethod(instance, name, new Object[]{});
     }
 
-    @Nullable
     public <T> T getField(Object instance, String name) {
         try {
             return (T) XposedHelpers.getObjectField(instance, name);
@@ -91,7 +84,6 @@ public class ExpandTool extends ConvertHelper implements IDynamic, IStatic {
         return null;
     }
 
-    @Nullable
     public <T> T getField(Object instance, Field field) {
         try {
             field.setAccessible(true);
@@ -133,7 +125,6 @@ public class ExpandTool extends ConvertHelper implements IDynamic, IStatic {
         return false;
     }
 
-    @Nullable
     public <T> T getAdditionalInstanceField(Object instance, String name) {
         try {
             return (T) XposedHelpers.getAdditionalInstanceField(instance, name);
@@ -160,7 +151,6 @@ public class ExpandTool extends ConvertHelper implements IDynamic, IStatic {
      * 如果仅传入一个参数可以不使用 new Object[]{}<br/>
      * 这是为了规避泛型与可变参数的冲突。
      */
-    @Nullable
     public <T, R> R newInstance(Class<?> clz, T objects) {
         if (clz != null) {
             try {
@@ -172,7 +162,6 @@ public class ExpandTool extends ConvertHelper implements IDynamic, IStatic {
         return null;
     }
 
-    @Nullable
     public <R> R newInstance(Class<?> clz) {
         return newInstance(clz, new Object[]{});
     }
@@ -182,7 +171,6 @@ public class ExpandTool extends ConvertHelper implements IDynamic, IStatic {
      * 如果仅传入一个参数可以不使用 new Object[]{}<br/>
      * 这是为了规避泛型与可变参数的冲突。
      */
-    @Nullable
     public <T, R> R callStaticMethod(Class<?> clz, String name, T objs) {
         if (clz != null) {
             try {
@@ -196,12 +184,10 @@ public class ExpandTool extends ConvertHelper implements IDynamic, IStatic {
         return null;
     }
 
-    @Nullable
     public <R> R callStaticMethod(Class<?> clz, String name) {
         return callStaticMethod(clz, name, new Object[]{});
     }
 
-    @Nullable
     public <T> T getStaticField(Class<?> clz, String name) {
         if (clz != null) {
             try {
@@ -213,7 +199,6 @@ public class ExpandTool extends ConvertHelper implements IDynamic, IStatic {
         return null;
     }
 
-    @Nullable
     public <T> T getStaticField(Field field) {
         try {
             field.setAccessible(true);
@@ -259,7 +244,6 @@ public class ExpandTool extends ConvertHelper implements IDynamic, IStatic {
         return false;
     }
 
-    @Nullable
     public <T> T getAdditionalStaticField(Class<?> clz, String key) {
         if (clz != null) {
             try {

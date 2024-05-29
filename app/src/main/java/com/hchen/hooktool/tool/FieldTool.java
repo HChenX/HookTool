@@ -21,8 +21,6 @@ package com.hchen.hooktool.tool;
 import static com.hchen.hooktool.log.XposedLog.logE;
 import static com.hchen.hooktool.log.XposedLog.logW;
 
-import androidx.annotation.Nullable;
-
 import com.hchen.hooktool.data.MemberData;
 import com.hchen.hooktool.utils.DataUtils;
 
@@ -32,7 +30,6 @@ import de.robv.android.xposed.XposedHelpers;
 
 public class FieldTool {
     private final DataUtils utils;
-    private Class<?> toClass;
 
     public FieldTool(DataUtils utils) {
         this.utils = utils;
@@ -48,7 +45,6 @@ public class FieldTool {
      */
     public FieldTool findField(String name) {
         utils.findField = null;
-        toClass = null;
         if (utils.labelClasses.isEmpty()) {
             logW(utils.getTAG(), "The class list is empty!");
             return utils.getFieldTool();
@@ -67,7 +63,6 @@ public class FieldTool {
         try {
             utils.findField = XposedHelpers.findField(c, name);
             data.mField = utils.findField;
-            toClass = c;
         } catch (NoSuchFieldError e) {
             logE(utils.getTAG(), "failed to get claim field: [" + name + "] class: " + utils.findClass, e);
         }
@@ -77,7 +72,6 @@ public class FieldTool {
     /**
      * 获取查找到的字段，需要在下次查找前调用，否则被覆盖。
      */
-    @Nullable
     public Field getField() {
         return utils.findField;
     }

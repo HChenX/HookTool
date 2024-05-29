@@ -20,8 +20,6 @@ package com.hchen.hooktool.tool.param;
 
 import static com.hchen.hooktool.log.XposedLog.logE;
 
-import androidx.annotation.Nullable;
-
 import com.hchen.hooktool.utils.DataUtils;
 
 public class Arguments extends ActAchieve {
@@ -30,7 +28,6 @@ public class Arguments extends ActAchieve {
         super(utils);
     }
 
-    @Nullable
     public <T> T getParam(int index) {
         if (size() == -1) {
             return null;
@@ -44,32 +41,26 @@ public class Arguments extends ActAchieve {
 
     // ------- 提供五个快捷获取 ---------
 
-    @Nullable
     public <T> T first() {
         return getParam(0);
     }
 
-    @Nullable
     public <T> T second() {
         return getParam(1);
     }
 
-    @Nullable
     public <T> T third() {
         return getParam(2);
     }
 
-    @Nullable
     public <T> T fourth() {
         return getParam(3);
     }
 
-    @Nullable
     public <T> T fifth() {
         return getParam(4);
     }
 
-    @Nullable
     public <T> Arguments setParam(int index, T value) {
         if (size() == -1) {
             return this;
@@ -83,27 +74,23 @@ public class Arguments extends ActAchieve {
     }
 
     // ------- 提供五个快捷设置 ---------
-    @Nullable
+
     public <T> Arguments first(T value) {
         return setParam(0, value);
     }
 
-    @Nullable
     public <T> Arguments second(T value) {
         return setParam(1, value);
     }
 
-    @Nullable
     public <T> Arguments third(T value) {
         return setParam(2, value);
     }
 
-    @Nullable
     public <T> Arguments fourth(T value) {
         return setParam(3, value);
     }
 
-    @Nullable
     public <T> Arguments fifth(T value) {
         return setParam(4, value);
     }
