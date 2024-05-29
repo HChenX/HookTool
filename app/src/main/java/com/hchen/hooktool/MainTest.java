@@ -50,6 +50,13 @@ public class MainTest {
                 Context context = param.thisObject();
                 String string = param.first();
                 param.second(1);
+                // 设置其他实例
+                Object instance = new Object();
+                param.to(instance).setField("demo", 1);// 设置实例 instance 的 demo 字段
+                param.to(instance, false).callMethod("method"); // call 实例 instance 的方法
+                param.getField("test"); // 因为 to(instance, false) 所以 get 的是 instance 的 test 字段
+                param.homing(); // 清除设置的指定实例
+
                 String result = param.callMethod("call", new Object[]{param.thisObject(), param.first()});
                 param.callStaticMethod(param.findClass("com.demo.Main"),
                         "callStatic", new Object[]{param.thisObject(), param.second()});
