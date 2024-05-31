@@ -26,7 +26,6 @@ import com.hchen.hooktool.tool.FieldTool;
 import com.hchen.hooktool.tool.MethodTool;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.HashMap;
 
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
@@ -47,16 +46,10 @@ public class DataUtils {
     public static ClassLoader classLoader = null;
     public ClassLoader mCustomClassLoader = null;
     public Class<?> findClass = null;
-    // public MapUtils<MemberData> classes = new MapUtils<>();
     public HashMap<Object, MemberData> labelClasses = new HashMap<>();
-    // public ArrayList<Class<?>> classes = new ArrayList<>();
-    public ArrayList<Object> newInstances = new ArrayList<>();
     public Field findField = null;
     public Object mLabel = null;
-    // public int next = 0;
-    // private Method method = null;
     public final HashMap<Object, MemberData> members = new HashMap<>();
-    // public final MapUtils<MemberData> constructors = new MapUtils<>();
 
     public ClassLoader getClassLoader() {
         if (mCustomClassLoader != null) return mCustomClassLoader;
@@ -75,22 +68,6 @@ public class DataUtils {
     public Object getLabel() {
         return mLabel;
     }
-
-    /* public int getCount() {
-        return next;
-    }
-
-    public void reset() {
-        next = 0;
-    }
-
-    public void next() {
-        next = next + 1;
-    }
-
-    public void back() {
-        next = next - 1;
-    } */
 
     public HCHook getHCHook() {
         HCHook hcHook = this.hcHook;

@@ -188,8 +188,7 @@ public class SystemSDK {
      */
     public static boolean isPad() {
         if (IS_TABLET()) return true;
-        if (isPadDevice()) return true;
-        return false;
+        return isPadDevice();
     }
 
     /**
@@ -198,8 +197,7 @@ public class SystemSDK {
      * @return 一个 Boolean 值，true 代表是国际版系统，false 代表不是国际版系统
      */
     public static boolean isInternational() {
-        if (IS_INTERNATIONAL_BUILD()) return true;
-        return false;
+        return IS_INTERNATIONAL_BUILD();
     }
 
     public static String getFingerPrint() {

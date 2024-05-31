@@ -228,6 +228,10 @@ public class MethodTool extends ConvertHelper {
         return utils.getActionTool().hook(iAction);
     }
 
+    public MethodTool hook(Member member, IAction iAction) {
+        return utils.getActionTool().hook(member, iAction);
+    }
+
     public MethodTool returnResult(final Object result) {
         return utils.getActionTool().returnResult(result);
     }

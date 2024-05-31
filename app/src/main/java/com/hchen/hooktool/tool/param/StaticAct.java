@@ -32,12 +32,29 @@ public class StaticAct extends ConvertHelper {
     protected final IDynamic iDynamic;
     protected final DataUtils utils;
 
+    private Class<?> mClass;
+
     public StaticAct(DataUtils utils) {
         super(utils);
         this.utils = utils;
         ExpandTool expandTool = new ExpandTool(utils);
         iStatic = expandTool;
         iDynamic = expandTool;
+    }
+
+    public StaticAct to(Class<?> mClass) {
+        this.mClass = mClass;
+        return this;
+    }
+
+    public StaticAct to(String clazz) {
+        this.mClass = findClass(clazz);
+        return this;
+    }
+
+    public StaticAct to(String clazz, ClassLoader classLoader) {
+        this.mClass = findClass(clazz, classLoader);
+        return this;
     }
 
     /**
@@ -56,12 +73,12 @@ public class StaticAct extends ConvertHelper {
      * 如果仅传入一个参数可以不使用 new Object[]{}<br/>
      * 这是为了规避泛型与可变参数的冲突。
      */
-    public <T, R> R newInstance(Class<?> claz, T objs) {
-        return iStatic.newInstance(claz, objs);
+    public <T, R> R newInstance(T objs) {
+        return iStatic.newInstance(mClass, objs);
     }
 
-    public <R> R newInstance(Class<?> clz) {
-        return iStatic.newInstance(clz);
+    public <R> R newInstance() {
+        return iStatic.newInstance(mClass);
     }
 
     /**
@@ -69,31 +86,31 @@ public class StaticAct extends ConvertHelper {
      * 如果仅传入一个参数可以不使用 new Object[]{}<br/>
      * 这是为了规避泛型与可变参数的冲突。
      */
-    public <T, R> R callStaticMethod(Class<?> clz, String name, T objs) {
-        return iStatic.callStaticMethod(clz, name, objs);
+    public <T, R> R callStaticMethod(String name, T objs) {
+        return iStatic.callStaticMethod(mClass, name, objs);
     }
 
-    public <R> R callStaticMethod(Class<?> clz, String name) {
-        return iStatic.callStaticMethod(clz, name);
+    public <R> R callStaticMethod(String name) {
+        return iStatic.callStaticMethod(mClass, name);
     }
 
-    public <T> T getStaticField(Class<?> clz, String name) {
-        return iStatic.getStaticField(clz, name);
+    public <T> T getStaticField(String name) {
+        return iStatic.getStaticField(mClass, name);
     }
 
-    public boolean setStaticField(Class<?> clz, String name, Object value) {
-        return iStatic.setStaticField(clz, name, value);
+    public boolean setStaticField(String name, Object value) {
+        return iStatic.setStaticField(mClass, name, value);
     }
 
-    public boolean setAdditionalStaticField(Class<?> clz, String key, Object value) {
-        return iStatic.setAdditionalStaticField(clz, key, value);
+    public boolean setAdditionalStaticField(String key, Object value) {
+        return iStatic.setAdditionalStaticField(mClass, key, value);
     }
 
-    public <T> T getAdditionalStaticField(Class<?> clz, String key) {
-        return iStatic.getAdditionalStaticField(clz, key);
+    public <T> T getAdditionalStaticField(String key) {
+        return iStatic.getAdditionalStaticField(mClass, key);
     }
 
-    public boolean removeAdditionalStaticField(Class<?> clz, String key) {
-        return iStatic.removeAdditionalStaticField(clz, key);
+    public boolean removeAdditionalStaticField(String key) {
+        return iStatic.removeAdditionalStaticField(mClass, key);
     }
 }

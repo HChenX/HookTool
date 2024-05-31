@@ -40,7 +40,7 @@ dependencyResolutionManagement {
 
 ```groovy
 dependencies {
-    implementation 'com.github.HChenX:HookTool:v.0.7.0'
+    implementation 'com.github.HChenX:HookTool:v.0.8.4'
 }
 ```
 
@@ -54,7 +54,7 @@ dependencies {
 
 @Override
 public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) {
-    HookInit.setTAG("YourTag"); // 设置日志TAG
+    HookInit.setTAG("YourTag"); // 设置日志 TAG
     HookInit.initLoadPackageParam(lpparam); // 初始化
 }
 ```
@@ -64,8 +64,28 @@ public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) {
 ```java
 public void test() {
     HCHook hcHook = new HCHook(); // 实例工具
-    hcHook.setThisTag(TAG); // 设置具体TAG，比如本类名。
+    hcHook.setThisTag(TAG); // 设置具体 TAG，比如本类名。
 }
+```
+
+- 当然你也可以直接继承本工具打包好的类
+
+```java
+// Hook 方
+public class MainTest extends BaseHC {
+    @Override
+    public void init() {
+        // BaseHC 包含已经初始化的工具，直接调用即可。
+    }
+}
+
+// 执行方
+public class RunHook {
+    public void run() {
+        new MainTest().onCreate(); // 调用 onCreate() 即可执行 Hook。
+    }
+}
+
 ```
 
 - 到此完成全部工作，可以愉快的使用了！
@@ -93,7 +113,6 @@ public class MainTest {
             //......
         });
         // 看，是不是很简单？因为上面获取了三个方法，所以下面也同样的可以 hook 三次。
-        // 当然你可以指定顺序，比如 hook(1,new IAction() {});
         // 不用担心前面可能的报错导致 hook 无法进行，还记得吗？本工具的亮点 “安全调用”。
         // 如果 getMethod() 数量少于 hook() 调用数量则会自动停止执行 hook()，不会影响后续代码！
     }
@@ -109,13 +128,13 @@ public class MainTest {
                 .findClass("main3", "com.demo.Main3")
                 .getMethod("main1").hook(new IAction() {
                     //......
-                }).to("main2") // 调用 to() 则会转为使用指定枚举对象的类进行方法查找与Hook。
+                }).to("main2") // 调用 to() 则会转为使用指定 TAG 的类进行方法查找与 Hook。
                 .getMethod("main2").hook(new IAction() {
                     //......
-                }).to("main3") // 调用 to() 则会转为使用指定枚举对象的类进行方法查找与Hook。
+                }).to("main3") // 调用 to() 则会转为使用指定 TAG 的类进行方法查找与 Hook。
                 .getMethod("main3").hook(new IAction() {
                     //......
-                }).to("main2") // 调用 to() 则会转为使用指定枚举对象的类进行方法查找与Hook。
+                }).to("main2") // 调用 to() 则会转为使用指定 TAG 的类进行方法查找与 Hook。
                 .getMethod("main2-1").hook(new IAction() {
                     //......
                 });
@@ -171,20 +190,22 @@ public class MainTest {
         new IAction() {
             @Override
             public void before(ParamTool param) {
-                Context context = param.thisObject(); // 无显性转换
-                String string = param.first(); // 简单且无需显性转换
-                param.second(1); // 直达式设置
+                Context context = param.thisObject();
+                String string = param.first();
+                param.second(1);
                 // 设置其他实例
                 Object instance = new Object();
-                param.to(instance).setField("demo", 1);// 设置实例 instance 的 demo 字段
+                param.to(instance).setField("demo", 1); // 设置实例 instance 的 demo 字段
                 param.to(instance, false).callMethod("method"); // call 实例 instance 的方法
                 param.getField("test"); // 因为 to(instance, false) 所以 get 的是 instance 的 test 字段
                 param.homing(); // 清除设置的指定实例
-                
+
                 String result = param.callMethod("call", new Object[]{param.thisObject(), param.first()});
-                param.callStaticMethod(param.findClass("com.demo.Main"),
-                        "callStatic", new Object[]{param.thisObject(), param.second()});
-                int i = param.getStaticField(param.findClass("com.demo.Main"), "field");
+                param.to("com.demo.Main") // 指定类执行静态动作
+                        .callStaticMethod("callStatic", new Object[]{param.thisObject(), param.second()});
+                int i = param.getStaticField("field"); // 延续之前类
+                param.to("com.demo.Test") // 设置新的则需要重新 to 一下~
+                        .setStaticField("test", true);
             }
         };
         // 是不是方便了许多呢？

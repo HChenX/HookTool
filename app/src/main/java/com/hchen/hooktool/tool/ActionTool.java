@@ -69,6 +69,22 @@ public class ActionTool extends MethodOpt {
     }
 
     /**
+     * 直接 Hook 指定方法
+     */
+    public MethodTool hook(Member member, IAction iAction) {
+        if (member == null || iAction == null) {
+            logW(utils.getTAG(), "member or iAction is null, cant hook!");
+            return utils.getMethodTool();
+        }
+        try {
+            XposedBridge.hookMethod(member, hookTool(iAction));
+        } catch (Throwable e) {
+            logE(utils.getTAG(), "hook: [" + member + "] failed!", e);
+        }
+        return utils.getMethodTool();
+    }
+
+    /**
      * 直接返回指定值
      */
     public MethodTool returnResult(final Object result) {

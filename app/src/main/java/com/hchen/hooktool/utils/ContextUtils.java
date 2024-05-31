@@ -77,7 +77,7 @@ public class ContextUtils {
      * handler = new Handler();
      * ContextUtils.getWaitContext(new ContextUtils.IContext() {
      *   @Override
-     *   public void hadContext(Context context) {
+     *   public void findContext(Context context) {
      *      handler.post(new Runnable() {
      *        @Override
      *        public void run() {
@@ -106,14 +106,14 @@ public class ContextUtils {
                     }
                 }
                 // context 可能为 null 请注意判断
-                iContext.hadContext(context);
+                iContext.findContext(context);
             }
         });
         ThreadPool.shutdown();
     }
 
     public interface IContext {
-        void hadContext(Context context);
+        void findContext(Context context);
     }
 
     private static Context invokeMethod(int flag) throws Throwable {

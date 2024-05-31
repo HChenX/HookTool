@@ -3,7 +3,8 @@ plugins {
     id 'maven-publish'
 }
 
-def defVersion = 'v.0.8.3'
+def defVersion = 'v.0.8.4'
+int defVersionCode = 2024053100
 
 group = 'com.github.HChenX'
 version = defVersion
@@ -15,7 +16,8 @@ android {
     defaultConfig {
         minSdk 29
         targetSdk 34
-        versionCode 1
+        //noinspection HighAppVersionCode
+        versionCode defVersionCode
         versionName defVersion
         // ndk {
         //   noinspection ChromeOsAbiSupport
