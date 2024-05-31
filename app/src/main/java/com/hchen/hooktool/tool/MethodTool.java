@@ -21,6 +21,8 @@ package com.hchen.hooktool.tool;
 import static com.hchen.hooktool.log.XposedLog.logE;
 import static com.hchen.hooktool.log.XposedLog.logW;
 
+import androidx.annotation.NonNull;
+
 import com.hchen.hooktool.callback.IAction;
 import com.hchen.hooktool.data.MemberData;
 import com.hchen.hooktool.data.StateEnum;
@@ -43,7 +45,7 @@ public class MethodTool extends ConvertHelper {
         clear();
     }
 
-    public MethodTool to(Object label) {
+    public MethodTool to(@NonNull Object label) {
         utils.getClassTool().to(label);
         return utils.getMethodTool();
     }

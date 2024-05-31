@@ -21,6 +21,8 @@ package com.hchen.hooktool.tool;
 import static com.hchen.hooktool.log.XposedLog.logE;
 import static com.hchen.hooktool.log.XposedLog.logW;
 
+import androidx.annotation.NonNull;
+
 import com.hchen.hooktool.data.MemberData;
 import com.hchen.hooktool.utils.DataUtils;
 
@@ -35,7 +37,7 @@ public class FieldTool {
         this.utils = utils;
     }
 
-    public FieldTool to(Object label) {
+    public FieldTool to(@NonNull Object label) {
         utils.getClassTool().to(label);
         return utils.getFieldTool();
     }

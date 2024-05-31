@@ -23,6 +23,8 @@ import static com.hchen.hooktool.log.XposedLog.logE;
 import static com.hchen.hooktool.log.XposedLog.logW;
 import static de.robv.android.xposed.callbacks.XCallback.PRIORITY_HIGHEST;
 
+import androidx.annotation.NonNull;
+
 import com.hchen.hooktool.action.Action;
 import com.hchen.hooktool.callback.IAction;
 import com.hchen.hooktool.data.MemberData;
@@ -48,7 +50,7 @@ public class ActionTool extends MethodOpt {
     /**
      * 指定类标签
      */
-    public ActionTool to(Object label) {
+    public ActionTool to(@NonNull Object label) {
         utils.getClassTool().to(label);
         return utils.getActionTool();
     }
