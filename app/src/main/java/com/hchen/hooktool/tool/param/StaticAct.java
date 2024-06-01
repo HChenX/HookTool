@@ -52,6 +52,9 @@ public class StaticAct extends ConvertHelper {
         return this;
     }
 
+    /**
+     * 指定静态对象，若不重新指定则一直使用上次静态对象。
+     */
     public StaticAct to(String clazz, ClassLoader classLoader) {
         this.mClass = findClass(clazz, classLoader);
         return this;

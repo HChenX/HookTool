@@ -26,7 +26,10 @@ import com.hchen.hooktool.itool.IStatic;
 import com.hchen.hooktool.utils.ConvertHelper;
 import com.hchen.hooktool.utils.DataUtils;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
 
 import de.robv.android.xposed.XposedHelpers;
 
@@ -53,6 +56,38 @@ public class ExpandTool extends ConvertHelper implements IDynamic, IStatic {
             logE(utils.getTAG(), e);
         }
         return null;
+    }
+
+    public ArrayList<Method> getMethod(Class<?> clazz, IFindMethod iFindMethod) {
+        ArrayList<Method> methods = new ArrayList<>();
+        for (Method m : clazz.getDeclaredMethods()) {
+            try {
+                methods.add(iFindMethod.doFind(m));
+            } catch (Throwable e) {
+                logE(utils.getTAG(), "do find method failed!", e);
+            }
+        }
+        return methods;
+    }
+
+    public ArrayList<Constructor<?>> getMethod(Class<?> clazz, IFindConstructor iFindConstructor) {
+        ArrayList<Constructor<?>> constructors = new ArrayList<>();
+        for (Constructor<?> c : clazz.getDeclaredConstructors()) {
+            try {
+                constructors.add(iFindConstructor.doFind(c));
+            } catch (Throwable e) {
+                logE(utils.getTAG(), "do find constructor failed!", e);
+            }
+        }
+        return constructors;
+    }
+
+    public interface IFindMethod {
+        Method doFind(Method method);
+    }
+
+    public interface IFindConstructor {
+        Constructor<?> doFind(Constructor<?> constructor);
     }
 
     // ---------- 非静态 -----------
