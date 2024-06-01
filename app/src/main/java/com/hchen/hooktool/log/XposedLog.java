@@ -27,36 +27,50 @@ import de.robv.android.xposed.XposedBridge;
  */
 public class XposedLog {
     private static final String rootTag = HCInit.getTAG();
-
-    public static void logI(String tag, String log) {
-        XposedBridge.log(rootTag + "[" + tag + "]" + "[I]: " + log);
-    }
-
-    public static void logI(String tag, String pkg, String log) {
-        XposedBridge.log(rootTag + "[" + tag + "]" + "[" + pkg + "][I]: " + log);
-    }
-
-    public static void logW(String tag, String log) {
-        XposedBridge.log(rootTag + "[" + tag + "]" + "[W]: " + log);
-    }
+    private static final int level = HCInit.getLogLevel();
 
     public static void logE(String tag, String log) {
+        if (level < 1) return;
         XposedBridge.log(rootTag + "[" + tag + "]" + "[E]: " + log);
     }
 
     public static void logE(String tag, Throwable e) {
+        if (level < 1) return;
         XposedBridge.log(rootTag + "[" + tag + "]" + "[E]: " + e);
     }
 
     public static void logE(String tag, String log, Throwable e) {
+        if (level < 1) return;
         XposedBridge.log(rootTag + "[" + tag + "]" + "[E]: " + log + " \nError Msg: " + e);
     }
 
+    public static void logW(String tag, String log) {
+        if (level < 2) return;
+        XposedBridge.log(rootTag + "[" + tag + "]" + "[W]: " + log);
+    }
+
+    public static void logW(String tag, Throwable e) {
+        if (level < 2) return;
+        XposedBridge.log(rootTag + "[" + tag + "]" + "[W]: " + e);
+    }
+
+    public static void logI(String tag, String log) {
+        if (level < 3) return;
+        XposedBridge.log(rootTag + "[" + tag + "]" + "[I]: " + log);
+    }
+
+    public static void logI(String tag, String pkg, String log) {
+        if (level < 3) return;
+        XposedBridge.log(rootTag + "[" + tag + "]" + "[" + pkg + "][I]: " + log);
+    }
+
     public static void logD(String tag, Throwable e) {
+        if (level < 4) return;
         XposedBridge.log(rootTag + "[" + tag + "]" + "[D]: " + e);
     }
 
     public static void logD(String tag, String e) {
+        if (level < 4) return;
         XposedBridge.log(rootTag + "[" + tag + "]" + "[D]: " + e);
     }
 }

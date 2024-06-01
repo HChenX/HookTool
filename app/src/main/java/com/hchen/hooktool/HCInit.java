@@ -20,19 +20,40 @@ package com.hchen.hooktool;
 
 import static com.hchen.hooktool.log.XposedLog.logI;
 
+import androidx.annotation.IntDef;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 /**
  * 初始化类，请在 Hook 入口处初始化本类。
  */
 public class HCInit {
+    public static final int LOG_NONE = 0;
+    public static final int LOG_E = 1;
+    public static final int LOG_W = 2;
+    public static final int LOG_I = 3;
+    public static final int LOG_D = 4;
     private static XC_LoadPackage.LoadPackageParam lpparam = null;
     private static ClassLoader classLoader = null;
     private static boolean canUseSystemClassLoader = false;
     private static String packageName;
     private static String TAG = "Unknown";
     public static String spareTag = "Unknown";
-    private static int logLevel = 0;
+    private static int logLevel = LOG_I;
+
+    @IntDef(value = {
+            LOG_NONE,
+            LOG_I,
+            LOG_W,
+            LOG_E,
+            LOG_D
+    })
+    @Retention(RetentionPolicy.SOURCE)
+    private @interface Duration {
+    }
 
     public static void setTAG(String tag) {
         TAG = "[" + tag + "]";
@@ -43,11 +64,16 @@ public class HCInit {
         return TAG;
     }
 
-    /* 日志等级 */
-    public static void setLogLevel(int level) {
+    /**
+     * 日志等级
+     */
+    public static void setLogLevel(@Duration int level) {
         logLevel = level;
     }
 
+    /**
+     * 默认: {@link #LOG_I}
+     */
     public static int getLogLevel() {
         return logLevel;
     }

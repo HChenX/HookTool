@@ -27,24 +27,50 @@ import com.hchen.hooktool.HCInit;
  */
 public class AndroidLog {
     private static final String rootTag = HCInit.getTAG();
-
-    public static void logI(String tag, String pkg, String log) {
-        Log.i(rootTag, "[" + tag + "]" + "[" + pkg + "][I]: " + log);
-    }
-
-    public static void logI(String tag, String log) {
-        Log.i(rootTag, "[" + tag + "]" + "[I]: " + log);
-    }
-
-    public static void logW(String tag, String log) {
-        Log.w(rootTag, "[" + tag + "]" + "[W]: " + log);
-    }
+    private static final int level = HCInit.getLogLevel();
 
     public static void logE(String tag, String log) {
+        if (level < 1) return;
         Log.e(rootTag, "[" + tag + "]" + "[E]: " + log);
     }
 
     public static void logE(String tag, String log, Throwable throwable) {
+        if (level < 1) return;
         Log.e(rootTag, "[" + tag + "]" + "[E]: " + log, throwable);
+    }
+
+    public static void logW(String tag, String log) {
+        if (level < 2) return;
+        Log.w(rootTag, "[" + tag + "]" + "[W]: " + log);
+    }
+
+    public static void logW(String tag, String log, Throwable throwable) {
+        if (level < 2) return;
+        Log.w(rootTag, "[" + tag + "]" + "[W]: " + log, throwable);
+    }
+
+    public static void logI(String tag, String pkg, String log) {
+        if (level < 3) return;
+        Log.i(rootTag, "[" + tag + "]" + "[" + pkg + "][I]: " + log);
+    }
+
+    public static void logI(String tag, String log) {
+        if (level < 3) return;
+        Log.i(rootTag, "[" + tag + "]" + "[I]: " + log);
+    }
+
+    public static void logI(String tag, String log, Throwable throwable) {
+        if (level < 3) return;
+        Log.i(rootTag, "[" + tag + "]" + "[I]: " + log, throwable);
+    }
+
+    public static void logD(String tag, String log) {
+        if (level < 4) return;
+        Log.d(rootTag, "[" + tag + "]" + "[E]: " + tag);
+    }
+
+    public static void logD(String tag, String log, Throwable throwable) {
+        if (level < 4) return;
+        Log.d(rootTag, "[" + tag + "]" + "[E]: " + tag, throwable);
     }
 }

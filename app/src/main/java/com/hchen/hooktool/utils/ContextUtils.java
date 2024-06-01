@@ -41,7 +41,7 @@ public class ContextUtils {
             FlAG_ONLY_ANDROID
     })
     @Retention(RetentionPolicy.SOURCE)
-    public @interface Duration {
+    private @interface Duration {
     }
 
     private static final String TAG = "ContextUtils";
