@@ -30,13 +30,7 @@ import java.util.HashMap;
 public class MemberData {
     @Nullable
     public Class<?> mClass; // 查找到的类
-    // public ArrayList<Member> mMethod;
-    // public ArrayList<Member> mConstructor;
     public Field mField;
-    // public boolean isHooked;
-    // public boolean allAction;
-    // public boolean after;
-    // public boolean before;
     /* member 存储与读取 */
     public MapUtils<ArrayList<Member>> memberMap = new MapUtils<>();
     /* member 状态记录 */

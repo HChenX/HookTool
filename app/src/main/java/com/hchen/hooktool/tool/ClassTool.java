@@ -81,6 +81,19 @@ public class ClassTool extends MethodOpt {
     // ---------- 标签形式 ------------
 
     /**
+     * 手动添加类。
+     */
+    public ClassTool add(@NonNull Object label, Class<?> clazz) {
+        if (clazz == null) {
+            logW(utils.getTAG(), "the class is null! label: " + label);
+        }
+        utils.findClass = clazz;
+        utils.labelClasses.put(label, new MemberData(clazz));
+        utils.setLabel(label);
+        return utils.getClassTool();
+    }
+
+    /**
      * 查找指定类，并为其设置独有的标签。
      */
     public ClassTool findClass(@NonNull Object label, String className) {

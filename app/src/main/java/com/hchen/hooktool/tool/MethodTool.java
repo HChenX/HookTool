@@ -217,11 +217,15 @@ public class MethodTool extends ConvertHelper {
     }
 
     // 更棒的无缝衔接
-    public ClassTool findClass(Object label, String className) {
+    public ClassTool add(@NonNull Object label, Class<?> clazz) {
+        return utils.getClassTool().add(label, clazz);
+    }
+
+    public ClassTool findClass(@NonNull Object label, String className) {
         return utils.getClassTool().findClass(label, className);
     }
 
-    public ClassTool findClass(Object label, String className, ClassLoader classLoader) {
+    public ClassTool findClass(@NonNull Object label, String className, ClassLoader classLoader) {
         return utils.getClassTool().findClass(label, className, classLoader);
     }
 
@@ -239,7 +243,7 @@ public class MethodTool extends ConvertHelper {
     }
 
     public MethodTool doNothing() {
-        return utils.getMethodTool().doNothing();
+        return utils.getActionTool().doNothing();
     }
 
     /* 不建议使用 clear 本工具应该是一次性的。 */

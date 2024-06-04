@@ -59,14 +59,16 @@ public class ActionTool extends MethodOpt {
      * 执行 hook
      */
     public MethodTool hook(IAction iAction) {
-        if (actionSafe("hook", iAction)) {
-            hookTool("hook", new IActionTool() {
-                @Override
-                public Action action() {
-                    return hookTool(iAction);
-                }
-            });
+        if (iAction == null) {
+            logW(utils.getTAG(), "hook but iAction is null!");
+            return utils.getMethodTool();
         }
+        hookTool("hook", new IActionTool() {
+            @Override
+            public Action action() {
+                return hookTool(iAction);
+            }
+        });
         return utils.getMethodTool();
     }
 
@@ -206,19 +208,11 @@ public class ActionTool extends MethodOpt {
         };
     }
 
-    private boolean actionSafe(String name, Object iAction) {
-        if (iAction == null) {
-            logW(utils.getTAG(), name + " is null!");
-            return false;
-        }
-        return true;
+    public MethodTool methodTool() {
+        return utils.getMethodTool();
     }
 
     private interface IActionTool {
         Action action();
-    }
-
-    public MethodTool methodTool() {
-        return utils.getMethodTool();
     }
 }
