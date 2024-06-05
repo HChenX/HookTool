@@ -36,6 +36,8 @@ public class HCInit {
     public static final int LOG_W = 2;
     public static final int LOG_I = 3;
     public static final int LOG_D = 4;
+    private static String[] filter = null;
+    private static boolean useLogExpand = false;
     private static XC_LoadPackage.LoadPackageParam lpparam = null;
     private static ClassLoader classLoader = null;
     private static boolean canUseSystemClassLoader = false;
@@ -76,6 +78,25 @@ public class HCInit {
      */
     public static int getLogLevel() {
         return logLevel;
+    }
+
+    public static void setUseLogExpand(boolean use) {
+        useLogExpand = use;
+    }
+
+    protected static boolean getUseLogExpand() {
+        return useLogExpand;
+    }
+
+    /**
+     * 设置日志过滤
+     */
+    public static void setFilter(String[] filter) {
+        HCInit.filter = filter;
+    }
+
+    protected static String[] getFilter() {
+        return filter;
     }
 
     /**

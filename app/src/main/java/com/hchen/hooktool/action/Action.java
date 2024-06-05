@@ -20,10 +20,17 @@ package com.hchen.hooktool.action;
 
 import static com.hchen.hooktool.log.XposedLog.logE;
 
+import com.hchen.hooktool.utils.DataUtils;
+import com.hchen.hooktool.utils.LogExpand;
+
+import java.lang.reflect.Member;
+
 import de.robv.android.xposed.XC_MethodHook;
 
 public class Action extends XC_MethodHook {
     private String TAG = null;
+    private LogExpand logExpand = null;
+    private boolean useLogExpand = false;
 
     protected void before(MethodHookParam param) {
     }
@@ -31,20 +38,28 @@ public class Action extends XC_MethodHook {
     protected void after(MethodHookParam param) {
     }
 
-    public Action(String tag) {
+    public Action(Member member, String tag) {
         super();
         TAG = tag;
+        this.useLogExpand = DataUtils.useLogExpand;
+        if (useLogExpand) this.logExpand = new LogExpand(member, TAG);
     }
 
-    public Action(String tag, int priority) {
+    public Action(Member member, String tag, int priority) {
         super(priority);
         TAG = tag;
+        this.useLogExpand = DataUtils.useLogExpand;
+        if (useLogExpand) this.logExpand = new LogExpand(member, TAG);
     }
 
     @Override
     protected void beforeHookedMethod(MethodHookParam param) {
         try {
             before(param);
+            if (useLogExpand) {
+                logExpand.setParam(param);
+                logExpand.detailedLogs();
+            }
         } catch (Throwable e) {
             logE(TAG + ":" + "before", e);
         }

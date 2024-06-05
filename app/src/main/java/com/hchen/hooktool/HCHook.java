@@ -41,6 +41,8 @@ public class HCHook {
         try {
             TAG = HCInit.spareTag;
             DataUtils.lpparam = HCInit.getLoadPackageParam();
+            DataUtils.useLogExpand = HCInit.getUseLogExpand();
+            DataUtils.filter = HCInit.getFilter();
             DataUtils.classLoader = HCInit.getClassLoader();
         } catch (Throwable e) {
             logE(TAG, e);

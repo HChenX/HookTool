@@ -65,8 +65,8 @@ public class ActionTool extends MethodOpt {
         }
         hookTool("hook", new IActionTool() {
             @Override
-            public Action action() {
-                return hookTool(iAction);
+            public Action action(Member member) {
+                return hookTool(member, iAction);
             }
         });
         return utils.getMethodTool();
@@ -81,7 +81,7 @@ public class ActionTool extends MethodOpt {
             return utils.getMethodTool();
         }
         try {
-            XposedBridge.hookMethod(member, hookTool(iAction));
+            XposedBridge.hookMethod(member, hookTool(member, iAction));
         } catch (Throwable e) {
             logE(utils.getTAG(), "hook: [" + member + "] failed!", e);
         }
@@ -94,8 +94,8 @@ public class ActionTool extends MethodOpt {
     public MethodTool returnResult(final Object result) {
         hookTool("returnResult", new IActionTool() {
             @Override
-            public Action action() {
-                return new Action(utils.getTAG()) {
+            public Action action(Member member) {
+                return new Action(member, utils.getTAG()) {
                     @Override
                     protected void before(MethodHookParam param) {
                         param.setResult(result);
@@ -112,8 +112,9 @@ public class ActionTool extends MethodOpt {
     public MethodTool doNothing() {
         hookTool("doNothing", new IActionTool() {
             @Override
-            public Action action() {
-                return new Action(utils.getTAG(), PRIORITY_HIGHEST * 2) {
+            public Action action(Member member) {
+                return new Action(member,
+                        utils.getTAG(), PRIORITY_HIGHEST * 2) {
                     @Override
                     protected void before(MethodHookParam param) {
                         param.setResult(null);
@@ -152,7 +153,7 @@ public class ActionTool extends MethodOpt {
                     } else {
                         for (Member member : members) {
                             try {
-                                XposedBridge.hookMethod(member, tool.action());
+                                XposedBridge.hookMethod(member, tool.action(member));
                                 logD(utils.getTAG(), "success hook: [" + member + "] class: [" + data.mClass
                                         + "] label: [" + label + "] count: " + count);
                                 setState(name, data, members, true);
@@ -191,9 +192,9 @@ public class ActionTool extends MethodOpt {
         }
     }
 
-    private Action hookTool(IAction iAction) {
+    private Action hookTool(Member member, IAction iAction) {
         ParamTool paramTool = new ParamTool(utils);
-        return new Action(utils.getTAG()) {
+        return new Action(member, utils.getTAG()) {
             @Override
             protected void before(MethodHookParam param) {
                 paramTool.setParam(param);
@@ -213,6 +214,6 @@ public class ActionTool extends MethodOpt {
     }
 
     private interface IActionTool {
-        Action action();
+        Action action(Member member);
     }
 }

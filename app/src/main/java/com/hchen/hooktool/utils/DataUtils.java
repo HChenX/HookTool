@@ -41,6 +41,8 @@ public class DataUtils {
     public FieldTool fieldTool = null;
     public MethodTool methodTool = null;
     public ActionTool actionTool = null;
+    public static String[] filter = null;
+    public static boolean useLogExpand = false;
     public static XC_LoadPackage.LoadPackageParam lpparam = null;
     public XC_LoadPackage.LoadPackageParam mCustomLpparam = null;
     public static ClassLoader classLoader = null;

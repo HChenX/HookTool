@@ -43,24 +43,26 @@ public class DexkitTool extends ConvertHelper {
         this.utils = utils;
     }
 
-    public void hookMethod(Member member, IAction iAction) {
+    public DexkitTool hookMethod(Member member, IAction iAction) {
         try {
             hook(member, iAction);
         } catch (Throwable e) {
             logE(utils.getTAG(), "dexkit hook member failed!", e);
         }
+        return this;
     }
 
-    public void hookMethod(MethodData methodData, IAction iAction) {
+    public DexkitTool hookMethod(MethodData methodData, IAction iAction) {
         try {
             Method method = methodData.getMethodInstance(utils.getClassLoader());
             hook(method, iAction);
         } catch (Throwable e) {
             logE(utils.getTAG(), "dexkit instance method failed!", e);
         }
+        return this;
     }
 
-    public void hookMethod(ClassData classData, IAction iAction, Object... objs) {
+    public DexkitTool hookMethod(ClassData classData, IAction iAction, Object... objs) {
         try {
             Class<?> clzz = classData.getInstance(utils.getClassLoader());
             Constructor<?> constructor = clzz.getConstructor(objectArrayToClassArray(objs));
@@ -68,16 +70,17 @@ public class DexkitTool extends ConvertHelper {
         } catch (Throwable e) {
             logE(utils.getTAG(), "dexkit instance constructor failed!", e);
         }
+        return this;
     }
 
     private void hook(Member member, IAction iAction) throws Throwable {
-        XposedBridge.hookMethod(member, hookTool(iAction));
+        XposedBridge.hookMethod(member, hookTool(member, iAction));
         logI(utils.getTAG(), "success to hook: " + member);
     }
 
-    private Action hookTool(IAction iAction) {
+    private Action hookTool(Member member, IAction iAction) {
         ParamTool paramTool = new ParamTool(utils);
-        return new Action(utils.getTAG()) {
+        return new Action(member, utils.getTAG()) {
             @Override
             protected void before(MethodHookParam param) {
                 paramTool.setParam(param);
