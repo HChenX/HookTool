@@ -18,8 +18,8 @@
  */
 package com.hchen.hooktool.tool;
 
+import static com.hchen.hooktool.log.XposedLog.logD;
 import static com.hchen.hooktool.log.XposedLog.logE;
-import static com.hchen.hooktool.log.XposedLog.logI;
 
 import com.hchen.hooktool.action.Action;
 import com.hchen.hooktool.callback.IAction;
@@ -75,7 +75,7 @@ public class DexkitTool extends ConvertHelper {
 
     private void hook(Member member, IAction iAction) throws Throwable {
         XposedBridge.hookMethod(member, hookTool(member, iAction));
-        logI(utils.getTAG(), "success to hook: " + member);
+        logD(utils.getTAG(), "success to hook: " + member);
     }
 
     private Action hookTool(Member member, IAction iAction) {
