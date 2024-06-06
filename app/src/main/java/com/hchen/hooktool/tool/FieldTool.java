@@ -54,7 +54,7 @@ public class FieldTool {
         Object label = utils.getLabel();
         MemberData data = utils.labelClasses.get(label);
         if (data == null) {
-            logW(utils.getTAG(), "data is null, cant find field: [" + name + "], label: " + label);
+            logW(utils.getTAG(), "data is null, can't find field: [" + name + "], label: " + label);
             return utils.getFieldTool();
         }
         Class<?> c = data.mClass;

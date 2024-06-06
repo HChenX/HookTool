@@ -37,7 +37,7 @@ public class ConvertHelper {
             return XposedHelpers.findClass(name,
                     utils.getClassLoader());
         } catch (XposedHelpers.ClassNotFoundError e) {
-            logE(utils.getTAG(), "The specified class could not be found!", e);
+            logE(utils.getTAG(), "the specified class could not be found!", e);
         }
         return null;
     }

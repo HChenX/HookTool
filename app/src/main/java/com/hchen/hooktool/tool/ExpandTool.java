@@ -201,7 +201,7 @@ public class ExpandTool extends ConvertHelper implements IDynamic, IStatic {
             } catch (Throwable e) {
                 logE(utils.getTAG(), "new instance failed!", e);
             }
-        } else logW(utils.getTAG(), "class is null, cant new instance.");
+        } else logW(utils.getTAG(), "class is null, can't new instance.");
         return null;
     }
 
@@ -222,7 +222,7 @@ public class ExpandTool extends ConvertHelper implements IDynamic, IStatic {
                 logE(utils.getTAG(), "call static method failed!", e);
             }
         } else {
-            logW(utils.getTAG(), "class is null, cant call: " + name);
+            logW(utils.getTAG(), "class is null, can't call: " + name);
         }
         return null;
     }
@@ -238,7 +238,7 @@ public class ExpandTool extends ConvertHelper implements IDynamic, IStatic {
             } catch (Throwable e) {
                 logE(utils.getTAG(), "get static field failed!", e);
             }
-        } else logW(utils.getTAG(), "class is null, cant get field: " + name);
+        } else logW(utils.getTAG(), "class is null, can't get field: " + name);
         return null;
     }
 
@@ -262,7 +262,7 @@ public class ExpandTool extends ConvertHelper implements IDynamic, IStatic {
             } catch (Throwable e) {
                 logE(utils.getTAG(), "set static field failed!", e);
             }
-        } else logW(utils.getTAG(), "class is null, cant set field: " + name);
+        } else logW(utils.getTAG(), "class is null, can't set field: " + name);
         return false;
     }
 
@@ -287,7 +287,7 @@ public class ExpandTool extends ConvertHelper implements IDynamic, IStatic {
             } catch (Throwable e) {
                 logE(utils.getTAG(), "set additional static field failed!", e);
             }
-        } else logW(utils.getTAG(), "class is null, cant additional: " + key);
+        } else logW(utils.getTAG(), "class is null, can't additional: " + key);
         return false;
     }
 
@@ -298,7 +298,7 @@ public class ExpandTool extends ConvertHelper implements IDynamic, IStatic {
             } catch (Throwable e) {
                 logE(utils.getTAG(), "get additional static field failed!", e);
             }
-        } else logW(utils.getTAG(), "class is null, cant get additional: " + key);
+        } else logW(utils.getTAG(), "class is null, can't get additional: " + key);
         return null;
     }
 
@@ -311,7 +311,7 @@ public class ExpandTool extends ConvertHelper implements IDynamic, IStatic {
                 logE(utils.getTAG(), "remove additional static field failed!", e);
             }
         } else
-            logW(utils.getTAG(), "class is null, cant remove additional: " + key);
+            logW(utils.getTAG(), "class is null, can't remove additional: " + key);
         return false;
     }
 }

@@ -87,7 +87,7 @@ public class MethodTool extends ConvertHelper {
                 try {
                     arrayList.add(c.getDeclaredMethod(name, classes));
                 } catch (NoSuchMethodException e) {
-                    logE(utils.getTAG(), "The method to get the claim failed name: [" + name +
+                    logE(utils.getTAG(), "the method to get the claim failed name: [" + name +
                             "], class: [" + c + "], classes: " + Arrays.toString(classes), e);
                 }
                 return arrayList;
@@ -118,19 +118,19 @@ public class MethodTool extends ConvertHelper {
 
     private ActionTool findMethod(String name, IMethodTool iMethodTool, Class<?>... clzzs) {
         if (utils.labelClasses.isEmpty()) {
-            logW(utils.getTAG(), "the class list is empty! cant find method: " + name);
+            logW(utils.getTAG(), "the class list is empty! can't find method: " + name);
             return utils.getActionTool();
         }
         Object label = utils.getLabel();
         MemberData data = utils.labelClasses.get(label);
         if (data == null) {
-            logW(utils.getTAG(), "memberData is null, cant find: [" + name + "], label: " + label);
+            logW(utils.getTAG(), "memberData is null, can't find: [" + name + "], label: " + label);
             utils.members.put(label, data);
             return utils.getActionTool();
         }
         Class<?> c = data.mClass;
         if (c == null) {
-            logW(utils.getTAG(), "class is null! cant find: [" + name + "], label: " + label);
+            logW(utils.getTAG(), "class is null! can't find: [" + name + "], label: " + label);
             // utils.methods.put(index, new ArrayList<>());
             utils.members.put(label, data);
             return utils.getActionTool();
@@ -162,7 +162,7 @@ public class MethodTool extends ConvertHelper {
                 try {
                     members.add(c.getDeclaredConstructor(classes));
                 } catch (NoSuchMethodException e) {
-                    logE(utils.getTAG(), "The specified constructor could not be found: [" + c +
+                    logE(utils.getTAG(), "the specified constructor could not be found: [" + c +
                             "], classes: " + Arrays.toString(classes), e);
                 }
                 return members;
@@ -184,7 +184,7 @@ public class MethodTool extends ConvertHelper {
 
     private ActionTool findConstructor(IConstructorTool iConstructorTool, Class<?>... classes) {
         if (utils.labelClasses.isEmpty()) {
-            logW(utils.getTAG(), "The class list is empty!");
+            logW(utils.getTAG(), "the class list is empty!");
             return utils.getActionTool();
         }
         Object label = utils.getLabel();

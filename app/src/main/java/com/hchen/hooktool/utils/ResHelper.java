@@ -111,11 +111,11 @@ public class ResHelper {
             load = loadResAboveApi30(context);
         }
         if (!load) {
-            logW(TAG, "loadModuleRes return 0, It may have failed. Try the second method ...");
+            logW(TAG, "loadModuleRes return 0, it may have failed. try the second method ...");
             try {
                 return getModuleRes(context);
             } catch (PackageManager.NameNotFoundException e) {
-                logE(TAG, "failed to load resource! Critical error!! Scope may crash!!", e);
+                logE(TAG, "failed to load resource! critical error!! scope may crash!!", e);
             }
         }
         return context.getResources();

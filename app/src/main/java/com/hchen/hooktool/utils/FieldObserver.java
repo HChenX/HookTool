@@ -95,6 +95,9 @@ public class FieldObserver {
         if (o == value || o.equals(value)) {
             logI(utils.getTAG(), "success put " + call + " field: [" + name + "]," +
                     " value to: [" + value + "], now is: " + o);
+        } else {
+            logW(utils.getTAG(), "failed put " + call + " field: [" + name + "]," +
+                    " value to: [" + value + "], now is: " + o);
         }
     }
 }

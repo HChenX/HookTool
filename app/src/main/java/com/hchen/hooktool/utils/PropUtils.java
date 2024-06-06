@@ -44,7 +44,7 @@ public class PropUtils {
             @SuppressLint("PrivateApi") Class<?> cls = Class.forName("android.os.SystemProperties");
             return Boolean.TRUE.equals(invokeMethod(cls, "getBoolean", new Class[]{String.class, boolean.class}, name, def));
         } catch (Throwable e) {
-            logE(TAG, "get prop int", e);
+            logE(TAG, "get prop boolean", e);
             return false;
         }
     }
@@ -74,7 +74,7 @@ public class PropUtils {
             return invokeMethod(Class.forName("android.os.SystemProperties"),
                     "get", new Class[]{String.class, String.class}, name, def);
         } catch (Throwable e) {
-            logE(TAG, "get prop String", e);
+            logE(TAG, "get prop string", e);
             return "";
         }
     }

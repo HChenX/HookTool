@@ -125,12 +125,12 @@ public class HCInit {
         lpparam = loadPackageParam;
         classLoader = loadPackageParam.classLoader;
         packageName = lpparam.packageName;
-        logI(spareTag, "init lpparam: [" + lpparam + "], classLoader: [" + classLoader + "], pkgName: " + packageName);
+        logI(spareTag, "init lpparam: [" + lpparam + "], classLoader: [" + classLoader + "], pkg name: " + packageName);
     }
 
     protected static XC_LoadPackage.LoadPackageParam getLoadPackageParam() throws Throwable {
         if (lpparam != null) return lpparam;
-        throw new Throwable(getTAG() + "[E]: Failed to obtain LoadPackageParam, it is null!");
+        throw new Throwable(getTAG() + "[E]: failed to obtain LoadPackageParam, it is null!");
     }
 
     protected static ClassLoader getClassLoader() {
@@ -138,7 +138,7 @@ public class HCInit {
         if (canUseSystemClassLoader) {
             return getSystemClassLoader();
         }
-        throw new RuntimeException(getTAG() + "[E]: Failed to obtain ClassLoader! It is null!");
+        throw new RuntimeException(getTAG() + "[E]: failed to obtain ClassLoader! it is null!");
     }
 
     private static ClassLoader getClassLoaderIfExists() {
