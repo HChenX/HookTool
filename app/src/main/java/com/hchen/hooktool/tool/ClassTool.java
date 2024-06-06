@@ -45,6 +45,33 @@ public class ClassTool extends MethodOpt {
         return utils.getMethodTool();
     }
 
+    /**
+     * 查找指定类是否存在。
+     */
+    public boolean findClassIfExists(String clazz) {
+        try {
+            utils.getClassLoader().loadClass(clazz);
+        } catch (ClassNotFoundException e) {
+            logE(utils.getTAG(), e);
+            return false;
+        }
+        return true;
+    }
+
+    public boolean findClassIfExists(String clazz, ClassLoader classLoader) {
+        try {
+            if (classLoader == null) {
+                logW(utils.getTAG(), "the classloader is null, cant find class: " + clazz);
+                return false;
+            }
+            classLoader.loadClass(clazz);
+        } catch (ClassNotFoundException e) {
+            logE(utils.getTAG(), e);
+            return false;
+        }
+        return true;
+    }
+
     // -------- 传统索引形式 ----------
 
     /**

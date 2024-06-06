@@ -30,13 +30,10 @@ import com.hchen.hooktool.utils.DataUtils;
 public class StaticAct extends ConvertHelper {
     private final IStatic iStatic;
     protected final IDynamic iDynamic;
-    protected final DataUtils utils;
-
     private Class<?> mClass;
 
     public StaticAct(DataUtils utils) {
         super(utils);
-        this.utils = utils;
         ExpandTool expandTool = new ExpandTool(utils);
         iStatic = expandTool;
         iDynamic = expandTool;
@@ -48,7 +45,7 @@ public class StaticAct extends ConvertHelper {
     }
 
     public StaticAct to(String clazz) {
-        this.mClass = findClass(clazz);
+        this.mClass = utils.getExpandTool().findClass(clazz);
         return this;
     }
 

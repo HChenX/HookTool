@@ -35,13 +35,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 public class MethodTool extends ConvertHelper {
-    private final DataUtils utils;
-
     private ArrayList<Member> findMember = null;
 
     public MethodTool(DataUtils utils) {
         super(utils);
-        this.utils = utils;
         clear();
     }
 
@@ -58,20 +55,40 @@ public class MethodTool extends ConvertHelper {
         return findMember;
     }
 
-    public void findMethodOrThrowable(String clazz, String name, Object... ojbs) throws NoSuchMethodException {
-        Class<?> cl = findClass(clazz);
-        Class<?>[] classes = objectArrayToClassArray(ojbs);
-        cl.getDeclaredMethod(name, classes);
+    //------------ 检查指定方法是否存在 --------------
+
+    /**
+     * 检查指定方法是否存在，不存在则返回 false。
+     */
+    public boolean findMethodIfExists(String clazz, String name, Object... ojbs) {
+        return findMethodIfExists(clazz, utils.getClassLoader(), name, ojbs);
     }
 
-    public void findAnyMethodOrThrowable(String clazz, String name) throws NoSuchMethodException {
-        Class<?> cl = findClass(clazz);
+    public boolean findMethodIfExists(String clazz, ClassLoader classLoader,
+                                      String name, Object... ojbs) {
+        Class<?> cl = utils.getExpandTool().findClass(clazz, classLoader);
+        Class<?>[] classes = objectArrayToClassArray(classLoader, ojbs);
+        try {
+            cl.getDeclaredMethod(name, classes);
+        } catch (NoSuchMethodException e) {
+            logE(utils.getTAG(), e);
+            return false;
+        }
+        return true;
+    }
+
+    public boolean findAnyMethodIfExists(String clazz, String name) {
+        return findAnyMethodIfExists(clazz, utils.getClassLoader(), name);
+    }
+
+    public boolean findAnyMethodIfExists(String clazz, ClassLoader classLoader, String name) {
+        Class<?> cl = utils.getExpandTool().findClass(clazz, classLoader);
         for (Method method : cl.getDeclaredMethods()) {
             if (method.getName().equals(name)) {
-                return;
+                return true;
             }
         }
-        throw new NoSuchMethodException("no found method: " + name);
+        return false;
     }
 
     /**

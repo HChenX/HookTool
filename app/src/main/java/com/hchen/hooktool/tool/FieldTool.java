@@ -43,6 +43,24 @@ public class FieldTool {
     }
 
     /**
+     * 查找指定字段是否存在，不存在返回 false
+     */
+    public boolean findFieldIfExists(String clazz, String name) {
+        return findFieldIfExists(clazz, utils.getClassLoader(), name);
+    }
+
+    public boolean findFieldIfExists(String clazz, ClassLoader classLoader, String name) {
+        Class<?> cl = utils.getExpandTool().findClass(clazz, classLoader);
+        try {
+            cl.getDeclaredField(name);
+        } catch (NoSuchFieldException e) {
+            logE(utils.getTAG(), e);
+            return false;
+        }
+        return true;
+    }
+
+    /**
      * 按标签类获取指定字段。
      */
     public FieldTool findField(String name) {

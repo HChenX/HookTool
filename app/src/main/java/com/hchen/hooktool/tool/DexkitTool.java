@@ -36,11 +36,8 @@ import java.lang.reflect.Method;
 import de.robv.android.xposed.XposedBridge;
 
 public class DexkitTool extends ConvertHelper {
-    private final DataUtils utils;
-
     public DexkitTool(DataUtils utils) {
         super(utils);
-        this.utils = utils;
     }
 
     public DexkitTool hookMethod(Member member, IAction iAction) {
