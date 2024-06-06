@@ -102,21 +102,21 @@ public class ActAchieve extends StaticAct {
         return iDynamic.getField(checkAndReturn(), name);
     }
 
-    public boolean setField(String name, Object key) {
-        return iDynamic.setField(checkAndReturn(), name, key);
+    public boolean setField(String name, Object value) {
+        return iDynamic.setField(checkAndReturn(), name, value);
     }
 
     // ---------- 设置自定义字段 --------------
-    public boolean setAdditionalInstanceField(String name, Object key) {
-        return iDynamic.setAdditionalInstanceField(checkAndReturn(), name, key);
+    public boolean setAdditionalInstanceField(String key, Object value) {
+        return iDynamic.setAdditionalInstanceField(checkAndReturn(), key, value);
     }
 
-    public <T> T getAdditionalInstanceField(String name) {
-        return iDynamic.getAdditionalInstanceField(checkAndReturn(), name);
+    public <T> T getAdditionalInstanceField(String key) {
+        return iDynamic.getAdditionalInstanceField(checkAndReturn(), key);
     }
 
-    public boolean removeAdditionalInstanceField(String name) {
-        return iDynamic.removeAdditionalInstanceField(checkAndReturn(), name);
+    public boolean removeAdditionalInstanceField(String key) {
+        return iDynamic.removeAdditionalInstanceField(checkAndReturn(), key);
     }
 
     private Object checkAndReturn() {

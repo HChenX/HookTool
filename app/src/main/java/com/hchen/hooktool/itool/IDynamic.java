@@ -30,13 +30,13 @@ public interface IDynamic {
 
     <T> T getField(Object instance, Field field);
 
-    boolean setField(Object instance, String name, Object key);
+    boolean setField(Object instance, String name, Object value);
 
-    boolean setField(Object instance, Field field, Object key);
+    boolean setField(Object instance, Field field, Object value);
 
-    boolean setAdditionalInstanceField(Object instance, String name, Object key);
+    boolean setAdditionalInstanceField(Object instance, String key, Object value);
 
-    <T> T getAdditionalInstanceField(Object instance, String name);
+    <T> T getAdditionalInstanceField(Object instance, String key);
 
-    boolean removeAdditionalInstanceField(Object instance, String name);
+    boolean removeAdditionalInstanceField(Object instance, String key);
 }

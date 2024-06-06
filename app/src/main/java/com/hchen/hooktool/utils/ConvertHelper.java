@@ -32,7 +32,7 @@ public class ConvertHelper {
         this.utils = utils;
     }
 
-    private Class<?> findClass(String name) {
+    protected Class<?> findClass(String name) {
         try {
             return XposedHelpers.findClass(name,
                     utils.getClassLoader());

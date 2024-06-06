@@ -25,6 +25,7 @@ import com.hchen.hooktool.itool.IDynamic;
 import com.hchen.hooktool.itool.IStatic;
 import com.hchen.hooktool.utils.ConvertHelper;
 import com.hchen.hooktool.utils.DataUtils;
+import com.hchen.hooktool.utils.FieldObserver;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -35,10 +36,13 @@ import de.robv.android.xposed.XposedHelpers;
 
 public class ExpandTool extends ConvertHelper implements IDynamic, IStatic {
     private final DataUtils utils;
+    private final FieldObserver observer;
+    private final boolean useFieldObserver = DataUtils.useFieldObserver;
 
     public ExpandTool(DataUtils dataUtils) {
         super(dataUtils);
         utils = dataUtils;
+        observer = new FieldObserver(utils);
     }
 
     public Class<?> findClass(String name) {
@@ -129,9 +133,11 @@ public class ExpandTool extends ConvertHelper implements IDynamic, IStatic {
         return null;
     }
 
-    public boolean setField(Object instance, String name, Object key) {
+    public boolean setField(Object instance, String name, Object value) {
         try {
-            XposedHelpers.setObjectField(instance, name, key);
+            XposedHelpers.setObjectField(instance, name, value);
+            if (useFieldObserver)
+                observer.dynamicObserver(instance, name, value);
             return true;
         } catch (Throwable e) {
             logE(utils.getTAG(), "set field failed!", e);
@@ -139,10 +145,12 @@ public class ExpandTool extends ConvertHelper implements IDynamic, IStatic {
         return false;
     }
 
-    public boolean setField(Object instance, Field field, Object key) {
+    public boolean setField(Object instance, Field field, Object value) {
         try {
             field.setAccessible(true);
-            field.set(instance, key);
+            field.set(instance, value);
+            if (useFieldObserver)
+                observer.dynamicObserver(field, instance, value);
             return true;
         } catch (Throwable e) {
             logE(utils.getTAG(), "set field failed!", e);
@@ -150,9 +158,9 @@ public class ExpandTool extends ConvertHelper implements IDynamic, IStatic {
         return false;
     }
 
-    public boolean setAdditionalInstanceField(Object instance, String name, Object key) {
+    public boolean setAdditionalInstanceField(Object instance, String key, Object value) {
         try {
-            XposedHelpers.setAdditionalInstanceField(instance, name, key);
+            XposedHelpers.setAdditionalInstanceField(instance, key, value);
             return true;
         } catch (Throwable e) {
             logE(utils.getTAG(), "set additional failed!", e);
@@ -160,18 +168,18 @@ public class ExpandTool extends ConvertHelper implements IDynamic, IStatic {
         return false;
     }
 
-    public <T> T getAdditionalInstanceField(Object instance, String name) {
+    public <T> T getAdditionalInstanceField(Object instance, String key) {
         try {
-            return (T) XposedHelpers.getAdditionalInstanceField(instance, name);
+            return (T) XposedHelpers.getAdditionalInstanceField(instance, key);
         } catch (Throwable e) {
             logE(utils.getTAG(), "get additional failed!", e);
         }
         return null;
     }
 
-    public boolean removeAdditionalInstanceField(Object instance, String name) {
+    public boolean removeAdditionalInstanceField(Object instance, String key) {
         try {
-            XposedHelpers.removeAdditionalInstanceField(instance, name);
+            XposedHelpers.removeAdditionalInstanceField(instance, key);
             return true;
         } catch (Throwable e) {
             logE(utils.getTAG(), "remove additional failed!", e);
@@ -248,6 +256,8 @@ public class ExpandTool extends ConvertHelper implements IDynamic, IStatic {
         if (clz != null) {
             try {
                 XposedHelpers.setStaticObjectField(clz, name, value);
+                if (useFieldObserver)
+                    observer.staticObserver(clz, name, value);
                 return true;
             } catch (Throwable e) {
                 logE(utils.getTAG(), "set static field failed!", e);
@@ -260,6 +270,8 @@ public class ExpandTool extends ConvertHelper implements IDynamic, IStatic {
         try {
             field.setAccessible(true);
             field.set(null, value);
+            if (useFieldObserver)
+                observer.staticObserver(field, value);
             return true;
         } catch (Throwable e) {
             logE(utils.getTAG(), "set static field failed!", e);

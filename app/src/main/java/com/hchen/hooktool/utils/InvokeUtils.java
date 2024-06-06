@@ -124,7 +124,7 @@ public class InvokeUtils {
             Class<?> clz = baseClass(classLoader, className);
             return baseInvokeMethod(clz, instance, method, param, value);
         } catch (ClassNotFoundException e) {
-            AndroidLog.logE(TAG, "Reflection call method failed! class: [" + className + "] method: " + method, e);
+            AndroidLog.logE(TAG, "Reflection call method failed! class: [" + className + "], method: " + method, e);
             return null;
         }
     }
@@ -143,7 +143,7 @@ public class InvokeUtils {
                     try {
                         declaredMethod = clz.getDeclaredMethod(method, param);
                     } catch (NoSuchMethodException ex) {
-                        throw new NoSuchMethodException("getMethod: [" + e + "] getDeclaredMethod: " + ex);
+                        throw new NoSuchMethodException("get method failed: [" + e + "], get declared method failed: " + ex);
                     }
                 }
                 methodCache.put(clz.getName() + "." + declaredMethod.getName() + Arrays.toString(declaredMethod.getParameterTypes()), declaredMethod);
@@ -151,7 +151,7 @@ public class InvokeUtils {
             declaredMethod.setAccessible(true);
             return (T) declaredMethod.invoke(instance, value);
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-            AndroidLog.logE(TAG, "Reflection call method failed! class: [" + clz.getName() + "] method: " + method, e);
+            AndroidLog.logE(TAG, "Reflection call method failed! class: [" + clz.getName() + "], method: " + method, e);
             return null;
         }
     }
@@ -165,7 +165,7 @@ public class InvokeUtils {
             Class<?> clz = baseClass(classLoader, className);
             return baseInvokeField(clz, instance, field, set, value);
         } catch (ClassNotFoundException e) {
-            AndroidLog.logE(TAG, "Reflection call method failed! class: [" + className + "] field: " + field, e);
+            AndroidLog.logE(TAG, "Reflection call method failed! class: [" + className + "], field: " + field, e);
             return null;
         }
     }
@@ -184,7 +184,7 @@ public class InvokeUtils {
                     try {
                         declaredField = clz.getDeclaredField(field);
                     } catch (NoSuchFieldException ex) {
-                        throw new NoSuchFieldException("getField: [" + e + "] getDeclaredField: " + ex);
+                        throw new NoSuchFieldException("get method failed: [" + e + "], get declared method failed: " + ex);
                     }
                 }
                 fieldCache.put(clz.getName() + "." + declaredField.getName(), declaredField);
@@ -196,7 +196,7 @@ public class InvokeUtils {
             } else
                 return (T) declaredField.get(instance);
         } catch (NoSuchFieldException | IllegalAccessException e) {
-            AndroidLog.logE(TAG, "Reflection call method failed! class: [" + clz.getName() + "] field: " + field, e);
+            AndroidLog.logE(TAG, "Reflection call method failed! class: [" + clz.getName() + "], field: " + field, e);
             return null;
         }
     }
@@ -209,7 +209,7 @@ public class InvokeUtils {
                 try {
                     return ClassLoader.getSystemClassLoader().loadClass(className);
                 } catch (ClassNotFoundException f) {
-                    throw new ClassNotFoundException("forName: [" + e + "] loadClass: " + f);
+                    throw new ClassNotFoundException("forName: [" + e + "], loadClass: " + f);
                 }
             }
         }

@@ -69,7 +69,7 @@ public class ResHelper {
                 loader.addProvider(provider);
                 resourcesLoader = loader;
             } catch (IOException e) {
-                logE(TAG, "Failed to add resource!: " + e);
+                logE(TAG, "failed to add resource!: " + e);
                 return false;
             }
         }
@@ -115,7 +115,7 @@ public class ResHelper {
             try {
                 return getModuleRes(context);
             } catch (PackageManager.NameNotFoundException e) {
-                logE(TAG, "Failed to load resource!Critical error!!Scope may crash!!", e);
+                logE(TAG, "failed to load resource! Critical error!! Scope may crash!!", e);
             }
         }
         return context.getResources();

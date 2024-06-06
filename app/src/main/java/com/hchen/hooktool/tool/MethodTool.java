@@ -58,6 +58,22 @@ public class MethodTool extends ConvertHelper {
         return findMember;
     }
 
+    public void findMethodOrThrowable(String clazz, String name, Object... ojbs) throws NoSuchMethodException {
+        Class<?> cl = findClass(clazz);
+        Class<?>[] classes = objectArrayToClassArray(ojbs);
+        cl.getDeclaredMethod(name, classes);
+    }
+
+    public void findAnyMethodOrThrowable(String clazz, String name) throws NoSuchMethodException {
+        Class<?> cl = findClass(clazz);
+        for (Method method : cl.getDeclaredMethods()) {
+            if (method.getName().equals(name)) {
+                return;
+            }
+        }
+        throw new NoSuchMethodException("no found method: " + name);
+    }
+
     /**
      * 获取标签类内的指定方法。
      */
@@ -72,7 +88,7 @@ public class MethodTool extends ConvertHelper {
                     arrayList.add(c.getDeclaredMethod(name, classes));
                 } catch (NoSuchMethodException e) {
                     logE(utils.getTAG(), "The method to get the claim failed name: [" + name +
-                            "] class: [" + c + "] classes: " + Arrays.toString(classes), e);
+                            "], class: [" + c + "], classes: " + Arrays.toString(classes), e);
                 }
                 return arrayList;
             }
@@ -94,7 +110,7 @@ public class MethodTool extends ConvertHelper {
                     }
                 }
                 if (list.isEmpty())
-                    logW(utils.getTAG(), "find any method, but list is empty! class: [" + c + "] member: " + name);
+                    logW(utils.getTAG(), "find any method, but list is empty! class: [" + c + "], member: " + name);
                 return list;
             }
         });
@@ -108,13 +124,13 @@ public class MethodTool extends ConvertHelper {
         Object label = utils.getLabel();
         MemberData data = utils.labelClasses.get(label);
         if (data == null) {
-            logW(utils.getTAG(), "memberData is null, cant find: [" + name + "] label: " + label);
+            logW(utils.getTAG(), "memberData is null, cant find: [" + name + "], label: " + label);
             utils.members.put(label, data);
             return utils.getActionTool();
         }
         Class<?> c = data.mClass;
         if (c == null) {
-            logW(utils.getTAG(), "class is null! cant find: [" + name + "] label: " + label);
+            logW(utils.getTAG(), "class is null! cant find: [" + name + "], label: " + label);
             // utils.methods.put(index, new ArrayList<>());
             utils.members.put(label, data);
             return utils.getActionTool();
@@ -147,7 +163,7 @@ public class MethodTool extends ConvertHelper {
                     members.add(c.getDeclaredConstructor(classes));
                 } catch (NoSuchMethodException e) {
                     logE(utils.getTAG(), "The specified constructor could not be found: [" + c +
-                            "] classes: " + Arrays.toString(classes), e);
+                            "], classes: " + Arrays.toString(classes), e);
                 }
                 return members;
             }

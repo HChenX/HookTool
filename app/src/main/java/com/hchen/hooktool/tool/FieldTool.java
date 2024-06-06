@@ -54,7 +54,7 @@ public class FieldTool {
         Object label = utils.getLabel();
         MemberData data = utils.labelClasses.get(label);
         if (data == null) {
-            logW(utils.getTAG(), "data is null, cant find field: [" + name + "] label: " + label);
+            logW(utils.getTAG(), "data is null, cant find field: [" + name + "], label: " + label);
             return utils.getFieldTool();
         }
         Class<?> c = data.mClass;
@@ -66,7 +66,7 @@ public class FieldTool {
             utils.findField = XposedHelpers.findField(c, name);
             data.mField = utils.findField;
         } catch (NoSuchFieldError e) {
-            logE(utils.getTAG(), "failed to get claim field: [" + name + "] class: " + utils.findClass, e);
+            logE(utils.getTAG(), "failed to get claim field: [" + name + "], class: " + utils.findClass, e);
         }
         return utils.getFieldTool();
     }
@@ -104,7 +104,7 @@ public class FieldTool {
             } catch (IllegalAccessException e) {
                 logE(utils.getTAG(), "get: " + utils.findField, e);
             }
-        } else logW(utils.getTAG(), "findField is null!");
+        } else logW(utils.getTAG(), "find field is null!");
         return null;
     }
 

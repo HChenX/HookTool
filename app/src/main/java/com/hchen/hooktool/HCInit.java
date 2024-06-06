@@ -38,6 +38,7 @@ public class HCInit {
     public static final int LOG_D = 4;
     private static String[] filter = null;
     private static boolean useLogExpand = false;
+    private static boolean useFieldObserver = false;
     private static XC_LoadPackage.LoadPackageParam lpparam = null;
     private static ClassLoader classLoader = null;
     private static boolean canUseSystemClassLoader = false;
@@ -100,6 +101,17 @@ public class HCInit {
     }
 
     /**
+     * 使每个字段的设置受到检查
+     */
+    public static void setUseFieldObserver(boolean use) {
+        useFieldObserver = use;
+    }
+
+    protected static boolean getUseFieldObserver() {
+        return useFieldObserver;
+    }
+
+    /**
      * 设置在 classLoader 为 null 时允许使用系统 classLoader
      */
     public static void setCanUseSystemClassLoader(boolean use) {
@@ -113,12 +125,12 @@ public class HCInit {
         lpparam = loadPackageParam;
         classLoader = loadPackageParam.classLoader;
         packageName = lpparam.packageName;
-        logI(spareTag, "init lpparam: [" + lpparam + "] classLoader: [" + classLoader + "] pkgName: " + packageName);
+        logI(spareTag, "init lpparam: [" + lpparam + "], classLoader: [" + classLoader + "], pkgName: " + packageName);
     }
 
     protected static XC_LoadPackage.LoadPackageParam getLoadPackageParam() throws Throwable {
         if (lpparam != null) return lpparam;
-        throw new Throwable("Failed to obtain LoadPackageParam, it is null!");
+        throw new Throwable(getTAG() + "[E]: Failed to obtain LoadPackageParam, it is null!");
     }
 
     protected static ClassLoader getClassLoader() {
@@ -126,7 +138,7 @@ public class HCInit {
         if (canUseSystemClassLoader) {
             return getSystemClassLoader();
         }
-        throw new RuntimeException("Failed to obtain ClassLoader! It is null!");
+        throw new RuntimeException(getTAG() + "[E]: Failed to obtain ClassLoader! It is null!");
     }
 
     private static ClassLoader getClassLoaderIfExists() {

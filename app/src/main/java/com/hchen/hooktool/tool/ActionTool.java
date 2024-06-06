@@ -39,8 +39,6 @@ import de.robv.android.xposed.XposedBridge;
 
 public class ActionTool extends MethodOpt {
     private final DataUtils utils;
-    // private int classIndex = -1;
-    // protected ArrayList<Member> members = null;
 
     public ActionTool(DataUtils data) {
         super(data);
@@ -83,7 +81,7 @@ public class ActionTool extends MethodOpt {
         try {
             XposedBridge.hookMethod(member, hookTool(member, iAction));
         } catch (Throwable e) {
-            logE(utils.getTAG(), "hook: [" + member + "] failed!", e);
+            logE(utils.getTAG(), "hook: [" + member + "], failed!", e);
         }
         return utils.getMethodTool();
     }
@@ -130,7 +128,7 @@ public class ActionTool extends MethodOpt {
         MemberData data = utils.members.get(label);
         if (data != null) {
             if (data.mClass == null) {
-                logW(utils.getTAG(), "label: [" + label + "] this data class is null!");
+                logW(utils.getTAG(), "label: [" + label + "], this data class is null!");
             }
             int count = data.memberMap.size();
             if (count == 0) {
@@ -149,13 +147,13 @@ public class ActionTool extends MethodOpt {
                 } else {
                     if (members.isEmpty()) {
                         logW(utils.getTAG(), "this members is empty! cant hook anything, will skip! class: ["
-                                + data.mClass + "] label: [" + label + "] count: " + count);
+                                + data.mClass + "], label: [" + label + "], count: " + count);
                     } else {
                         for (Member member : members) {
                             try {
                                 XposedBridge.hookMethod(member, tool.action(member));
-                                logD(utils.getTAG(), "success hook: [" + member + "] class: [" + data.mClass
-                                        + "] label: [" + label + "] count: " + count);
+                                logD(utils.getTAG(), "success hook: [" + member + "], class: [" + data.mClass
+                                        + "], label: [" + label + "], count: " + count);
                                 setState(name, data, members, true);
                             } catch (Throwable e) {
                                 logE(utils.getTAG(), name + " hook method: " + member, e);

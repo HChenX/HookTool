@@ -19,7 +19,7 @@
 package com.hchen.hooktool;
 
 import static com.hchen.hooktool.log.XposedLog.logE;
-import static com.hchen.hooktool.utils.DataUtils.TAG;
+import static com.hchen.hooktool.utils.DataUtils.spareTag;
 
 import com.hchen.hooktool.tool.ActionTool;
 import com.hchen.hooktool.tool.ClassTool;
@@ -33,19 +33,19 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 public class HCHook {
     private final DataUtils utils;
-    private final ExpandTool expandTool;
     private final DexkitTool dexkitTool;
 
     static {
         initSafe();
         try {
-            TAG = HCInit.spareTag;
+            spareTag = HCInit.spareTag;
             DataUtils.lpparam = HCInit.getLoadPackageParam();
             DataUtils.useLogExpand = HCInit.getUseLogExpand();
+            DataUtils.useFieldObserver = HCInit.getUseFieldObserver();
             DataUtils.filter = HCInit.getFilter();
             DataUtils.classLoader = HCInit.getClassLoader();
         } catch (Throwable e) {
-            logE(TAG, e);
+            logE(spareTag, e);
         }
     }
 
@@ -59,7 +59,7 @@ public class HCHook {
         utils.classTool = new ClassTool(utils);
         utils.fieldTool = new FieldTool(utils);
         utils.methodTool = new MethodTool(utils);
-        expandTool = new ExpandTool(utils);
+        utils.expandTool = new ExpandTool(utils);
         dexkitTool = new DexkitTool(utils);
     }
 
@@ -91,7 +91,7 @@ public class HCHook {
     }
 
     public ExpandTool expandTool() {
-        return expandTool;
+        return utils.getExpandTool();
     }
 
     public DexkitTool dexkitTool() {
@@ -121,6 +121,6 @@ public class HCHook {
 
     public static void initSafe() {
         if (!HCInit.isInitDone())
-            throw new RuntimeException(HCInit.getTAG() + " HookInit not initialized!");
+            throw new RuntimeException(HCInit.getTAG() + "[E]: HookInit not initialized!");
     }
 }
