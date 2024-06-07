@@ -54,9 +54,9 @@ dependencies {
 
 @Override
 public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) {
-    HookInit.setTAG("YourTag"); // 设置日志 TAG
+    HCInit.setTAG("YourTag"); // 设置日志 TAG
     HCInit.setLogLevel(HCInit.LOG_I); // 设置日志输出等级
-    HookInit.initLoadPackageParam(lpparam); // 初始化
+    HCInit.initLoadPackageParam(lpparam); // 初始化
 }
 ```
 
