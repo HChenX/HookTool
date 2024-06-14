@@ -31,6 +31,9 @@ import com.hchen.hooktool.utils.DataUtils;
 
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
+/**
+ * 工具入口
+ */
 public class HCHook {
     private final DataUtils utils;
     private final DexkitTool dexkitTool;

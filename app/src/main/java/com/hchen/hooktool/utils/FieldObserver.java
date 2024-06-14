@@ -18,9 +18,9 @@
  */
 package com.hchen.hooktool.utils;
 
+import static com.hchen.hooktool.log.AndroidLog.logE;
 import static com.hchen.hooktool.log.AndroidLog.logI;
 import static com.hchen.hooktool.log.AndroidLog.logW;
-import static com.hchen.hooktool.log.XposedLog.logE;
 
 import java.lang.reflect.Field;
 

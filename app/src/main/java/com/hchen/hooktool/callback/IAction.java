@@ -20,6 +20,9 @@ package com.hchen.hooktool.callback;
 
 import com.hchen.hooktool.tool.ParamTool;
 
+/**
+ * Hook 动作接口
+ */
 public interface IAction {
     default void before(ParamTool param) {
     }

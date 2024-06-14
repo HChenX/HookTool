@@ -23,7 +23,7 @@ import android.util.Log;
 import com.hchen.hooktool.HCInit;
 
 /**
- * 没啥用的安卓日志类
+ * 安卓日志类
  */
 public class AndroidLog {
     private static final String rootTag = HCInit.getTAG();
@@ -32,6 +32,11 @@ public class AndroidLog {
     public static void logE(String tag, String log) {
         if (level < 1) return;
         Log.e(rootTag, "[" + tag + "]" + "[E]: " + log);
+    }
+
+    public static void logE(String tag, Throwable throwable) {
+        if (level < 1) return;
+        Log.e(rootTag, "[" + tag + "]" + "[E]: ", throwable);
     }
 
     public static void logE(String tag, String log, Throwable throwable) {

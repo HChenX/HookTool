@@ -18,6 +18,9 @@
  */
 package com.hchen.hooktool.data;
 
+/**
+ * 状态枚举类
+ */
 public enum StateEnum {
-    NONE, HOOK, Failed
+    NONE, HOOK, FAILED
 }

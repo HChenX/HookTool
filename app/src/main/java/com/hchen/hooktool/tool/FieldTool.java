@@ -30,6 +30,9 @@ import java.lang.reflect.Field;
 
 import de.robv.android.xposed.XposedHelpers;
 
+/**
+ * 字段类
+ */
 public class FieldTool {
     private final DataUtils utils;
 
@@ -65,12 +68,12 @@ public class FieldTool {
      */
     public FieldTool findField(String name) {
         utils.findField = null;
-        if (utils.labelClasses.isEmpty()) {
+        if (utils.members.isEmpty()) {
             logW(utils.getTAG(), "The class list is empty!");
             return utils.getFieldTool();
         }
         Object label = utils.getLabel();
-        MemberData data = utils.labelClasses.get(label);
+        MemberData data = utils.members.get(label);
         if (data == null) {
             logW(utils.getTAG(), "data is null, can't find field: [" + name + "], label: " + label);
             return utils.getFieldTool();
@@ -125,11 +128,6 @@ public class FieldTool {
         } else logW(utils.getTAG(), "find field is null!");
         return null;
     }
-
-    /* 不需要再回到此类 */
-    // public HCHook hcHook() {
-    //     return utils.getHCHook();
-    // }
 
     public ClassTool classTool() {
         return utils.getClassTool();

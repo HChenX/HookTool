@@ -26,6 +26,9 @@ import java.lang.reflect.Member;
 
 import de.robv.android.xposed.XC_MethodHook;
 
+/**
+ * 参数工具
+ */
 public class ParamTool extends Arguments {
     public Class<?> mClass;
 

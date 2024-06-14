@@ -29,7 +29,7 @@ import com.hchen.hooktool.tool.MethodTool;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 /**
- * 对需要使用工具的类继承本类，课快速使用工具。
+ * 对需要使用工具的类继承本类，可快速使用工具。
  */
 public abstract class BaseHC {
     public String TAG = getClass().getSimpleName();

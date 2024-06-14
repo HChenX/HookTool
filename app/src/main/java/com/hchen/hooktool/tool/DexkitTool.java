@@ -35,6 +35,9 @@ import java.lang.reflect.Method;
 
 import de.robv.android.xposed.XposedBridge;
 
+/**
+ * 为 dexkit 查找到的方法提供 hook 的类
+ */
 public class DexkitTool extends ConvertHelper {
     public DexkitTool(DataUtils utils) {
         super(utils);

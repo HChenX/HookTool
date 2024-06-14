@@ -20,7 +20,6 @@ package com.hchen.hooktool.tool.param;
 
 import com.hchen.hooktool.itool.IDynamic;
 import com.hchen.hooktool.itool.IStatic;
-import com.hchen.hooktool.tool.ExpandTool;
 import com.hchen.hooktool.utils.ConvertHelper;
 import com.hchen.hooktool.utils.DataUtils;
 
@@ -34,9 +33,8 @@ public class StaticAct extends ConvertHelper {
 
     public StaticAct(DataUtils utils) {
         super(utils);
-        ExpandTool expandTool = new ExpandTool(utils);
-        iStatic = expandTool;
-        iDynamic = expandTool;
+        iStatic = utils.expandTool;
+        iDynamic = utils.expandTool;
     }
 
     public StaticAct to(Class<?> mClass) {

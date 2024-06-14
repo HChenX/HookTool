@@ -22,6 +22,9 @@ import com.hchen.hooktool.utils.DataUtils;
 
 import de.robv.android.xposed.XC_MethodHook;
 
+/**
+ * 动作类
+ */
 public class ActAchieve extends StaticAct {
     protected XC_MethodHook.MethodHookParam param;
 

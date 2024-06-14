@@ -37,6 +37,9 @@ import java.util.ArrayList;
 
 import de.robv.android.xposed.XposedBridge;
 
+/**
+ * Hook 执行类
+ */
 public class ActionTool extends MethodOpt {
     private final DataUtils utils;
 
@@ -61,7 +64,7 @@ public class ActionTool extends MethodOpt {
             logW(utils.getTAG(), "hook but iAction is null!");
             return utils.getMethodTool();
         }
-        hookTool("hook", new IActionTool() {
+        hookTool(new IActionTool() {
             @Override
             public Action action(Member member) {
                 return hookTool(member, iAction);
@@ -90,7 +93,7 @@ public class ActionTool extends MethodOpt {
      * 直接返回指定值
      */
     public MethodTool returnResult(final Object result) {
-        hookTool("returnResult", new IActionTool() {
+        hookTool(new IActionTool() {
             @Override
             public Action action(Member member) {
                 return new Action(member, utils.getTAG()) {
@@ -108,7 +111,7 @@ public class ActionTool extends MethodOpt {
      * 使 hook 方法失效
      */
     public MethodTool doNothing() {
-        hookTool("doNothing", new IActionTool() {
+        hookTool(new IActionTool() {
             @Override
             public Action action(Member member) {
                 return new Action(member,
@@ -123,27 +126,28 @@ public class ActionTool extends MethodOpt {
         return utils.getMethodTool();
     }
 
-    private void hookTool(String name, IActionTool tool) {
+    private void hookTool(IActionTool tool) {
         Object label = utils.getLabel();
         MemberData data = utils.members.get(label);
         if (data != null) {
             if (data.mClass == null) {
                 logW(utils.getTAG(), "label: [" + label + "], this data class is null!");
+                return;
             }
             int count = data.memberMap.size();
             if (count == 0) {
-                logW(utils.getTAG(), name + " member map is empty! class: " + data.mClass);
+                logW(utils.getTAG(), "member map is empty! class: " + data.mClass);
             } else {
                 ArrayList<Member> members = new ArrayList<>();
                 for (int i = 0; i < count; i++) {
                     members = data.memberMap.get(i);
-                    if (!isHooked(name, data, members)) {
+                    if (!isHooked(data, members)) {
                         logD(utils.getTAG(), "now try to hook member: " + members);
                         break;
                     }
                 }
                 if (members == null) {
-                    logW(utils.getTAG(), name + " don't have anything can hook. class is: " + data.mClass);
+                    logW(utils.getTAG(), "don't have anything can hook. class is: " + data.mClass);
                 } else {
                     if (members.isEmpty()) {
                         logW(utils.getTAG(), "this members is empty! cant hook anything, will skip! class: ["
@@ -154,10 +158,10 @@ public class ActionTool extends MethodOpt {
                                 XposedBridge.hookMethod(member, tool.action(member));
                                 logD(utils.getTAG(), "success hook: [" + member + "], class: [" + data.mClass
                                         + "], label: [" + label + "], count: " + count);
-                                setState(name, data, members, true);
+                                setState(data, members, true);
                             } catch (Throwable e) {
-                                logE(utils.getTAG(), name + " hook method: " + member, e);
-                                setState(name, data, members, false);
+                                logE(utils.getTAG(), "hook method: " + member, e);
+                                setState(data, members, false);
                             }
                         }
 
@@ -166,28 +170,17 @@ public class ActionTool extends MethodOpt {
                 utils.members.put(label, data);
             }
         } else {
-            logW(utils.getTAG(), name + " member data is null!");
+            logW(utils.getTAG(), "member data is null!");
         }
     }
 
-    private boolean isHooked(String name, MemberData data, ArrayList<Member> members) {
-        switch (name) {
-            case "hook", "doNothing", "returnResult" -> {
-                return data.stateMap.get(members) == StateEnum.HOOK
-                        || data.stateMap.get(members) == StateEnum.Failed;
-            }
-            default -> {
-                return false;
-            }
-        }
+    private boolean isHooked(MemberData data, ArrayList<Member> members) {
+        return data.stateMap.get(members) == StateEnum.HOOK
+                || data.stateMap.get(members) == StateEnum.FAILED;
     }
 
-    private void setState(String name, MemberData data, ArrayList<Member> members, boolean isSuccess) {
-        switch (name) {
-            case "hook", "doNothing", "returnResult" -> {
-                data.stateMap.put(members, isSuccess ? StateEnum.HOOK : StateEnum.Failed);
-            }
-        }
+    private void setState(MemberData data, ArrayList<Member> members, boolean isSuccess) {
+        data.stateMap.put(members, isSuccess ? StateEnum.HOOK : StateEnum.FAILED);
     }
 
     private Action hookTool(Member member, IAction iAction) {

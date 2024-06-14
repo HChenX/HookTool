@@ -33,7 +33,7 @@ import java.util.HashMap;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 /**
- * 这是字段的读写类，请不要继承重写。
+ * 这是本工具的读写数据类，请不要继承重写。
  */
 public class DataUtils {
     public static String spareTag = null;
@@ -52,7 +52,6 @@ public class DataUtils {
     public static ClassLoader classLoader = null;
     public ClassLoader mCustomClassLoader = null;
     public Class<?> findClass = null;
-    public HashMap<Object, MemberData> labelClasses = new HashMap<>();
     public Field findField = null;
     public Object mLabel = null;
     public final HashMap<Object, MemberData> members = new HashMap<>();

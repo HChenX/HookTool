@@ -27,6 +27,9 @@ import java.lang.reflect.Member;
 
 import de.robv.android.xposed.XC_MethodHook;
 
+/**
+ * Hook 动作类
+ */
 public class Action extends XC_MethodHook {
     private String TAG = null;
     private LogExpand logExpand = null;
@@ -57,8 +60,10 @@ public class Action extends XC_MethodHook {
         try {
             before(param);
             if (useLogExpand) {
-                logExpand.setParam(param);
-                logExpand.detailedLogs();
+                if (logExpand != null) {
+                    logExpand.setParam(param);
+                    logExpand.detailedLogs();
+                }
             }
         } catch (Throwable e) {
             logE(TAG + ":" + "before", e);

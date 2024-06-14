@@ -23,7 +23,7 @@ import com.hchen.hooktool.HCInit;
 import de.robv.android.xposed.XposedBridge;
 
 /**
- * 本工具的日志类。
+ * LSP 日志类。
  */
 public class XposedLog {
     private static final String rootTag = HCInit.getTAG();

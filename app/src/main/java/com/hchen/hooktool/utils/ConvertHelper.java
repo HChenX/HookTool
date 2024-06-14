@@ -22,6 +22,9 @@ import static com.hchen.hooktool.log.XposedLog.logW;
 
 import java.util.ArrayList;
 
+/**
+ * 本工具的快捷转换类
+ */
 public class ConvertHelper {
     protected final DataUtils utils;
 

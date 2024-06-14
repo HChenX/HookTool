@@ -37,7 +37,7 @@ import java.io.IOException;
 
 /**
  * 资源注入工具，
- * 可能不是痕稳定。
+ * 可能不是很稳定。
  */
 public class ResHelper {
     private static ResourcesLoader resourcesLoader = null;

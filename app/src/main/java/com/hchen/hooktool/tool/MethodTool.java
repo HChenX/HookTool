@@ -34,6 +34,9 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+/**
+ * 方法类
+ */
 public class MethodTool extends ConvertHelper {
     private ArrayList<Member> findMember = null;
 
@@ -67,6 +70,7 @@ public class MethodTool extends ConvertHelper {
     public boolean findMethodIfExists(String clazz, ClassLoader classLoader,
                                       String name, Object... ojbs) {
         Class<?> cl = utils.getExpandTool().findClass(clazz, classLoader);
+        if (cl == null) return false;
         Class<?>[] classes = objectArrayToClassArray(classLoader, ojbs);
         try {
             cl.getDeclaredMethod(name, classes);
@@ -83,6 +87,7 @@ public class MethodTool extends ConvertHelper {
 
     public boolean findAnyMethodIfExists(String clazz, ClassLoader classLoader, String name) {
         Class<?> cl = utils.getExpandTool().findClass(clazz, classLoader);
+        if (cl == null) return false;
         for (Method method : cl.getDeclaredMethods()) {
             if (method.getName().equals(name)) {
                 return true;
@@ -134,32 +139,27 @@ public class MethodTool extends ConvertHelper {
     }
 
     private ActionTool findMethod(String name, IMethodTool iMethodTool, Class<?>... clzzs) {
-        if (utils.labelClasses.isEmpty()) {
+        findMember = new ArrayList<>();
+        if (utils.members.isEmpty()) {
             logW(utils.getTAG(), "the class list is empty! can't find method: " + name);
             return utils.getActionTool();
         }
         Object label = utils.getLabel();
-        MemberData data = utils.labelClasses.get(label);
+        MemberData data = utils.members.get(label);
         if (data == null) {
             logW(utils.getTAG(), "memberData is null, can't find: [" + name + "], label: " + label);
-            utils.members.put(label, data);
             return utils.getActionTool();
         }
         Class<?> c = data.mClass;
         if (c == null) {
             logW(utils.getTAG(), "class is null! can't find: [" + name + "], label: " + label);
-            // utils.methods.put(index, new ArrayList<>());
-            utils.members.put(label, data);
             return utils.getActionTool();
         }
-        ArrayList<Member> members = iMethodTool.doFindMethod(c, name, clzzs);
-        findMember = members;
-        if (data.stateMap.get(members) == null) {
-            data.memberMap.put(members);
-            data.stateMap.put(members, StateEnum.NONE);
+        findMember = iMethodTool.doFindMethod(c, name, clzzs);
+        if (data.stateMap.get(findMember) == null) {
+            data.memberMap.put(findMember);
+            data.stateMap.put(findMember, StateEnum.NONE);
         }
-        // data.isHooked = false;
-        // data.mConstructor = null;
         utils.members.put(label, data);
         return utils.getActionTool();
     }
@@ -200,42 +200,30 @@ public class MethodTool extends ConvertHelper {
     }
 
     private ActionTool findConstructor(IConstructorTool iConstructorTool, Class<?>... classes) {
-        if (utils.labelClasses.isEmpty()) {
+        findMember = new ArrayList<>();
+        if (utils.members.isEmpty()) {
             logW(utils.getTAG(), "the class list is empty!");
             return utils.getActionTool();
         }
         Object label = utils.getLabel();
-        // utils.constructors.add(utils.classes.get(0).getConstructor(obj));
-        MemberData data = utils.labelClasses.get(label);
+        MemberData data = utils.members.get(label);
         if (data == null) {
             logW(utils.getTAG(), "memberData is null, label: " + label);
-            utils.members.put(label, null);
             return utils.getActionTool();
         }
         Class<?> c = data.mClass;
         if (c == null) {
             logW(utils.getTAG(), "class is null! label: " + label);
-            utils.members.put(label, data);
-            // utils.constructors.put(new Constructor[]{});
             return utils.getActionTool();
         }
-        ArrayList<Member> members = iConstructorTool.doFindConstructor(c, classes);
-        findMember = members;
-        if (data.stateMap.get(members) == null) {
-            data.memberMap.put(members);
-            data.stateMap.put(members, StateEnum.NONE);
+        findMember = iConstructorTool.doFindConstructor(c, classes);
+        if (data.stateMap.get(findMember) == null) {
+            data.memberMap.put(findMember);
+            data.stateMap.put(findMember, StateEnum.NONE);
         }
-        // data.mConstructor = members;
-        // data.mMethod = null;
-        // data.isHooked = false;
         utils.members.put(label, data);
         return utils.getActionTool();
     }
-
-    /* 不需要再回到此类 */
-    // public HCHook hcHook() {
-    //     return utils.getHCHook();
-    // }
 
     public ActionTool actionTool() {
         return utils.getActionTool();

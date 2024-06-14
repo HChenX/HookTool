@@ -20,6 +20,9 @@ package com.hchen.hooktool.itool;
 
 import java.lang.reflect.Field;
 
+/**
+ * 静态方法类
+ */
 public interface IStatic {
 
     Class<?> findClass(String name);

@@ -27,9 +27,13 @@ import java.lang.reflect.Member;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+/**
+ * Member 数据类
+ */
 public class MemberData {
     @Nullable
     public Class<?> mClass; // 查找到的类
+    @Nullable
     public Field mField;
     /* member 存储与读取 */
     public MapUtils<ArrayList<Member>> memberMap = new MapUtils<>();

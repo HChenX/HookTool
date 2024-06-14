@@ -18,7 +18,6 @@
  */
 package com.hchen.hooktool.tool;
 
-import static com.hchen.hooktool.HCHook.initSafe;
 import static com.hchen.hooktool.log.XposedLog.logE;
 import static com.hchen.hooktool.log.XposedLog.logW;
 
@@ -30,14 +29,17 @@ import com.hchen.hooktool.utils.MethodOpt;
 
 import de.robv.android.xposed.XposedHelpers;
 
+/**
+ * 类工具
+ */
 public class ClassTool extends MethodOpt {
     private final DataUtils utils;
 
     public ClassTool(DataUtils utils) {
         super(utils);
         this.utils = utils;
-        clear();
         utils.classTool = this;
+        clear();
     }
 
     public MethodTool to(@NonNull Object label) {
@@ -49,61 +51,12 @@ public class ClassTool extends MethodOpt {
      * 查找指定类是否存在。
      */
     public boolean findClassIfExists(String clazz) {
-        try {
-            utils.getClassLoader().loadClass(clazz);
-        } catch (ClassNotFoundException e) {
-            logE(utils.getTAG(), e);
-            return false;
-        }
-        return true;
+        return utils.expandTool.findClass(clazz) != null;
     }
 
     public boolean findClassIfExists(String clazz, ClassLoader classLoader) {
-        try {
-            if (classLoader == null) {
-                logW(utils.getTAG(), "the classloader is null, cant find class: " + clazz);
-                return false;
-            }
-            classLoader.loadClass(clazz);
-        } catch (ClassNotFoundException e) {
-            logE(utils.getTAG(), e);
-            return false;
-        }
-        return true;
+        return utils.expandTool.findClass(clazz, classLoader) != null;
     }
-
-    // -------- 传统索引形式 ----------
-
-    /**
-     * 查找指定类，通过索引。<br/>
-     * 旧实现。
-     */
-    /*public ClassTool findClass(String className) {
-        return findClass(className, utils.mCustomClassLoader == null ? classLoader : utils.mCustomClassLoader);
-    }
-
-    public ClassTool findClass(String className, boolean add) {
-        return findClass(className, add, utils.mCustomClassLoader == null ? classLoader : utils.mCustomClassLoader);
-    }
-
-    public ClassTool findClass(String className, ClassLoader classLoader) {
-        return findClass(className, true, classLoader);
-    }
-
-    public ClassTool findClass(String className, boolean add, ClassLoader classLoader) {
-        initSafe();
-        if (utils.findClass != null) utils.findClass = null;
-        try {
-            utils.findClass = XposedHelpers.findClass(className,
-                    classLoader);
-        } catch (XposedHelpers.ClassNotFoundError e) {
-            logE(utils.getTAG(), "The specified class could not be found: " + className + " e: " + e);
-            utils.findClass = null;
-        }
-        // utils.classes.add(utils.findClass);
-        if (add) utils.classes.put(new MemberData(utils.findClass));
-        return utils.getClassTool();
-    }*/
 
     // ---------- 标签形式 ------------
 
@@ -115,7 +68,7 @@ public class ClassTool extends MethodOpt {
             logW(utils.getTAG(), "the class is null! label: " + label);
         }
         utils.findClass = clazz;
-        utils.labelClasses.put(label, new MemberData(clazz));
+        utils.members.put(label, new MemberData(clazz));
         utils.setLabel(label);
         return utils.getClassTool();
     }
@@ -124,22 +77,13 @@ public class ClassTool extends MethodOpt {
      * 查找指定类，并为其设置独有的标签。
      */
     public ClassTool findClass(@NonNull Object label, String className) {
-        return findClass(label, className,
-                utils.getClassLoader());
+        return findClass(label, className, utils.getClassLoader());
     }
 
     public ClassTool findClass(@NonNull Object label, String className, ClassLoader classLoader) {
-        initSafe();
         if (utils.findClass != null) utils.findClass = null;
-        try {
-            utils.findClass = XposedHelpers.findClass(className,
-                    classLoader);
-        } catch (XposedHelpers.ClassNotFoundError e) {
-            logE(utils.getTAG(), "the class not found!", e);
-            utils.findClass = null;
-        }
-        // utils.classes.add(utils.findClass);
-        utils.labelClasses.put(label, new MemberData(utils.findClass));
+        utils.findClass = utils.expandTool.findClass(className, classLoader);
+        utils.members.put(label, new MemberData(utils.findClass));
         utils.setLabel(label);
         return utils.getClassTool();
     }
@@ -151,7 +95,7 @@ public class ClassTool extends MethodOpt {
 
     /* 获取指定枚举标签的类。 */
     public Class<?> getClassByLabel(Object label) {
-        MemberData data = utils.labelClasses.get(label);
+        MemberData data = utils.members.get(label);
         if (data != null) {
             return data.mClass;
         }
@@ -159,7 +103,7 @@ public class ClassTool extends MethodOpt {
     }
 
     public int size() {
-        return utils.labelClasses.size();
+        return utils.members.size();
     }
 
     // ---------- 实例方法 -----------
@@ -175,7 +119,7 @@ public class ClassTool extends MethodOpt {
      * 实例指定索引类，索引从 0 开始。
      */
     public Object newInstance(Object label, Object... args) {
-        MemberData memberData = utils.labelClasses.get(label);
+        MemberData memberData = utils.members.get(label);
         if (memberData != null && memberData.mClass != null) {
             try {
                 return XposedHelpers.newInstance(memberData.mClass, args);
@@ -186,27 +130,6 @@ public class ClassTool extends MethodOpt {
         return null;
     }
 
-    /**
-     * 实例全部类。
-     * 不建议使用。<br/>
-     * 已经报废。
-     */
-    /* public ArrayList<Object> newInstanceAll(MapUtils<Object[]> mapUtils) {
-        utils.newInstances.clear();
-        if (utils.newInstances.size() != mapUtils.getHashMap().size()) {
-            logE(utils.getTAG(), "The length of the instance parameter list is inconsistent!");
-            return new ArrayList<>();
-        }
-        for (int i = 0; i < size(); i++) {
-            utils.newInstances.add(newInstance(i, mapUtils.get(i)));
-        }
-        return utils.newInstances;
-    } */
-
-    // 无需再回归此类。
-    // public HCHook hcHook() {
-    //     return utils.getHCHook();
-    // }
     public MethodTool methodTool() {
         return utils.getMethodTool();
     }
@@ -217,6 +140,6 @@ public class ClassTool extends MethodOpt {
 
     /* 不建议使用 clear 本工具应该是一次性的。 */
     private void clear() {
-        utils.labelClasses.clear();
+        utils.members.clear();
     }
 }

@@ -26,6 +26,9 @@ import com.hchen.hooktool.tool.ParamTool;
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedHelpers;
 
+/**
+ * 测试和示例类
+ */
 public class MainTest {
 
     public void test() {

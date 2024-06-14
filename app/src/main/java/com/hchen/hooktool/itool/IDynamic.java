@@ -20,6 +20,9 @@ package com.hchen.hooktool.itool;
 
 import java.lang.reflect.Field;
 
+/**
+ * 动态方法接口
+ */
 public interface IDynamic {
 
     <T, R> R callMethod(Object instance, String name, T ts);

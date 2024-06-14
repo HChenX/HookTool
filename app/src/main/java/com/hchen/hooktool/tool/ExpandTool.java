@@ -34,6 +34,9 @@ import java.util.ArrayList;
 
 import de.robv.android.xposed.XposedHelpers;
 
+/**
+ * 杂项类
+ */
 public class ExpandTool extends ConvertHelper implements IDynamic, IStatic {
     private final FieldObserver observer;
     private final boolean useFieldObserver = DataUtils.useFieldObserver;

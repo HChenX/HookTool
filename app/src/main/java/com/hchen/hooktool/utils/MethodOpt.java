@@ -20,7 +20,9 @@ package com.hchen.hooktool.utils;
 
 import com.hchen.hooktool.tool.ActionTool;
 
-// 优化调用，只提供基本用法，详细用法请获取工具类对象
+/**
+ * 优化调用，只提供基本用法，详细用法请参考具体工具类
+ */
 public class MethodOpt {
     private final DataUtils utils;
 
