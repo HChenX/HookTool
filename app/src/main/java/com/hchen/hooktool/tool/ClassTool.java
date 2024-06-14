@@ -109,15 +109,12 @@ public class ClassTool extends MethodOpt {
     // ---------- 实例方法 -----------
 
     /**
-     * 实例当前索引类。
+     * 实例指定标签类
      */
     public Object newInstance(Object... args) {
         return newInstance(utils.getLabel(), args);
     }
 
-    /**
-     * 实例指定索引类，索引从 0 开始。
-     */
     public Object newInstance(Object label, Object... args) {
         MemberData memberData = utils.members.get(label);
         if (memberData != null && memberData.mClass != null) {
@@ -138,7 +135,6 @@ public class ClassTool extends MethodOpt {
         return utils.getFieldTool();
     }
 
-    /* 不建议使用 clear 本工具应该是一次性的。 */
     private void clear() {
         utils.members.clear();
     }

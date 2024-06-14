@@ -81,6 +81,9 @@ public class MethodTool extends ConvertHelper {
         return true;
     }
 
+    /**
+     * 检查指定方法名是否存在，不存在则返回 false。
+     */
     public boolean findAnyMethodIfExists(String clazz, String name) {
         return findAnyMethodIfExists(clazz, utils.getClassLoader(), name);
     }
@@ -267,7 +270,6 @@ public class MethodTool extends ConvertHelper {
         return utils.getActionTool().doNothing();
     }
 
-    /* 不建议使用 clear 本工具应该是一次性的。 */
     private void clear() {
         if (!utils.members.isEmpty()) utils.members.clear();
     }
