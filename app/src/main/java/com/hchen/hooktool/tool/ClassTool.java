@@ -51,11 +51,16 @@ public class ClassTool extends MethodOpt {
      * 查找指定类是否存在。
      */
     public boolean findClassIfExists(String clazz) {
-        return utils.expandTool.findClass(clazz) != null;
+        return findClassIfExists(clazz, utils.getClassLoader());
     }
 
     public boolean findClassIfExists(String clazz, ClassLoader classLoader) {
-        return utils.expandTool.findClass(clazz, classLoader) != null;
+        try {
+            if (classLoader == null) return false;
+            return XposedHelpers.findClass(clazz, classLoader) != null;
+        } catch (XposedHelpers.ClassNotFoundError e) {
+        }
+        return false;
     }
 
     // ---------- 标签形式 ------------

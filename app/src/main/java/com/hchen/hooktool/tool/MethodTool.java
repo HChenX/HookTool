@@ -75,7 +75,6 @@ public class MethodTool extends ConvertHelper {
         try {
             cl.getDeclaredMethod(name, classes);
         } catch (NoSuchMethodException e) {
-            logE(utils.getTAG(), e);
             return false;
         }
         return true;
