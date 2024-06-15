@@ -21,6 +21,8 @@ package com.hchen.hooktool.utils;
 import static com.hchen.hooktool.log.AndroidLog.logI;
 import static com.hchen.hooktool.log.XposedLog.logE;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
@@ -41,6 +43,13 @@ public class LogExpand {
         this.TAG = TAG;
         this.filter = DataUtils.filter;
         getName(member);
+    }
+
+    public static String printStackTrace(Throwable t) {
+        StringWriter stringWriter = new StringWriter();
+        PrintWriter printWriter = new PrintWriter(stringWriter);
+        t.printStackTrace(printWriter);
+        return stringWriter.toString();
     }
 
     private void getName(Member member) {

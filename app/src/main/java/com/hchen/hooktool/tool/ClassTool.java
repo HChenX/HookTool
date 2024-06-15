@@ -112,18 +112,14 @@ public class ClassTool extends MethodOpt {
      * 实例指定标签类
      */
     public Object newInstance(Object... args) {
-        return newInstance(utils.getLabel(), args);
-    }
-
-    public Object newInstance(Object label, Object... args) {
-        MemberData memberData = utils.members.get(label);
+        MemberData memberData = utils.members.get(utils.getLabel());
         if (memberData != null && memberData.mClass != null) {
             try {
                 return XposedHelpers.newInstance(memberData.mClass, args);
             } catch (Throwable e) {
                 logE(utils.getTAG(), "new instance class: " + memberData.mClass, e);
             }
-        } else logW(utils.getTAG(), "class is null, cant new instance. label: " + label);
+        } else logW(utils.getTAG(), "class is null, cant new instance. label: " + utils.getLabel());
         return null;
     }
 
