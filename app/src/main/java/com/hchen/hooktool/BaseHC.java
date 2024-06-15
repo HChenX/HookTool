@@ -27,7 +27,6 @@ import com.hchen.hooktool.tool.FieldTool;
 import com.hchen.hooktool.tool.MethodTool;
 
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
-import kotlin.LazyKt;
 
 /**
  * 对需要使用工具的类继承本类，可快速使用工具。
@@ -35,8 +34,7 @@ import kotlin.LazyKt;
 public abstract class BaseHC {
     public String TAG = getClass().getSimpleName();
     // 使用 kt lazy 延迟初始化本值
-    public static XC_LoadPackage.LoadPackageParam lpparam =
-            LazyKt.lazy(BaseHC::getLpparam).getValue();
+    public static XC_LoadPackage.LoadPackageParam lpparam;
     public static HCHook hcHook;
     public static ClassTool classTool;
     public static MethodTool methodTool;
@@ -57,17 +55,11 @@ public abstract class BaseHC {
         BaseHC.dexkitTool = hcHook.dexkitTool();
         BaseHC.expandTool = hcHook.expandTool();
         BaseHC.hcHook.setThisTag(TAG);
+        lpparam = hcHook.getLpparam();
         try {
             init();
         } catch (Throwable e) {
             logE(TAG, e);
         }
-    }
-
-    private static XC_LoadPackage.LoadPackageParam getLpparam() {
-        if (hcHook != null) {
-            return hcHook.getLpparam();
-        }
-        return null;
     }
 }
