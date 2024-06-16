@@ -32,7 +32,9 @@ import com.hchen.hooktool.data.StateEnum;
 import com.hchen.hooktool.utils.DataUtils;
 import com.hchen.hooktool.utils.MethodOpt;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Member;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 
 import de.robv.android.xposed.XposedBridge;
@@ -85,6 +87,19 @@ public class ActionTool extends MethodOpt {
             XposedBridge.hookMethod(member, hookTool(member, iAction));
         } catch (Throwable e) {
             logE(utils.getTAG(), "hook: [" + member + "], failed!", e);
+        }
+        return utils.getMethodTool();
+    }
+
+    public MethodTool hook(ArrayList<?> members, IAction iAction) {
+        for (Object o : members) {
+            if (o instanceof Method || o instanceof Constructor<?>) {
+                try {
+                    XposedBridge.hookMethod((Member) o, hookTool((Member) o, iAction));
+                } catch (Throwable e) {
+                    logE(utils.getTAG(), "hook: [" + o + "], failed!", e);
+                }
+            }
         }
         return utils.getMethodTool();
     }

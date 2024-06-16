@@ -3,8 +3,8 @@ plugins {
     id 'maven-publish'
 }
 
-def defVersion = 'v.0.9.2'
-int defVersionCode = 2024061501
+def defVersion = 'v.0.9.3'
+int defVersionCode = 2024061600
 
 group = 'com.github.HChenX'
 version = defVersion
@@ -38,8 +38,8 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_21
-        targetCompatibility JavaVersion.VERSION_21
+        sourceCompatibility JavaVersion.VERSION_22
+        targetCompatibility JavaVersion.VERSION_22
     }
 
     publishing {

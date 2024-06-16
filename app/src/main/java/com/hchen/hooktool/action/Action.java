@@ -35,10 +35,10 @@ public class Action extends XC_MethodHook {
     private LogExpand logExpand = null;
     private boolean useLogExpand = false;
 
-    protected void before(MethodHookParam param) {
+    protected void before(MethodHookParam param) throws Throwable {
     }
 
-    protected void after(MethodHookParam param) {
+    protected void after(MethodHookParam param) throws Throwable {
     }
 
     public Action(Member member, String tag) {
@@ -56,7 +56,7 @@ public class Action extends XC_MethodHook {
     }
 
     @Override
-    protected void beforeHookedMethod(MethodHookParam param) {
+    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
         try {
             before(param);
             if (useLogExpand) {
@@ -71,7 +71,7 @@ public class Action extends XC_MethodHook {
     }
 
     @Override
-    protected void afterHookedMethod(MethodHookParam param) {
+    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
         try {
             after(param);
         } catch (Throwable e) {

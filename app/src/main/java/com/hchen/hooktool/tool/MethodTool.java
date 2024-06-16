@@ -34,6 +34,8 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import de.robv.android.xposed.XposedHelpers;
+
 /**
  * 方法类
  */
@@ -69,12 +71,12 @@ public class MethodTool extends ConvertHelper {
 
     public boolean findMethodIfExists(String clazz, ClassLoader classLoader,
                                       String name, Object... ojbs) {
-        Class<?> cl = utils.getExpandTool().findClass(clazz, classLoader);
-        if (cl == null) return false;
-        Class<?>[] classes = objectArrayToClassArray(classLoader, ojbs);
         try {
+            Class<?> cl = XposedHelpers.findClass(clazz, classLoader);
+            if (cl == null) return false;
+            Class<?>[] classes = objectArrayToClassArray(classLoader, ojbs);
             cl.getDeclaredMethod(name, classes);
-        } catch (NoSuchMethodException e) {
+        } catch (NoSuchMethodException | XposedHelpers.ClassNotFoundError _) {
             return false;
         }
         return true;
@@ -259,6 +261,10 @@ public class MethodTool extends ConvertHelper {
 
     public MethodTool hook(Member member, IAction iAction) {
         return utils.getActionTool().hook(member, iAction);
+    }
+
+    public MethodTool hook(ArrayList<?> members, IAction iAction) {
+        return utils.getActionTool().hook(members, iAction);
     }
 
     public MethodTool returnResult(final Object result) {

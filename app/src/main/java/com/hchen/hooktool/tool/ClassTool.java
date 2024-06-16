@@ -58,7 +58,7 @@ public class ClassTool extends MethodOpt {
         try {
             if (classLoader == null) return false;
             return XposedHelpers.findClass(clazz, classLoader) != null;
-        } catch (XposedHelpers.ClassNotFoundError e) {
+        } catch (XposedHelpers.ClassNotFoundError _) {
         }
         return false;
     }
@@ -88,6 +88,15 @@ public class ClassTool extends MethodOpt {
     public ClassTool findClass(@NonNull Object label, String className, ClassLoader classLoader) {
         if (utils.findClass != null) utils.findClass = null;
         utils.findClass = utils.expandTool.findClass(className, classLoader);
+        MemberData data = utils.members.get(label);
+        if (data != null) {
+            Class<?> old = data.mClass;
+            if (old != null && old.equals(utils.findClass)) {
+                utils.setLabel(label);
+                logW(utils.getTAG(), "malicious coverage! label: [" + label + "], class: " + className);
+                return utils.getClassTool();
+            }
+        }
         utils.members.put(label, new MemberData(utils.findClass));
         utils.setLabel(label);
         return utils.getClassTool();
@@ -117,14 +126,18 @@ public class ClassTool extends MethodOpt {
      * 实例指定标签类
      */
     public Object newInstance(Object... args) {
-        MemberData memberData = utils.members.get(utils.getLabel());
+        return newInstance(utils.getLabel(), args);
+    }
+
+    public Object newInstance(Object label, Object[] objects) {
+        MemberData memberData = utils.members.get(label);
         if (memberData != null && memberData.mClass != null) {
             try {
-                return XposedHelpers.newInstance(memberData.mClass, args);
+                return XposedHelpers.newInstance(memberData.mClass, objects);
             } catch (Throwable e) {
                 logE(utils.getTAG(), "new instance class: " + memberData.mClass, e);
             }
-        } else logW(utils.getTAG(), "class is null, cant new instance. label: " + utils.getLabel());
+        } else logW(utils.getTAG(), "class is null, cant new instance. label: " + label);
         return null;
     }
 

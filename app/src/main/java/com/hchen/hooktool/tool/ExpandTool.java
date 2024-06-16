@@ -31,6 +31,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import de.robv.android.xposed.XposedHelpers;
 
@@ -63,7 +64,85 @@ public class ExpandTool extends ConvertHelper implements IDynamic, IStatic {
         return null;
     }
 
-    public ArrayList<Method> getMethod(Class<?> clazz, IFindMethod iFindMethod) {
+    public Method getMethod(String clazz, String name, Object... objects) {
+        return getMethod(findClass(clazz), name, objects);
+    }
+
+    public Method getMethod(String clazz, ClassLoader classLoader, String name, Object... objects) {
+        return getMethod(findClass(clazz, classLoader), name, objects);
+    }
+
+    public Method getMethod(Class<?> clazz, String name, Object... objects) {
+        try {
+            if (clazz == null) {
+                logW(utils.getTAG(), "class is null!");
+                return null;
+            }
+            return clazz.getDeclaredMethod(name, objectArrayToClassArray(objects));
+        } catch (NoSuchMethodException e) {
+            logE(utils.getTAG(), e);
+        }
+        return null;
+    }
+
+    public ArrayList<Method> getAnyMethod(String clazz, String name) {
+        return getAnyMethod(findClass(clazz), name);
+    }
+
+    public ArrayList<Method> getAnyMethod(String clazz, ClassLoader classLoader, String name) {
+        return getAnyMethod(findClass(clazz, classLoader), name);
+    }
+
+    public ArrayList<Method> getAnyMethod(Class<?> clazz, String name) {
+        ArrayList<Method> methods = new ArrayList<>();
+        if (clazz == null) {
+            logW(utils.getTAG(), "class is null!");
+            return methods;
+        }
+        for (Method m : clazz.getDeclaredMethods()) {
+            if (m.getName().equals(name)) methods.add(m);
+        }
+        return methods;
+    }
+
+    public Constructor<?> getConstructor(String clazz, Object... objects) {
+        return getConstructor(findClass(clazz), objects);
+    }
+
+    public Constructor<?> getConstructor(String clazz, ClassLoader classLoader, Object... objects) {
+        return getConstructor(findClass(clazz, classLoader), objects);
+    }
+
+    public Constructor<?> getConstructor(Class<?> clazz, Object... objects) {
+        try {
+            if (clazz == null) {
+                logW(utils.getTAG(), "class is null!");
+                return null;
+            }
+            return clazz.getConstructor(objectArrayToClassArray(objects));
+        } catch (NoSuchMethodException e) {
+            logE(utils.getTAG(), e);
+        }
+        return null;
+    }
+
+    public ArrayList<Constructor<?>> getAnyConstructor(String clazz) {
+        return getAnyConstructor(findClass(clazz));
+    }
+
+    public ArrayList<Constructor<?>> getAnyConstructor(String clazz, ClassLoader classLoader) {
+        return getAnyConstructor(findClass(clazz, classLoader));
+    }
+
+    public ArrayList<Constructor<?>> getAnyConstructor(Class<?> clazz) {
+        if (clazz == null) {
+            logW(utils.getTAG(), "class is null!");
+            return new ArrayList<>();
+        }
+        return new ArrayList<>(Arrays.asList(clazz.getDeclaredConstructors()));
+    }
+
+    public ArrayList<Method> filterMethod(Class<?> clazz, IFindMethod iFindMethod) {
         ArrayList<Method> methods = new ArrayList<>();
         for (Method m : clazz.getDeclaredMethods()) {
             try {
@@ -75,7 +154,7 @@ public class ExpandTool extends ConvertHelper implements IDynamic, IStatic {
         return methods;
     }
 
-    public ArrayList<Constructor<?>> getMethod(Class<?> clazz, IFindConstructor iFindConstructor) {
+    public ArrayList<Constructor<?>> filterMethod(Class<?> clazz, IFindConstructor iFindConstructor) {
         ArrayList<Constructor<?>> constructors = new ArrayList<>();
         for (Constructor<?> c : clazz.getDeclaredConstructors()) {
             try {
