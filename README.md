@@ -40,7 +40,7 @@ dependencyResolutionManagement {
 
 ```groovy
 dependencies {
-    implementation 'com.github.HChenX:HookTool:v.0.9.1'
+    implementation 'com.github.HChenX:HookTool:v.0.9.5'
 }
 ```
 
@@ -83,7 +83,7 @@ public class MainTest extends BaseHC {
 // 执行方
 public class RunHook {
     public void run() {
-        new MainTest().onCreate(); // 调用 onCreate() 即可执行 Hook。
+        new MainTest(); // 即可执行 Hook。
     }
 }
 
@@ -277,6 +277,12 @@ public class MainTest {
     }
 }
 ```
+
+---
+
+- ExpandTool 类:
+- 提供超完善的 Hook 方法！
+- 绝对满足需求！
 
 ----
 
