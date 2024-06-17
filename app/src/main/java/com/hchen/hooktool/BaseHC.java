@@ -43,7 +43,6 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
  */
 public abstract class BaseHC implements IMember, IDynamic, IStatic {
     public String TAG = getClass().getSimpleName();
-    // 使用 kt lazy 延迟初始化本值
     public static XC_LoadPackage.LoadPackageParam lpparam;
     public static HCHook hcHook;
     public static ClassTool classTool;
