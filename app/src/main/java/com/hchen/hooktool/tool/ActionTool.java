@@ -124,14 +124,14 @@ public class ActionTool extends MethodOpt {
             } else {
                 ArrayList<Member> members = new ArrayList<>();
                 for (int i = 0; i < count; i++) {
-                    if ((i + 1) == count) {
-                        logD(utils.getTAG(), "all hooked! label: " + label);
-                        return;
-                    }
                     members = data.memberMap.get(i);
                     if (!isHooked(data, members)) {
                         logD(utils.getTAG(), "now try to hook member: " + members);
                         break;
+                    }
+                    if ((i + 1) == count) {
+                        logD(utils.getTAG(), "all hooked! label: " + label);
+                        return;
                     }
                 }
                 if (members == null) {
