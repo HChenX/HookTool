@@ -32,9 +32,7 @@ import com.hchen.hooktool.data.StateEnum;
 import com.hchen.hooktool.utils.DataUtils;
 import com.hchen.hooktool.utils.MethodOpt;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Member;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 
 import de.robv.android.xposed.XposedBridge;
@@ -72,35 +70,6 @@ public class ActionTool extends MethodOpt {
                 return hookTool(member, iAction);
             }
         });
-        return utils.getMethodTool();
-    }
-
-    /**
-     * 直接 Hook 指定方法
-     */
-    public MethodTool hook(Member member, IAction iAction) {
-        if (member == null || iAction == null) {
-            logW(utils.getTAG(), "member or iAction is null, cant hook!");
-            return utils.getMethodTool();
-        }
-        try {
-            XposedBridge.hookMethod(member, hookTool(member, iAction));
-        } catch (Throwable e) {
-            logE(utils.getTAG(), "hook: [" + member + "], failed!", e);
-        }
-        return utils.getMethodTool();
-    }
-
-    public MethodTool hook(ArrayList<?> members, IAction iAction) {
-        for (Object o : members) {
-            if (o instanceof Method || o instanceof Constructor<?>) {
-                try {
-                    XposedBridge.hookMethod((Member) o, hookTool((Member) o, iAction));
-                } catch (Throwable e) {
-                    logE(utils.getTAG(), "hook: [" + o + "], failed!", e);
-                }
-            }
-        }
         return utils.getMethodTool();
     }
 
@@ -155,6 +124,10 @@ public class ActionTool extends MethodOpt {
             } else {
                 ArrayList<Member> members = new ArrayList<>();
                 for (int i = 0; i < count; i++) {
+                    if ((i + 1) == count) {
+                        logD(utils.getTAG(), "all hooked! label: " + label);
+                        return;
+                    }
                     members = data.memberMap.get(i);
                     if (!isHooked(data, members)) {
                         logD(utils.getTAG(), "now try to hook member: " + members);
@@ -198,7 +171,7 @@ public class ActionTool extends MethodOpt {
         data.stateMap.put(members, isSuccess ? StateEnum.HOOK : StateEnum.FAILED);
     }
 
-    private Action hookTool(Member member, IAction iAction) {
+    protected Action hookTool(Member member, IAction iAction) {
         ParamTool paramTool = new ParamTool(utils);
         return new Action(member, utils.getTAG()) {
             @Override

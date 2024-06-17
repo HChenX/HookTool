@@ -19,6 +19,7 @@
 package com.hchen.hooktool.tool.param;
 
 import com.hchen.hooktool.itool.IDynamic;
+import com.hchen.hooktool.itool.IMember;
 import com.hchen.hooktool.itool.IStatic;
 import com.hchen.hooktool.utils.ConvertHelper;
 import com.hchen.hooktool.utils.DataUtils;
@@ -28,13 +29,15 @@ import com.hchen.hooktool.utils.DataUtils;
  */
 public class StaticAct extends ConvertHelper {
     private final IStatic iStatic;
+    private final IMember iMember;
     protected final IDynamic iDynamic;
     private Class<?> mClass;
 
     public StaticAct(DataUtils utils) {
         super(utils);
-        iStatic = utils.expandTool;
-        iDynamic = utils.expandTool;
+        iStatic = utils.getExpandTool();
+        iDynamic = utils.getExpandTool();
+        iMember = utils.getExpandTool();
     }
 
     public StaticAct to(Class<?> mClass) {
@@ -59,11 +62,11 @@ public class StaticAct extends ConvertHelper {
      * 查找指定的类
      */
     public Class<?> findClass(String name) {
-        return iStatic.findClass(name);
+        return iMember.findClass(name);
     }
 
     public Class<?> findClass(String name, ClassLoader classLoader) {
-        return iStatic.findClass(name, classLoader);
+        return iMember.findClass(name, classLoader);
     }
 
     /**

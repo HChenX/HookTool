@@ -21,7 +21,9 @@ package com.hchen.hooktool.tool;
 import static com.hchen.hooktool.log.XposedLog.logE;
 import static com.hchen.hooktool.log.XposedLog.logW;
 
+import com.hchen.hooktool.callback.IAction;
 import com.hchen.hooktool.itool.IDynamic;
+import com.hchen.hooktool.itool.IMember;
 import com.hchen.hooktool.itool.IStatic;
 import com.hchen.hooktool.utils.ConvertHelper;
 import com.hchen.hooktool.utils.DataUtils;
@@ -29,16 +31,18 @@ import com.hchen.hooktool.utils.FieldObserver;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.XposedHelpers;
 
 /**
  * 杂项类
  */
-public class ExpandTool extends ConvertHelper implements IDynamic, IStatic {
+public class ExpandTool extends ConvertHelper implements IDynamic, IStatic, IMember {
     private final FieldObserver observer;
     private final boolean useFieldObserver = DataUtils.useFieldObserver;
 
@@ -46,6 +50,8 @@ public class ExpandTool extends ConvertHelper implements IDynamic, IStatic {
         super(dataUtils);
         observer = new FieldObserver(utils);
     }
+
+    // --------- 查找类 -----------
 
     public Class<?> findClass(String name) {
         return findClass(name, utils.getClassLoader());
@@ -64,15 +70,74 @@ public class ExpandTool extends ConvertHelper implements IDynamic, IStatic {
         return null;
     }
 
-    public Method getMethod(String clazz, String name, Object... objects) {
-        return getMethod(findClass(clazz), name, objects);
+    // --------- 查找方法 -----------
+
+    /**
+     * 查找指定类是否存在。
+     */
+    public boolean findClassIfExists(String clazz) {
+        return findClassIfExists(clazz, utils.getClassLoader());
     }
 
-    public Method getMethod(String clazz, ClassLoader classLoader, String name, Object... objects) {
-        return getMethod(findClass(clazz, classLoader), name, objects);
+    public boolean findClassIfExists(String clazz, ClassLoader classLoader) {
+        try {
+            if (classLoader == null) return false;
+            return XposedHelpers.findClass(clazz, classLoader) != null;
+        } catch (XposedHelpers.ClassNotFoundError _) {
+        }
+        return false;
     }
 
-    public Method getMethod(Class<?> clazz, String name, Object... objects) {
+
+    //------------ 检查指定方法是否存在 --------------
+
+    /**
+     * 检查指定方法是否存在，不存在则返回 false。
+     */
+    public boolean findMethodIfExists(String clazz, String name, Object... ojbs) {
+        return findMethodIfExists(clazz, utils.getClassLoader(), name, ojbs);
+    }
+
+    public boolean findMethodIfExists(String clazz, ClassLoader classLoader,
+                                      String name, Object... ojbs) {
+        try {
+            Class<?> cl = XposedHelpers.findClassIfExists(clazz, classLoader);
+            if (cl == null) return false;
+            Class<?>[] classes = objectArrayToClassArray(classLoader, ojbs);
+            cl.getDeclaredMethod(name, classes);
+        } catch (NoSuchMethodException _) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * 检查指定方法名是否存在，不存在则返回 false。
+     */
+    public boolean findAnyMethodIfExists(String clazz, String name) {
+        return findAnyMethodIfExists(clazz, utils.getClassLoader(), name);
+    }
+
+    public boolean findAnyMethodIfExists(String clazz, ClassLoader classLoader, String name) {
+        Class<?> cl = XposedHelpers.findClassIfExists(clazz, classLoader);
+        if (cl == null) return false;
+        for (Method method : cl.getDeclaredMethods()) {
+            if (method.getName().equals(name)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public Method findMethod(String clazz, String name, Object... objects) {
+        return findMethod(findClass(clazz), name, objects);
+    }
+
+    public Method findMethod(String clazz, ClassLoader classLoader, String name, Object... objects) {
+        return findMethod(findClass(clazz, classLoader), name, objects);
+    }
+
+    public Method findMethod(Class<?> clazz, String name, Object... objects) {
         try {
             if (clazz == null) {
                 logW(utils.getTAG(), "class is null!");
@@ -85,15 +150,15 @@ public class ExpandTool extends ConvertHelper implements IDynamic, IStatic {
         return null;
     }
 
-    public ArrayList<Method> getAnyMethod(String clazz, String name) {
-        return getAnyMethod(findClass(clazz), name);
+    public ArrayList<Method> findAnyMethod(String clazz, String name) {
+        return findAnyMethod(findClass(clazz), name);
     }
 
-    public ArrayList<Method> getAnyMethod(String clazz, ClassLoader classLoader, String name) {
-        return getAnyMethod(findClass(clazz, classLoader), name);
+    public ArrayList<Method> findAnyMethod(String clazz, ClassLoader classLoader, String name) {
+        return findAnyMethod(findClass(clazz, classLoader), name);
     }
 
-    public ArrayList<Method> getAnyMethod(Class<?> clazz, String name) {
+    public ArrayList<Method> findAnyMethod(Class<?> clazz, String name) {
         ArrayList<Method> methods = new ArrayList<>();
         if (clazz == null) {
             logW(utils.getTAG(), "class is null!");
@@ -105,15 +170,17 @@ public class ExpandTool extends ConvertHelper implements IDynamic, IStatic {
         return methods;
     }
 
-    public Constructor<?> getConstructor(String clazz, Object... objects) {
-        return getConstructor(findClass(clazz), objects);
+    // --------- 查找构造函数 -----------
+
+    public Constructor<?> findConstructor(String clazz, Object... objects) {
+        return findConstructor(findClass(clazz), objects);
     }
 
-    public Constructor<?> getConstructor(String clazz, ClassLoader classLoader, Object... objects) {
-        return getConstructor(findClass(clazz, classLoader), objects);
+    public Constructor<?> findConstructor(String clazz, ClassLoader classLoader, Object... objects) {
+        return findConstructor(findClass(clazz, classLoader), objects);
     }
 
-    public Constructor<?> getConstructor(Class<?> clazz, Object... objects) {
+    public Constructor<?> findConstructor(Class<?> clazz, Object... objects) {
         try {
             if (clazz == null) {
                 logW(utils.getTAG(), "class is null!");
@@ -126,21 +193,109 @@ public class ExpandTool extends ConvertHelper implements IDynamic, IStatic {
         return null;
     }
 
-    public ArrayList<Constructor<?>> getAnyConstructor(String clazz) {
-        return getAnyConstructor(findClass(clazz));
+    public ArrayList<Constructor<?>> findAnyConstructor(String clazz) {
+        return findAnyConstructor(findClass(clazz));
     }
 
-    public ArrayList<Constructor<?>> getAnyConstructor(String clazz, ClassLoader classLoader) {
-        return getAnyConstructor(findClass(clazz, classLoader));
+    public ArrayList<Constructor<?>> findAnyConstructor(String clazz, ClassLoader classLoader) {
+        return findAnyConstructor(findClass(clazz, classLoader));
     }
 
-    public ArrayList<Constructor<?>> getAnyConstructor(Class<?> clazz) {
+    public ArrayList<Constructor<?>> findAnyConstructor(Class<?> clazz) {
         if (clazz == null) {
             logW(utils.getTAG(), "class is null!");
             return new ArrayList<>();
         }
         return new ArrayList<>(Arrays.asList(clazz.getDeclaredConstructors()));
     }
+
+    // --------- 查找字段 -----------
+
+    /**
+     * 查找指定字段是否存在，不存在返回 false
+     */
+    public boolean findFieldIfExists(String clazz, String name) {
+        return findFieldIfExists(clazz, utils.getClassLoader(), name);
+    }
+
+    public boolean findFieldIfExists(String clazz, ClassLoader classLoader, String name) {
+        Class<?> cl = utils.getExpandTool().findClass(clazz, classLoader);
+        try {
+            cl.getDeclaredField(name);
+        } catch (NoSuchFieldException e) {
+            logE(utils.getTAG(), e);
+            return false;
+        }
+        return true;
+    }
+
+    public Field findField(String clazz, String name) {
+        return findField(findClass(clazz), name);
+    }
+
+    public Field findField(String clazz, ClassLoader classLoader, String name) {
+        return findField(findClass(clazz, classLoader), name);
+    }
+
+    public Field findField(Class<?> clazz, String name) {
+        if (clazz == null) {
+            logW(utils.getTAG(), "class is null!");
+            return null;
+        }
+        try {
+            return clazz.getField(name);
+        } catch (NoSuchFieldException e) {
+            logE(utils.getTAG(), e);
+        }
+        return null;
+    }
+
+    // --------- 执行 hook -----------
+
+    public void hook(Member member, IAction iAction) {
+        if (member == null || iAction == null) {
+            logW(utils.getTAG(), "member or iAction is null, can't hook!");
+            return;
+        }
+        try {
+            XposedBridge.hookMethod(member, utils.getActionTool().hookTool(member, iAction));
+        } catch (Throwable e) {
+            logE(utils.getTAG(), "hook: [" + member + "], failed!", e);
+        }
+    }
+
+    public void hook(ArrayList<?> members, IAction iAction) {
+        for (Object o : members) {
+            if (o instanceof Method || o instanceof Constructor<?>) {
+                try {
+                    XposedBridge.hookMethod((Member) o,
+                            utils.getActionTool().hookTool((Member) o, iAction));
+                } catch (Throwable e) {
+                    logE(utils.getTAG(), "hook: [" + o + "], failed!", e);
+                }
+            }
+        }
+    }
+
+    public IAction returnResult(final Object result) {
+        return new IAction() {
+            @Override
+            public void before(ParamTool param) {
+                param.setResult(result);
+            }
+        };
+    }
+
+    public IAction doNothing() {
+        return new IAction() {
+            @Override
+            public void before(ParamTool param) {
+                param.setResult(null);
+            }
+        };
+    }
+
+    // --------- 过滤方法 -----------
 
     public ArrayList<Method> filterMethod(Class<?> clazz, IFindMethod iFindMethod) {
         ArrayList<Method> methods = new ArrayList<>();

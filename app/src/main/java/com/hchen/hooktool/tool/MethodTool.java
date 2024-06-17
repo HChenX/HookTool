@@ -18,7 +18,6 @@
  */
 package com.hchen.hooktool.tool;
 
-import static com.hchen.hooktool.log.XposedLog.logE;
 import static com.hchen.hooktool.log.XposedLog.logW;
 
 import androidx.annotation.NonNull;
@@ -30,11 +29,7 @@ import com.hchen.hooktool.utils.ConvertHelper;
 import com.hchen.hooktool.utils.DataUtils;
 
 import java.lang.reflect.Member;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Arrays;
-
-import de.robv.android.xposed.XposedHelpers;
 
 /**
  * 方法类
@@ -60,46 +55,6 @@ public class MethodTool extends ConvertHelper {
         return findMember;
     }
 
-    //------------ 检查指定方法是否存在 --------------
-
-    /**
-     * 检查指定方法是否存在，不存在则返回 false。
-     */
-    public boolean findMethodIfExists(String clazz, String name, Object... ojbs) {
-        return findMethodIfExists(clazz, utils.getClassLoader(), name, ojbs);
-    }
-
-    public boolean findMethodIfExists(String clazz, ClassLoader classLoader,
-                                      String name, Object... ojbs) {
-        try {
-            Class<?> cl = XposedHelpers.findClass(clazz, classLoader);
-            if (cl == null) return false;
-            Class<?>[] classes = objectArrayToClassArray(classLoader, ojbs);
-            cl.getDeclaredMethod(name, classes);
-        } catch (NoSuchMethodException | XposedHelpers.ClassNotFoundError _) {
-            return false;
-        }
-        return true;
-    }
-
-    /**
-     * 检查指定方法名是否存在，不存在则返回 false。
-     */
-    public boolean findAnyMethodIfExists(String clazz, String name) {
-        return findAnyMethodIfExists(clazz, utils.getClassLoader(), name);
-    }
-
-    public boolean findAnyMethodIfExists(String clazz, ClassLoader classLoader, String name) {
-        Class<?> cl = utils.getExpandTool().findClass(clazz, classLoader);
-        if (cl == null) return false;
-        for (Method method : cl.getDeclaredMethods()) {
-            if (method.getName().equals(name)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     /**
      * 获取标签类内的指定方法。
      */
@@ -110,12 +65,7 @@ public class MethodTool extends ConvertHelper {
             @Override
             public ArrayList<Member> doFindMethod(Class<?> c, String name, Class<?>... classes) {
                 ArrayList<Member> arrayList = new ArrayList<>();
-                try {
-                    arrayList.add(c.getDeclaredMethod(name, classes));
-                } catch (NoSuchMethodException e) {
-                    logE(utils.getTAG(), "the method to get the claim failed name: [" + name +
-                            "], class: [" + c + "], classes: " + Arrays.toString(classes), e);
-                }
+                arrayList.add(utils.getExpandTool().findMethod(c, name, (Object[]) classes));
                 return arrayList;
             }
         }, clist);
@@ -128,13 +78,7 @@ public class MethodTool extends ConvertHelper {
         return findMethod(name, new IMethodTool() {
             @Override
             public ArrayList<Member> doFindMethod(Class<?> c, String name, Class<?>... classes) {
-                ArrayList<Member> list = new ArrayList<>();
-                Method[] methods = c.getDeclaredMethods();
-                for (Method m : methods) {
-                    if (name.equals(m.getName())) {
-                        list.add(m);
-                    }
-                }
+                ArrayList<Member> list = new ArrayList<>(utils.getExpandTool().findAnyMethod(c, name));
                 if (list.isEmpty())
                     logW(utils.getTAG(), "find any method, but list is empty! class: [" + c + "], member: " + name);
                 return list;
@@ -180,12 +124,7 @@ public class MethodTool extends ConvertHelper {
             @Override
             public ArrayList<Member> doFindConstructor(Class<?> c, Class<?>... classes) {
                 ArrayList<Member> members = new ArrayList<>();
-                try {
-                    members.add(c.getDeclaredConstructor(classes));
-                } catch (NoSuchMethodException e) {
-                    logE(utils.getTAG(), "the specified constructor could not be found: [" + c +
-                            "], classes: " + Arrays.toString(classes), e);
-                }
+                members.add(utils.getExpandTool().findConstructor(c, (Object[]) classes));
                 return members;
             }
         }, clist);
@@ -198,7 +137,7 @@ public class MethodTool extends ConvertHelper {
         return findConstructor(new IConstructorTool() {
             @Override
             public ArrayList<Member> doFindConstructor(Class<?> c, Class<?>... classes) {
-                return new ArrayList<>(Arrays.asList(c.getDeclaredConstructors()));
+                return new ArrayList<>(utils.getExpandTool().findAnyConstructor(c));
             }
         });
     }
@@ -257,14 +196,6 @@ public class MethodTool extends ConvertHelper {
     // 优化调用，只提供基本用法，详细用法请获取工具类对象
     public MethodTool hook(IAction iAction) {
         return utils.getActionTool().hook(iAction);
-    }
-
-    public MethodTool hook(Member member, IAction iAction) {
-        return utils.getActionTool().hook(member, iAction);
-    }
-
-    public MethodTool hook(ArrayList<?> members, IAction iAction) {
-        return utils.getActionTool().hook(members, iAction);
     }
 
     public MethodTool returnResult(final Object result) {

@@ -38,29 +38,12 @@ public class ClassTool extends MethodOpt {
     public ClassTool(DataUtils utils) {
         super(utils);
         this.utils = utils;
-        utils.classTool = this;
         clear();
     }
 
     public MethodTool to(@NonNull Object label) {
         utils.setLabel(label);
         return utils.getMethodTool();
-    }
-
-    /**
-     * 查找指定类是否存在。
-     */
-    public boolean findClassIfExists(String clazz) {
-        return findClassIfExists(clazz, utils.getClassLoader());
-    }
-
-    public boolean findClassIfExists(String clazz, ClassLoader classLoader) {
-        try {
-            if (classLoader == null) return false;
-            return XposedHelpers.findClass(clazz, classLoader) != null;
-        } catch (XposedHelpers.ClassNotFoundError _) {
-        }
-        return false;
     }
 
     // ---------- 标签形式 ------------
@@ -87,7 +70,7 @@ public class ClassTool extends MethodOpt {
 
     public ClassTool findClass(@NonNull Object label, String className, ClassLoader classLoader) {
         if (utils.findClass != null) utils.findClass = null;
-        utils.findClass = utils.expandTool.findClass(className, classLoader);
+        utils.findClass = utils.getExpandTool().findClass(className, classLoader);
         MemberData data = utils.members.get(label);
         if (data != null) {
             Class<?> old = data.mClass;

@@ -56,7 +56,7 @@ public class Action extends XC_MethodHook {
     }
 
     @Override
-    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+    protected void beforeHookedMethod(MethodHookParam param) {
         try {
             before(param);
             if (useLogExpand) {
@@ -71,7 +71,7 @@ public class Action extends XC_MethodHook {
     }
 
     @Override
-    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+    protected void afterHookedMethod(MethodHookParam param) {
         try {
             after(param);
         } catch (Throwable e) {

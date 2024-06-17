@@ -24,11 +24,6 @@ import java.lang.reflect.Field;
  * 静态方法类
  */
 public interface IStatic {
-
-    Class<?> findClass(String name);
-
-    Class<?> findClass(String name, ClassLoader classLoader);
-
     // --------- 实例类 ------------
     <T, R> R newInstance(Class<?> clz, T objects);
 
