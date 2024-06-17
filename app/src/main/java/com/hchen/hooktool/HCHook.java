@@ -23,7 +23,6 @@ import static com.hchen.hooktool.utils.DataUtils.spareTag;
 
 import com.hchen.hooktool.tool.ActionTool;
 import com.hchen.hooktool.tool.ClassTool;
-import com.hchen.hooktool.tool.DexkitTool;
 import com.hchen.hooktool.tool.ExpandTool;
 import com.hchen.hooktool.tool.FieldTool;
 import com.hchen.hooktool.tool.MethodTool;
@@ -36,7 +35,6 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
  */
 public class HCHook {
     private final DataUtils utils;
-    private final DexkitTool dexkitTool;
 
     static {
         initSafe();
@@ -63,7 +61,6 @@ public class HCHook {
         utils.fieldTool = new FieldTool(utils);
         utils.methodTool = new MethodTool(utils);
         utils.expandTool = new ExpandTool(utils);
-        dexkitTool = new DexkitTool(utils);
     }
 
     public HCHook setThisTag(String tag) {
@@ -80,7 +77,7 @@ public class HCHook {
         return utils.getClassTool().findClass(label, className, classLoader);
     }
 
-    /* 因为 class tool 是本工具基准入口，所以初始化使用必须进入此类。 */
+    /* 因为 ClassTool 是本工具基准入口，所以初始化使用必须进入此类。 */
     public ClassTool classTool() {
         return utils.getClassTool();
     }
@@ -97,17 +94,13 @@ public class HCHook {
         return utils.getExpandTool();
     }
 
-    public DexkitTool dexkitTool() {
-        return dexkitTool;
-    }
-
-    /* 设置自定义 ClassLoader
-     * 这应该是在使用工具开始就指定的，设置后不能更改。 */
+    /* 设置自定义 class loader */
     public HCHook setClassLoader(ClassLoader classLoader) {
         utils.mCustomClassLoader = classLoader;
         return utils.getHCHook();
     }
 
+    /* 设置自定义 lpparam */
     public HCHook setLpparam(XC_LoadPackage.LoadPackageParam lpparam) {
         utils.mCustomLpparam = lpparam;
         setClassLoader(lpparam.classLoader);

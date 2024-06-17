@@ -25,7 +25,6 @@ import com.hchen.hooktool.itool.IDynamic;
 import com.hchen.hooktool.itool.IMember;
 import com.hchen.hooktool.itool.IStatic;
 import com.hchen.hooktool.tool.ClassTool;
-import com.hchen.hooktool.tool.DexkitTool;
 import com.hchen.hooktool.tool.ExpandTool;
 import com.hchen.hooktool.tool.FieldTool;
 import com.hchen.hooktool.tool.MethodTool;
@@ -48,7 +47,6 @@ public abstract class BaseHC implements IMember, IDynamic, IStatic {
     public static ClassTool classTool;
     public static MethodTool methodTool;
     public static FieldTool fieldTool;
-    public static DexkitTool dexkitTool;
     public static ExpandTool expandTool;
 
     public abstract void init();
@@ -58,7 +56,6 @@ public abstract class BaseHC implements IMember, IDynamic, IStatic {
         BaseHC.classTool = hcHook.classTool();
         BaseHC.methodTool = hcHook.methodTool();
         BaseHC.fieldTool = hcHook.fieldTool();
-        BaseHC.dexkitTool = hcHook.dexkitTool();
         BaseHC.expandTool = hcHook.expandTool();
         BaseHC.hcHook.setThisTag(TAG);
         lpparam = hcHook.getLpparam();
