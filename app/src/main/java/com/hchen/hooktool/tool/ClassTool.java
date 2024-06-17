@@ -56,6 +56,7 @@ public class ClassTool extends MethodOpt {
             logW(utils.getTAG(), "the class is null! label: " + label);
         }
         utils.findClass = clazz;
+        if (test(label, clazz.getName())) return utils.getClassTool();
         utils.members.put(label, new MemberData(clazz));
         utils.setLabel(label);
         return utils.getClassTool();
@@ -71,18 +72,23 @@ public class ClassTool extends MethodOpt {
     public ClassTool findClass(@NonNull Object label, String className, ClassLoader classLoader) {
         if (utils.findClass != null) utils.findClass = null;
         utils.findClass = utils.getExpandTool().findClass(className, classLoader);
+        if (test(label, className)) return utils.getClassTool();
+        utils.members.put(label, new MemberData(utils.findClass));
+        utils.setLabel(label);
+        return utils.getClassTool();
+    }
+
+    private boolean test(@NonNull Object label, String className) {
         MemberData data = utils.members.get(label);
         if (data != null) {
             Class<?> old = data.mClass;
             if (old != null && old.equals(utils.findClass)) {
                 utils.setLabel(label);
                 logW(utils.getTAG(), "malicious coverage! label: [" + label + "], class: " + className);
-                return utils.getClassTool();
+                return true;
             }
         }
-        utils.members.put(label, new MemberData(utils.findClass));
-        utils.setLabel(label);
-        return utils.getClassTool();
+        return false;
     }
 
     /* 获取本次得到的类 */

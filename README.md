@@ -40,7 +40,7 @@ dependencyResolutionManagement {
 
 ```groovy
 dependencies {
-    implementation 'com.github.HChenX:HookTool:v.0.9.5'
+    implementation 'com.github.HChenX:HookTool:v.0.9.5-beta'
 }
 ```
 
@@ -167,49 +167,47 @@ public class MainTest {
 - 本工具则充分使用泛型，就不需要显性的进行类型转换啦！
 
 ```java
-public class MainTest {
-    public void test() {
-        // Xposed 代码
+public class MainTest extends BaseHC {
+
+    @Override
+    public void init() {
         new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) {
-                Context context = (Context) param.thisObject; // 显性的转换
-                String string = (String) param.args[0]; // 复杂的 args[]
+                Context context = (Context) param.thisObject;
+                String string = (String) param.args[0];
                 param.args[1] = 1;
                 String result = (String) XposedHelpers.callMethod(param.thisObject, "call",
                         param.thisObject, param.args[0]);
-                XposedHelpers.callStaticMethod(XposedHelpers.findClass("com.demo.Main",
-                                ClassLoader.getSystemClassLoader()),
+                XposedHelpers.callStaticMethod(XposedHelpers.findClass("com.demo.Main", ClassLoader.getSystemClassLoader()),
                         "callStatic", param.thisObject, param.args[1]);
-                int i = (int) XposedHelpers.getStaticObjectField(XposedHelpers.findClass("com.demo.Main",
-                                ClassLoader.getSystemClassLoader()),
+                int i = (int) XposedHelpers.getStaticObjectField(XposedHelpers.findClass("com.demo.Main", ClassLoader.getSystemClassLoader()),
                         "field");
             }
         };
 
-        // HookTool 代码
         new IAction() {
             @Override
             public void before(ParamTool param) {
+                // hook 方法所属的类
+                Class<?> c = param.mClass;
+
                 Context context = param.thisObject();
                 String string = param.first();
                 param.second(1);
-                // 设置其他实例
-                Object instance = new Object();
-                param.to(instance).setField("demo", 1); // 设置实例 instance 的 demo 字段
-                param.to(instance, false).callMethod("method"); // call 实例 instance 的方法
-                param.getField("test"); // 因为 to(instance, false) 所以 get 的是 instance 的 test 字段
-                param.homing(); // 清除设置的指定实例
 
+                // 非静态的本类内实例可直接使用 param.xx() 进行设置。
+                param.setField("demo", 1);
+                param.callMethod("method");
+                param.getField("test");
+
+                // 静态需要 class
                 String result = param.callMethod("call", new Object[]{param.thisObject(), param.first()});
-                param.to("com.demo.Main") // 指定类执行静态动作
-                        .callStaticMethod("callStatic", new Object[]{param.thisObject(), param.second()});
-                int i = param.getStaticField("field"); // 延续之前类
-                param.to("com.demo.Test") // 设置新的则需要重新 to 一下~
-                        .setStaticField("test", true);
+                callStaticMethod(findClass("com.demo.Main"), "callStatic", new Object[]{param.thisObject(), param.second()});
+                int i = getStaticField(findClass("com.demo.Main"), "field");
+                setStaticField(findClass("com.demo.Main"), "test", true);
             }
         };
-        // 是不是方便了许多呢？
     }
 }
 

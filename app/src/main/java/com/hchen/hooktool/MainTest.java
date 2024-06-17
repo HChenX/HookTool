@@ -29,9 +29,10 @@ import de.robv.android.xposed.XposedHelpers;
 /**
  * 测试和示例类
  */
-public class MainTest {
+public class MainTest extends BaseHC {
 
-    public void test() {
+    @Override
+    public void init() {
         new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) {
@@ -50,22 +51,23 @@ public class MainTest {
         new IAction() {
             @Override
             public void before(ParamTool param) {
+                // hook 方法所属的类
+                Class<?> c = param.mClass;
+
                 Context context = param.thisObject();
                 String string = param.first();
                 param.second(1);
-                // 设置其他实例
-                Object instance = new Object();
-                param.to(instance).setField("demo", 1); // 设置实例 instance 的 demo 字段
-                param.to(instance, false).callMethod("method"); // call 实例 instance 的方法
-                param.getField("test"); // 因为 to(instance, false) 所以 get 的是 instance 的 test 字段
-                param.homing(); // 清除设置的指定实例
 
+                // 非静态的本类内实例可直接使用 param.xx() 进行设置。
+                param.setField("demo", 1);
+                param.callMethod("method");
+                param.getField("test");
+
+                // 静态需要 class
                 String result = param.callMethod("call", new Object[]{param.thisObject(), param.first()});
-                param.to("com.demo.Main") // 指定类执行静态动作
-                        .callStaticMethod("callStatic", new Object[]{param.thisObject(), param.second()});
-                int i = param.getStaticField("field"); // 延续之前类
-                param.to("com.demo.Test") // 设置新的则需要重新 to 一下~
-                        .setStaticField("test", true);
+                callStaticMethod(findClass("com.demo.Main"), "callStatic", new Object[]{param.thisObject(), param.second()});
+                int i = getStaticField(findClass("com.demo.Main"), "field");
+                setStaticField(findClass("com.demo.Main"), "test", true);
             }
         };
     }

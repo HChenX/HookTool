@@ -18,6 +18,8 @@
  */
 package com.hchen.hooktool.tool.param;
 
+import com.hchen.hooktool.itool.IDynamic;
+import com.hchen.hooktool.utils.ConvertHelper;
 import com.hchen.hooktool.utils.DataUtils;
 
 import de.robv.android.xposed.XC_MethodHook;
@@ -25,14 +27,13 @@ import de.robv.android.xposed.XC_MethodHook;
 /**
  * 动作类
  */
-public class ActAchieve extends StaticAct {
+public class ActAchieve extends ConvertHelper {
     protected XC_MethodHook.MethodHookParam param;
-
-    private Object instance = null;
-    private boolean needHoming = false;
+    protected final IDynamic iDynamic;
 
     public ActAchieve(DataUtils utils) {
         super(utils);
+        iDynamic = utils.getExpandTool();
     }
 
     protected void setParam(XC_MethodHook.MethodHookParam param) {
@@ -66,24 +67,6 @@ public class ActAchieve extends StaticAct {
         return (T) param.getResultOrThrowable();
     }
 
-    public ActAchieve to(Object instance) {
-        return to(instance, true);
-    }
-
-    /**
-     * 让指定的实例进行下面的动作设置。
-     *
-     * @param instance 实例
-     * @param homing   是否归位实例
-     * @return this
-     */
-    public ActAchieve to(Object instance, boolean homing) {
-        homing();
-        needHoming = homing;
-        this.instance = instance;
-        return this;
-    }
-
     // --------- 调用方法 --------------
 
     /**
@@ -92,47 +75,33 @@ public class ActAchieve extends StaticAct {
      * 这是为了规避泛型与可变参数的冲突。
      */
     public <T, R> R callMethod(String name, T ts) {
-        return iDynamic.callMethod(checkAndReturn(), name, genericToObjectArray(ts));
+        return iDynamic.callMethod(param.thisObject, name, genericToObjectArray(ts));
     }
 
     public <R> R callMethod(String name) {
-        return iDynamic.callMethod(checkAndReturn(), name);
+        return iDynamic.callMethod(param.thisObject, name);
     }
 
     // ----------- 获取/修改 字段 -------------
 
     public <T> T getField(String name) {
-        return iDynamic.getField(checkAndReturn(), name);
+        return iDynamic.getField(param.thisObject, name);
     }
 
     public boolean setField(String name, Object value) {
-        return iDynamic.setField(checkAndReturn(), name, value);
+        return iDynamic.setField(param.thisObject, name, value);
     }
 
     // ---------- 设置自定义字段 --------------
     public boolean setAdditionalInstanceField(String key, Object value) {
-        return iDynamic.setAdditionalInstanceField(checkAndReturn(), key, value);
+        return iDynamic.setAdditionalInstanceField(param.thisObject, key, value);
     }
 
     public <T> T getAdditionalInstanceField(String key) {
-        return iDynamic.getAdditionalInstanceField(checkAndReturn(), key);
+        return iDynamic.getAdditionalInstanceField(param.thisObject, key);
     }
 
     public boolean removeAdditionalInstanceField(String key) {
-        return iDynamic.removeAdditionalInstanceField(checkAndReturn(), key);
-    }
-
-    private Object checkAndReturn() {
-        if (instance == null) return param.thisObject;
-        Object i = instance;
-        if (needHoming) homing();
-        return i;
-    }
-
-    /**
-     * 手动归位。
-     */
-    public void homing() {
-        instance = null;
+        return iDynamic.removeAdditionalInstanceField(param.thisObject, key);
     }
 }

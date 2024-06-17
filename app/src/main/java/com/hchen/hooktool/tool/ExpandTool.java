@@ -51,6 +51,24 @@ public class ExpandTool extends ConvertHelper implements IDynamic, IStatic, IMem
         observer = new FieldObserver(utils);
     }
 
+    //------------ 检查指定类是否存在 --------------
+
+    /**
+     * 查找指定类是否存在。
+     */
+    public boolean findClassIfExists(String clazz) {
+        return findClassIfExists(clazz, utils.getClassLoader());
+    }
+
+    public boolean findClassIfExists(String clazz, ClassLoader classLoader) {
+        try {
+            if (classLoader == null) return false;
+            return XposedHelpers.findClass(clazz, classLoader) != null;
+        } catch (XposedHelpers.ClassNotFoundError _) {
+        }
+        return false;
+    }
+
     // --------- 查找类 -----------
 
     public Class<?> findClass(String name) {
@@ -69,25 +87,6 @@ public class ExpandTool extends ConvertHelper implements IDynamic, IStatic, IMem
         }
         return null;
     }
-
-    // --------- 查找方法 -----------
-
-    /**
-     * 查找指定类是否存在。
-     */
-    public boolean findClassIfExists(String clazz) {
-        return findClassIfExists(clazz, utils.getClassLoader());
-    }
-
-    public boolean findClassIfExists(String clazz, ClassLoader classLoader) {
-        try {
-            if (classLoader == null) return false;
-            return XposedHelpers.findClass(clazz, classLoader) != null;
-        } catch (XposedHelpers.ClassNotFoundError _) {
-        }
-        return false;
-    }
-
 
     //------------ 检查指定方法是否存在 --------------
 
@@ -128,6 +127,8 @@ public class ExpandTool extends ConvertHelper implements IDynamic, IStatic, IMem
         }
         return false;
     }
+
+    // ------------ 查找方法 --------------
 
     public Method findMethod(String clazz, String name, Object... objects) {
         return findMethod(findClass(clazz), name, objects);
@@ -209,7 +210,7 @@ public class ExpandTool extends ConvertHelper implements IDynamic, IStatic, IMem
         return new ArrayList<>(Arrays.asList(clazz.getDeclaredConstructors()));
     }
 
-    // --------- 查找字段 -----------
+    //------------ 检查指定字段是否存在 --------------
 
     /**
      * 查找指定字段是否存在，不存在返回 false
@@ -228,6 +229,8 @@ public class ExpandTool extends ConvertHelper implements IDynamic, IStatic, IMem
         }
         return true;
     }
+
+    // --------- 查找字段 -----------
 
     public Field findField(String clazz, String name) {
         return findField(findClass(clazz), name);

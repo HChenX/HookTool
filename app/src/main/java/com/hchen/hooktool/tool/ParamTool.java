@@ -31,6 +31,7 @@ import de.robv.android.xposed.XC_MethodHook;
  */
 public class ParamTool extends Arguments {
     public Class<?> mClass;
+    public Member mMember;
 
     public ParamTool(DataUtils utils) {
         super(utils);
@@ -42,14 +43,11 @@ public class ParamTool extends Arguments {
             throw new RuntimeException(HCInit.getTAG() + "[" + utils.getTAG() + "][E]: param is null!!");
         this.param = param;
         mClass = param.method.getDeclaringClass();
+        mMember = param.method;
     }
 
     public <T> T thisObject() {
         return (T) param.thisObject;
-    }
-
-    public Member method() {
-        return param.method;
     }
 
     /**
