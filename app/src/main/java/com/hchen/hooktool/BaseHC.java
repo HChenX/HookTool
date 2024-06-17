@@ -42,22 +42,22 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
  */
 public abstract class BaseHC implements IMember, IDynamic, IStatic {
     public String TAG = getClass().getSimpleName();
-    public static XC_LoadPackage.LoadPackageParam lpparam;
-    public static HCHook hcHook;
-    public static ClassTool classTool;
-    public static MethodTool methodTool;
-    public static FieldTool fieldTool;
-    public static ExpandTool expandTool;
+    public XC_LoadPackage.LoadPackageParam lpparam;
+    public HCHook hcHook;
+    public ClassTool classTool;
+    public MethodTool methodTool;
+    public FieldTool fieldTool;
+    public ExpandTool expandTool;
 
     public abstract void init();
 
-    public BaseHC() {
-        BaseHC.hcHook = new HCHook();
-        BaseHC.classTool = hcHook.classTool();
-        BaseHC.methodTool = hcHook.methodTool();
-        BaseHC.fieldTool = hcHook.fieldTool();
-        BaseHC.expandTool = hcHook.expandTool();
-        BaseHC.hcHook.setThisTag(TAG);
+    public void onCreate() {
+        hcHook = new HCHook();
+        classTool = hcHook.classTool();
+        methodTool = hcHook.methodTool();
+        fieldTool = hcHook.fieldTool();
+        expandTool = hcHook.expandTool();
+        hcHook.setThisTag(TAG);
         lpparam = hcHook.getLpparam();
         try {
             init();
