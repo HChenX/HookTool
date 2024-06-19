@@ -24,9 +24,9 @@ import com.hchen.hooktool.tool.ParamTool;
  * Hook 动作接口
  */
 public interface IAction {
-    default void before(ParamTool param) {
+    default void before(ParamTool param) throws Throwable {
     }
 
-    default void after(ParamTool param) {
+    default void after(ParamTool param) throws Throwable {
     }
 }

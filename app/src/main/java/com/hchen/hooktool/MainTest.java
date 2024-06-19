@@ -50,7 +50,7 @@ public class MainTest extends BaseHC {
 
         new IAction() {
             @Override
-            public void before(ParamTool param) {
+            public void before(ParamTool param) throws Throwable {
                 // hook 方法所属的类
                 Class<?> c = param.mClass;
 

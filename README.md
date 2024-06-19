@@ -40,7 +40,7 @@ dependencyResolutionManagement {
 
 ```groovy
 dependencies {
-    implementation 'com.github.HChenX:HookTool:v.0.9.6.3'
+    implementation 'com.github.HChenX:HookTool:v.0.9.6.5'
 }
 ```
 
@@ -188,7 +188,7 @@ public class MainTest extends BaseHC {
 
         new IAction() {
             @Override
-            public void before(ParamTool param) {
+            public void before(ParamTool param) throws Throwable {
                 // hook 方法所属的类
                 Class<?> c = param.mClass;
 

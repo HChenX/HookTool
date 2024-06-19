@@ -175,13 +175,13 @@ public class ActionTool extends MethodOpt {
         ParamTool paramTool = new ParamTool(utils);
         return new Action(member, utils.getTAG()) {
             @Override
-            protected void before(MethodHookParam param) {
+            protected void before(MethodHookParam param) throws Throwable {
                 paramTool.setParam(param);
                 iAction.before(paramTool);
             }
 
             @Override
-            protected void after(MethodHookParam param) {
+            protected void after(MethodHookParam param) throws Throwable {
                 paramTool.setParam(param);
                 iAction.after(paramTool);
             }

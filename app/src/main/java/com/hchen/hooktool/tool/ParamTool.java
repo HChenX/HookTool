@@ -32,6 +32,7 @@ import de.robv.android.xposed.XC_MethodHook;
 public class ParamTool extends Arguments {
     public Class<?> mClass;
     public Member mMember;
+    public Object[] mParam;
 
     public ParamTool(DataUtils utils) {
         super(utils);
@@ -44,6 +45,7 @@ public class ParamTool extends Arguments {
         this.param = param;
         mClass = param.method.getDeclaringClass();
         mMember = param.method;
+        mParam = param.args;
     }
 
     public <T> T thisObject() {

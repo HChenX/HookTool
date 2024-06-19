@@ -3,8 +3,8 @@ plugins {
     id 'maven-publish'
 }
 
-def defVersion = 'v.0.9.6.3'
-int defVersionCode = 2024061705
+def defVersion = 'v.0.9.6.5'
+int defVersionCode = 2024061900
 
 group = 'com.github.HChenX'
 version = defVersion
@@ -19,10 +19,6 @@ android {
         // noinspection HighAppVersionCode
         versionCode defVersionCode
         versionName defVersion
-        // ndk {
-        //   noinspection ChromeOsAbiSupport
-        //   abiFilters 'arm64-v8a', 'armeabi-v7a'
-        // }
     }
 
     buildTypes {
@@ -58,20 +54,9 @@ tasks.register('androidSourcesJar', Jar) {
     from android.sourceSets.main.java.srcDirs
 }
 
-// getTasks().withType(JavaCompile) {
-//    options.compilerArgs += ['-Xplugin:Manifold']
-// }
-
 dependencies {
     compileOnly libs.xposed
     implementation libs.annotation
-    // implementation libs.dexkit
-    // implementation libs.jetbrains.annotations
-    // compileOnly libs.systems.manifold.ext
-    // implementation libs.annotations
-    // implementation libs.androidx.annotation.jvm
-    // implementation libs.jetbrains.annotations
-    // implementation libs.manifold.ext.rt
 }
 
 afterEvaluate {

@@ -18,6 +18,7 @@
  */
 package com.hchen.hooktool.tool;
 
+import static com.hchen.hooktool.log.XposedLog.logD;
 import static com.hchen.hooktool.log.XposedLog.logE;
 import static com.hchen.hooktool.log.XposedLog.logW;
 
@@ -262,6 +263,7 @@ public class ExpandTool extends ConvertHelper implements IDynamic, IStatic, IMem
         }
         try {
             XposedBridge.hookMethod(member, utils.getActionTool().hookTool(member, iAction));
+            logD(utils.getTAG(), "success hook: " + member);
         } catch (Throwable e) {
             logE(utils.getTAG(), "hook: [" + member + "], failed!", e);
         }
@@ -273,6 +275,7 @@ public class ExpandTool extends ConvertHelper implements IDynamic, IStatic, IMem
                 try {
                     XposedBridge.hookMethod((Member) o,
                             utils.getActionTool().hookTool((Member) o, iAction));
+                    logD(utils.getTAG(), "success hook: " + o);
                 } catch (Throwable e) {
                     logE(utils.getTAG(), "hook: [" + o + "], failed!", e);
                 }
@@ -283,7 +286,7 @@ public class ExpandTool extends ConvertHelper implements IDynamic, IStatic, IMem
     public IAction returnResult(final Object result) {
         return new IAction() {
             @Override
-            public void before(ParamTool param) {
+            public void before(ParamTool param) throws Throwable {
                 param.setResult(result);
             }
         };
@@ -292,7 +295,7 @@ public class ExpandTool extends ConvertHelper implements IDynamic, IStatic, IMem
     public IAction doNothing() {
         return new IAction() {
             @Override
-            public void before(ParamTool param) {
+            public void before(ParamTool param) throws Throwable {
                 param.setResult(null);
             }
         };
