@@ -25,37 +25,54 @@ import com.hchen.hooktool.utils.DataUtils;
 import java.lang.reflect.Member;
 
 import de.robv.android.xposed.XC_MethodHook;
+import de.robv.android.xposed.XposedBridge;
 
 /**
  * 参数工具
  */
 public class ParamTool extends Arguments {
+    // hook 的方法的所在类
     public Class<?> mClass;
+    // hook 的方法
     public Member mMember;
-    public Object[] mParam;
+    // hook 的方法的参数
+    public Object[] mArgs;
 
-    public ParamTool(DataUtils utils) {
-        super(utils);
-    }
+    private XC_MethodHook xcMethodHook;
 
     @Override
-    protected void setParam(XC_MethodHook.MethodHookParam param) {
+    final protected void putMethodHookParam(XC_MethodHook.MethodHookParam param) {
         if (param == null)
             throw new RuntimeException(HCInit.getTAG() + "[" + utils.getTAG() + "][E]: param is null!!");
         this.param = param;
         mClass = param.method.getDeclaringClass();
         mMember = param.method;
-        mParam = param.args;
+        mArgs = param.args;
     }
 
-    public <T> T thisObject() {
+    final protected void putXCMethodHook(XC_MethodHook xcMethodHook) {
+        this.xcMethodHook = xcMethodHook;
+    }
+
+    final protected void putUtils(DataUtils utils) {
+        super.putUtils(utils);
+    }
+
+    final public <T> T thisObject() {
         return (T) param.thisObject;
+    }
+
+    /**
+     * 移除 hook 自身。
+     */
+    final public void removeSelf() {
+        XposedBridge.unhookMethod(mMember, xcMethodHook);
     }
 
     /**
      * 获取原 Xposed param 参数。
      */
-    public XC_MethodHook.MethodHookParam originalParam() {
+    final public XC_MethodHook.MethodHookParam originalParam() {
         return param;
     }
 }

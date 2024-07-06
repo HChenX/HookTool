@@ -23,10 +23,16 @@ import com.hchen.hooktool.tool.ParamTool;
 /**
  * Hook 动作接口
  */
-public interface IAction {
-    default void before(ParamTool param) throws Throwable {
+public abstract class IAction extends ParamTool {
+    /**
+     * 在目标方法调用前回调。
+     */
+    public void before() throws Throwable {
     }
 
-    default void after(ParamTool param) throws Throwable {
+    /**
+     * 在目标方法调用后回调。
+     */
+    public void after() throws Throwable {
     }
 }

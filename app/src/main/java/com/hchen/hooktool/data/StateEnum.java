@@ -22,5 +22,7 @@ package com.hchen.hooktool.data;
  * 状态枚举类
  */
 public enum StateEnum {
-    NONE, HOOK, FAILED
+    NONE, /*未 hook*/
+    HOOKED, /*成功 hook*/
+    FAILED /*hook 失败*/
 }

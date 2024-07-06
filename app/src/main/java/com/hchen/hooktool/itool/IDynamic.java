@@ -21,7 +21,9 @@ package com.hchen.hooktool.itool;
 import java.lang.reflect.Field;
 
 /**
- * 动态方法接口
+ * 动态方法接口，
+ * 方法具体介绍请看实现类。<br/>
+ * {@link com.hchen.hooktool.tool.CoreTool}
  */
 public interface IDynamic {
 

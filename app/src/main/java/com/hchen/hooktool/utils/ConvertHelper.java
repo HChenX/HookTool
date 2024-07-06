@@ -26,30 +26,46 @@ import java.util.ArrayList;
  * 本工具的快捷转换类
  */
 public class ConvertHelper {
-    protected final DataUtils utils;
+    protected DataUtils utils;
+
+    public ConvertHelper() {
+    }
 
     public ConvertHelper(DataUtils utils) {
         this.utils = utils;
     }
 
-    protected <T> Object[] genericToObjectArray(T ts) {
+    protected void putUtils(DataUtils utils) {
+        this.utils = utils;
+    }
+
+    /**
+     * 泛型转换为数组。
+     *
+     * @param ts 泛型
+     * @return 数组
+     */
+    final public <T> Object[] genericToArray(T ts) {
         if (ts instanceof Object[] objects) {
             return objects;
         }
         return new Object[]{ts};
     }
 
-    protected Class<?>[] objectArrayToClassArray(Object... objs) {
-        return objectArrayToClassArray(utils.getClassLoader(), objs);
+    final public Class<?>[] arrayToClass(Object... objs) {
+        return arrayToClass(utils.getClassLoader(), objs);
     }
 
-    protected Class<?>[] objectArrayToClassArray(ClassLoader classLoader, Object... objs) {
+    /**
+     * 数组参数转为类。
+     */
+    final public Class<?>[] arrayToClass(ClassLoader classLoader, Object... objs) {
         ArrayList<Class<?>> classes = new ArrayList<>();
         for (Object o : objs) {
             if (o instanceof Class<?> c) {
                 classes.add(c);
             } else if (o instanceof String s) {
-                Class<?> ct = utils.getExpandTool().findClass(s, classLoader);
+                Class<?> ct = utils.getCoreTool().findClass(s, classLoader);
                 if (ct == null) {
                     return new Class[]{};
                 }
@@ -59,7 +75,6 @@ public class ConvertHelper {
                 return new Class[]{};
             }
         }
-        return classes.toArray(new Class<?>[classes.size()]);
+        return classes.toArray(new Class<?>[0]);
     }
-
 }

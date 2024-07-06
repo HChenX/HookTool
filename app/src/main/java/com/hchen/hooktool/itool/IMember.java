@@ -19,7 +19,7 @@
 package com.hchen.hooktool.itool;
 
 import com.hchen.hooktool.callback.IAction;
-import com.hchen.hooktool.tool.ExpandTool;
+import com.hchen.hooktool.tool.CoreTool;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -27,11 +27,18 @@ import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 
+import de.robv.android.xposed.XC_MethodHook;
+
+/**
+ * 成员操作接口，
+ * 方法具体介绍请看实现类。<br/>
+ * {@link com.hchen.hooktool.tool.CoreTool}
+ */
 public interface IMember {
     // ---------- 查找类是否存在 -------------
-    boolean findClassIfExists(String clazz);
+    boolean ifExistsClass(String clazz);
 
-    boolean findClassIfExists(String clazz, ClassLoader classLoader);
+    boolean ifExistsClass(String clazz, ClassLoader classLoader);
 
     // --------- 查找类 ------
     Class<?> findClass(String name);
@@ -43,17 +50,17 @@ public interface IMember {
     /**
      * 检查指定方法是否存在，不存在则返回 false。
      */
-    boolean findMethodIfExists(String clazz, String name, Object... ojbs);
+    boolean ifExistsMethod(String clazz, String name, Object... ojbs);
 
-    boolean findMethodIfExists(String clazz, ClassLoader classLoader,
-                               String name, Object... ojbs);
+    boolean ifExistsMethod(String clazz, ClassLoader classLoader,
+                           String name, Object... ojbs);
 
     /**
      * 检查指定方法名是否存在，不存在则返回 false。
      */
-    boolean findAnyMethodIfExists(String clazz, String name);
+    boolean ifExistsAnyMethod(String clazz, String name);
 
-    boolean findAnyMethodIfExists(String clazz, ClassLoader classLoader, String name);
+    boolean ifExistsAnyMethod(String clazz, ClassLoader classLoader, String name);
 
     // --------- 查找方法 ------
     Method findMethod(String clazz, String name, Object... objects);
@@ -86,9 +93,9 @@ public interface IMember {
     /**
      * 查找指定字段是否存在，不存在返回 false
      */
-    boolean findFieldIfExists(String clazz, String name);
+    boolean ifExistsField(String clazz, String name);
 
-    boolean findFieldIfExists(String clazz, ClassLoader classLoader, String name);
+    boolean ifExistsField(String clazz, ClassLoader classLoader, String name);
 
     Field findField(String clazz, String name);
 
@@ -97,17 +104,17 @@ public interface IMember {
     Field findField(Class<?> clazz, String name);
 
     // --------- 执行 hook -----------
-    public void hook(Member member, IAction iAction);
+    XC_MethodHook.Unhook hook(Member member, IAction iAction);
 
-    public void hook(ArrayList<?> members, IAction iAction);
+    ArrayList<XC_MethodHook.Unhook> hook(ArrayList<?> members, IAction iAction);
 
-    public IAction returnResult(final Object result);
+    IAction returnResult(final Object result);
 
-    public IAction doNothing();
+    IAction doNothing();
 
     // --------- 过滤方法 -----------
-    public ArrayList<Method> filterMethod(Class<?> clazz, ExpandTool.IFindMethod iFindMethod);
+    ArrayList<Method> filterMethod(Class<?> clazz, CoreTool.IFindMethod iFindMethod);
 
-    public ArrayList<Constructor<?>> filterMethod(Class<?> clazz, ExpandTool.IFindConstructor iFindConstructor);
+    ArrayList<Constructor<?>> filterMethod(Class<?> clazz, CoreTool.IFindConstructor iFindConstructor);
 
 }

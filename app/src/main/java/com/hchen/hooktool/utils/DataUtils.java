@@ -20,15 +20,11 @@ package com.hchen.hooktool.utils;
 
 import com.hchen.hooktool.HCHook;
 import com.hchen.hooktool.HCInit;
-import com.hchen.hooktool.data.MemberData;
 import com.hchen.hooktool.tool.ActionTool;
-import com.hchen.hooktool.tool.ClassTool;
-import com.hchen.hooktool.tool.ExpandTool;
-import com.hchen.hooktool.tool.FieldTool;
-import com.hchen.hooktool.tool.MethodTool;
+import com.hchen.hooktool.tool.ChainTool;
+import com.hchen.hooktool.tool.CoreTool;
 
 import java.lang.reflect.Field;
-import java.util.HashMap;
 
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
@@ -39,11 +35,9 @@ public class DataUtils {
     public static String spareTag = null;
     public String mThisTag = null;
     public HCHook hcHook = null;
-    public ClassTool classTool = null;
-    public FieldTool fieldTool = null;
-    public MethodTool methodTool = null;
     public ActionTool actionTool = null;
-    public ExpandTool expandTool = null;
+    public CoreTool coreTool = null;
+    public ChainTool chainTool = null;
     public static String[] filter = null;
     public static boolean useLogExpand = false;
     public static boolean useFieldObserver = false;
@@ -53,25 +47,17 @@ public class DataUtils {
     public ClassLoader mCustomClassLoader = null;
     public Class<?> findClass = null;
     public Field findField = null;
-    public Object mLabel = null;
-    public final HashMap<Object, MemberData> members = new HashMap<>();
 
     public ClassLoader getClassLoader() {
-        if (mCustomClassLoader != null) return mCustomClassLoader;
+        if (mCustomClassLoader != null) 
+            return mCustomClassLoader;
         return classLoader;
     }
 
     public XC_LoadPackage.LoadPackageParam getLpparam() {
-        if (mCustomLpparam != null) return mCustomLpparam;
+        if (mCustomLpparam != null)
+            return mCustomLpparam;
         return lpparam;
-    }
-
-    public void setLabel(Object label) {
-        this.mLabel = label;
-    }
-
-    public Object getLabel() {
-        return mLabel;
     }
 
     public HCHook getHCHook() {
@@ -88,32 +74,18 @@ public class DataUtils {
         return actionTool;
     }
 
-    public ClassTool getClassTool() {
-        ClassTool classTool = this.classTool;
-        if (classTool == null)
-            throw new RuntimeException(HCInit.getTAG() + "[" + getTAG() + "][E]: ClassTool is null!!");
-        return classTool;
+    public CoreTool getCoreTool() {
+        CoreTool coreTool = this.coreTool;
+        if (coreTool == null)
+            throw new RuntimeException(HCInit.getTAG() + "[" + getTAG() + "][E]: CoreTool is null!!");
+        return coreTool;
     }
-
-    public MethodTool getMethodTool() {
-        MethodTool methodTool = this.methodTool;
-        if (methodTool == null)
-            throw new RuntimeException(HCInit.getTAG() + "[" + getTAG() + "][E]: MethodTool is null!!");
-        return methodTool;
-    }
-
-    public FieldTool getFieldTool() {
-        FieldTool fieldTool = this.fieldTool;
-        if (fieldTool == null)
-            throw new RuntimeException(HCInit.getTAG() + "[" + getTAG() + "][E]: FieldTool is null!!");
-        return fieldTool;
-    }
-
-    public ExpandTool getExpandTool() {
-        ExpandTool expandTool = this.expandTool;
-        if (expandTool == null)
-            throw new RuntimeException(HCInit.getTAG() + "[" + getTAG() + "][E]: ExpandTool is null!!");
-        return expandTool;
+    
+    public ChainTool getChainTool() {
+        ChainTool chain = this.chainTool;
+        if (chain == null)
+            throw new RuntimeException(HCInit.getTAG() + "[" + getTAG() + "][E]: CreateChain is null!!");
+        return chain;
     }
 
     public String getTAG() {

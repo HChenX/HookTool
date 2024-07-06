@@ -26,8 +26,8 @@ import com.hchen.hooktool.HCInit;
  * 安卓日志类
  */
 public class AndroidLog {
-    private static final String rootTag = HCInit.getTAG();
-    private static final int level = HCInit.getLogLevel();
+    private static final String rootTag = HCInit.getTAG(); /*根 TAG*/
+    private static final int level = HCInit.getLogLevel(); /*日志等级*/
 
     public static void logE(String tag, String log) {
         if (level < 1) return;

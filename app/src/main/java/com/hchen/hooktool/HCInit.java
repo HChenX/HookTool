@@ -25,6 +25,7 @@ import androidx.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
+import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 /**
@@ -153,5 +154,24 @@ public class HCInit {
         // if (lpparam == null) return false;
         if (canUseSystemClassLoader) return true;
         return classLoader != null;
+    }
+
+    /**
+     * 模块是否被激活。
+     * 使用方法：<br/>
+     * lpparam 传入模块本身。<br/>
+     * path 传入指定类。<br/>
+     * fieldName 传入字段名。<br/>
+     * value 输入值。<br/>
+     * 随后模块本身检查这个字段是否被更改即可。
+     */
+    public static boolean isXposedModuleActive(XC_LoadPackage.LoadPackageParam lpparam,
+                                               String path, String fieldName, Object value) {
+        try {
+            XposedHelpers.setStaticObjectField(XposedHelpers.findClass(path, lpparam.classLoader), fieldName, value);
+            return true;
+        } catch (Throwable e) {
+            return false;
+        }
     }
 }

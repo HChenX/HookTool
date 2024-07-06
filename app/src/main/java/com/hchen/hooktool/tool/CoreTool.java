@@ -37,17 +37,18 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.XposedHelpers;
 
 /**
- * 杂项类
+ * 核心工具类
  */
-public class ExpandTool extends ConvertHelper implements IDynamic, IStatic, IMember {
+public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMember {
     private final FieldObserver observer;
     private final boolean useFieldObserver = DataUtils.useFieldObserver;
 
-    public ExpandTool(DataUtils dataUtils) {
+    public CoreTool(DataUtils dataUtils) {
         super(dataUtils);
         observer = new FieldObserver(utils);
     }
@@ -57,11 +58,11 @@ public class ExpandTool extends ConvertHelper implements IDynamic, IStatic, IMem
     /**
      * 查找指定类是否存在。
      */
-    public boolean findClassIfExists(String clazz) {
-        return findClassIfExists(clazz, utils.getClassLoader());
+    public boolean ifExistsClass(String clazz) {
+        return ifExistsClass(clazz, utils.getClassLoader());
     }
 
-    public boolean findClassIfExists(String clazz, ClassLoader classLoader) {
+    public boolean ifExistsClass(String clazz, ClassLoader classLoader) {
         try {
             if (classLoader == null) return false;
             return XposedHelpers.findClass(clazz, classLoader) != null;
@@ -94,16 +95,16 @@ public class ExpandTool extends ConvertHelper implements IDynamic, IStatic, IMem
     /**
      * 检查指定方法是否存在，不存在则返回 false。
      */
-    public boolean findMethodIfExists(String clazz, String name, Object... ojbs) {
-        return findMethodIfExists(clazz, utils.getClassLoader(), name, ojbs);
+    public boolean ifExistsMethod(String clazz, String name, Object... ojbs) {
+        return ifExistsMethod(clazz, utils.getClassLoader(), name, ojbs);
     }
 
-    public boolean findMethodIfExists(String clazz, ClassLoader classLoader,
-                                      String name, Object... ojbs) {
+    public boolean ifExistsMethod(String clazz, ClassLoader classLoader,
+                                  String name, Object... ojbs) {
         try {
             Class<?> cl = XposedHelpers.findClassIfExists(clazz, classLoader);
             if (cl == null) return false;
-            Class<?>[] classes = objectArrayToClassArray(classLoader, ojbs);
+            Class<?>[] classes = arrayToClass(classLoader, ojbs);
             cl.getDeclaredMethod(name, classes);
         } catch (NoSuchMethodException _) {
             return false;
@@ -114,11 +115,11 @@ public class ExpandTool extends ConvertHelper implements IDynamic, IStatic, IMem
     /**
      * 检查指定方法名是否存在，不存在则返回 false。
      */
-    public boolean findAnyMethodIfExists(String clazz, String name) {
-        return findAnyMethodIfExists(clazz, utils.getClassLoader(), name);
+    public boolean ifExistsAnyMethod(String clazz, String name) {
+        return ifExistsAnyMethod(clazz, utils.getClassLoader(), name);
     }
 
-    public boolean findAnyMethodIfExists(String clazz, ClassLoader classLoader, String name) {
+    public boolean ifExistsAnyMethod(String clazz, ClassLoader classLoader, String name) {
         Class<?> cl = XposedHelpers.findClassIfExists(clazz, classLoader);
         if (cl == null) return false;
         for (Method method : cl.getDeclaredMethods()) {
@@ -145,7 +146,7 @@ public class ExpandTool extends ConvertHelper implements IDynamic, IStatic, IMem
                 logW(utils.getTAG(), "class is null!");
                 return null;
             }
-            return clazz.getDeclaredMethod(name, objectArrayToClassArray(objects));
+            return clazz.getDeclaredMethod(name, arrayToClass(objects));
         } catch (NoSuchMethodException e) {
             logE(utils.getTAG(), e);
         }
@@ -188,7 +189,7 @@ public class ExpandTool extends ConvertHelper implements IDynamic, IStatic, IMem
                 logW(utils.getTAG(), "class is null!");
                 return null;
             }
-            return clazz.getConstructor(objectArrayToClassArray(objects));
+            return clazz.getDeclaredConstructor(arrayToClass(objects));
         } catch (NoSuchMethodException e) {
             logE(utils.getTAG(), e);
         }
@@ -216,12 +217,12 @@ public class ExpandTool extends ConvertHelper implements IDynamic, IStatic, IMem
     /**
      * 查找指定字段是否存在，不存在返回 false
      */
-    public boolean findFieldIfExists(String clazz, String name) {
-        return findFieldIfExists(clazz, utils.getClassLoader(), name);
+    public boolean ifExistsField(String clazz, String name) {
+        return ifExistsField(clazz, utils.getClassLoader(), name);
     }
 
-    public boolean findFieldIfExists(String clazz, ClassLoader classLoader, String name) {
-        Class<?> cl = utils.getExpandTool().findClass(clazz, classLoader);
+    public boolean ifExistsField(String clazz, ClassLoader classLoader, String name) {
+        Class<?> cl = utils.getCoreTool().findClass(clazz, classLoader);
         try {
             cl.getDeclaredField(name);
         } catch (NoSuchFieldException e) {
@@ -256,38 +257,42 @@ public class ExpandTool extends ConvertHelper implements IDynamic, IStatic, IMem
 
     // --------- 执行 hook -----------
 
-    public void hook(Member member, IAction iAction) {
+    public XC_MethodHook.Unhook hook(Member member, IAction iAction) {
         if (member == null || iAction == null) {
             logW(utils.getTAG(), "member or iAction is null, can't hook!");
-            return;
+            return null;
         }
         try {
-            XposedBridge.hookMethod(member, utils.getActionTool().hookTool(member, iAction));
+            XC_MethodHook.Unhook unhook = XposedBridge.hookMethod(member, utils.getActionTool().createHook(member, iAction));
             logD(utils.getTAG(), "success hook: " + member);
+            return unhook;
         } catch (Throwable e) {
             logE(utils.getTAG(), "hook: [" + member + "], failed!", e);
         }
+        return null;
     }
 
-    public void hook(ArrayList<?> members, IAction iAction) {
+    public ArrayList<XC_MethodHook.Unhook> hook(ArrayList<?> members, IAction iAction) {
+        ArrayList<XC_MethodHook.Unhook> unhooks = new ArrayList<>();
         for (Object o : members) {
             if (o instanceof Method || o instanceof Constructor<?>) {
                 try {
-                    XposedBridge.hookMethod((Member) o,
-                            utils.getActionTool().hookTool((Member) o, iAction));
+                    unhooks.add(XposedBridge.hookMethod((Member) o,
+                            utils.getActionTool().createHook((Member) o, iAction)));
                     logD(utils.getTAG(), "success hook: " + o);
                 } catch (Throwable e) {
                     logE(utils.getTAG(), "hook: [" + o + "], failed!", e);
                 }
             }
         }
+        return unhooks;
     }
 
     public IAction returnResult(final Object result) {
         return new IAction() {
             @Override
-            public void before(ParamTool param) throws Throwable {
-                param.setResult(result);
+            public void before() throws Throwable {
+                setResult(result);
             }
         };
     }
@@ -295,8 +300,8 @@ public class ExpandTool extends ConvertHelper implements IDynamic, IStatic, IMem
     public IAction doNothing() {
         return new IAction() {
             @Override
-            public void before(ParamTool param) throws Throwable {
-                param.setResult(null);
+            public void before() throws Throwable {
+                setResult(null);
             }
         };
     }
@@ -344,7 +349,7 @@ public class ExpandTool extends ConvertHelper implements IDynamic, IStatic, IMem
      */
     public <T, R> R callMethod(Object instance, String name, T ts) {
         try {
-            return (R) XposedHelpers.callMethod(instance, name, genericToObjectArray(ts));
+            return (R) XposedHelpers.callMethod(instance, name, genericToArray(ts));
         } catch (Throwable e) {
             logE(utils.getTAG(), "call method failed!", e);
         }
@@ -438,7 +443,7 @@ public class ExpandTool extends ConvertHelper implements IDynamic, IStatic, IMem
     public <T, R> R newInstance(Class<?> clz, T objects) {
         if (clz != null) {
             try {
-                return (R) XposedHelpers.newInstance(clz, genericToObjectArray(objects));
+                return (R) XposedHelpers.newInstance(clz, genericToArray(objects));
             } catch (Throwable e) {
                 logE(utils.getTAG(), "new instance failed!", e);
             }
@@ -458,7 +463,7 @@ public class ExpandTool extends ConvertHelper implements IDynamic, IStatic, IMem
     public <T, R> R callStaticMethod(Class<?> clz, String name, T objs) {
         if (clz != null) {
             try {
-                return (R) XposedHelpers.callStaticMethod(clz, name, genericToObjectArray(objs));
+                return (R) XposedHelpers.callStaticMethod(clz, name, genericToArray(objs));
             } catch (Throwable e) {
                 logE(utils.getTAG(), "call static method failed!", e);
             }

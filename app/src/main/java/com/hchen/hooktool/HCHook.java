@@ -22,10 +22,8 @@ import static com.hchen.hooktool.log.XposedLog.logE;
 import static com.hchen.hooktool.utils.DataUtils.spareTag;
 
 import com.hchen.hooktool.tool.ActionTool;
-import com.hchen.hooktool.tool.ClassTool;
-import com.hchen.hooktool.tool.ExpandTool;
-import com.hchen.hooktool.tool.FieldTool;
-import com.hchen.hooktool.tool.MethodTool;
+import com.hchen.hooktool.tool.ChainTool;
+import com.hchen.hooktool.tool.CoreTool;
 import com.hchen.hooktool.utils.DataUtils;
 
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
@@ -57,10 +55,8 @@ public class HCHook {
         utils = new DataUtils();
         utils.hcHook = this;
         utils.actionTool = new ActionTool(utils);
-        utils.classTool = new ClassTool(utils);
-        utils.fieldTool = new FieldTool(utils);
-        utils.methodTool = new MethodTool(utils);
-        utils.expandTool = new ExpandTool(utils);
+        utils.coreTool = new CoreTool(utils);
+        utils.chainTool = new ChainTool(utils);
     }
 
     public HCHook setThisTag(String tag) {
@@ -68,30 +64,16 @@ public class HCHook {
         return utils.getHCHook();
     }
 
-    // 更棒的无缝衔接
-    public ClassTool findClass(Object label, String className) {
-        return utils.getClassTool().findClass(label, className);
+    public CoreTool coreTool() {
+        return utils.getCoreTool();
+    }
+    
+    public ActionTool actionTool() {
+        return utils.getActionTool();
     }
 
-    public ClassTool findClass(Object label, String className, ClassLoader classLoader) {
-        return utils.getClassTool().findClass(label, className, classLoader);
-    }
-
-    /* 因为 ClassTool 是本工具基准入口，所以初始化使用必须进入此类。 */
-    public ClassTool classTool() {
-        return utils.getClassTool();
-    }
-
-    public MethodTool methodTool() {
-        return utils.getMethodTool();
-    }
-
-    public FieldTool fieldTool() {
-        return utils.getFieldTool();
-    }
-
-    public ExpandTool expandTool() {
-        return utils.getExpandTool();
+    public ChainTool chainTool() {
+        return utils.getChainTool();
     }
 
     /* 设置自定义 class loader */

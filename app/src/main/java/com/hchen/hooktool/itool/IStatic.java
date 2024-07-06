@@ -21,7 +21,9 @@ package com.hchen.hooktool.itool;
 import java.lang.reflect.Field;
 
 /**
- * 静态方法类
+ * 静态方法类，
+ * 方法具体介绍请看实现类。<br/>
+ * {@link com.hchen.hooktool.tool.CoreTool}
  */
 public interface IStatic {
     // --------- 实例类 ------------

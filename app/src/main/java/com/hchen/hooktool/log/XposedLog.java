@@ -24,11 +24,11 @@ import com.hchen.hooktool.utils.LogExpand;
 import de.robv.android.xposed.XposedBridge;
 
 /**
- * LSP 日志类。
+ * LSP 框架日志类。
  */
 public class XposedLog {
-    private static final String rootTag = HCInit.getTAG();
-    private static final int level = HCInit.getLogLevel();
+    private static final String rootTag = HCInit.getTAG(); /*根 TAG*/
+    private static final int level = HCInit.getLogLevel(); /*日志等级*/
 
     public static void logE(String tag, String log) {
         if (level < 1) return;
@@ -71,8 +71,8 @@ public class XposedLog {
         XposedBridge.log(rootTag + "[" + tag + "]" + "[D]: " + LogExpand.printStackTrace(e));
     }
 
-    public static void logD(String tag, String e) {
+    public static void logD(String tag, String log) {
         if (level < 4) return;
-        XposedBridge.log(rootTag + "[" + tag + "]" + "[D]: " + e);
+        XposedBridge.log(rootTag + "[" + tag + "]" + "[D]: " + log);
     }
 }

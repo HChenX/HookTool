@@ -21,7 +21,6 @@ package com.hchen.hooktool;
 import android.content.Context;
 
 import com.hchen.hooktool.callback.IAction;
-import com.hchen.hooktool.tool.ParamTool;
 
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedHelpers;
@@ -48,24 +47,57 @@ public class MainTest extends BaseHC {
             }
         };
 
+        chain("com.hchen.demo",
+                method("test")
+                        .hook(new IAction() {
+                            @Override
+                            public void before() throws Throwable {
+                                super.before();
+                            }
+                        })
+
+                        .method("test_1", String.class)
+                        .hook(new IAction() {
+                            @Override
+                            public void after() throws Throwable {
+                                super.after();
+                            }
+                        })
+
+                        .constructor()
+                        .hook(new IAction() {
+                            @Override
+                            public void after() throws Throwable {
+                                super.after();
+                            }
+                        })
+        );
+
+        hook(findMethod("com.hchen.demo", "test"), new IAction() {
+            @Override
+            public void before() throws Throwable {
+                super.before();
+            }
+        });
+
         new IAction() {
             @Override
-            public void before(ParamTool param) throws Throwable {
+            public void before() throws Throwable {
                 // hook 方法所属的类
-                Class<?> c = param.mClass;
+                Class<?> c = mClass;
 
-                Context context = param.thisObject();
-                String string = param.first();
-                param.second(1);
+                Context context = thisObject();
+                String string = first();
+                second(1);
 
-                // 非静态的本类内实例可直接使用 param.xx() 进行设置。
-                param.setField("demo", 1);
-                param.callMethod("method");
-                param.getField("test");
+                // 非静态的本类内实例可直接使用 xx() 进行设置。
+                setField("demo", 1);
+                callMethod("method");
+                getField("test");
 
                 // 静态需要 class
-                String result = param.callMethod("call", new Object[]{param.thisObject(), param.first()});
-                callStaticMethod(findClass("com.demo.Main"), "callStatic", new Object[]{param.thisObject(), param.second()});
+                String result = callMethod("call", new Object[]{thisObject(), first()});
+                callStaticMethod(findClass("com.demo.Main"), "callStatic", new Object[]{thisObject(), second()});
                 int i = getStaticField(findClass("com.demo.Main"), "field");
                 setStaticField(findClass("com.demo.Main"), "test", true);
             }

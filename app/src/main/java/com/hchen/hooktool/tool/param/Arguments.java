@@ -20,106 +20,110 @@ package com.hchen.hooktool.tool.param;
 
 import static com.hchen.hooktool.log.XposedLog.logE;
 
-import com.hchen.hooktool.utils.DataUtils;
-
 /**
  * 参数操作类
  */
 public class Arguments extends ActAchieve {
 
-    public Arguments(DataUtils utils) {
-        super(utils);
-    }
-
     // ------- 提供快捷获取 ---------
+    // 依次返回指定的参数。
 
-    public <T> T first() {
+    final public <T> T first() {
         return getParam(0);
     }
 
-    public <T> T second() {
+    final public <T> T second() {
         return getParam(1);
     }
 
-    public <T> T third() {
+    final public <T> T third() {
         return getParam(2);
     }
 
-    public <T> T fourth() {
+    final public <T> T fourth() {
         return getParam(3);
     }
 
-    public <T> T fifth() {
+    final public <T> T fifth() {
         return getParam(4);
     }
 
-    public <T> T sixth() {
+    final public <T> T sixth() {
         return getParam(5);
     }
 
-    public <T> T seventh() {
+    final public <T> T seventh() {
         return getParam(6);
     }
 
-    public <T> T eighth() {
+    final public <T> T eighth() {
         return getParam(7);
     }
 
-    public <T> T ninth() {
+    final public <T> T ninth() {
         return getParam(8);
     }
 
-    public <T> T tenth() {
+    final public <T> T tenth() {
         return getParam(9);
     }
 
     // ------- 提供快捷设置 ---------
-
-    public <T> Arguments first(T value) {
+    // 依次设置指定的参数
+    
+    final public <T> Arguments first(T value) {
         return setParam(0, value);
     }
 
-    public <T> Arguments second(T value) {
+    final public <T> Arguments second(T value) {
         return setParam(1, value);
     }
 
-    public <T> Arguments third(T value) {
+    final public <T> Arguments third(T value) {
         return setParam(2, value);
     }
 
-    public <T> Arguments fourth(T value) {
+    final public <T> Arguments fourth(T value) {
         return setParam(3, value);
     }
 
-    public <T> Arguments fifth(T value) {
+    final public <T> Arguments fifth(T value) {
         return setParam(4, value);
     }
 
-    public <T> Arguments sixth(T value) {
+    final public <T> Arguments sixth(T value) {
         return setParam(5, value);
     }
 
-    public <T> Arguments seventh(T value) {
+    final public <T> Arguments seventh(T value) {
         return setParam(6, value);
     }
 
-    public <T> Arguments eighth(T value) {
+    final public <T> Arguments eighth(T value) {
         return setParam(7, value);
     }
 
-    public <T> Arguments ninth(T value) {
+    final public <T> Arguments ninth(T value) {
         return setParam(8, value);
     }
 
-    public <T> Arguments tenth(T value) {
+    final public <T> Arguments tenth(T value) {
         return setParam(9, value);
     }
 
-    public int size() {
+    /**
+     * 当前方法参数的数量。
+     */
+    final public int size() {
         return param.args.length;
     }
 
-    public <T> T getParam(int index) {
+    /**
+     * 获取指定参数。
+     * @param index 索引
+     * @return 获取到的参数或 null
+     */
+    final public <T> T getParam(int index) {
         if (size() == -1) {
             return null;
         } else if (size() < index + 1) {
@@ -130,7 +134,12 @@ public class Arguments extends ActAchieve {
         return (T) param.args[index];
     }
 
-    public <T> Arguments setParam(int index, T value) {
+    /**
+     * 设置指定参数。
+     * @param index 索引
+     * @param value 目标值
+     */
+    final public <T> Arguments setParam(int index, T value) {
         if (size() == -1) {
             return this;
         } else if (size() < index + 1) {
