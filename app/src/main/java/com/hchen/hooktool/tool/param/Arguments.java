@@ -127,7 +127,7 @@ public class Arguments extends ActAchieve {
         if (size() == -1) {
             return null;
         } else if (size() < index + 1) {
-            logE(utils.getTAG(), "method: [" + param.method.getName() +
+            logE(data.getTAG(), "method: [" + param.method.getName() +
                     "], param max size: [" + size() + "], index: [" + index + "]!!");
             return null;
         }
@@ -143,7 +143,7 @@ public class Arguments extends ActAchieve {
         if (size() == -1) {
             return this;
         } else if (size() < index + 1) {
-            logE(utils.getTAG(), "method: [" + param.method.getName() +
+            logE(data.getTAG(), "method: [" + param.method.getName() +
                     "], param max size: [" + size() + "], index: [" + index + "]!!");
             return this;
         }

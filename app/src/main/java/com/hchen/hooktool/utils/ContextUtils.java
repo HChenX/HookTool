@@ -65,7 +65,6 @@ public class ContextUtils {
         try {
             return invokeMethod(flag);
         } catch (Throwable e) {
-            // AndroidLogUtils.LogE(TAG, "getContext: ", e);
             return null;
         }
     }
@@ -132,10 +131,10 @@ public class ContextUtils {
                 context = android(clz);
             }
             default -> {
-                throw new Throwable("Unexpected flag");
+                throw new Throwable("unexpected flag");
             }
         }
-        if (context == null) throw new Throwable("Context is null");
+        if (context == null) throw new Throwable("context is null");
         return context;
     }
 
@@ -156,9 +155,11 @@ public class ContextUtils {
         getSystemContext.setAccessible(true);
         context = (Context) getSystemContext.invoke(o);
         if (context == null) {
-            Method getSystemUiContext = clz.getDeclaredMethod("getSystemUiContext");
-            getSystemUiContext.setAccessible(true);
-            context = (Context) getSystemContext.invoke(o);
+            // 这里获取的 context 可能存在问题。
+            // 所以暂时注释。
+            // Method getSystemUiContext = clz.getDeclaredMethod("getSystemUiContext");
+            // getSystemUiContext.setAccessible(true);
+            // context = (Context) getSystemContext.invoke(o);
         }
         return context;
     }

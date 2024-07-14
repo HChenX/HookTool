@@ -24,7 +24,7 @@ import static com.hchen.hooktool.data.ChainData.TYPE_METHOD;
 import com.hchen.hooktool.callback.IAction;
 import com.hchen.hooktool.data.ChainData;
 import com.hchen.hooktool.data.StateEnum;
-import com.hchen.hooktool.utils.DataUtils;
+import com.hchen.hooktool.utils.ToolData;
 
 import java.lang.reflect.Member;
 import java.util.ArrayList;
@@ -33,57 +33,72 @@ import java.util.ArrayList;
  * 创建链式调用
  */
 public class ChainTool {
-    protected Member mMember = null;
-    private final DataUtils utils;
+    private final ToolData data;
     private final ChainHook chainHook;
-    protected final ArrayList<ChainData> chainData = new ArrayList<>();
+    protected ChainData chainData;
+    protected final ArrayList<ChainData> chainDataList = new ArrayList<>();
     private final ArrayList<ChainData> cacheData = new ArrayList<>();
 
-    public ChainTool(DataUtils utils) {
-        this.utils = utils;
+    public ChainTool(ToolData data) {
+        this.data = data;
         chainHook = new ChainHook(this);
     }
 
+    /**
+     * 查找方法。
+     *
+     * @param name   方法名
+     * @param params 方法参数
+     */
     public ChainHook method(String name, Object... params) {
-        cacheData.add(new ChainData(name, params));
+        chainData = new ChainData(name, params);
         return chainHook;
     }
 
+    /**
+     * 查找构造函数。
+     *
+     * @param params 参数
+     */
     public ChainHook constructor(Object... params) {
-        cacheData.add(new ChainData(params));
+        chainData = new ChainData(params);
         return chainHook;
     }
 
     protected void doFind(Class<?> clazz) {
+        Member mMember;
         for (ChainData data : cacheData) {
             switch (data.mType) {
                 case TYPE_METHOD -> {
-                    mMember = utils.getCoreTool().findMethod(clazz, data.mName, data.mParams);
+                    mMember = this.data.getCoreTool().findMethod(clazz, data.mName, data.mParams);
                 }
                 case TYPE_CONSTRUCTOR -> {
-                    mMember = utils.getCoreTool().findConstructor(clazz, data.mParams);
+                    mMember = this.data.getCoreTool().findConstructor(clazz, data.mParams);
                 }
                 default -> mMember = null;
             }
-            chainData.add(new ChainData(mMember, chainHook.iAction, StateEnum.NONE));
+            chainDataList.add(new ChainData(mMember, data.iAction, StateEnum.NONE));
         }
         cacheData.clear();
     }
 
-    protected ArrayList<ChainData> getChainData() {
-        return chainData;
+    protected ArrayList<ChainData> getChainDataList() {
+        return chainDataList;
     }
 
     public static class ChainHook {
         private final ChainTool chain;
-        protected IAction iAction;
 
         public ChainHook(ChainTool chain) {
             this.chain = chain;
         }
 
+        /**
+         * hook 动作。
+         */
         public ChainTool hook(IAction iAction) {
-            this.iAction = iAction;
+            chain.chainData.iAction = iAction;
+            chain.cacheData.add(chain.chainData);
             return chain;
         }
     }

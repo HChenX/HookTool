@@ -36,9 +36,9 @@ import de.robv.android.xposed.XC_MethodHook;
  */
 public interface IMember {
     // ---------- 查找类是否存在 -------------
-    boolean ifExistsClass(String clazz);
+    boolean existsClass(String clazz);
 
-    boolean ifExistsClass(String clazz, ClassLoader classLoader);
+    boolean existsClass(String clazz, ClassLoader classLoader);
 
     // --------- 查找类 ------
     Class<?> findClass(String name);
@@ -50,17 +50,17 @@ public interface IMember {
     /**
      * 检查指定方法是否存在，不存在则返回 false。
      */
-    boolean ifExistsMethod(String clazz, String name, Object... ojbs);
+    boolean existsMethod(String clazz, String name, Object... ojbs);
 
-    boolean ifExistsMethod(String clazz, ClassLoader classLoader,
-                           String name, Object... ojbs);
+    boolean existsMethod(String clazz, ClassLoader classLoader,
+                         String name, Object... ojbs);
 
     /**
      * 检查指定方法名是否存在，不存在则返回 false。
      */
-    boolean ifExistsAnyMethod(String clazz, String name);
+    boolean existsAnyMethod(String clazz, String name);
 
-    boolean ifExistsAnyMethod(String clazz, ClassLoader classLoader, String name);
+    boolean existsAnyMethod(String clazz, ClassLoader classLoader, String name);
 
     // --------- 查找方法 ------
     Method findMethod(String clazz, String name, Object... objects);
@@ -93,9 +93,9 @@ public interface IMember {
     /**
      * 查找指定字段是否存在，不存在返回 false
      */
-    boolean ifExistsField(String clazz, String name);
+    boolean existsField(String clazz, String name);
 
-    boolean ifExistsField(String clazz, ClassLoader classLoader, String name);
+    boolean existsField(String clazz, ClassLoader classLoader, String name);
 
     Field findField(String clazz, String name);
 

@@ -35,118 +35,50 @@ public class InvokeUtils {
 
     private final static String TAG = "invokeUtils";
 
-    // ----------------------------设置字段--------------------------------
-    // Class 类型
-    public static <T> T setField(Class<?> clz, Object instance, String field, Object value) {
-        return baseInvokeField(clz, instance, field, true, value);
-    }
-
-    public static <T> T setStaticField(Class<?> clz, String field, Object value) {
-        return baseInvokeField(clz, null, field, true, value);
-    }
-
-    public static <T> T getField(Class<?> clz, Object instance, String field) {
-        return baseInvokeField(clz, instance, field, false, null);
-    }
-
-    public static <T> T getStaticField(Class<?> clz, String field) {
-        return baseInvokeField(clz, null, field, false, null);
-    }
-
-    // String类型
-    public static <T> T setField(String className, ClassLoader classLoader, Object instance, String field, Object value) {
-        return baseInvokeField(className, classLoader, instance, field, true, value);
-    }
-
-    public static <T> T setStaticField(String className, ClassLoader classLoader, String field, Object value) {
-        return baseInvokeField(className, classLoader, null, field, true, value);
-    }
-
-    public static <T> T getField(String className, ClassLoader classLoader, Object instance, String field) {
-        return baseInvokeField(className, classLoader, instance, field, false, null);
-    }
-
-    public static <T> T getStaticField(String className, ClassLoader classLoader, String field) {
-        return baseInvokeField(className, classLoader, null, field, false, null);
-    }
-
-    // 无 ClassLoader
-    public static <T> T setField(String className, Object instance, String field, Object value) {
-        return baseInvokeField(className, instance, field, true, value);
-    }
-
-    public static <T> T setStaticField(String className, String field, Object value) {
-        return baseInvokeField(className, null, field, true, value);
-    }
-
-    public static <T> T getField(String className, Object instance, String field) {
-        return baseInvokeField(className, instance, field, false, null);
-    }
-
-    public static <T> T getStaticField(String className, String field) {
-        return baseInvokeField(className, null, field, false, null);
-    }
-
     // ----------------------------反射调用方法--------------------------------
-    // Class 类型
     public static <T> T callMethod(Class<?> clz, Object instance, String method, Class<?>[] param, Object... value) {
-        return baseInvokeMethod(clz, instance, method, param, value);
+        return baseInvokeMethod(null, instance, method, param, value);
     }
 
     public static <T> T callStaticMethod(Class<?> clz, String method, Class<?>[] param, Object... value) {
         return baseInvokeMethod(clz, null, method, param, value);
     }
 
-    // String类型
-    public static <T> T callMethod(String className, ClassLoader classLoader, Object instance, String method, Class<?>[] param, Object... value) {
-        return baseInvokeMethod(className, classLoader, instance, method, param, value);
+    // ----------------------------设置字段--------------------------------
+    public static <T> T setField(Object instance, String field, Object value) {
+        return baseInvokeField(null, instance, field, true, value);
     }
 
-    public static <T> T callStaticMethod(String className, ClassLoader classLoader, String method, Class<?>[] param, Object... value) {
-        return baseInvokeMethod(className, classLoader, null, method, param, value);
+    public static <T> T setStaticField(Class<?> clz, String field, Object value) {
+        return baseInvokeField(clz, null, field, true, value);
     }
 
-    // 无 ClassLoader
-    public static <T> T callMethod(String className, Object instance, String method, Class<?>[] param, Object... value) {
-        return baseInvokeMethod(className, instance, method, param, value);
+    public static <T> T getField(Object instance, String field) {
+        return baseInvokeField(null, instance, field, false, null);
     }
 
-    public static <T> T callStaticMethod(String className, String method, Class<?>[] param, Object... value) {
-        return baseInvokeMethod(className, null, method, param, value);
+    public static <T> T getStaticField(Class<?> clz, String field) {
+        return baseInvokeField(clz, null, field, false, null);
     }
-
-    private static <T> T baseInvokeMethod(String className, Object instance, String method, Class<?>[] param, Object... value) {
-        return baseInvokeMethod(className, null, instance, method, param, value);
-    }
-
-    private static <T> T baseInvokeMethod(String className, ClassLoader classLoader, Object instance, String method, Class<?>[] param, Object... value) {
-        try {
-            Class<?> clz = baseClass(classLoader, className);
-            return baseInvokeMethod(clz, instance, method, param, value);
-        } catch (ClassNotFoundException e) {
-            AndroidLog.logE(TAG, "reflection call method failed! class: [" + className + "], method: " + method, e);
-            return null;
-        }
-    }
-
+    
     /**
      * @noinspection unchecked
      */
-    private static <T> T baseInvokeMethod(Class<?> clz, Object instance, String method, Class<?>[] param, Object... value) {
+    private static <T> T baseInvokeMethod(Class<?> clz /* 类 */, Object instance /* 实例 */, String method /* 方法名 */,
+                                          Class<?>[] param /* 方法参数 */, Object... value /* 值 */) {
         Method declaredMethod;
+        if (clz == null && instance == null) {
+            AndroidLog.logW(TAG, "class is null! can't invoke method: " + method);
+            return null;
+        } else if (clz == null) {
+            clz = instance.getClass();
+        }
         try {
-            declaredMethod = methodCache.get(clz.getName() + "." + method + Arrays.toString(param));
+            String methodTag = clz.getName() + "." + method + Arrays.toString(param);
+            declaredMethod = methodCache.get(methodTag);
             if (declaredMethod == null) {
-                try {
-                    declaredMethod = clz.getMethod(method, param);
-                } catch (NoSuchMethodException e) {
-                    try {
-                        declaredMethod = clz.getDeclaredMethod(method, param);
-                    } catch (NoSuchMethodException ex) {
-                        throw new NoSuchMethodException("get method failed: [" + e + "], get declared method failed: " + ex);
-                    }
-                }
-                methodCache.put(clz.getName() + "." + declaredMethod.getName() + Arrays.toString(declaredMethod.getParameterTypes()), declaredMethod);
+                declaredMethod = clz.getDeclaredMethod(method, param);
+                methodCache.put(methodTag, declaredMethod);
             }
             declaredMethod.setAccessible(true);
             return (T) declaredMethod.invoke(instance, value);
@@ -156,38 +88,39 @@ public class InvokeUtils {
         }
     }
 
-    private static <T> T baseInvokeField(String className, Object instance, String field, boolean set, Object value) {
-        return baseInvokeField(className, null, instance, field, set, value);
-    }
-
-    private static <T> T baseInvokeField(String className, ClassLoader classLoader, Object instance, String field, boolean set, Object value) {
-        try {
-            Class<?> clz = baseClass(classLoader, className);
-            return baseInvokeField(clz, instance, field, set, value);
-        } catch (ClassNotFoundException e) {
-            AndroidLog.logE(TAG, "reflection call method failed! class: [" + className + "], field: " + field, e);
-            return null;
-        }
-    }
-
     /**
      * @noinspection unchecked
      */
-    private static <T> T baseInvokeField(Class<?> clz, Object instance, String field, boolean set, Object value) {
+    private static <T> T baseInvokeField(Class<?> clz /* 类 */, Object instance /* 实例 */, String field /* 字段名 */,
+                                         boolean set /* 是否为 set 模式 */, Object value /* 指定值 */) {
         Field declaredField = null;
+        if (clz == null && instance == null) {
+            AndroidLog.logW(TAG, "class is null! can't invoke field: " + field);
+            return null;
+        } else if (clz == null) {
+            clz = instance.getClass();
+        }
         try {
-            declaredField = fieldCache.get(clz.getName() + "." + field);
+            String fieldTag = clz.getName() + "#" + field;
+            declaredField = fieldCache.get(fieldTag);
             if (declaredField == null) {
                 try {
-                    declaredField = clz.getField(field);
+                    declaredField = clz.getDeclaredField(field);
                 } catch (NoSuchFieldException e) {
-                    try {
-                        declaredField = clz.getDeclaredField(field);
-                    } catch (NoSuchFieldException ex) {
-                        throw new NoSuchFieldException("get method failed: [" + e + "], get declared method failed: " + ex);
+                    while (true) {
+                        clz = clz.getSuperclass();
+                        if (clz == null || clz.equals(Object.class))
+                            break;
+
+                        try {
+                            declaredField = clz.getDeclaredField(field);
+                            break;
+                        } catch (NoSuchFieldException ignored) {
+                        }
                     }
+                    if (clz == null || declaredField == null) throw e;
                 }
-                fieldCache.put(clz.getName() + "." + declaredField.getName(), declaredField);
+                fieldCache.put(fieldTag, declaredField);
             }
             declaredField.setAccessible(true);
             if (set) {
@@ -196,23 +129,20 @@ public class InvokeUtils {
             } else
                 return (T) declaredField.get(instance);
         } catch (NoSuchFieldException | IllegalAccessException e) {
-            AndroidLog.logE(TAG, "reflection call method failed! class: [" + clz.getName() + "], field: " + field, e);
+            AndroidLog.logE(TAG, "reflection call method failed! class: [" + (clz != null ? clz.getName() : null) + "], field: " + field, e);
             return null;
         }
     }
 
-    private static Class<?> baseClass(ClassLoader classLoader, String className) throws ClassNotFoundException {
-        if (classLoader == null) {
-            try {
-                return Class.forName(className);
-            } catch (ClassNotFoundException e) {
-                try {
-                    return ClassLoader.getSystemClassLoader().loadClass(className);
-                } catch (ClassNotFoundException f) {
-                    throw new ClassNotFoundException("forName: [" + e + "], loadClass: " + f);
-                }
+    public static Class<?> findClass(String className, ClassLoader classLoader) {
+        try {
+            if (classLoader == null) {
+                classLoader = ClassLoader.getSystemClassLoader();
             }
+            return classLoader.loadClass(className);
+        } catch (Throwable e) {
+            AndroidLog.logE(TAG, e);
         }
-        return classLoader.loadClass(className);
+        return null;
     }
 }

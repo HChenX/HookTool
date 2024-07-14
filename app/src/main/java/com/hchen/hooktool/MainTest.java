@@ -47,30 +47,29 @@ public class MainTest extends BaseHC {
             }
         };
 
-        chain("com.hchen.demo",
-                method("test")
-                        .hook(new IAction() {
-                            @Override
-                            public void before() throws Throwable {
-                                super.before();
-                            }
-                        })
+        chain("com.hchen.demo", method("test")
+                .hook(new IAction() {
+                    @Override
+                    public void before() throws Throwable {
+                        super.before();
+                    }
+                })
 
-                        .method("test_1", String.class)
-                        .hook(new IAction() {
-                            @Override
-                            public void after() throws Throwable {
-                                super.after();
-                            }
-                        })
+                .method("test_1", String.class)
+                .hook(new IAction() {
+                    @Override
+                    public void after() throws Throwable {
+                        super.after();
+                    }
+                })
 
-                        .constructor()
-                        .hook(new IAction() {
-                            @Override
-                            public void after() throws Throwable {
-                                super.after();
-                            }
-                        })
+                .constructor()
+                .hook(new IAction() {
+                    @Override
+                    public void after() throws Throwable {
+                        super.after();
+                    }
+                })
         );
 
         hook(findMethod("com.hchen.demo", "test"), new IAction() {

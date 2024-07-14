@@ -25,6 +25,7 @@ import androidx.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
+import de.robv.android.xposed.IXposedHookZygoteInit;
 import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
@@ -41,6 +42,7 @@ public class HCInit {
     private static boolean useLogExpand = false;
     private static boolean useFieldObserver = false;
     private static XC_LoadPackage.LoadPackageParam lpparam = null;
+    private static IXposedHookZygoteInit.StartupParam startupParam = null;
     private static ClassLoader classLoader = null;
     private static boolean canUseSystemClassLoader = false;
     private static String packageName;
@@ -129,9 +131,21 @@ public class HCInit {
         logI(spareTag, "init lpparam: [" + lpparam + "], classLoader: [" + classLoader + "], pkg name: " + packageName);
     }
 
+    /**
+     * 初始化 zygote。
+     */
+    public static void initZygote(IXposedHookZygoteInit.StartupParam sp) {
+        startupParam = sp;
+    }
+
     protected static XC_LoadPackage.LoadPackageParam getLoadPackageParam() throws Throwable {
         if (lpparam != null) return lpparam;
         throw new Throwable(getTAG() + "[E]: failed to obtain LoadPackageParam, it is null!");
+    }
+
+    protected static IXposedHookZygoteInit.StartupParam getStartupParam() {
+        if (startupParam != null) return startupParam;
+        return null;
     }
 
     protected static ClassLoader getClassLoader() {

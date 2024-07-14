@@ -30,19 +30,22 @@ import de.robv.android.xposed.XposedHelpers;
  * 字段设置结果观察
  */
 public class FieldObserver {
-    private final DataUtils utils;
+    private final ToolData data;
 
-    public FieldObserver(DataUtils utils) {
-        this.utils = utils;
+    public FieldObserver(ToolData data) {
+        this.data = data;
     }
 
+    /**
+     * 观察字段设置结果。
+     */
     public void dynamicObserver(Field field, Object instance, Object value) {
         Object o = null;
         field.setAccessible(true);
         try {
             o = field.get(instance);
         } catch (IllegalAccessException e) {
-            logE(utils.getTAG(), e);
+            logE(data.getTAG(), e);
             return;
         }
         doInspect("", field.getName(), value, o);
@@ -53,19 +56,22 @@ public class FieldObserver {
         try {
             o = XposedHelpers.getObjectField(instance, name);
         } catch (Throwable e) {
-            logE(utils.getTAG(), e);
+            logE(data.getTAG(), e);
             return;
         }
         doInspect("", name, value, o);
     }
 
+    /**
+     * 观察静态字段设置结果。
+     */
     public void staticObserver(Field field, Object value) {
         Object o = null;
         field.setAccessible(true);
         try {
             o = field.get(null);
         } catch (IllegalAccessException e) {
-            logE(utils.getTAG(), e);
+            logE(data.getTAG(), e);
             return;
         }
         doInspect("static", field.getName(), value, o);
@@ -76,7 +82,7 @@ public class FieldObserver {
         try {
             o = XposedHelpers.getStaticObjectField(clazz, name);
         } catch (Throwable e) {
-            logE(utils.getTAG(), e);
+            logE(data.getTAG(), e);
             return;
         }
         doInspect("static", name, value, o);
@@ -84,19 +90,19 @@ public class FieldObserver {
 
     private void doInspect(String call, String name, Object value, Object o) {
         if (o == null && value == null) {
-            logI(utils.getTAG(), "put field: [" + name + "], value to null");
+            logI(data.getTAG(), "set field: [" + name + "], value to null");
             return;
         }
         if ((o == null && value != null) || (o != null && value == null)) {
-            logW(utils.getTAG(), "failed put " + call + " field: [" + name + "]," +
+            logW(data.getTAG(), "failed set " + call + " field: [" + name + "]," +
                     " value to: [" + value + "], now is: " + o);
             return;
         }
         if (o == value || o.equals(value)) {
-            logI(utils.getTAG(), "success put " + call + " field: [" + name + "]," +
+            logI(data.getTAG(), "success set " + call + " field: [" + name + "]," +
                     " value to: [" + value + "], now is: " + o);
         } else {
-            logW(utils.getTAG(), "failed put " + call + " field: [" + name + "]," +
+            logW(data.getTAG(), "failed set " + call + " field: [" + name + "]," +
                     " value to: [" + value + "], now is: " + o);
         }
     }

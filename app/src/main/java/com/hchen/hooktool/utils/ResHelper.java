@@ -22,8 +22,6 @@ import static com.hchen.hooktool.log.XposedLog.logE;
 import static com.hchen.hooktool.log.XposedLog.logW;
 
 import android.content.Context;
-import android.content.pm.PackageManager;
-import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.content.res.loader.ResourcesLoader;
 import android.content.res.loader.ResourcesProvider;
@@ -43,17 +41,14 @@ public class ResHelper {
     private static ResourcesLoader resourcesLoader = null;
     private static final String TAG = "ResHelper";
     private static String mModulePath;
-    private static String mProjectPkg;
 
     /**
      * 请在 initZygote 中初始化。
      *
      * @param modulePath startupParam.modulePath 即可
-     * @param projectPkg 本项目包名。
      */
-    public static void initResHelper(String modulePath, String projectPkg) {
+    public static void initResHelper(String modulePath) {
         mModulePath = modulePath;
-        mProjectPkg = projectPkg;
     }
 
     /**
@@ -109,19 +104,21 @@ public class ResHelper {
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             load = loadResAboveApi30(context);
+        } else {
+            logW(TAG, "sdk so low, can't load module res!");
         }
         if (!load) {
-            logW(TAG, "loadModuleRes return 0, it may have failed. try the second method ...");
-            try {
+            /*try {
                 return getModuleRes(context);
             } catch (PackageManager.NameNotFoundException e) {
                 logE(TAG, "failed to load resource! critical error!! scope may crash!!", e);
-            }
+            }*/
         }
         return context.getResources();
     }
 
-    public static Context getModuleContext(Context context)
+    // 下面注入方法存在风险，可能导致资源混乱，暂抛弃。
+    /*public static Context getModuleContext(Context context)
             throws PackageManager.NameNotFoundException {
         return getModuleContext(context, null);
     }
@@ -138,5 +135,5 @@ public class ResHelper {
         Configuration config = context.getResources().getConfiguration();
         Context moduleContext = getModuleContext(context);
         return (config == null ? moduleContext.getResources() : moduleContext.createConfigurationContext(config).getResources());
-    }
+    }*/
 }

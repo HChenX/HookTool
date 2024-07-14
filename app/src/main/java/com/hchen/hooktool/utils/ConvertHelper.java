@@ -26,17 +26,10 @@ import java.util.ArrayList;
  * 本工具的快捷转换类
  */
 public class ConvertHelper {
-    protected DataUtils utils;
+    protected ToolData data;
 
-    public ConvertHelper() {
-    }
-
-    public ConvertHelper(DataUtils utils) {
-        this.utils = utils;
-    }
-
-    protected void putUtils(DataUtils utils) {
-        this.utils = utils;
+    public ConvertHelper(ToolData data) {
+        this.data = data;
     }
 
     /**
@@ -46,14 +39,12 @@ public class ConvertHelper {
      * @return 数组
      */
     final public <T> Object[] genericToArray(T ts) {
-        if (ts instanceof Object[] objects) {
-            return objects;
-        }
+        if (ts instanceof Object[] objects) return objects;
         return new Object[]{ts};
     }
 
     final public Class<?>[] arrayToClass(Object... objs) {
-        return arrayToClass(utils.getClassLoader(), objs);
+        return arrayToClass(data.getClassLoader(), objs);
     }
 
     /**
@@ -65,13 +56,13 @@ public class ConvertHelper {
             if (o instanceof Class<?> c) {
                 classes.add(c);
             } else if (o instanceof String s) {
-                Class<?> ct = utils.getCoreTool().findClass(s, classLoader);
+                Class<?> ct = data.getCoreTool().findClass(s, classLoader);
                 if (ct == null) {
                     return new Class[]{};
                 }
                 classes.add(ct);
             } else {
-                logW(utils.getTAG(), "unknown type: " + o);
+                logW(data.getTAG(), "unknown type: " + o);
                 return new Class[]{};
             }
         }

@@ -24,14 +24,12 @@ import com.hchen.hooktool.tool.ActionTool;
 import com.hchen.hooktool.tool.ChainTool;
 import com.hchen.hooktool.tool.CoreTool;
 
-import java.lang.reflect.Field;
-
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 /**
  * 这是本工具的读写数据类，请不要继承重写。
  */
-public class DataUtils {
+public class ToolData {
     public static String spareTag = null;
     public String mThisTag = null;
     public HCHook hcHook = null;
@@ -45,8 +43,6 @@ public class DataUtils {
     public XC_LoadPackage.LoadPackageParam mCustomLpparam = null;
     public static ClassLoader classLoader = null;
     public ClassLoader mCustomClassLoader = null;
-    public Class<?> findClass = null;
-    public Field findField = null;
 
     public ClassLoader getClassLoader() {
         if (mCustomClassLoader != null) 

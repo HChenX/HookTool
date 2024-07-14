@@ -41,7 +41,7 @@ public class LogExpand {
 
     public LogExpand(Member member, String TAG) {
         this.TAG = TAG;
-        this.filter = DataUtils.filter;
+        this.filter = ToolData.filter;
         getName(member);
     }
 

@@ -34,57 +34,57 @@ public class PropUtils {
         try {
             return classLoaderMethod(context, name);
         } catch (Throwable e) {
-            logE(TAG, "get prop string", e);
+            logE(TAG, "get string prop failed!", e);
             return "";
         }
     }
 
-    public static boolean getProp(String name, boolean def) {
+    public static boolean getProp(String key, boolean def) {
         try {
             @SuppressLint("PrivateApi") Class<?> cls = Class.forName("android.os.SystemProperties");
-            return Boolean.TRUE.equals(invokeMethod(cls, "getBoolean", new Class[]{String.class, boolean.class}, name, def));
+            return Boolean.TRUE.equals(invokeMethod(cls, "getBoolean", new Class[]{String.class, boolean.class}, key, def));
         } catch (Throwable e) {
-            logE(TAG, "get prop boolean", e);
+            logE(TAG, "get boolean prop failed!", e);
             return false;
         }
     }
 
-    public static int getProp(String name, int def) {
+    public static int getProp(String key, int def) {
         try {
             Class<?> cls = Class.forName("android.os.SystemProperties");
-            return invokeMethod(cls, "getInt", new Class[]{String.class, int.class}, name, def);
+            return invokeMethod(cls, "getInt", new Class[]{String.class, int.class}, key, def);
         } catch (Throwable e) {
-            logE(TAG, "get prop int", e);
+            logE(TAG, "get int prop failed!", e);
             return 0;
         }
     }
 
-    public static long getProp(String name, long def) {
+    public static long getProp(String key, long def) {
         try {
             Class<?> cls = Class.forName("android.os.SystemProperties");
-            return invokeMethod(cls, "getLong", new Class[]{String.class, long.class}, name, def);
+            return invokeMethod(cls, "getLong", new Class[]{String.class, long.class}, key, def);
         } catch (Throwable e) {
-            logE(TAG, "get prop long", e);
+            logE(TAG, "get long prop failed!", e);
             return 0L;
         }
     }
 
-    public static String getProp(String name, String def) {
+    public static String getProp(String key, String def) {
         try {
             return invokeMethod(Class.forName("android.os.SystemProperties"),
-                    "get", new Class[]{String.class, String.class}, name, def);
+                    "get", new Class[]{String.class, String.class}, key, def);
         } catch (Throwable e) {
-            logE(TAG, "get prop string", e);
+            logE(TAG, "get string prop failed!", e);
             return "";
         }
     }
 
-    public static String getProp(String name) {
+    public static String getProp(String key) {
         try {
             return invokeMethod(Class.forName("android.os.SystemProperties"),
-                    "get", new Class[]{String.class}, name);
+                    "get", new Class[]{String.class}, key);
         } catch (Throwable e) {
-            logE(TAG, "get prop string no def", e);
+            logE(TAG, "get string no def prop failed!", e);
             return "";
         }
     }
@@ -95,27 +95,27 @@ public class PropUtils {
      *
      * @return boolean
      */
-    public static boolean setProp(String name, String vale) {
+    public static boolean setProp(String key, String vale) {
         try {
             invokeMethod(Class.forName("android.os.SystemProperties"),
-                    "set", new Class[]{String.class, String.class}, name, vale);
+                    "set", new Class[]{String.class, String.class}, key, vale);
             return true;
         } catch (Throwable e) {
-            logE(TAG, "set", e);
+            logE(TAG, "set prop failed!", e);
         }
         return false;
     }
 
-    private static String classLoaderMethod(Context context, String name) throws Throwable {
+    private static String classLoaderMethod(Context context, String name) {
         ClassLoader classLoader = context.getClassLoader();
-        return InvokeUtils.callStaticMethod("android.os.SystemProperties", classLoader,
+        return InvokeUtils.callStaticMethod(InvokeUtils.findClass("android.os.SystemProperties", classLoader),
                 "get", new Class[]{String.class}, name);
     }
 
     /**
      * @noinspection unchecked
      */
-    private static <T> T invokeMethod(Class<?> cls, String str, Class<?>[] clsArr, Object... objArr) throws Throwable {
+    private static <T> T invokeMethod(Class<?> cls, String str, Class<?>[] clsArr, Object... objArr) {
         return InvokeUtils.callStaticMethod(cls, str, clsArr, objArr);
     }
 }

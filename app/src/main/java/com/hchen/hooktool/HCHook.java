@@ -19,12 +19,12 @@
 package com.hchen.hooktool;
 
 import static com.hchen.hooktool.log.XposedLog.logE;
-import static com.hchen.hooktool.utils.DataUtils.spareTag;
+import static com.hchen.hooktool.utils.ToolData.spareTag;
 
 import com.hchen.hooktool.tool.ActionTool;
 import com.hchen.hooktool.tool.ChainTool;
 import com.hchen.hooktool.tool.CoreTool;
-import com.hchen.hooktool.utils.DataUtils;
+import com.hchen.hooktool.utils.ToolData;
 
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
@@ -32,17 +32,17 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
  * 工具入口
  */
 public class HCHook {
-    private final DataUtils utils;
+    private final ToolData data;
 
     static {
         initSafe();
         try {
             spareTag = HCInit.spareTag;
-            DataUtils.lpparam = HCInit.getLoadPackageParam();
-            DataUtils.useLogExpand = HCInit.getUseLogExpand();
-            DataUtils.useFieldObserver = HCInit.getUseFieldObserver();
-            DataUtils.filter = HCInit.getFilter();
-            DataUtils.classLoader = HCInit.getClassLoader();
+            ToolData.lpparam = HCInit.getLoadPackageParam();
+            ToolData.useLogExpand = HCInit.getUseLogExpand();
+            ToolData.useFieldObserver = HCInit.getUseFieldObserver();
+            ToolData.filter = HCInit.getFilter();
+            ToolData.classLoader = HCInit.getClassLoader();
         } catch (Throwable e) {
             logE(spareTag, e);
         }
@@ -52,49 +52,49 @@ public class HCHook {
      * 实例化本类开始使用
      */
     public HCHook() {
-        utils = new DataUtils();
-        utils.hcHook = this;
-        utils.actionTool = new ActionTool(utils);
-        utils.coreTool = new CoreTool(utils);
-        utils.chainTool = new ChainTool(utils);
+        data = new ToolData();
+        data.hcHook = this;
+        data.actionTool = new ActionTool(data);
+        data.coreTool = new CoreTool(data);
+        data.chainTool = new ChainTool(data);
     }
 
     public HCHook setThisTag(String tag) {
-        utils.mThisTag = tag;
-        return utils.getHCHook();
+        data.mThisTag = tag;
+        return data.getHCHook();
     }
 
     public CoreTool coreTool() {
-        return utils.getCoreTool();
+        return data.getCoreTool();
     }
     
     public ActionTool actionTool() {
-        return utils.getActionTool();
+        return data.getActionTool();
     }
 
     public ChainTool chainTool() {
-        return utils.getChainTool();
+        return data.getChainTool();
     }
 
     /* 设置自定义 class loader */
     public HCHook setClassLoader(ClassLoader classLoader) {
-        utils.mCustomClassLoader = classLoader;
-        return utils.getHCHook();
+        data.mCustomClassLoader = classLoader;
+        return data.getHCHook();
     }
 
     /* 设置自定义 lpparam */
     public HCHook setLpparam(XC_LoadPackage.LoadPackageParam lpparam) {
-        utils.mCustomLpparam = lpparam;
+        data.mCustomLpparam = lpparam;
         setClassLoader(lpparam.classLoader);
-        return utils.getHCHook();
+        return data.getHCHook();
     }
 
     public XC_LoadPackage.LoadPackageParam getLpparam() {
-        return utils.getLpparam();
+        return data.getLpparam();
     }
 
     public ClassLoader getClassLoader() {
-        return utils.getClassLoader();
+        return data.getClassLoader();
     }
 
     public static void initSafe() {

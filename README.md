@@ -150,13 +150,13 @@ public class MainTest {
         Object object = null;
         Class<?> clazz = null;
         HCHook hcHook = new HCHook();
-        ExpandTool expandTool = new HCHook().expandTool();
-        expandTool.callMethod(object, "call", new Object[]{});
-        expandTool.setField(object, "field", null);
-        expandTool.getField(object, "field");
-        expandTool.callStaticMethod(clazz, "callStatic");
-        expandTool.setStaticField(clazz, "fieldStatic", null);
-        expandTool.getStaticField(clazz, "fieldStatic");
+        ExpandTool coreTool = new HCHook().coreTool();
+        coreTool.callMethod(object, "call", new Object[]{});
+        coreTool.setField(object, "field", null);
+        coreTool.getField(object, "field");
+        coreTool.callStaticMethod(clazz, "callStatic");
+        coreTool.setStaticField(clazz, "fieldStatic", null);
+        coreTool.getStaticField(clazz, "fieldStatic");
     }
 }
 ```

@@ -20,7 +20,7 @@ package com.hchen.hooktool.tool;
 
 import com.hchen.hooktool.HCInit;
 import com.hchen.hooktool.tool.param.Arguments;
-import com.hchen.hooktool.utils.DataUtils;
+import com.hchen.hooktool.utils.ToolData;
 
 import java.lang.reflect.Member;
 
@@ -40,10 +40,9 @@ public class ParamTool extends Arguments {
 
     private XC_MethodHook xcMethodHook;
 
-    @Override
     final protected void putMethodHookParam(XC_MethodHook.MethodHookParam param) {
         if (param == null)
-            throw new RuntimeException(HCInit.getTAG() + "[" + utils.getTAG() + "][E]: param is null!!");
+            throw new RuntimeException(HCInit.getTAG() + "[" + data.getTAG() + "][E]: param is null!!");
         this.param = param;
         mClass = param.method.getDeclaringClass();
         mMember = param.method;
@@ -54,10 +53,13 @@ public class ParamTool extends Arguments {
         this.xcMethodHook = xcMethodHook;
     }
 
-    final protected void putUtils(DataUtils utils) {
-        super.putUtils(utils);
+    final protected void putUtils(ToolData data) {
+        this.data = data;
     }
 
+    /**
+     * 本类的实例。
+     */
     final public <T> T thisObject() {
         return (T) param.thisObject;
     }
@@ -70,7 +72,14 @@ public class ParamTool extends Arguments {
     }
 
     /**
-     * 获取原 Xposed param 参数。
+     * 返回此实例的类加载器。
+     */
+    final public ClassLoader classLoader() {
+        return param.thisObject.getClass().getClassLoader();
+    }
+    
+    /**
+     * 获取原 param 参数。
      */
     final public XC_MethodHook.MethodHookParam originalParam() {
         return param;

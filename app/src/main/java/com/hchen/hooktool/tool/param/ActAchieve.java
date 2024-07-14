@@ -18,18 +18,16 @@
  */
 package com.hchen.hooktool.tool.param;
 
-import com.hchen.hooktool.utils.ConvertHelper;
+import com.hchen.hooktool.utils.ToolData;
 
 import de.robv.android.xposed.XC_MethodHook;
 
 /**
  * 动作类
  */
-public class ActAchieve extends ConvertHelper {
+public class ActAchieve {
     protected XC_MethodHook.MethodHookParam param;
-
-    protected void putMethodHookParam(XC_MethodHook.MethodHookParam param) {
-    }
+    protected ToolData data;
 
     /**
      * 获取方法执行完毕后的返回值。
@@ -103,40 +101,40 @@ public class ActAchieve extends ConvertHelper {
      * 方法具体介绍请看实现类。<br/>
      * {@link com.hchen.hooktool.tool.CoreTool}
      */
-    
+
     /**
      * 请使用 new Object[]{} 传入参数。<br/>
      * 如果仅传入一个参数可以不使用 new Object[]{}<br/>
      * 这是为了规避泛型与可变参数的冲突。
      */
     final public <T, R> R callMethod(String name, T ts) {
-        return utils.getCoreTool().callMethod(param.thisObject, name, genericToArray(ts));
+        return data.getCoreTool().callMethod(param.thisObject, name, ts);
     }
 
     final public <R> R callMethod(String name) {
-        return utils.getCoreTool().callMethod(param.thisObject, name);
+        return data.getCoreTool().callMethod(param.thisObject, name);
     }
 
     // ----------- 获取/修改 字段 -------------
 
     final public <T> T getField(String name) {
-        return utils.getCoreTool().getField(param.thisObject, name);
+        return data.getCoreTool().getField(param.thisObject, name);
     }
 
     final public boolean setField(String name, Object value) {
-        return utils.getCoreTool().setField(param.thisObject, name, value);
+        return data.getCoreTool().setField(param.thisObject, name, value);
     }
 
     // ---------- 设置自定义字段 --------------
     final public boolean setAdditionalInstanceField(String key, Object value) {
-        return utils.getCoreTool().setAdditionalInstanceField(param.thisObject, key, value);
+        return data.getCoreTool().setAdditionalInstanceField(param.thisObject, key, value);
     }
 
     final public <T> T getAdditionalInstanceField(String key) {
-        return utils.getCoreTool().getAdditionalInstanceField(param.thisObject, key);
+        return data.getCoreTool().getAdditionalInstanceField(param.thisObject, key);
     }
 
     final public boolean removeAdditionalInstanceField(String key) {
-        return utils.getCoreTool().removeAdditionalInstanceField(param.thisObject, key);
+        return data.getCoreTool().removeAdditionalInstanceField(param.thisObject, key);
     }
 }

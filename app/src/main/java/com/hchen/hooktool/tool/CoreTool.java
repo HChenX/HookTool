@@ -27,8 +27,8 @@ import com.hchen.hooktool.itool.IDynamic;
 import com.hchen.hooktool.itool.IMember;
 import com.hchen.hooktool.itool.IStatic;
 import com.hchen.hooktool.utils.ConvertHelper;
-import com.hchen.hooktool.utils.DataUtils;
 import com.hchen.hooktool.utils.FieldObserver;
+import com.hchen.hooktool.utils.ToolData;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -46,11 +46,11 @@ import de.robv.android.xposed.XposedHelpers;
  */
 public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMember {
     private final FieldObserver observer;
-    private final boolean useFieldObserver = DataUtils.useFieldObserver;
+    private final boolean useFieldObserver = ToolData.useFieldObserver;
 
-    public CoreTool(DataUtils dataUtils) {
-        super(dataUtils);
-        observer = new FieldObserver(utils);
+    public CoreTool(ToolData toolData) {
+        super(toolData);
+        observer = new FieldObserver(data);
     }
 
     //------------ 检查指定类是否存在 --------------
@@ -58,34 +58,30 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
     /**
      * 查找指定类是否存在。
      */
-    public boolean ifExistsClass(String clazz) {
-        return ifExistsClass(clazz, utils.getClassLoader());
+    public boolean existsClass(String clazz) {
+        return existsClass(clazz, data.getClassLoader());
     }
 
-    public boolean ifExistsClass(String clazz, ClassLoader classLoader) {
-        try {
-            if (classLoader == null) return false;
-            return XposedHelpers.findClass(clazz, classLoader) != null;
-        } catch (XposedHelpers.ClassNotFoundError _) {
-        }
-        return false;
+    public boolean existsClass(String clazz, ClassLoader classLoader) {
+        if (classLoader == null) return false;
+        return XposedHelpers.findClassIfExists(clazz, classLoader) != null;
     }
 
     // --------- 查找类 -----------
 
     public Class<?> findClass(String name) {
-        return findClass(name, utils.getClassLoader());
+        return findClass(name, data.getClassLoader());
     }
 
     public Class<?> findClass(String name, ClassLoader classLoader) {
         try {
             if (classLoader == null) {
-                logE(utils.getTAG(), "classLoader is null!");
+                logW(data.getTAG(), "classLoader is null! can't find class: " + name);
                 return null;
             }
             return XposedHelpers.findClass(name, classLoader);
         } catch (XposedHelpers.ClassNotFoundError e) {
-            logE(utils.getTAG(), e);
+            logE(data.getTAG(), e);
         }
         return null;
     }
@@ -95,18 +91,18 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
     /**
      * 检查指定方法是否存在，不存在则返回 false。
      */
-    public boolean ifExistsMethod(String clazz, String name, Object... ojbs) {
-        return ifExistsMethod(clazz, utils.getClassLoader(), name, ojbs);
+    public boolean existsMethod(String clazz, String name, Object... ojbs) {
+        return existsMethod(clazz, data.getClassLoader(), name, ojbs);
     }
 
-    public boolean ifExistsMethod(String clazz, ClassLoader classLoader,
-                                  String name, Object... ojbs) {
+    public boolean existsMethod(String clazz, ClassLoader classLoader,
+                                String name, Object... ojbs) {
         try {
             Class<?> cl = XposedHelpers.findClassIfExists(clazz, classLoader);
             if (cl == null) return false;
             Class<?>[] classes = arrayToClass(classLoader, ojbs);
             cl.getDeclaredMethod(name, classes);
-        } catch (NoSuchMethodException _) {
+        } catch (NoSuchMethodException i) {
             return false;
         }
         return true;
@@ -115,11 +111,11 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
     /**
      * 检查指定方法名是否存在，不存在则返回 false。
      */
-    public boolean ifExistsAnyMethod(String clazz, String name) {
-        return ifExistsAnyMethod(clazz, utils.getClassLoader(), name);
+    public boolean existsAnyMethod(String clazz, String name) {
+        return existsAnyMethod(clazz, data.getClassLoader(), name);
     }
 
-    public boolean ifExistsAnyMethod(String clazz, ClassLoader classLoader, String name) {
+    public boolean existsAnyMethod(String clazz, ClassLoader classLoader, String name) {
         Class<?> cl = XposedHelpers.findClassIfExists(clazz, classLoader);
         if (cl == null) return false;
         for (Method method : cl.getDeclaredMethods()) {
@@ -143,12 +139,12 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
     public Method findMethod(Class<?> clazz, String name, Object... objects) {
         try {
             if (clazz == null) {
-                logW(utils.getTAG(), "class is null!");
+                logW(data.getTAG(), "class is null! can't find method: " + name);
                 return null;
             }
             return clazz.getDeclaredMethod(name, arrayToClass(objects));
         } catch (NoSuchMethodException e) {
-            logE(utils.getTAG(), e);
+            logE(data.getTAG(), e);
         }
         return null;
     }
@@ -164,7 +160,7 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
     public ArrayList<Method> findAnyMethod(Class<?> clazz, String name) {
         ArrayList<Method> methods = new ArrayList<>();
         if (clazz == null) {
-            logW(utils.getTAG(), "class is null!");
+            logW(data.getTAG(), "class is null! can't find method: " + name);
             return methods;
         }
         for (Method m : clazz.getDeclaredMethods()) {
@@ -186,12 +182,12 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
     public Constructor<?> findConstructor(Class<?> clazz, Object... objects) {
         try {
             if (clazz == null) {
-                logW(utils.getTAG(), "class is null!");
+                logW(data.getTAG(), "class is null! can't find constructor!");
                 return null;
             }
             return clazz.getDeclaredConstructor(arrayToClass(objects));
         } catch (NoSuchMethodException e) {
-            logE(utils.getTAG(), e);
+            logE(data.getTAG(), e);
         }
         return null;
     }
@@ -206,7 +202,7 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
 
     public ArrayList<Constructor<?>> findAnyConstructor(Class<?> clazz) {
         if (clazz == null) {
-            logW(utils.getTAG(), "class is null!");
+            logW(data.getTAG(), "class is null! can't find constructor!");
             return new ArrayList<>();
         }
         return new ArrayList<>(Arrays.asList(clazz.getDeclaredConstructors()));
@@ -217,19 +213,13 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
     /**
      * 查找指定字段是否存在，不存在返回 false
      */
-    public boolean ifExistsField(String clazz, String name) {
-        return ifExistsField(clazz, utils.getClassLoader(), name);
+    public boolean existsField(String clazz, String name) {
+        return existsField(clazz, data.getClassLoader(), name);
     }
 
-    public boolean ifExistsField(String clazz, ClassLoader classLoader, String name) {
-        Class<?> cl = utils.getCoreTool().findClass(clazz, classLoader);
-        try {
-            cl.getDeclaredField(name);
-        } catch (NoSuchFieldException e) {
-            logE(utils.getTAG(), e);
-            return false;
-        }
-        return true;
+    public boolean existsField(String clazz, ClassLoader classLoader, String name) {
+        Class<?> cl = data.getCoreTool().findClass(clazz, classLoader);
+        return XposedHelpers.findFieldIfExists(cl, name) != null;
     }
 
     // --------- 查找字段 -----------
@@ -244,13 +234,13 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
 
     public Field findField(Class<?> clazz, String name) {
         if (clazz == null) {
-            logW(utils.getTAG(), "class is null!");
+            logW(data.getTAG(), "class is null! can't find field: " + name);
             return null;
         }
         try {
-            return clazz.getField(name);
-        } catch (NoSuchFieldException e) {
-            logE(utils.getTAG(), e);
+            return XposedHelpers.findField(clazz, name);
+        } catch (Throwable e) {
+            logE(data.getTAG(), e);
         }
         return null;
     }
@@ -259,15 +249,15 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
 
     public XC_MethodHook.Unhook hook(Member member, IAction iAction) {
         if (member == null || iAction == null) {
-            logW(utils.getTAG(), "member or iAction is null, can't hook!");
+            logW(data.getTAG(), "member or iAction is null, can't hook!");
             return null;
         }
         try {
-            XC_MethodHook.Unhook unhook = XposedBridge.hookMethod(member, utils.getActionTool().createHook(member, iAction));
-            logD(utils.getTAG(), "success hook: " + member);
+            XC_MethodHook.Unhook unhook = XposedBridge.hookMethod(member, data.getActionTool().createHook(member, iAction));
+            logD(data.getTAG(), "success hook: " + member);
             return unhook;
         } catch (Throwable e) {
-            logE(utils.getTAG(), "hook: [" + member + "], failed!", e);
+            logE(data.getTAG(), "hook: [" + member + "], failed!", e);
         }
         return null;
     }
@@ -278,10 +268,10 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
             if (o instanceof Method || o instanceof Constructor<?>) {
                 try {
                     unhooks.add(XposedBridge.hookMethod((Member) o,
-                            utils.getActionTool().createHook((Member) o, iAction)));
-                    logD(utils.getTAG(), "success hook: " + o);
+                            data.getActionTool().createHook((Member) o, iAction)));
+                    logD(data.getTAG(), "success hook: " + o);
                 } catch (Throwable e) {
-                    logE(utils.getTAG(), "hook: [" + o + "], failed!", e);
+                    logE(data.getTAG(), "hook: [" + o + "], failed!", e);
                 }
             }
         }
@@ -312,9 +302,11 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
         ArrayList<Method> methods = new ArrayList<>();
         for (Method m : clazz.getDeclaredMethods()) {
             try {
-                methods.add(iFindMethod.doFind(m));
+                if (iFindMethod.test(m)) {
+                    methods.add(m);
+                }
             } catch (Throwable e) {
-                logE(utils.getTAG(), "do find method failed!", e);
+                logE(data.getTAG(), "do find method failed!", e);
             }
         }
         return methods;
@@ -324,20 +316,22 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
         ArrayList<Constructor<?>> constructors = new ArrayList<>();
         for (Constructor<?> c : clazz.getDeclaredConstructors()) {
             try {
-                constructors.add(iFindConstructor.doFind(c));
+                if (iFindConstructor.test(c)) {
+                    constructors.add(c);
+                }
             } catch (Throwable e) {
-                logE(utils.getTAG(), "do find constructor failed!", e);
+                logE(data.getTAG(), "do find constructor failed!", e);
             }
         }
         return constructors;
     }
 
     public interface IFindMethod {
-        Method doFind(Method method);
+        boolean test(Method method);
     }
 
     public interface IFindConstructor {
-        Constructor<?> doFind(Constructor<?> constructor);
+        boolean test(Constructor<?> constructor);
     }
 
     // ---------- 非静态 -----------
@@ -348,10 +342,14 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
      * 这是为了规避泛型与可变参数的冲突。
      */
     public <T, R> R callMethod(Object instance, String name, T ts) {
+        if (instance == null) {
+            logW(data.getTAG(), "instance is null! can't call method: " + name);
+            return null;
+        }
         try {
             return (R) XposedHelpers.callMethod(instance, name, genericToArray(ts));
         } catch (Throwable e) {
-            logE(utils.getTAG(), "call method failed!", e);
+            logE(data.getTAG(), "call method failed!", e);
         }
         return null;
     }
@@ -361,74 +359,102 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
     }
 
     public <T> T getField(Object instance, String name) {
+        if (instance == null) {
+            logW(data.getTAG(), "instance is null! can't set field: " + name);
+            return null;
+        }
         try {
             return (T) XposedHelpers.getObjectField(instance, name);
         } catch (Throwable e) {
-            logE(utils.getTAG(), "get field failed!", e);
+            logE(data.getTAG(), "get field failed!", e);
         }
         return null;
     }
 
     public <T> T getField(Object instance, Field field) {
         try {
+            if (instance == null) {
+                logW(data.getTAG(), "instance is null! can't get field: " + field.getName());
+                return null;
+            }
             field.setAccessible(true);
             return (T) field.get(instance);
         } catch (Throwable e) {
-            logE(utils.getTAG(), "get field failed!", e);
+            logE(data.getTAG(), "get field failed!", e);
         }
         return null;
     }
 
     public boolean setField(Object instance, String name, Object value) {
+        if (instance == null) {
+            logW(data.getTAG(), "instance is null! can't set field: " + name);
+            return false;
+        }
         try {
             XposedHelpers.setObjectField(instance, name, value);
             if (useFieldObserver)
                 observer.dynamicObserver(instance, name, value);
             return true;
         } catch (Throwable e) {
-            logE(utils.getTAG(), "set field failed!", e);
+            logE(data.getTAG(), "set field failed!", e);
         }
         return false;
     }
 
     public boolean setField(Object instance, Field field, Object value) {
         try {
+            if (instance == null) {
+                logW(data.getTAG(), "instance is null! can't set field: " + field.getName());
+                return false;
+            }
             field.setAccessible(true);
             field.set(instance, value);
             if (useFieldObserver)
                 observer.dynamicObserver(field, instance, value);
             return true;
         } catch (Throwable e) {
-            logE(utils.getTAG(), "set field failed!", e);
+            logE(data.getTAG(), "set field failed!", e);
         }
         return false;
     }
 
     public boolean setAdditionalInstanceField(Object instance, String key, Object value) {
+        if (instance == null) {
+            logW(data.getTAG(), "instance is null! can't remove additional: " + key);
+            return false;
+        }
         try {
             XposedHelpers.setAdditionalInstanceField(instance, key, value);
             return true;
         } catch (Throwable e) {
-            logE(utils.getTAG(), "set additional failed!", e);
+            logE(data.getTAG(), "set additional failed!", e);
         }
         return false;
     }
 
     public <T> T getAdditionalInstanceField(Object instance, String key) {
+        if (instance == null) {
+            logW(data.getTAG(), "instance is null! can't get additional: " + key);
+            return null;
+        }
         try {
             return (T) XposedHelpers.getAdditionalInstanceField(instance, key);
         } catch (Throwable e) {
-            logE(utils.getTAG(), "get additional failed!", e);
+            logE(data.getTAG(), "get additional failed!", e);
         }
         return null;
     }
 
     public boolean removeAdditionalInstanceField(Object instance, String key) {
+        if (instance == null) {
+            logW(data.getTAG(), "instance is null! can't remove additional: " + key);
+            return false;
+        }
         try {
             XposedHelpers.removeAdditionalInstanceField(instance, key);
             return true;
         } catch (Throwable e) {
-            logE(utils.getTAG(), "remove additional failed!", e);
+            logE(data.getTAG(), "remove additional failed!", e);
         }
         return false;
     }
@@ -445,9 +471,9 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
             try {
                 return (R) XposedHelpers.newInstance(clz, genericToArray(objects));
             } catch (Throwable e) {
-                logE(utils.getTAG(), "new instance failed!", e);
+                logE(data.getTAG(), "new instance failed!", e);
             }
-        } else logW(utils.getTAG(), "class is null, can't new instance.");
+        } else logW(data.getTAG(), "class is null, can't new instance.");
         return null;
     }
 
@@ -465,10 +491,10 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
             try {
                 return (R) XposedHelpers.callStaticMethod(clz, name, genericToArray(objs));
             } catch (Throwable e) {
-                logE(utils.getTAG(), "call static method failed!", e);
+                logE(data.getTAG(), "call static method failed!", e);
             }
         } else {
-            logW(utils.getTAG(), "class is null, can't call: " + name);
+            logW(data.getTAG(), "class is null, can't call static method: " + name);
         }
         return null;
     }
@@ -482,9 +508,9 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
             try {
                 return (T) XposedHelpers.getStaticObjectField(clz, name);
             } catch (Throwable e) {
-                logE(utils.getTAG(), "get static field failed!", e);
+                logE(data.getTAG(), "get static field failed!", e);
             }
-        } else logW(utils.getTAG(), "class is null, can't get field: " + name);
+        } else logW(data.getTAG(), "class is null, can't get static field: " + name);
         return null;
     }
 
@@ -493,7 +519,7 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
             field.setAccessible(true);
             return (T) field.get(null);
         } catch (Throwable e) {
-            logE(utils.getTAG(), "get static field failed!", e);
+            logE(data.getTAG(), "get static field failed!", e);
         }
         return null;
     }
@@ -506,9 +532,9 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
                     observer.staticObserver(clz, name, value);
                 return true;
             } catch (Throwable e) {
-                logE(utils.getTAG(), "set static field failed!", e);
+                logE(data.getTAG(), "set static field failed!", e);
             }
-        } else logW(utils.getTAG(), "class is null, can't set field: " + name);
+        } else logW(data.getTAG(), "class is null, can't set static field: " + name);
         return false;
     }
 
@@ -520,7 +546,7 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
                 observer.staticObserver(field, value);
             return true;
         } catch (Throwable e) {
-            logE(utils.getTAG(), "set static field failed!", e);
+            logE(data.getTAG(), "set static field failed!", e);
         }
         return false;
     }
@@ -531,9 +557,9 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
                 XposedHelpers.setAdditionalStaticField(clz, key, value);
                 return true;
             } catch (Throwable e) {
-                logE(utils.getTAG(), "set additional static field failed!", e);
+                logE(data.getTAG(), "set additional static field failed!", e);
             }
-        } else logW(utils.getTAG(), "class is null, can't additional: " + key);
+        } else logW(data.getTAG(), "class is null, can't static additional: " + key);
         return false;
     }
 
@@ -542,9 +568,9 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
             try {
                 return (T) XposedHelpers.getAdditionalStaticField(clz, key);
             } catch (Throwable e) {
-                logE(utils.getTAG(), "get additional static field failed!", e);
+                logE(data.getTAG(), "get additional static field failed!", e);
             }
-        } else logW(utils.getTAG(), "class is null, can't get additional: " + key);
+        } else logW(data.getTAG(), "class is null, can't get static additional: " + key);
         return null;
     }
 
@@ -554,10 +580,10 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
                 XposedHelpers.removeAdditionalStaticField(clz, key);
                 return true;
             } catch (Throwable e) {
-                logE(utils.getTAG(), "remove additional static field failed!", e);
+                logE(data.getTAG(), "remove additional static field failed!", e);
             }
         } else
-            logW(utils.getTAG(), "class is null, can't remove additional: " + key);
+            logW(data.getTAG(), "class is null, can't remove static additional: " + key);
         return false;
     }
 }

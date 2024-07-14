@@ -191,11 +191,13 @@ public class SystemSDK {
 
     // --------- 其他 --------
     public static boolean IS_TABLET() {
-        return Boolean.TRUE.equals(InvokeUtils.getStaticField("miui.os.Build", "IS_TABLET"));
+        return Boolean.TRUE.equals(InvokeUtils.getStaticField(
+                InvokeUtils.findClass("miui.os.Build", null), "IS_TABLET"));
     }
 
     public static boolean IS_INTERNATIONAL_BUILD() {
-        return Boolean.TRUE.equals(InvokeUtils.getStaticField("miui.os.Build", "IS_INTERNATIONAL_BUILD"));
+        return Boolean.TRUE.equals(InvokeUtils.getStaticField(
+                InvokeUtils.findClass("miui.os.Build", null), "IS_INTERNATIONAL_BUILD"));
     }
 
     /**

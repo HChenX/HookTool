@@ -25,8 +25,8 @@ import static com.hchen.hooktool.log.XposedLog.logW;
 import com.hchen.hooktool.callback.IAction;
 import com.hchen.hooktool.data.ChainData;
 import com.hchen.hooktool.data.StateEnum;
-import com.hchen.hooktool.utils.DataUtils;
 import com.hchen.hooktool.utils.LogExpand;
+import com.hchen.hooktool.utils.ToolData;
 
 import java.lang.reflect.Member;
 import java.util.ArrayList;
@@ -39,19 +39,19 @@ import de.robv.android.xposed.XposedBridge;
  * Hook 执行类
  */
 public class ActionTool {
-    private final DataUtils utils;
+    private final ToolData data;
     private ChainTool chain;
 
-    public ActionTool(DataUtils data) {
-        this.utils = data;
+    public ActionTool(ToolData data) {
+        this.data = data;
     }
 
     public void chain(String clazz, ChainTool chain) {
-        chain(utils.getCoreTool().findClass(clazz), chain);
+        chain(data.getCoreTool().findClass(clazz), chain);
     }
 
     public void chain(String clazz, ClassLoader classLoader, ChainTool chain) {
-        chain(utils.getCoreTool().findClass(clazz, classLoader), chain);
+        chain(data.getCoreTool().findClass(clazz, classLoader), chain);
     }
 
     public void chain(Class<?> clazz, ChainTool chain) {
@@ -61,40 +61,44 @@ public class ActionTool {
     }
 
     private void doAction() {
-        ArrayList<ChainData> chainData = chain.getChainData();
+        ArrayList<ChainData> chainData = chain.getChainDataList();
         if (chainData == null) {
-            logW(utils.getTAG(), "chain data is null!!");
+            logW(data.getTAG(), "chain data is null!!");
             return;
         }
 
         ListIterator<ChainData> iterator = chainData.listIterator();
         while (iterator.hasNext()) {
             ChainData data = iterator.next();
+            if (data.iAction == null) {
+                logW(this.data.getTAG(), "member: [" + data.member + "]'s action is null! can't hook!");
+                continue;
+            }
             switch (data.stateEnum) {
                 case StateEnum.NONE -> {
                     try {
                         XposedBridge.hookMethod(data.member, createHook(data.member, data.iAction));
                         data.stateEnum = StateEnum.HOOKED;
-                        logD(utils.getTAG(), "success to hook: " + data.member);
+                        logD(this.data.getTAG(), "success to hook: " + data.member);
                     } catch (Throwable e) {
                         data.stateEnum = StateEnum.FAILED;
-                        logE(utils.getTAG(), e);
+                        logE(this.data.getTAG(), e);
                     }
                     iterator.set(data);
                 }
                 case StateEnum.HOOKED -> {
-                    logD(utils.getTAG(), "this method is hooked: " + data.member);
+                    logD(this.data.getTAG(), "this method is hooked: " + data.member);
                 }
                 case StateEnum.FAILED -> {
-                    logD(utils.getTAG(), "this method is hook failed: " + data.member);
+                    logD(this.data.getTAG(), "this method is hook failed: " + data.member);
                 }
             }
         }
     }
 
     protected Action createHook(Member member, IAction iAction) {
-        iAction.putUtils(utils);
-        return new Action(member, utils.getTAG()) {
+        iAction.putUtils(data);
+        return new Action(member, data.getTAG()) {
             @Override
             protected void before(MethodHookParam param) throws Throwable {
                 iAction.putMethodHookParam(param);
@@ -131,7 +135,7 @@ public class ActionTool {
             super();
             TAG = tag;
             putThis(this);
-            this.useLogExpand = DataUtils.useLogExpand;
+            this.useLogExpand = ToolData.useLogExpand;
             if (useLogExpand) this.logExpand = new LogExpand(member, TAG);
         }
 
@@ -139,7 +143,7 @@ public class ActionTool {
             super(priority);
             TAG = tag;
             putThis(this);
-            this.useLogExpand = DataUtils.useLogExpand;
+            this.useLogExpand = ToolData.useLogExpand;
             if (useLogExpand) this.logExpand = new LogExpand(member, TAG);
         }
 
