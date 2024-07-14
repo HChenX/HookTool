@@ -36,7 +36,7 @@ public class InvokeUtils {
     private final static String TAG = "invokeUtils";
 
     // ----------------------------反射调用方法--------------------------------
-    public static <T> T callMethod(Class<?> clz, Object instance, String method, Class<?>[] param, Object... value) {
+    public static <T> T callMethod(Object instance, String method, Class<?>[] param, Object... value) {
         return baseInvokeMethod(null, instance, method, param, value);
     }
 
@@ -60,7 +60,7 @@ public class InvokeUtils {
     public static <T> T getStaticField(Class<?> clz, String field) {
         return baseInvokeField(clz, null, field, false, null);
     }
-    
+
     /**
      * @noinspection unchecked
      */

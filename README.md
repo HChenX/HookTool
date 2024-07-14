@@ -20,7 +20,7 @@
 
 ### 3. **安全调用**
 
-### 4. **一次性使用**
+### 4. **简洁干练**
 
 # 🔧 使用方法
 
@@ -53,6 +53,11 @@ dependencies {
 ```java
 
 @Override
+public void initZygote(IXposedHookZygoteInit.StartupParam startupParam) {
+    HCInit.initZygote(startupParam); // 初始化
+}
+
+@Override
 public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) {
     HCInit.setTAG("YourTag"); // 设置日志 TAG
     HCInit.setLogLevel(HCInit.LOG_I); // 设置日志输出等级
@@ -65,7 +70,7 @@ public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) {
 ```java
 public void test() {
     HCHook hcHook = new HCHook(); // 实例工具
-    hcHook.setThisTag(TAG); // 设置具体 TAG，比如本类名。
+    hcHook.setThisTag(TAG); // 设置具体 TAG，比如本类名 "test"。
 }
 ```
 
@@ -77,6 +82,13 @@ public class MainTest extends BaseHC {
     @Override
     public void init() {
         // BaseHC 包含已经初始化的工具，直接调用即可。
+    }
+
+    // 可选项。
+    // 时机为 zygote。
+    @Override
+    public void initZygote(IXposedHookZygoteInit.StartupParam startupParam) {
+        super.initZygote(startupParam);
     }
 }
 
@@ -93,64 +105,52 @@ public class RunHook {
 
 # 💡链式调用
 
-- 本工具支持链式调用，获取一次`Class`终身使用 (bushi) 。
-- ⚠️对`Class`的定位获取需要借助标签来辅助。
-- 标签类型为 Object，所以可以随便写。
+- 本工具支持链式调用，使用 chain() 方法创建链式。
+- 这是本工具重构提供的全新链式方案，是否更简洁高效了呢？
 - 代码示例:
 
 ```java
-// Method 的链式调用
+// 链式调用
 public class MainTest {
     public void test() {
-        HCHook hcHook = new HCHook();
-        hcHook.findClass("main", "com.demo.Main").
-                getMethod("test1").getMethod("test2").getMethod("test3"); // 即可持续的获取方法。
-        // 什么？怎么 Hook ？同样简单！
-        hcHook.methodTool().hook(new IAction() {
-            //......
-        }).hook(new IAction() {
-            //......
-        }).hook(new IAction() {
-            //......
-        });
-        // 看，是不是很简单？因为上面获取了三个方法，所以下面也同样的可以 hook 三次。
-        // 不用担心前面可能的报错导致 hook 无法进行，还记得吗？本工具的亮点 “安全调用”。
-        // 如果 getMethod() 数量少于 hook() 调用数量则会自动停止执行 hook()，不会影响后续代码！
+        // 看！是不是很简洁易懂？
+        // 链式调用时任何抛错将不会引起进程中断，请放心使用！
+        chain("com.hchen.demo", method("test")
+                .hook(new IAction() {
+                    @Override
+                    public void before() throws Throwable {
+                        super.before();
+                    }
+                })
+
+                .method("test_1", String.class)
+                .hook(new IAction() {
+                    @Override
+                    public void after() throws Throwable {
+                        super.after();
+                    }
+                })
+
+                .constructor()
+                .hook(new IAction() {
+                    @Override
+                    public void after() throws Throwable {
+                        super.after();
+                    }
+                })
+        );
     }
 }
 ```
 
 ```java
-// Class 的链式调用
-public class MainTest {
-    public void test() {
-        HCHook hcHook = new HCHook();
-        hcHook.findClass("main1", "com.demo.Main1").findClass("main2", "com.demo.Main2")
-                .findClass("main3", "com.demo.Main3")
-                .getMethod("main1").hook(new IAction() {
-                    //......
-                }).to("main2") // 调用 to() 则会转为使用指定 TAG 的类进行方法查找与 Hook。
-                .getMethod("main2").hook(new IAction() {
-                    //......
-                }).to("main3") // 调用 to() 则会转为使用指定 TAG 的类进行方法查找与 Hook。
-                .getMethod("main3").hook(new IAction() {
-                    //......
-                }).to("main2") // 调用 to() 则会转为使用指定 TAG 的类进行方法查找与 Hook。
-                .getMethod("main2-1").hook(new IAction() {
-                    //......
-                });
-    }
-}
-```
-
-```java
-// 独立工具
+// 独立工具，更建议直接继承 BaseHC 类获取更好体验！
 public class MainTest {
     public void test() {
         Object object = null;
         Class<?> clazz = null;
         HCHook hcHook = new HCHook();
-        ExpandTool coreTool = new HCHook().coreTool();
+        CoreTool coreTool = new HCHook().coreTool();
         coreTool.callMethod(object, "call", new Object[]{});
         coreTool.setField(object, "field", null);
         coreTool.getField(object, "field");
@@ -188,22 +188,22 @@ public class MainTest extends BaseHC {
 
         new IAction() {
             @Override
-            public void before(ParamTool param) throws Throwable {
+            public void before() throws Throwable {
                 // hook 方法所属的类
-                Class<?> c = param.mClass;
+                Class<?> c = mClass;
 
-                Context context = param.thisObject();
-                String string = param.first();
-                param.second(1);
+                Context context = thisObject();
+                String string = first();
+                second(1);
 
                 // 非静态的本类内实例可直接使用 param.xx() 进行设置。
-                param.setField("demo", 1);
-                param.callMethod("method");
-                param.getField("test");
+                setField("demo", 1);
+                callMethod("method");
+                getField("test");
 
                 // 静态需要 class
-                String result = param.callMethod("call", new Object[]{param.thisObject(), param.first()});
-                callStaticMethod(findClass("com.demo.Main"), "callStatic", new Object[]{param.thisObject(), param.second()});
+                String result = callMethod("call", new Object[]{thisObject(), first()});
+                callStaticMethod(findClass("com.demo.Main"), "callStatic", new Object[]{thisObject(), second()});
                 int i = getStaticField(findClass("com.demo.Main"), "field");
                 setStaticField(findClass("com.demo.Main"), "test", true);
             }
@@ -224,9 +224,40 @@ public class MainTest extends BaseHC {
 - 拥有较好的容错率等。
 - 适合于需要非中断执行的情况。
 
-# 📌一次性使用
+# 📌简洁干练
 
-- 工具追求在目标类内实例化一次即可执行完全部需要执行的操作，拒绝多次重复实例。
+- 工具追求提供简洁干练的方法，比如：
+
+```java
+public class MainTest extends BaseHC {
+
+    @Override
+    public void init() {
+        new XC_MethodHook() {
+            @Override
+            protected void beforeHookedMethod(MethodHookParam param) {
+                // 需要使用 param 来调出 param.thisObject, param.args,等内容。
+                // 需要使用 XposedHelpers.callMethod(), XposedHelpers.callStaticMethod(),等来调用动作。
+                // 十分麻烦，繁杂。
+            }
+        };
+
+        new IAction() {
+            @Override
+            public void before() throws Throwable {
+                // 本工具将其封装，可直接使用！
+                // thisObject(), first(), callMethod(), callStaticMethod(),等，所见即所用。
+                // 注：部分方法调用需要继承 BaseHC 才能简洁调用！
+            }
+        };
+    }
+}
+```
+
+- 不知道客官是否喜欢呢？
+
+- ### **⚠️重要提醒**
+- 本工具十分建议您继承 BaseHC 类使用，以获得更佳的体验！
 
 # 🔥工具附加提供
 
@@ -253,8 +284,8 @@ public class MainTest {
 
     public void test() {
         // 即可反射调用方法，其他反射操作同理。
-        InvokeUtils.callMethod("com.hchen.hooktool.MainTest",
-                getClass().getClassLoader(), "test", new Class[]{});
+        InvokeUtils.callMethod(InvokeUtils.findClass("com.hchen.hooktool.MainTest",
+                getClass().getClassLoader()), "test", new Class[]{});
     }
 }
 ```
@@ -278,7 +309,7 @@ public class MainTest {
 
 ---
 
-- ExpandTool 类:
+- CoreTool 类:
 - 提供超完善的 Hook 方法！
 - 绝对满足需求！
 

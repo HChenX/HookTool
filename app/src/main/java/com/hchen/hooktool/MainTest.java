@@ -22,6 +22,7 @@ import android.content.Context;
 
 import com.hchen.hooktool.callback.IAction;
 
+import de.robv.android.xposed.IXposedHookZygoteInit;
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedHelpers;
 
@@ -29,6 +30,11 @@ import de.robv.android.xposed.XposedHelpers;
  * 测试和示例类
  */
 public class MainTest extends BaseHC {
+
+    @Override
+    public void initZygote(IXposedHookZygoteInit.StartupParam startupParam) {
+        super.initZygote(startupParam);
+    }
 
     @Override
     public void init() {
