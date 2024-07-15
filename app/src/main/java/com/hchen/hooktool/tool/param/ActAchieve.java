@@ -26,7 +26,7 @@ import de.robv.android.xposed.XC_MethodHook;
  * 动作类
  */
 public class ActAchieve {
-    protected XC_MethodHook.MethodHookParam param;
+    protected XC_MethodHook.MethodHookParam methodHookParam;
     protected ToolData data;
 
     /**
@@ -35,7 +35,7 @@ public class ActAchieve {
      * @return 方法返回值。
      */
     final public <T> T getResult() {
-        return (T) param.getResult();
+        return (T) methodHookParam.getResult();
     }
 
     /**
@@ -43,21 +43,21 @@ public class ActAchieve {
      * after 中使用修改返回结果。
      */
     final public void returnNull() {
-        param.setResult(null);
+        methodHookParam.setResult(null);
     }
 
     /**
      * 使方法返回指定的布尔值 true。
      */
     final public void returnTure() {
-        param.setResult(true);
+        methodHookParam.setResult(true);
     }
 
     /**
      * 使方法返回指定布尔值 false。
      */
     final public void returnFalse() {
-        param.setResult(false);
+        methodHookParam.setResult(false);
     }
 
     /**
@@ -65,35 +65,35 @@ public class ActAchieve {
      * after 中使用修改返回结果。
      */
     final public <T> void setResult(T value) {
-        param.setResult(value);
+        methodHookParam.setResult(value);
     }
 
     /**
      * 如果方法引发了异常，则返回 true。
      */
-    final public boolean hasThrowable() {
-        return param.hasThrowable();
+    final public boolean hasCrash() {
+        return methodHookParam.hasThrowable();
     }
 
     /**
      * 返回该方法抛出的 throwable 或者返回 null。
      */
-    final public Throwable getThrowable() {
-        return param.getThrowable();
+    final public Throwable getCrash() {
+        return methodHookParam.getThrowable();
     }
 
     /**
      * 调用方法将引发异常，在 before 中使用可阻止方法执行。
      */
-    final public void setThrowable(Throwable t) {
-        param.setThrowable(t);
+    final public void makeCrash(Throwable t) {
+        methodHookParam.setThrowable(t);
     }
 
     /**
      * 返回方法调用的结果，或抛出由该方法调用引起的 Throwable。
      */
     final public <T> T getResultOrThrowable() throws Throwable {
-        return (T) param.getResultOrThrowable();
+        return (T) methodHookParam.getResultOrThrowable();
     }
 
     // --------- 调用方法 --------------
@@ -107,34 +107,34 @@ public class ActAchieve {
      * 如果仅传入一个参数可以不使用 new Object[]{}<br/>
      * 这是为了规避泛型与可变参数的冲突。
      */
-    final public <T, R> R callMethod(String name, T ts) {
-        return data.getCoreTool().callMethod(param.thisObject, name, ts);
+    final public <T, R> R callThisMethod(String name, T ts) {
+        return data.getCoreTool().callMethod(methodHookParam.thisObject, name, ts);
     }
 
-    final public <R> R callMethod(String name) {
-        return data.getCoreTool().callMethod(param.thisObject, name);
+    final public <R> R callThisMethod(String name) {
+        return data.getCoreTool().callMethod(methodHookParam.thisObject, name);
     }
 
     // ----------- 获取/修改 字段 -------------
 
-    final public <T> T getField(String name) {
-        return data.getCoreTool().getField(param.thisObject, name);
+    final public <T> T getThisField(String name) {
+        return data.getCoreTool().getField(methodHookParam.thisObject, name);
     }
 
-    final public boolean setField(String name, Object value) {
-        return data.getCoreTool().setField(param.thisObject, name, value);
+    final public boolean setThisField(String name, Object value) {
+        return data.getCoreTool().setField(methodHookParam.thisObject, name, value);
     }
 
     // ---------- 设置自定义字段 --------------
-    final public boolean setAdditionalInstanceField(String key, Object value) {
-        return data.getCoreTool().setAdditionalInstanceField(param.thisObject, key, value);
+    final public boolean setThisAdditionalInstanceField(String key, Object value) {
+        return data.getCoreTool().setAdditionalInstanceField(methodHookParam.thisObject, key, value);
     }
 
-    final public <T> T getAdditionalInstanceField(String key) {
-        return data.getCoreTool().getAdditionalInstanceField(param.thisObject, key);
+    final public <T> T getThisAdditionalInstanceField(String key) {
+        return data.getCoreTool().getAdditionalInstanceField(methodHookParam.thisObject, key);
     }
 
-    final public boolean removeAdditionalInstanceField(String key) {
-        return data.getCoreTool().removeAdditionalInstanceField(param.thisObject, key);
+    final public boolean removeThisAdditionalInstanceField(String key) {
+        return data.getCoreTool().removeAdditionalInstanceField(methodHookParam.thisObject, key);
     }
 }

@@ -102,7 +102,7 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
             if (cl == null) return false;
             Class<?>[] classes = arrayToClass(classLoader, ojbs);
             cl.getDeclaredMethod(name, classes);
-        } catch (NoSuchMethodException i) {
+        } catch (NoSuchMethodException ignored) {
             return false;
         }
         return true;
@@ -247,6 +247,34 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
 
     // --------- 执行 hook -----------
 
+    public XC_MethodHook.Unhook hook(String clazz, String method, Object... params) {
+        return hook(clazz, data.getClassLoader(), method, params);
+    }
+
+    public XC_MethodHook.Unhook hook(String clazz, ClassLoader classLoader, String method, Object... params) {
+        return hook(findClass(clazz, classLoader), method, params);
+    }
+
+    public XC_MethodHook.Unhook hook(Class<?> clazz, String method, Object... params) {
+        if (params.length == 0 || !(params[params.length - 1] instanceof IAction)) {
+            logE(data.getTAG(), "params length == 0 or last param not is IAction! can't hook!!");
+            return null;
+        }
+        return hook(findMethod(clazz, method, params), (IAction) params[params.length - 1]);
+    }
+
+    public ArrayList<XC_MethodHook.Unhook> hook(String clazz, IAction iAction) {
+        return hook(findAnyConstructor(clazz), iAction);
+    }
+    
+    public XC_MethodHook.Unhook hook(String clazz, Object... params) {
+        if (params.length == 0 || !(params[params.length - 1] instanceof IAction)) {
+            logE(data.getTAG(), "params length == 0 or last param not is IAction! can't hook!!");
+            return null;
+        }
+        return hook(findConstructor(clazz, params), (IAction) params[params.length - 1]);
+    }
+
     public XC_MethodHook.Unhook hook(Member member, IAction iAction) {
         if (member == null || iAction == null) {
             logW(data.getTAG(), "member or iAction is null, can't hook!");
@@ -294,6 +322,26 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
                 setResult(null);
             }
         };
+    }
+
+    // --------- 解除 hook ---------
+
+    public boolean unHook(XC_MethodHook.Unhook unhook) {
+        try {
+            unhook.unhook();
+            return true;
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
+
+    public boolean unHook(Member hookMember, XC_MethodHook xcMethodHook) {
+        try {
+            XposedBridge.unhookMethod(hookMember, xcMethodHook);
+            return true;
+        } catch (Throwable ignored) {
+            return false;
+        }
     }
 
     // --------- 过滤方法 -----------

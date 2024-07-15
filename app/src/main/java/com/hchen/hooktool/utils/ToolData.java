@@ -23,65 +23,75 @@ import com.hchen.hooktool.HCInit;
 import com.hchen.hooktool.tool.ActionTool;
 import com.hchen.hooktool.tool.ChainTool;
 import com.hchen.hooktool.tool.CoreTool;
+import com.hchen.hooktool.tool.PrefsTool;
 
+import de.robv.android.xposed.IXposedHookZygoteInit;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 /**
  * 这是本工具的读写数据类，请不要继承重写。
  */
 public class ToolData {
-    public static String spareTag = null;
+    // HCInit
+    public static String mInitTag = "[Unknown]";
+    public static int mInitLogLevel = HCInit.LOG_I;
+    public static String spareTag = "Unknown";
+    public static String modulePackageName = null;
+    public static boolean useLogExpand = false;
+    public static String[] filter = new String[]{};
+    public static boolean useFieldObserver = false;
+    public static IXposedHookZygoteInit.StartupParam startupParam = null;
+    // HCHook
+    public static XC_LoadPackage.LoadPackageParam lpparam = null;
+    public static ClassLoader classLoader = null;
     public String mThisTag = null;
     public HCHook hcHook = null;
     public ActionTool actionTool = null;
     public CoreTool coreTool = null;
     public ChainTool chainTool = null;
-    public static String[] filter = null;
-    public static boolean useLogExpand = false;
-    public static boolean useFieldObserver = false;
-    public static XC_LoadPackage.LoadPackageParam lpparam = null;
-    public XC_LoadPackage.LoadPackageParam mCustomLpparam = null;
-    public static ClassLoader classLoader = null;
-    public ClassLoader mCustomClassLoader = null;
+    public PrefsTool prefsTool = null;
 
     public ClassLoader getClassLoader() {
-        if (mCustomClassLoader != null) 
-            return mCustomClassLoader;
         return classLoader;
     }
 
     public XC_LoadPackage.LoadPackageParam getLpparam() {
-        if (mCustomLpparam != null)
-            return mCustomLpparam;
         return lpparam;
     }
 
     public HCHook getHCHook() {
         HCHook hcHook = this.hcHook;
         if (hcHook == null)
-            throw new RuntimeException(HCInit.getTAG() + "[" + getTAG() + "][E]: HCHook is null!!");
+            throw new RuntimeException(mInitTag + "[" + getTAG() + "][E]: HCHook is null!!");
         return hcHook;
     }
 
     public ActionTool getActionTool() {
         ActionTool actionTool = this.actionTool;
         if (actionTool == null)
-            throw new RuntimeException(HCInit.getTAG() + "[" + getTAG() + "][E]: ActionTool is null!!");
+            throw new RuntimeException(mInitTag + "[" + getTAG() + "][E]: ActionTool is null!!");
         return actionTool;
     }
 
     public CoreTool getCoreTool() {
         CoreTool coreTool = this.coreTool;
         if (coreTool == null)
-            throw new RuntimeException(HCInit.getTAG() + "[" + getTAG() + "][E]: CoreTool is null!!");
+            throw new RuntimeException(mInitTag + "[" + getTAG() + "][E]: CoreTool is null!!");
         return coreTool;
     }
-    
+
     public ChainTool getChainTool() {
         ChainTool chain = this.chainTool;
         if (chain == null)
-            throw new RuntimeException(HCInit.getTAG() + "[" + getTAG() + "][E]: CreateChain is null!!");
+            throw new RuntimeException(mInitTag + "[" + getTAG() + "][E]: CreateChain is null!!");
         return chain;
+    }
+    
+    public PrefsTool getPrefsTool() {
+        PrefsTool prefs = this.prefsTool;
+        if (prefs == null)
+            throw new RuntimeException(mInitTag + "[" + getTAG() + "][E]: PrefsTool is null!!");
+        return prefs;
     }
 
     public String getTAG() {

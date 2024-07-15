@@ -40,7 +40,7 @@ import java.io.IOException;
 public class ResHelper {
     private static ResourcesLoader resourcesLoader = null;
     private static final String TAG = "ResHelper";
-    private static String mModulePath;
+    private static String mModulePath = null;
 
     /**
      * 请在 initZygote 中初始化。
@@ -101,6 +101,13 @@ public class ResHelper {
         if (context == null) {
             logE(TAG, "context can't is null!!");
             return null;
+        }
+        if (mModulePath == null) {
+            mModulePath = ToolData.startupParam.modulePath;
+            if (mModulePath == null) {
+                logE(TAG, "module path is null! can't load module res! please call initResHelper!");
+                return null;
+            }
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             load = loadResAboveApi30(context);

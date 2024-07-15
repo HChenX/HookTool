@@ -104,6 +104,16 @@ public interface IMember {
     Field findField(Class<?> clazz, String name);
 
     // --------- 执行 hook -----------
+    XC_MethodHook.Unhook hook(String clazz, String method, Object... params);
+
+    XC_MethodHook.Unhook hook(String clazz, ClassLoader classLoader, String method, Object... params);
+
+    ArrayList<XC_MethodHook.Unhook> hook(String clazz, IAction iAction);
+
+    XC_MethodHook.Unhook hook(String clazz, Object... params);
+
+    XC_MethodHook.Unhook hook(Class<?> clazz, String method, Object... params);
+
     XC_MethodHook.Unhook hook(Member member, IAction iAction);
 
     ArrayList<XC_MethodHook.Unhook> hook(ArrayList<?> members, IAction iAction);
@@ -111,6 +121,12 @@ public interface IMember {
     IAction returnResult(final Object result);
 
     IAction doNothing();
+
+    // --------- 解除 hook ---------
+
+    boolean unHook(XC_MethodHook.Unhook unhook);
+
+    boolean unHook(Member hookMember, XC_MethodHook xcMethodHook);
 
     // --------- 过滤方法 -----------
     ArrayList<Method> filterMethod(Class<?> clazz, CoreTool.IFindMethod iFindMethod);

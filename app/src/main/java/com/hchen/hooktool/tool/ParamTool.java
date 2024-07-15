@@ -18,7 +18,6 @@
  */
 package com.hchen.hooktool.tool;
 
-import com.hchen.hooktool.HCInit;
 import com.hchen.hooktool.tool.param.Arguments;
 import com.hchen.hooktool.utils.ToolData;
 
@@ -42,8 +41,8 @@ public class ParamTool extends Arguments {
 
     final protected void putMethodHookParam(XC_MethodHook.MethodHookParam param) {
         if (param == null)
-            throw new RuntimeException(HCInit.getTAG() + "[" + data.getTAG() + "][E]: param is null!!");
-        this.param = param;
+            throw new RuntimeException(ToolData.mInitTag + "[" + data.getTAG() + "][E]: param is null!!");
+        this.methodHookParam = param;
         mClass = param.method.getDeclaringClass();
         mMember = param.method;
         mArgs = param.args;
@@ -61,7 +60,7 @@ public class ParamTool extends Arguments {
      * 本类的实例。
      */
     final public <T> T thisObject() {
-        return (T) param.thisObject;
+        return (T) methodHookParam.thisObject;
     }
 
     /**
@@ -75,13 +74,13 @@ public class ParamTool extends Arguments {
      * 返回此实例的类加载器。
      */
     final public ClassLoader classLoader() {
-        return param.thisObject.getClass().getClassLoader();
+        return methodHookParam.thisObject.getClass().getClassLoader();
     }
     
     /**
      * 获取原 param 参数。
      */
     final public XC_MethodHook.MethodHookParam originalParam() {
-        return param;
+        return methodHookParam;
     }
 }

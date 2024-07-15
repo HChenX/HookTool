@@ -18,12 +18,10 @@
  */
 package com.hchen.hooktool;
 
-import static com.hchen.hooktool.log.XposedLog.logE;
-import static com.hchen.hooktool.utils.ToolData.spareTag;
-
 import com.hchen.hooktool.tool.ActionTool;
 import com.hchen.hooktool.tool.ChainTool;
 import com.hchen.hooktool.tool.CoreTool;
+import com.hchen.hooktool.tool.PrefsTool;
 import com.hchen.hooktool.utils.ToolData;
 
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
@@ -35,17 +33,8 @@ public class HCHook {
     private final ToolData data;
 
     static {
-        initSafe();
-        try {
-            spareTag = HCInit.spareTag;
-            ToolData.lpparam = HCInit.getLoadPackageParam();
-            ToolData.useLogExpand = HCInit.getUseLogExpand();
-            ToolData.useFieldObserver = HCInit.getUseFieldObserver();
-            ToolData.filter = HCInit.getFilter();
-            ToolData.classLoader = HCInit.getClassLoader();
-        } catch (Throwable e) {
-            logE(spareTag, e);
-        }
+        ToolData.lpparam = HCInit.getLoadPackageParam();
+        ToolData.classLoader = HCInit.getClassLoader();
     }
 
     /**
@@ -57,6 +46,9 @@ public class HCHook {
         data.actionTool = new ActionTool(data);
         data.coreTool = new CoreTool(data);
         data.chainTool = new ChainTool(data);
+        if (PrefsTool.xposedPrefs() == null) {
+            data.prefsTool = new PrefsTool(data);
+        } else data.prefsTool = PrefsTool.xposedPrefs();
     }
 
     public HCHook setThisTag(String tag) {
@@ -64,41 +56,27 @@ public class HCHook {
         return data.getHCHook();
     }
 
-    public CoreTool coreTool() {
+    public CoreTool core() {
         return data.getCoreTool();
     }
-    
-    public ActionTool actionTool() {
+
+    public ActionTool action() {
         return data.getActionTool();
     }
 
-    public ChainTool chainTool() {
+    public ChainTool chain() {
         return data.getChainTool();
     }
 
-    /* 设置自定义 class loader */
-    public HCHook setClassLoader(ClassLoader classLoader) {
-        data.mCustomClassLoader = classLoader;
-        return data.getHCHook();
+    public PrefsTool prefs() {
+        return data.getPrefsTool();
     }
 
-    /* 设置自定义 lpparam */
-    public HCHook setLpparam(XC_LoadPackage.LoadPackageParam lpparam) {
-        data.mCustomLpparam = lpparam;
-        setClassLoader(lpparam.classLoader);
-        return data.getHCHook();
-    }
-
-    public XC_LoadPackage.LoadPackageParam getLpparam() {
+    public XC_LoadPackage.LoadPackageParam lpparam() {
         return data.getLpparam();
     }
 
-    public ClassLoader getClassLoader() {
+    public ClassLoader classLoader() {
         return data.getClassLoader();
-    }
-
-    public static void initSafe() {
-        if (!HCInit.isInitDone())
-            throw new RuntimeException(HCInit.getTAG() + "[E]: HookInit not initialized!");
     }
 }

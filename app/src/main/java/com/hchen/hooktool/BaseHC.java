@@ -20,14 +20,17 @@ package com.hchen.hooktool;
 
 import static com.hchen.hooktool.log.XposedLog.logE;
 
+import android.content.Context;
 import android.content.pm.ApplicationInfo;
 
 import com.hchen.hooktool.callback.IAction;
 import com.hchen.hooktool.itool.IDynamic;
 import com.hchen.hooktool.itool.IMember;
+import com.hchen.hooktool.itool.IPrefs;
 import com.hchen.hooktool.itool.IStatic;
 import com.hchen.hooktool.tool.ChainTool;
 import com.hchen.hooktool.tool.CoreTool;
+import com.hchen.hooktool.tool.PrefsTool;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -51,7 +54,21 @@ public abstract class BaseHC implements IMember, IDynamic, IStatic {
     public boolean isFirstApplication;
     public String processName;
     public HCHook hcHook;
-    public CoreTool coreTool;
+    public CoreTool core;
+    public PrefsTool prefs;
+
+    // 工具为了保持日志易读性，无法全部静态化，但您仍然可以直接调用此静态字段使用本工具。
+    // 唯一区别是工具日志 tag 始终为 ”StaticHC“（不影响手动设置的 log tag。
+    // 当然你也可以在自己类内手动存储静态本类，实现日志正常。
+    public static HCHook sHc;
+    public static CoreTool sCore;
+    public static PrefsTool sPrefs;
+
+    static {
+        sHc = new HCHook().setThisTag("StaticHC");
+        sCore = sHc.core();
+        sPrefs = sHc.prefs();
+    }
 
     /**
      * 正常阶段。
@@ -69,8 +86,9 @@ public abstract class BaseHC implements IMember, IDynamic, IStatic {
     final public void onCreate() {
         hcHook = new HCHook();
         hcHook.setThisTag(TAG);
-        coreTool = hcHook.coreTool();
-        lpparam = hcHook.getLpparam();
+        core = hcHook.core();
+        prefs = hcHook.prefs();
+        lpparam = hcHook.lpparam();
         classLoader = lpparam.classLoader;
         appInfo = lpparam.appInfo;
         packageName = lpparam.packageName;
@@ -88,274 +106,337 @@ public abstract class BaseHC implements IMember, IDynamic, IStatic {
         }
     }
 
+    final public IPrefs prefs() {
+        return prefs.prefs();
+    }
+
+    final public IPrefs prefs(String prefsName) {
+        return prefs.prefs(prefsName);
+    }
+
+    final public IPrefs prefs(Context context) {
+        return prefs.prefs(context);
+    }
+
+    final public IPrefs prefs(Context context, String prefsName) {
+        return prefs.prefs(context, prefsName);
+    }
+
+    final public PrefsTool nativePrefs() {
+        return prefs.nativePrefs();
+    }
+
     final public void chain(String clazz, ChainTool chain) {
-        hcHook.actionTool().chain(clazz, chain);
+        hcHook.action().chain(clazz, chain);
     }
 
     final public void chain(String clazz, ClassLoader classLoader, ChainTool chain) {
-        hcHook.actionTool().chain(clazz, classLoader, chain);
+        hcHook.action().chain(clazz, classLoader, chain);
     }
 
     final public ChainTool.ChainHook method(String name, Object... params) {
-        return hcHook.chainTool().method(name, params);
+        return hcHook.chain().method(name, params);
+    }
+
+    final public ChainTool.ChainHook anyMethod(String name) {
+        return hcHook.chain().anyMethod(name);
     }
 
     final public ChainTool.ChainHook constructor(Object... params) {
-        return hcHook.chainTool().constructor(params);
+        return hcHook.chain().constructor(params);
+    }
+
+    final public ChainTool.ChainHook anyConstructor() {
+        return hcHook.chain().anyConstructor();
     }
 
     @Override
     final public <T, C> C callMethod(Object instance, String name, T ts) {
-        return coreTool.callMethod(instance, name, ts);
+        return core.callMethod(instance, name, ts);
     }
 
     @Override
     final public <C> C callMethod(Object instance, String name) {
-        return coreTool.callMethod(instance, name);
+        return core.callMethod(instance, name);
     }
 
     @Override
     final public <T> T getField(Object instance, String name) {
-        return coreTool.getField(instance, name);
+        return core.getField(instance, name);
     }
 
     @Override
     final public <T> T getField(Object instance, Field field) {
-        return coreTool.getField(instance, field);
+        return core.getField(instance, field);
     }
 
     @Override
     final public boolean setField(Object instance, String name, Object value) {
-        return coreTool.setField(instance, name, value);
+        return core.setField(instance, name, value);
     }
 
     @Override
     final public boolean setField(Object instance, Field field, Object value) {
-        return coreTool.setField(instance, field, value);
+        return core.setField(instance, field, value);
     }
 
     @Override
     final public boolean setAdditionalInstanceField(Object instance, String key, Object value) {
-        return coreTool.setAdditionalInstanceField(instance, key, value);
+        return core.setAdditionalInstanceField(instance, key, value);
     }
 
     @Override
     final public <T> T getAdditionalInstanceField(Object instance, String key) {
-        return coreTool.getAdditionalInstanceField(instance, key);
+        return core.getAdditionalInstanceField(instance, key);
     }
 
     @Override
     final public boolean removeAdditionalInstanceField(Object instance, String key) {
-        return coreTool.removeAdditionalInstanceField(instance, key);
+        return core.removeAdditionalInstanceField(instance, key);
     }
 
     @Override
     final public boolean existsClass(String clazz) {
-        return coreTool.existsClass(clazz);
+        return core.existsClass(clazz);
     }
 
     @Override
     final public boolean existsClass(String clazz, ClassLoader classLoader) {
-        return coreTool.existsClass(clazz, classLoader);
+        return core.existsClass(clazz, classLoader);
     }
 
     @Override
     final public Class<?> findClass(String name) {
-        return coreTool.findClass(name);
+        return core.findClass(name);
     }
 
     @Override
     final public Class<?> findClass(String name, ClassLoader classLoader) {
-        return coreTool.findClass(name, classLoader);
+        return core.findClass(name, classLoader);
     }
 
     @Override
     final public boolean existsMethod(String clazz, String name, Object... ojbs) {
-        return coreTool.existsMethod(clazz, name, ojbs);
+        return core.existsMethod(clazz, name, ojbs);
     }
 
     @Override
     final public boolean existsMethod(String clazz, ClassLoader classLoader, String name, Object... ojbs) {
-        return coreTool.existsMethod(clazz, classLoader, name, ojbs);
+        return core.existsMethod(clazz, classLoader, name, ojbs);
     }
 
     @Override
     final public boolean existsAnyMethod(String clazz, String name) {
-        return coreTool.existsAnyMethod(clazz, name);
+        return core.existsAnyMethod(clazz, name);
     }
 
     @Override
     final public boolean existsAnyMethod(String clazz, ClassLoader classLoader, String name) {
-        return coreTool.existsAnyMethod(clazz, classLoader, name);
+        return core.existsAnyMethod(clazz, classLoader, name);
     }
 
     @Override
     final public Method findMethod(String clazz, String name, Object... objects) {
-        return coreTool.findMethod(clazz, name, objects);
+        return core.findMethod(clazz, name, objects);
     }
 
     @Override
     final public Method findMethod(String clazz, ClassLoader classLoader, String name, Object... objects) {
-        return coreTool.findMethod(clazz, classLoader, name, objects);
+        return core.findMethod(clazz, classLoader, name, objects);
     }
 
     @Override
     final public Method findMethod(Class<?> clazz, String name, Object... objects) {
-        return coreTool.findMethod(clazz, name, objects);
+        return core.findMethod(clazz, name, objects);
     }
 
     @Override
     final public ArrayList<Method> findAnyMethod(String clazz, String name) {
-        return coreTool.findAnyMethod(clazz, name);
+        return core.findAnyMethod(clazz, name);
     }
 
     @Override
     final public ArrayList<Method> findAnyMethod(String clazz, ClassLoader classLoader, String name) {
-        return coreTool.findAnyMethod(clazz, classLoader, name);
+        return core.findAnyMethod(clazz, classLoader, name);
     }
 
     @Override
     final public ArrayList<Method> findAnyMethod(Class<?> clazz, String name) {
-        return coreTool.findAnyMethod(clazz, name);
+        return core.findAnyMethod(clazz, name);
     }
 
     @Override
     final public Constructor<?> findConstructor(String clazz, Object... objects) {
-        return coreTool.findConstructor(clazz, objects);
+        return core.findConstructor(clazz, objects);
     }
 
     @Override
     final public Constructor<?> findConstructor(String clazz, ClassLoader classLoader, Object... objects) {
-        return coreTool.findConstructor(clazz, classLoader, objects);
+        return core.findConstructor(clazz, classLoader, objects);
     }
 
     @Override
     final public Constructor<?> findConstructor(Class<?> clazz, Object... objects) {
-        return coreTool.findConstructor(clazz, objects);
+        return core.findConstructor(clazz, objects);
     }
 
     @Override
     final public ArrayList<Constructor<?>> findAnyConstructor(String clazz) {
-        return coreTool.findAnyConstructor(clazz);
+        return core.findAnyConstructor(clazz);
     }
 
     @Override
     final public ArrayList<Constructor<?>> findAnyConstructor(String clazz, ClassLoader classLoader) {
-        return coreTool.findAnyConstructor(clazz, classLoader);
+        return core.findAnyConstructor(clazz, classLoader);
     }
 
     @Override
     final public ArrayList<Constructor<?>> findAnyConstructor(Class<?> clazz) {
-        return coreTool.findAnyConstructor(clazz);
+        return core.findAnyConstructor(clazz);
     }
 
     @Override
     final public boolean existsField(String clazz, String name) {
-        return coreTool.existsField(clazz, name);
+        return core.existsField(clazz, name);
     }
 
     @Override
     final public boolean existsField(String clazz, ClassLoader classLoader, String name) {
-        return coreTool.existsField(clazz, classLoader, name);
+        return core.existsField(clazz, classLoader, name);
     }
 
     @Override
     final public Field findField(String clazz, String name) {
-        return coreTool.findField(clazz, name);
+        return core.findField(clazz, name);
     }
 
     @Override
     final public Field findField(String clazz, ClassLoader classLoader, String name) {
-        return coreTool.findField(clazz, classLoader, name);
+        return core.findField(clazz, classLoader, name);
     }
 
     @Override
     final public Field findField(Class<?> clazz, String name) {
-        return coreTool.findField(clazz, name);
+        return core.findField(clazz, name);
+    }
+
+    @Override
+    final public XC_MethodHook.Unhook hook(String clazz, String method, Object... params) {
+        return core.hook(clazz, method, params);
+    }
+
+    @Override
+    final public XC_MethodHook.Unhook hook(String clazz, ClassLoader classLoader, String method, Object... params) {
+        return core.hook(clazz, classLoader, method, params);
+    }
+
+    @Override
+    final public XC_MethodHook.Unhook hook(Class<?> clazz, String method, Object... params) {
+        return core.hook(clazz, method, params);
+    }
+
+    @Override
+    final public ArrayList<XC_MethodHook.Unhook> hook(String clazz, IAction iAction) {
+        return core.hook(clazz, iAction);
+    }
+
+    @Override
+    final public XC_MethodHook.Unhook hook(String clazz, Object... params) {
+        return core.hook(clazz, params);
     }
 
     @Override
     final public XC_MethodHook.Unhook hook(Member member, IAction iAction) {
-        return coreTool.hook(member, iAction);
+        return core.hook(member, iAction);
     }
 
     @Override
     final public ArrayList<XC_MethodHook.Unhook> hook(ArrayList<?> members, IAction iAction) {
-        return coreTool.hook(members, iAction);
+        return core.hook(members, iAction);
+    }
+
+    @Override
+    final public boolean unHook(XC_MethodHook.Unhook unhook) {
+        return core.unHook(unhook);
+    }
+
+    @Override
+    final public boolean unHook(Member hookMember, XC_MethodHook xcMethodHook) {
+        return core.unHook(hookMember, xcMethodHook);
     }
 
     @Override
     final public IAction returnResult(Object result) {
-        return coreTool.returnResult(result);
+        return core.returnResult(result);
     }
 
     @Override
     final public IAction doNothing() {
-        return coreTool.doNothing();
+        return core.doNothing();
     }
 
     @Override
     final public ArrayList<Method> filterMethod(Class<?> clazz, CoreTool.IFindMethod iFindMethod) {
-        return coreTool.filterMethod(clazz, iFindMethod);
+        return core.filterMethod(clazz, iFindMethod);
     }
 
     @Override
     final public ArrayList<Constructor<?>> filterMethod(Class<?> clazz, CoreTool.IFindConstructor iFindConstructor) {
-        return coreTool.filterMethod(clazz, iFindConstructor);
+        return core.filterMethod(clazz, iFindConstructor);
     }
 
     @Override
     final public <T, C> C newInstance(Class<?> clz, T objects) {
-        return coreTool.newInstance(clz, objects);
+        return core.newInstance(clz, objects);
     }
 
     @Override
     final public <C> C newInstance(Class<?> clz) {
-        return coreTool.newInstance(clz);
+        return core.newInstance(clz);
     }
 
     @Override
     final public <T, C> C callStaticMethod(Class<?> clz, String name, T objs) {
-        return coreTool.callStaticMethod(clz, name, objs);
+        return core.callStaticMethod(clz, name, objs);
     }
 
     @Override
     final public <C> C callStaticMethod(Class<?> clz, String name) {
-        return coreTool.callStaticMethod(clz, name);
+        return core.callStaticMethod(clz, name);
     }
 
     @Override
     final public <T> T getStaticField(Class<?> clz, String name) {
-        return coreTool.getStaticField(clz, name);
+        return core.getStaticField(clz, name);
     }
 
     @Override
     final public <T> T getStaticField(Field field) {
-        return coreTool.getStaticField(field);
+        return core.getStaticField(field);
     }
 
     @Override
     final public boolean setStaticField(Class<?> clz, String name, Object value) {
-        return coreTool.setStaticField(clz, name, value);
+        return core.setStaticField(clz, name, value);
     }
 
     @Override
     final public boolean setStaticField(Field field, Object value) {
-        return coreTool.setStaticField(field, value);
+        return core.setStaticField(field, value);
     }
 
     @Override
     final public boolean setAdditionalStaticField(Class<?> clz, String key, Object value) {
-        return coreTool.setAdditionalStaticField(clz, key, value);
+        return core.setAdditionalStaticField(clz, key, value);
     }
 
     @Override
     final public <T> T getAdditionalStaticField(Class<?> clz, String key) {
-        return coreTool.getAdditionalStaticField(clz, key);
+        return core.getAdditionalStaticField(clz, key);
     }
 
     @Override
     final public boolean removeAdditionalStaticField(Class<?> clz, String key) {
-        return coreTool.removeAdditionalStaticField(clz, key);
+        return core.removeAdditionalStaticField(clz, key);
     }
 }

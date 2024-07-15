@@ -20,6 +20,8 @@ package com.hchen.hooktool.utils;
 
 import static com.hchen.hooktool.log.XposedLog.logW;
 
+import com.hchen.hooktool.callback.IAction;
+
 import java.util.ArrayList;
 
 /**
@@ -61,6 +63,8 @@ public class ConvertHelper {
                     return new Class[]{};
                 }
                 classes.add(ct);
+            } else if (o instanceof IAction) {
+                continue;
             } else {
                 logW(data.getTAG(), "unknown type: " + o);
                 return new Class[]{};

@@ -115,7 +115,7 @@ public class Arguments extends ActAchieve {
      * 当前方法参数的数量。
      */
     final public int size() {
-        return param.args.length;
+        return methodHookParam.args.length;
     }
 
     /**
@@ -127,11 +127,11 @@ public class Arguments extends ActAchieve {
         if (size() == -1) {
             return null;
         } else if (size() < index + 1) {
-            logE(data.getTAG(), "method: [" + param.method.getName() +
+            logE(data.getTAG(), "method: [" + methodHookParam.method.getName() +
                     "], param max size: [" + size() + "], index: [" + index + "]!!");
             return null;
         }
-        return (T) param.args[index];
+        return (T) methodHookParam.args[index];
     }
 
     /**
@@ -143,11 +143,11 @@ public class Arguments extends ActAchieve {
         if (size() == -1) {
             return this;
         } else if (size() < index + 1) {
-            logE(data.getTAG(), "method: [" + param.method.getName() +
+            logE(data.getTAG(), "method: [" + methodHookParam.method.getName() +
                     "], param max size: [" + size() + "], index: [" + index + "]!!");
             return this;
         }
-        param.args[index] = value;
+        methodHookParam.args[index] = value;
         return this;
     }
 

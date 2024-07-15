@@ -78,30 +78,31 @@ public class MainTest extends BaseHC {
                 })
         );
 
+        
         hook(findMethod("com.hchen.demo", "test"), new IAction() {
             @Override
             public void before() throws Throwable {
                 super.before();
             }
         });
-
+        
         new IAction() {
             @Override
             public void before() throws Throwable {
                 // hook 方法所属的类
                 Class<?> c = mClass;
-
+                
                 Context context = thisObject();
                 String string = first();
                 second(1);
 
                 // 非静态的本类内实例可直接使用 xx() 进行设置。
-                setField("demo", 1);
-                callMethod("method");
-                getField("test");
+                setThisField("demo", 1);
+                callThisMethod("method");
+                getThisField("test");
 
                 // 静态需要 class
-                String result = callMethod("call", new Object[]{thisObject(), first()});
+                String result = callThisMethod("call", new Object[]{thisObject(), first()});
                 callStaticMethod(findClass("com.demo.Main"), "callStatic", new Object[]{thisObject(), second()});
                 int i = getStaticField(findClass("com.demo.Main"), "field");
                 setStaticField(findClass("com.demo.Main"), "test", true);

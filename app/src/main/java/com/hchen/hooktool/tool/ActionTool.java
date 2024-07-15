@@ -71,15 +71,17 @@ public class ActionTool {
         while (iterator.hasNext()) {
             ChainData data = iterator.next();
             if (data.iAction == null) {
-                logW(this.data.getTAG(), "member: [" + data.member + "]'s action is null! can't hook!");
+                logW(this.data.getTAG(), "member: " + data.members.toString() + "'s action is null! can't hook!");
                 continue;
             }
             switch (data.stateEnum) {
                 case StateEnum.NONE -> {
                     try {
-                        XposedBridge.hookMethod(data.member, createHook(data.member, data.iAction));
+                        for (Member m : data.members) {
+                            XposedBridge.hookMethod(m, createHook(m, data.iAction));
+                            logD(this.data.getTAG(), "success to hook: " + m);
+                        }
                         data.stateEnum = StateEnum.HOOKED;
-                        logD(this.data.getTAG(), "success to hook: " + data.member);
                     } catch (Throwable e) {
                         data.stateEnum = StateEnum.FAILED;
                         logE(this.data.getTAG(), e);
@@ -87,10 +89,10 @@ public class ActionTool {
                     iterator.set(data);
                 }
                 case StateEnum.HOOKED -> {
-                    logD(this.data.getTAG(), "this method is hooked: " + data.member);
+                    logD(this.data.getTAG(), "this method is hooked: " + data.members);
                 }
                 case StateEnum.FAILED -> {
-                    logD(this.data.getTAG(), "this method is hook failed: " + data.member);
+                    logD(this.data.getTAG(), "this method is hook failed: " + data.members);
                 }
             }
         }

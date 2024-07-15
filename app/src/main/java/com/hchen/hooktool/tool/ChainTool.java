@@ -18,6 +18,8 @@
  */
 package com.hchen.hooktool.tool;
 
+import static com.hchen.hooktool.data.ChainData.TYPE_ANY_CONSTRUCTOR;
+import static com.hchen.hooktool.data.ChainData.TYPE_ANY_METHOD;
 import static com.hchen.hooktool.data.ChainData.TYPE_CONSTRUCTOR;
 import static com.hchen.hooktool.data.ChainData.TYPE_METHOD;
 
@@ -55,6 +57,11 @@ public class ChainTool {
         return chainHook;
     }
 
+    public ChainHook anyMethod(String name) {
+        chainData = new ChainData(name);
+        return chainHook;
+    }
+
     /**
      * 查找构造函数。
      *
@@ -65,19 +72,30 @@ public class ChainTool {
         return chainHook;
     }
 
+    public ChainHook anyConstructor() {
+        chainData = new ChainData();
+        return chainHook;
+    }
+
     protected void doFind(Class<?> clazz) {
-        Member mMember;
+        ArrayList<Member> mMembers = new ArrayList<>();
         for (ChainData data : cacheData) {
             switch (data.mType) {
                 case TYPE_METHOD -> {
-                    mMember = this.data.getCoreTool().findMethod(clazz, data.mName, data.mParams);
+                    mMembers.add(this.data.getCoreTool().findMethod(clazz, data.mName, data.mParams));
                 }
                 case TYPE_CONSTRUCTOR -> {
-                    mMember = this.data.getCoreTool().findConstructor(clazz, data.mParams);
+                    mMembers.add(this.data.getCoreTool().findConstructor(clazz, data.mParams));
                 }
-                default -> mMember = null;
+                case TYPE_ANY_METHOD -> {
+                    mMembers.addAll(this.data.getCoreTool().findAnyMethod(clazz, data.mName));
+                }
+                case TYPE_ANY_CONSTRUCTOR -> {
+                    mMembers.addAll(this.data.getCoreTool().findAnyConstructor(clazz));
+                }
+                default -> mMembers = new ArrayList<>();
             }
-            chainDataList.add(new ChainData(mMember, data.iAction, StateEnum.NONE));
+            chainDataList.add(new ChainData(mMembers, data.iAction, StateEnum.NONE));
         }
         cacheData.clear();
     }

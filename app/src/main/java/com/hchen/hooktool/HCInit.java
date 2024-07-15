@@ -22,6 +22,8 @@ import static com.hchen.hooktool.log.XposedLog.logI;
 
 import androidx.annotation.IntDef;
 
+import com.hchen.hooktool.utils.ToolData;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
@@ -33,22 +35,16 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
  * 初始化类，请在 Hook 入口处初始化本类。
  */
 public class HCInit {
+    // ------- 可选日志等级 ------
     public static final int LOG_NONE = 0;
     public static final int LOG_E = 1;
     public static final int LOG_W = 2;
     public static final int LOG_I = 3;
     public static final int LOG_D = 4;
-    private static String[] filter = null;
-    private static boolean useLogExpand = false;
-    private static boolean useFieldObserver = false;
+    // ------- END -------------
     private static XC_LoadPackage.LoadPackageParam lpparam = null;
-    private static IXposedHookZygoteInit.StartupParam startupParam = null;
     private static ClassLoader classLoader = null;
     private static boolean canUseSystemClassLoader = false;
-    private static String packageName;
-    private static String TAG = "Unknown";
-    public static String spareTag = "Unknown";
-    private static int logLevel = LOG_I;
 
     @IntDef(value = {
             LOG_NONE,
@@ -61,113 +57,64 @@ public class HCInit {
     private @interface Duration {
     }
 
-    public static void setTAG(String tag) {
-        TAG = "[" + tag + "]";
-        spareTag = tag;
-    }
-
-    public static String getTAG() {
-        return TAG;
-    }
+    // ---------- 初始化工具 ----------
 
     /**
-     * 日志等级
-     */
-    public static void setLogLevel(@Duration int level) {
-        logLevel = level;
-    }
-
-    /**
-     * 默认: {@link #LOG_I}
-     */
-    public static int getLogLevel() {
-        return logLevel;
-    }
-
-    public static void setUseLogExpand(boolean use) {
-        useLogExpand = use;
-    }
-
-    protected static boolean getUseLogExpand() {
-        return useLogExpand;
-    }
-
-    /**
-     * 设置日志过滤
-     */
-    public static void setFilter(String[] filter) {
-        HCInit.filter = filter;
-    }
-
-    protected static String[] getFilter() {
-        return filter;
-    }
-
-    /**
-     * 使每个字段的设置受到检查
-     */
-    public static void setUseFieldObserver(boolean use) {
-        useFieldObserver = use;
-    }
-
-    protected static boolean getUseFieldObserver() {
-        return useFieldObserver;
-    }
-
-    /**
-     * 设置在 classLoader 为 null 时允许使用系统 classLoader
-     */
-    public static void setCanUseSystemClassLoader(boolean use) {
-        canUseSystemClassLoader = use;
-    }
-
-    /**
-     * 请在初始化时调用。
+     * 务必设置！
      */
     public static void initLoadPackageParam(XC_LoadPackage.LoadPackageParam loadPackageParam) {
+        if (loadPackageParam == null) {
+            throw new RuntimeException(ToolData.mInitTag + "[E]: load package param is null!!");
+        }
         lpparam = loadPackageParam;
         classLoader = loadPackageParam.classLoader;
-        packageName = lpparam.packageName;
-        logI(spareTag, "init lpparam: [" + lpparam + "], classLoader: [" + classLoader + "], pkg name: " + packageName);
+        String packageName = lpparam.packageName;
+        logI(ToolData.spareTag, "init lpparam: [" + lpparam + "], classLoader: [" + classLoader + "], pkg name: " + packageName);
     }
 
     /**
-     * 初始化 zygote。
+     * 务必设置！
      */
-    public static void initZygote(IXposedHookZygoteInit.StartupParam sp) {
-        startupParam = sp;
+    public static void initStartupParam(IXposedHookZygoteInit.StartupParam startupParam) {
+        ToolData.startupParam = startupParam;
     }
 
-    protected static XC_LoadPackage.LoadPackageParam getLoadPackageParam() throws Throwable {
+    /**
+     * 务必设置！
+     */
+    public static void initOther(String modulePackageName, String tag, @Duration int level) {
+        setTag(tag); /* 设置 TAG */
+        ToolData.mInitLogLevel = level; /* 设置日志等级 */
+        ToolData.modulePackageName = modulePackageName; /* 设置模块包名 */
+    }
+
+    public static void logFilter(boolean use, String[] filter) {
+        ToolData.useFieldObserver = use;
+        ToolData.filter = filter;
+    }
+
+    public static void filedObserver(boolean use) {
+        ToolData.useFieldObserver = use;
+    }
+    // ---------- END！----------
+
+    private static void setTag(String tag) {
+        ToolData.mInitTag = "[" + tag + "]";
+        ToolData.spareTag = tag;
+    }
+
+
+    protected static XC_LoadPackage.LoadPackageParam getLoadPackageParam() {
         if (lpparam != null) return lpparam;
-        throw new Throwable(getTAG() + "[E]: failed to obtain LoadPackageParam, it is null!");
-    }
-
-    protected static IXposedHookZygoteInit.StartupParam getStartupParam() {
-        if (startupParam != null) return startupParam;
-        return null;
+        throw new RuntimeException(ToolData.mInitTag + "[E]: failed to obtain LoadPackageParam, it is null!");
     }
 
     protected static ClassLoader getClassLoader() {
         if (classLoader != null) return classLoader;
         if (canUseSystemClassLoader) {
-            return getSystemClassLoader();
+            return ClassLoader.getSystemClassLoader();
         }
-        throw new RuntimeException(getTAG() + "[E]: failed to obtain ClassLoader! it is null!");
-    }
-
-    private static ClassLoader getClassLoaderIfExists() {
-        return classLoader;
-    }
-
-    private static ClassLoader getSystemClassLoader() {
-        return ClassLoader.getSystemClassLoader();
-    }
-
-    public static boolean isInitDone() {
-        // if (lpparam == null) return false;
-        if (canUseSystemClassLoader) return true;
-        return classLoader != null;
+        throw new RuntimeException(ToolData.mInitTag + "[E]: failed to obtain ClassLoader! it is null!");
     }
 
     /**

@@ -21,17 +21,18 @@ package com.hchen.hooktool.data;
 import com.hchen.hooktool.callback.IAction;
 
 import java.lang.reflect.Member;
+import java.util.ArrayList;
 
 /**
  * 链式调用数据
  */
 public class ChainData {
-    public Member member; /*目标成员*/
+    public ArrayList<Member> members = new ArrayList<>(); /*目标成员组*/
     public IAction iAction; /*hook 动作*/
     public StateEnum stateEnum; /*状态*/
 
-    public ChainData(Member member, IAction iAction, StateEnum stateEnum) {
-        this.member = member;
+    public ChainData(ArrayList<Member> members, IAction iAction, StateEnum stateEnum) {
+        this.members = members;
         this.iAction = iAction;
         this.stateEnum = stateEnum;
     }
@@ -39,7 +40,9 @@ public class ChainData {
     //################################
 
     public static final String TYPE_METHOD = "METHOD";
+    public static final String TYPE_ANY_METHOD = "ANY_METHOD";
     public static final String TYPE_CONSTRUCTOR = "CONSTRUCTOR";
+    public static final String TYPE_ANY_CONSTRUCTOR = "ANY_CONSTRUCTOR";
 
     public String mName; /*方法名*/
     public String mType; /*类型*/
@@ -51,9 +54,18 @@ public class ChainData {
         mParams = params;
     }
 
+    public ChainData(String name) {
+        mName = name;
+        mType = TYPE_ANY_METHOD;
+    }
+
     public ChainData(Object... params) {
         mName = "";
         mType = TYPE_CONSTRUCTOR;
         mParams = params;
+    }
+
+    public ChainData() {
+        mType = TYPE_ANY_CONSTRUCTOR;
     }
 }

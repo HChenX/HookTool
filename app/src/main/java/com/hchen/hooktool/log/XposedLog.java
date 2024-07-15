@@ -18,8 +18,8 @@
  */
 package com.hchen.hooktool.log;
 
-import com.hchen.hooktool.HCInit;
 import com.hchen.hooktool.utils.LogExpand;
+import com.hchen.hooktool.utils.ToolData;
 
 import de.robv.android.xposed.XposedBridge;
 
@@ -27,8 +27,8 @@ import de.robv.android.xposed.XposedBridge;
  * LSP 框架日志类。
  */
 public class XposedLog {
-    private static final String rootTag = HCInit.getTAG(); /*根 TAG*/
-    private static final int level = HCInit.getLogLevel(); /*日志等级*/
+    private static final String rootTag = ToolData.mInitTag; /*根 TAG*/
+    private static final int level = ToolData.mInitLogLevel; /*日志等级*/
 
     public static void logE(String tag, String log) {
         if (level < 1) return;
