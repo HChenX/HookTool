@@ -1,3 +1,21 @@
+/*
+ * This file is part of HookTool.
+
+ * HookTool is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License.
+
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+ * Copyright (C) 2023-2024 HookTool Contributions
+ */
 package com.hchen.hooktool.tool;
 
 import static com.hchen.hooktool.log.XposedLog.logE;
@@ -52,7 +70,7 @@ public class PrefsTool {
         xposedPrefs = this;
     }
 
-    public static PrefsTool xposedPrefs() {
+    public static PrefsTool getXposedPrefs() {
         return xposedPrefs;
     }
 
@@ -70,13 +88,16 @@ public class PrefsTool {
     public IPrefs prefs(String prefsName) {
         if (!isXposedEnvironment) {
             throw new RuntimeException(ToolData.mInitTag +
-                    "[E]: not is xposed can't call this method!");
+                    "[E]: not is xposed can't call this method! please use context method!");
         }
         if (isUsingNativeStorage) {
-            SharedPreferences s = currentSp(ContextUtils.getContext(ContextUtils.FLAG_CURRENT_APP), prefsName);
-            return new Sprefs(s);
+            return new Sprefs(currentSp(ContextUtils.getContext(ContextUtils.FLAG_CURRENT_APP), prefsName));
         }
-        return new Xprefs(currentXsp(prefsName), data);
+        if (isUsingNewXSharedPreferences)
+            return new Xprefs(currentXsp(prefsName), data);
+        else
+            throw new RuntimeException(ToolData.mInitTag +
+                    "[E]: not supported new xshared prefs! can't use!");
     }
 
     public IPrefs prefs(Context context) {
@@ -88,10 +109,41 @@ public class PrefsTool {
      */
     public IPrefs prefs(Context context, String prefsName) {
         if (isXposedEnvironment && !isUsingNativeStorage) {
-            return new Xprefs(currentXsp(prefsName), data);
+            if (isUsingNewXSharedPreferences)
+                return new Xprefs(currentXsp(prefsName), data);
+            else
+                throw new RuntimeException(ToolData.mInitTag +
+                        "[E]: not supported new xshared prefs! can't use!");
         } else {
             return new Sprefs(currentSp(context, prefsName));
         }
+    }
+
+    /**
+     * 异步设置配置。
+     * <p>
+     * 仅限寄生应用内调用，适用于不方便获取 context 的情况。
+     */
+    public void asynPrefs(IAsynPrefs asynPrefs) {
+        if (!isXposedEnvironment) {
+            throw new RuntimeException(ToolData.mInitTag +
+                    "[E]: not is xposed can't call this method! please use context method!");
+        }
+        isUsingNativeStorage = true;
+        ContextUtils.getWaitContext(new ContextUtils.IContext() {
+            @Override
+            public void findContext(Context context) {
+                if (context == null) {
+                    throw new RuntimeException(ToolData.mInitTag +
+                            "[" + data.getTAG() + "][E]: asyn prefs context is null!!");
+                }
+                asynPrefs.asyn(context);
+            }
+        }, false);
+    }
+
+    public interface IAsynPrefs {
+        void asyn(Context context);
     }
 
     /**
@@ -99,6 +151,14 @@ public class PrefsTool {
      */
     public PrefsTool nativePrefs() {
         isUsingNativeStorage = true;
+        return this;
+    }
+
+    /**
+     * 使寄生应用使用模块的配置。
+     */
+    public PrefsTool xposedPrefs() {
+        isUsingNativeStorage = false;
         return this;
     }
 

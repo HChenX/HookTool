@@ -18,7 +18,7 @@
  */
 package com.hchen.hooktool.tool.param;
 
-import com.hchen.hooktool.utils.ToolData;
+import com.hchen.hooktool.itool.IDynamic;
 
 import de.robv.android.xposed.XC_MethodHook;
 
@@ -27,7 +27,9 @@ import de.robv.android.xposed.XC_MethodHook;
  */
 public class ActAchieve {
     protected XC_MethodHook.MethodHookParam methodHookParam;
-    protected ToolData data;
+    protected String mTag;
+    protected IDynamic iDynamic;
+    // protected ToolData data;
 
     /**
      * 获取方法执行完毕后的返回值。
@@ -108,33 +110,33 @@ public class ActAchieve {
      * 这是为了规避泛型与可变参数的冲突。
      */
     final public <T, R> R callThisMethod(String name, T ts) {
-        return data.getCoreTool().callMethod(methodHookParam.thisObject, name, ts);
+        return iDynamic.callMethod(methodHookParam.thisObject, name, ts);
     }
 
     final public <R> R callThisMethod(String name) {
-        return data.getCoreTool().callMethod(methodHookParam.thisObject, name);
+        return iDynamic.callMethod(methodHookParam.thisObject, name);
     }
 
     // ----------- 获取/修改 字段 -------------
 
     final public <T> T getThisField(String name) {
-        return data.getCoreTool().getField(methodHookParam.thisObject, name);
+        return iDynamic.getField(methodHookParam.thisObject, name);
     }
 
     final public boolean setThisField(String name, Object value) {
-        return data.getCoreTool().setField(methodHookParam.thisObject, name, value);
+        return iDynamic.setField(methodHookParam.thisObject, name, value);
     }
 
     // ---------- 设置自定义字段 --------------
     final public boolean setThisAdditionalInstanceField(String key, Object value) {
-        return data.getCoreTool().setAdditionalInstanceField(methodHookParam.thisObject, key, value);
+        return iDynamic.setAdditionalInstanceField(methodHookParam.thisObject, key, value);
     }
 
     final public <T> T getThisAdditionalInstanceField(String key) {
-        return data.getCoreTool().getAdditionalInstanceField(methodHookParam.thisObject, key);
+        return iDynamic.getAdditionalInstanceField(methodHookParam.thisObject, key);
     }
 
     final public boolean removeThisAdditionalInstanceField(String key) {
-        return data.getCoreTool().removeAdditionalInstanceField(methodHookParam.thisObject, key);
+        return iDynamic.removeAdditionalInstanceField(methodHookParam.thisObject, key);
     }
 }

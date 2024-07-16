@@ -24,6 +24,7 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 
 import com.hchen.hooktool.callback.IAction;
+import com.hchen.hooktool.itool.IChain;
 import com.hchen.hooktool.itool.IDynamic;
 import com.hchen.hooktool.itool.IMember;
 import com.hchen.hooktool.itool.IPrefs;
@@ -31,6 +32,7 @@ import com.hchen.hooktool.itool.IStatic;
 import com.hchen.hooktool.tool.ChainTool;
 import com.hchen.hooktool.tool.CoreTool;
 import com.hchen.hooktool.tool.PrefsTool;
+import com.hchen.hooktool.utils.ToolData;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -45,7 +47,7 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
 /**
  * 对需要使用工具的类继承本类，可快速使用工具。
  */
-public abstract class BaseHC implements IMember, IDynamic, IStatic {
+public abstract class BaseHC implements IMember, IDynamic, IStatic, IChain {
     public String TAG = getClass().getSimpleName();
     public XC_LoadPackage.LoadPackageParam lpparam;
     public ClassLoader classLoader;
@@ -53,9 +55,11 @@ public abstract class BaseHC implements IMember, IDynamic, IStatic {
     public String packageName;
     public boolean isFirstApplication;
     public String processName;
-    public HCHook hcHook;
-    public CoreTool core;
-    public PrefsTool prefs;
+    private PrefsTool prefs;
+    private IDynamic iDynamic;
+    private IMember iMember;
+    private IStatic iStatic;
+    private IChain iChain;
 
     // 工具为了保持日志易读性，无法全部静态化，但您仍然可以直接调用此静态字段使用本工具。
     // 唯一区别是工具日志 tag 始终为 ”StaticHC“（不影响手动设置的 log tag。
@@ -84,11 +88,14 @@ public abstract class BaseHC implements IMember, IDynamic, IStatic {
     }
 
     final public void onCreate() {
-        hcHook = new HCHook();
+        HCHook hcHook = new HCHook();
         hcHook.setThisTag(TAG);
-        core = hcHook.core();
-        prefs = hcHook.prefs();
         lpparam = hcHook.lpparam();
+        iDynamic = hcHook.core();
+        iStatic = hcHook.core();
+        iMember = hcHook.core();
+        iChain = hcHook.chain();
+        prefs = hcHook.prefs();
         classLoader = lpparam.classLoader;
         appInfo = lpparam.appInfo;
         packageName = lpparam.packageName;
@@ -100,7 +107,7 @@ public abstract class BaseHC implements IMember, IDynamic, IStatic {
             logE(TAG, e);
         }
         try {
-            initZygote(HCInit.getStartupParam());
+            initZygote(ToolData.startupParam);
         } catch (Throwable e) {
             logE(TAG, e);
         }
@@ -122,321 +129,340 @@ public abstract class BaseHC implements IMember, IDynamic, IStatic {
         return prefs.prefs(context, prefsName);
     }
 
+    final public void asynPrefs(PrefsTool.IAsynPrefs asynPrefs) {
+        prefs.asynPrefs(asynPrefs);
+    }
+
     final public PrefsTool nativePrefs() {
         return prefs.nativePrefs();
     }
 
+    final public PrefsTool xposedPrefs() {
+        return prefs.xposedPrefs();
+    }
+
+    @Override
     final public void chain(String clazz, ChainTool chain) {
-        hcHook.action().chain(clazz, chain);
+        iChain.chain(clazz, chain);
     }
 
+    @Override
     final public void chain(String clazz, ClassLoader classLoader, ChainTool chain) {
-        hcHook.action().chain(clazz, classLoader, chain);
+        iChain.chain(clazz, classLoader, chain);
     }
 
+    @Override
+    public void chain(Class<?> clazz, ChainTool chain) {
+        iChain.chain(clazz, chain);
+    }
+
+    @Override
     final public ChainTool.ChainHook method(String name, Object... params) {
-        return hcHook.chain().method(name, params);
+        return iChain.method(name, params);
     }
 
+    @Override
     final public ChainTool.ChainHook anyMethod(String name) {
-        return hcHook.chain().anyMethod(name);
+        return iChain.anyMethod(name);
     }
 
+    @Override
     final public ChainTool.ChainHook constructor(Object... params) {
-        return hcHook.chain().constructor(params);
+        return iChain.constructor(params);
     }
 
+    @Override
     final public ChainTool.ChainHook anyConstructor() {
-        return hcHook.chain().anyConstructor();
+        return iChain.anyConstructor();
     }
 
     @Override
     final public <T, C> C callMethod(Object instance, String name, T ts) {
-        return core.callMethod(instance, name, ts);
+        return iDynamic.callMethod(instance, name, ts);
     }
 
     @Override
     final public <C> C callMethod(Object instance, String name) {
-        return core.callMethod(instance, name);
+        return iDynamic.callMethod(instance, name);
     }
 
     @Override
     final public <T> T getField(Object instance, String name) {
-        return core.getField(instance, name);
+        return iDynamic.getField(instance, name);
     }
 
     @Override
     final public <T> T getField(Object instance, Field field) {
-        return core.getField(instance, field);
+        return iDynamic.getField(instance, field);
     }
 
     @Override
     final public boolean setField(Object instance, String name, Object value) {
-        return core.setField(instance, name, value);
+        return iDynamic.setField(instance, name, value);
     }
 
     @Override
     final public boolean setField(Object instance, Field field, Object value) {
-        return core.setField(instance, field, value);
+        return iDynamic.setField(instance, field, value);
     }
 
     @Override
     final public boolean setAdditionalInstanceField(Object instance, String key, Object value) {
-        return core.setAdditionalInstanceField(instance, key, value);
+        return iDynamic.setAdditionalInstanceField(instance, key, value);
     }
 
     @Override
     final public <T> T getAdditionalInstanceField(Object instance, String key) {
-        return core.getAdditionalInstanceField(instance, key);
+        return iDynamic.getAdditionalInstanceField(instance, key);
     }
 
     @Override
     final public boolean removeAdditionalInstanceField(Object instance, String key) {
-        return core.removeAdditionalInstanceField(instance, key);
+        return iDynamic.removeAdditionalInstanceField(instance, key);
     }
 
     @Override
     final public boolean existsClass(String clazz) {
-        return core.existsClass(clazz);
+        return iMember.existsClass(clazz);
     }
 
     @Override
     final public boolean existsClass(String clazz, ClassLoader classLoader) {
-        return core.existsClass(clazz, classLoader);
+        return iMember.existsClass(clazz, classLoader);
     }
 
     @Override
     final public Class<?> findClass(String name) {
-        return core.findClass(name);
+        return iMember.findClass(name);
     }
 
     @Override
     final public Class<?> findClass(String name, ClassLoader classLoader) {
-        return core.findClass(name, classLoader);
+        return iMember.findClass(name, classLoader);
     }
 
     @Override
     final public boolean existsMethod(String clazz, String name, Object... ojbs) {
-        return core.existsMethod(clazz, name, ojbs);
+        return iMember.existsMethod(clazz, name, ojbs);
     }
 
     @Override
     final public boolean existsMethod(String clazz, ClassLoader classLoader, String name, Object... ojbs) {
-        return core.existsMethod(clazz, classLoader, name, ojbs);
+        return iMember.existsMethod(clazz, classLoader, name, ojbs);
     }
 
     @Override
     final public boolean existsAnyMethod(String clazz, String name) {
-        return core.existsAnyMethod(clazz, name);
+        return iMember.existsAnyMethod(clazz, name);
     }
 
     @Override
     final public boolean existsAnyMethod(String clazz, ClassLoader classLoader, String name) {
-        return core.existsAnyMethod(clazz, classLoader, name);
+        return iMember.existsAnyMethod(clazz, classLoader, name);
     }
 
     @Override
     final public Method findMethod(String clazz, String name, Object... objects) {
-        return core.findMethod(clazz, name, objects);
+        return iMember.findMethod(clazz, name, objects);
     }
 
     @Override
     final public Method findMethod(String clazz, ClassLoader classLoader, String name, Object... objects) {
-        return core.findMethod(clazz, classLoader, name, objects);
+        return iMember.findMethod(clazz, classLoader, name, objects);
     }
 
     @Override
     final public Method findMethod(Class<?> clazz, String name, Object... objects) {
-        return core.findMethod(clazz, name, objects);
+        return iMember.findMethod(clazz, name, objects);
     }
 
     @Override
     final public ArrayList<Method> findAnyMethod(String clazz, String name) {
-        return core.findAnyMethod(clazz, name);
+        return iMember.findAnyMethod(clazz, name);
     }
 
     @Override
     final public ArrayList<Method> findAnyMethod(String clazz, ClassLoader classLoader, String name) {
-        return core.findAnyMethod(clazz, classLoader, name);
+        return iMember.findAnyMethod(clazz, classLoader, name);
     }
 
     @Override
     final public ArrayList<Method> findAnyMethod(Class<?> clazz, String name) {
-        return core.findAnyMethod(clazz, name);
+        return iMember.findAnyMethod(clazz, name);
     }
 
     @Override
     final public Constructor<?> findConstructor(String clazz, Object... objects) {
-        return core.findConstructor(clazz, objects);
+        return iMember.findConstructor(clazz, objects);
     }
 
     @Override
     final public Constructor<?> findConstructor(String clazz, ClassLoader classLoader, Object... objects) {
-        return core.findConstructor(clazz, classLoader, objects);
+        return iMember.findConstructor(clazz, classLoader, objects);
     }
 
     @Override
     final public Constructor<?> findConstructor(Class<?> clazz, Object... objects) {
-        return core.findConstructor(clazz, objects);
+        return iMember.findConstructor(clazz, objects);
     }
 
     @Override
     final public ArrayList<Constructor<?>> findAnyConstructor(String clazz) {
-        return core.findAnyConstructor(clazz);
+        return iMember.findAnyConstructor(clazz);
     }
 
     @Override
     final public ArrayList<Constructor<?>> findAnyConstructor(String clazz, ClassLoader classLoader) {
-        return core.findAnyConstructor(clazz, classLoader);
+        return iMember.findAnyConstructor(clazz, classLoader);
     }
 
     @Override
     final public ArrayList<Constructor<?>> findAnyConstructor(Class<?> clazz) {
-        return core.findAnyConstructor(clazz);
+        return iMember.findAnyConstructor(clazz);
     }
 
     @Override
     final public boolean existsField(String clazz, String name) {
-        return core.existsField(clazz, name);
+        return iMember.existsField(clazz, name);
     }
 
     @Override
     final public boolean existsField(String clazz, ClassLoader classLoader, String name) {
-        return core.existsField(clazz, classLoader, name);
+        return iMember.existsField(clazz, classLoader, name);
     }
 
     @Override
     final public Field findField(String clazz, String name) {
-        return core.findField(clazz, name);
+        return iMember.findField(clazz, name);
     }
 
     @Override
     final public Field findField(String clazz, ClassLoader classLoader, String name) {
-        return core.findField(clazz, classLoader, name);
+        return iMember.findField(clazz, classLoader, name);
     }
 
     @Override
     final public Field findField(Class<?> clazz, String name) {
-        return core.findField(clazz, name);
+        return iMember.findField(clazz, name);
     }
 
     @Override
     final public XC_MethodHook.Unhook hook(String clazz, String method, Object... params) {
-        return core.hook(clazz, method, params);
+        return iMember.hook(clazz, method, params);
     }
 
     @Override
     final public XC_MethodHook.Unhook hook(String clazz, ClassLoader classLoader, String method, Object... params) {
-        return core.hook(clazz, classLoader, method, params);
+        return iMember.hook(clazz, classLoader, method, params);
     }
 
     @Override
     final public XC_MethodHook.Unhook hook(Class<?> clazz, String method, Object... params) {
-        return core.hook(clazz, method, params);
+        return iMember.hook(clazz, method, params);
     }
 
     @Override
     final public ArrayList<XC_MethodHook.Unhook> hook(String clazz, IAction iAction) {
-        return core.hook(clazz, iAction);
+        return iMember.hook(clazz, iAction);
     }
 
     @Override
     final public XC_MethodHook.Unhook hook(String clazz, Object... params) {
-        return core.hook(clazz, params);
+        return iMember.hook(clazz, params);
     }
 
     @Override
     final public XC_MethodHook.Unhook hook(Member member, IAction iAction) {
-        return core.hook(member, iAction);
+        return iMember.hook(member, iAction);
     }
 
     @Override
     final public ArrayList<XC_MethodHook.Unhook> hook(ArrayList<?> members, IAction iAction) {
-        return core.hook(members, iAction);
+        return iMember.hook(members, iAction);
     }
 
     @Override
     final public boolean unHook(XC_MethodHook.Unhook unhook) {
-        return core.unHook(unhook);
+        return iMember.unHook(unhook);
     }
 
     @Override
     final public boolean unHook(Member hookMember, XC_MethodHook xcMethodHook) {
-        return core.unHook(hookMember, xcMethodHook);
+        return iMember.unHook(hookMember, xcMethodHook);
     }
 
     @Override
     final public IAction returnResult(Object result) {
-        return core.returnResult(result);
+        return iMember.returnResult(result);
     }
 
     @Override
     final public IAction doNothing() {
-        return core.doNothing();
+        return iMember.doNothing();
     }
 
     @Override
     final public ArrayList<Method> filterMethod(Class<?> clazz, CoreTool.IFindMethod iFindMethod) {
-        return core.filterMethod(clazz, iFindMethod);
+        return iMember.filterMethod(clazz, iFindMethod);
     }
 
     @Override
     final public ArrayList<Constructor<?>> filterMethod(Class<?> clazz, CoreTool.IFindConstructor iFindConstructor) {
-        return core.filterMethod(clazz, iFindConstructor);
+        return iMember.filterMethod(clazz, iFindConstructor);
     }
 
     @Override
     final public <T, C> C newInstance(Class<?> clz, T objects) {
-        return core.newInstance(clz, objects);
+        return iStatic.newInstance(clz, objects);
     }
 
     @Override
     final public <C> C newInstance(Class<?> clz) {
-        return core.newInstance(clz);
+        return iStatic.newInstance(clz);
     }
 
     @Override
     final public <T, C> C callStaticMethod(Class<?> clz, String name, T objs) {
-        return core.callStaticMethod(clz, name, objs);
+        return iStatic.callStaticMethod(clz, name, objs);
     }
 
     @Override
     final public <C> C callStaticMethod(Class<?> clz, String name) {
-        return core.callStaticMethod(clz, name);
+        return iStatic.callStaticMethod(clz, name);
     }
 
     @Override
     final public <T> T getStaticField(Class<?> clz, String name) {
-        return core.getStaticField(clz, name);
+        return iStatic.getStaticField(clz, name);
     }
 
     @Override
     final public <T> T getStaticField(Field field) {
-        return core.getStaticField(field);
+        return iStatic.getStaticField(field);
     }
 
     @Override
     final public boolean setStaticField(Class<?> clz, String name, Object value) {
-        return core.setStaticField(clz, name, value);
+        return iStatic.setStaticField(clz, name, value);
     }
 
     @Override
     final public boolean setStaticField(Field field, Object value) {
-        return core.setStaticField(field, value);
+        return iStatic.setStaticField(field, value);
     }
 
     @Override
     final public boolean setAdditionalStaticField(Class<?> clz, String key, Object value) {
-        return core.setAdditionalStaticField(clz, key, value);
+        return iStatic.setAdditionalStaticField(clz, key, value);
     }
 
     @Override
     final public <T> T getAdditionalStaticField(Class<?> clz, String key) {
-        return core.getAdditionalStaticField(clz, key);
+        return iStatic.getAdditionalStaticField(clz, key);
     }
 
     @Override
     final public boolean removeAdditionalStaticField(Class<?> clz, String key) {
-        return core.removeAdditionalStaticField(clz, key);
+        return iStatic.removeAdditionalStaticField(clz, key);
     }
 }

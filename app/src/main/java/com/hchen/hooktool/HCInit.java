@@ -69,7 +69,8 @@ public class HCInit {
         lpparam = loadPackageParam;
         classLoader = loadPackageParam.classLoader;
         String packageName = lpparam.packageName;
-        logI(ToolData.spareTag, "init lpparam: [" + lpparam + "], classLoader: [" + classLoader + "], pkg name: " + packageName);
+        logI(ToolData.spareTag, "init lpparam: [" + lpparam + "]," +
+                " classLoader: [" + classLoader + "], pkg name: " + packageName);
     }
 
     /**
@@ -88,13 +89,17 @@ public class HCInit {
         ToolData.modulePackageName = modulePackageName; /* 设置模块包名 */
     }
 
+    public static void canUseSystemClassLoader(boolean use) {
+        canUseSystemClassLoader = use; /* 允许使用系统 classloader */
+    }
+
     public static void logFilter(boolean use, String[] filter) {
-        ToolData.useFieldObserver = use;
-        ToolData.filter = filter;
+        ToolData.useFieldObserver = use; /* 使用全局日志过滤 */
+        ToolData.filter = filter; /* 过滤规则 */
     }
 
     public static void filedObserver(boolean use) {
-        ToolData.useFieldObserver = use;
+        ToolData.useFieldObserver = use; /* 使用字段设置观察 */
     }
     // ---------- END！----------
 

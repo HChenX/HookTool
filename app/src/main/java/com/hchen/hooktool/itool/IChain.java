@@ -18,29 +18,21 @@
  */
 package com.hchen.hooktool.itool;
 
-import com.hchen.hooktool.tool.PrefsTool;
+import com.hchen.hooktool.tool.ChainTool;
 
-import java.util.Map;
-import java.util.Set;
+public interface IChain {
 
-public interface IPrefs {
-    String getString(String key, String def);
+    void chain(String clazz, ChainTool chain);
 
-    Set<String> getStringSet(String key, Set<String> def);
+    void chain(String clazz, ClassLoader classLoader, ChainTool chain);
 
-    boolean getBoolean(String key, boolean def);
+    void chain(Class<?> clazz, ChainTool chain);
 
-    int getInt(String key, int def);
+    ChainTool.ChainHook method(String name, Object... params);
 
-    float getFloat(String key, float def);
+    ChainTool.ChainHook anyMethod(String name);
 
-    long getLong(String key, long def);
+    ChainTool.ChainHook constructor(Object... params);
 
-    Object get(String key, Object def);
-
-    boolean contains(String key);
-
-    Map<String, ?> getAll();
-
-    PrefsTool.Editor editor();
+    ChainTool.ChainHook anyConstructor();
 }

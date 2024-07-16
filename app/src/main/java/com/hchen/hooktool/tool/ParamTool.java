@@ -36,12 +36,14 @@ public class ParamTool extends Arguments {
     public Member mMember;
     // hook 的方法的参数
     public Object[] mArgs;
+    // 自身
+    public ParamTool paramTool = this;
 
     private XC_MethodHook xcMethodHook;
 
     final protected void putMethodHookParam(XC_MethodHook.MethodHookParam param) {
         if (param == null)
-            throw new RuntimeException(ToolData.mInitTag + "[" + data.getTAG() + "][E]: param is null!!");
+            throw new RuntimeException(ToolData.mInitTag + "[" + mTag + "][E]: param is null!!");
         this.methodHookParam = param;
         mClass = param.method.getDeclaringClass();
         mMember = param.method;
@@ -53,7 +55,8 @@ public class ParamTool extends Arguments {
     }
 
     final protected void putUtils(ToolData data) {
-        this.data = data;
+        mTag = data.getTAG();
+        iDynamic = data.getCoreTool();
     }
 
     /**
@@ -76,7 +79,7 @@ public class ParamTool extends Arguments {
     final public ClassLoader classLoader() {
         return methodHookParam.thisObject.getClass().getClassLoader();
     }
-    
+
     /**
      * 获取原 param 参数。
      */

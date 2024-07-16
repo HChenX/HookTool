@@ -26,6 +26,7 @@ import static com.hchen.hooktool.data.ChainData.TYPE_METHOD;
 import com.hchen.hooktool.callback.IAction;
 import com.hchen.hooktool.data.ChainData;
 import com.hchen.hooktool.data.StateEnum;
+import com.hchen.hooktool.itool.IChain;
 import com.hchen.hooktool.utils.ToolData;
 
 import java.lang.reflect.Member;
@@ -34,7 +35,7 @@ import java.util.ArrayList;
 /**
  * 创建链式调用
  */
-public class ChainTool {
+public class ChainTool implements IChain {
     private final ToolData data;
     private final ChainHook chainHook;
     protected ChainData chainData;
@@ -46,17 +47,35 @@ public class ChainTool {
         chainHook = new ChainHook(this);
     }
 
+    @Override
+    public void chain(String clazz, ChainTool chain) {
+        chain(data.getCoreTool().findClass(clazz), chain);
+    }
+
+    @Override
+    public void chain(String clazz, ClassLoader classLoader, ChainTool chain) {
+        chain(data.getCoreTool().findClass(clazz, classLoader), chain);
+    }
+
+    @Override
+    public void chain(Class<?> clazz, ChainTool chain) {
+        chain.doFind(clazz);
+        data.getActionTool().doAction(chain);
+    }
+
     /**
      * 查找方法。
      *
      * @param name   方法名
      * @param params 方法参数
      */
+    @Override
     public ChainHook method(String name, Object... params) {
         chainData = new ChainData(name, params);
         return chainHook;
     }
 
+    @Override
     public ChainHook anyMethod(String name) {
         chainData = new ChainData(name);
         return chainHook;
@@ -67,11 +86,13 @@ public class ChainTool {
      *
      * @param params 参数
      */
+    @Override
     public ChainHook constructor(Object... params) {
         chainData = new ChainData(params);
         return chainHook;
     }
 
+    @Override
     public ChainHook anyConstructor() {
         chainData = new ChainData();
         return chainHook;
@@ -95,13 +116,14 @@ public class ChainTool {
                 }
                 default -> mMembers = new ArrayList<>();
             }
-            chainDataList.add(new ChainData(mMembers, data.iAction, StateEnum.NONE));
+            ArrayList<Member> cache = new ArrayList<>(mMembers);
+            ArrayList<Member> finalMMembers = mMembers;
+            if (chainDataList.stream().noneMatch(chainData -> chainData.members.equals(finalMMembers)))
+                chainDataList.add(new ChainData(clazz.getSimpleName(),
+                        data.mName, data.mType, cache, data.iAction, StateEnum.NONE));
+            mMembers.clear();
         }
         cacheData.clear();
-    }
-
-    protected ArrayList<ChainData> getChainDataList() {
-        return chainDataList;
     }
 
     public static class ChainHook {

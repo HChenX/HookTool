@@ -70,7 +70,7 @@ public class Arguments extends ActAchieve {
 
     // ------- 提供快捷设置 ---------
     // 依次设置指定的参数
-    
+
     final public <T> Arguments first(T value) {
         return setParam(0, value);
     }
@@ -120,14 +120,13 @@ public class Arguments extends ActAchieve {
 
     /**
      * 获取指定参数。
+     *
      * @param index 索引
      * @return 获取到的参数或 null
      */
     final public <T> T getParam(int index) {
-        if (size() == -1) {
-            return null;
-        } else if (size() < index + 1) {
-            logE(data.getTAG(), "method: [" + methodHookParam.method.getName() +
+        if (size() < index + 1) {
+            logE(mTag, "method: [" + methodHookParam.method.getName() +
                     "], param max size: [" + size() + "], index: [" + index + "]!!");
             return null;
         }
@@ -136,14 +135,13 @@ public class Arguments extends ActAchieve {
 
     /**
      * 设置指定参数。
+     *
      * @param index 索引
      * @param value 目标值
      */
     final public <T> Arguments setParam(int index, T value) {
-        if (size() == -1) {
-            return this;
-        } else if (size() < index + 1) {
-            logE(data.getTAG(), "method: [" + methodHookParam.method.getName() +
+        if (size() < index + 1) {
+            logE(mTag, "method: [" + methodHookParam.method.getName() +
                     "], param max size: [" + size() + "], index: [" + index + "]!!");
             return this;
         }

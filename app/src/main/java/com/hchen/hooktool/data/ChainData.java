@@ -30,8 +30,13 @@ public class ChainData {
     public ArrayList<Member> members = new ArrayList<>(); /*目标成员组*/
     public IAction iAction; /*hook 动作*/
     public StateEnum stateEnum; /*状态*/
+    public String clazz; /* 类名 */
 
-    public ChainData(ArrayList<Member> members, IAction iAction, StateEnum stateEnum) {
+    public ChainData(String clazz, String name, String type,
+                     ArrayList<Member> members, IAction iAction, StateEnum stateEnum) {
+        this.clazz = clazz;
+        this.mName = name;
+        this.mType = type;
         this.members = members;
         this.iAction = iAction;
         this.stateEnum = stateEnum;
@@ -66,6 +71,7 @@ public class ChainData {
     }
 
     public ChainData() {
+        mName = "";
         mType = TYPE_ANY_CONSTRUCTOR;
     }
 }

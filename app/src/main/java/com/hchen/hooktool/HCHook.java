@@ -46,9 +46,9 @@ public class HCHook {
         data.actionTool = new ActionTool(data);
         data.coreTool = new CoreTool(data);
         data.chainTool = new ChainTool(data);
-        if (PrefsTool.xposedPrefs() == null) {
+        if (PrefsTool.getXposedPrefs() == null) {
             data.prefsTool = new PrefsTool(data);
-        } else data.prefsTool = PrefsTool.xposedPrefs();
+        } else data.prefsTool = PrefsTool.getXposedPrefs();
     }
 
     public HCHook setThisTag(String tag) {
@@ -58,10 +58,6 @@ public class HCHook {
 
     public CoreTool core() {
         return data.getCoreTool();
-    }
-
-    public ActionTool action() {
-        return data.getActionTool();
     }
 
     public ChainTool chain() {

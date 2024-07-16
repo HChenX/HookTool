@@ -52,7 +52,7 @@ public class MainTest extends BaseHC {
                         "field");
             }
         };
-
+        
         chain("com.hchen.demo", method("test")
                 .hook(new IAction() {
                     @Override
@@ -91,7 +91,6 @@ public class MainTest extends BaseHC {
             public void before() throws Throwable {
                 // hook 方法所属的类
                 Class<?> c = mClass;
-                
                 Context context = thisObject();
                 String string = first();
                 second(1);
