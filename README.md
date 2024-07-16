@@ -59,7 +59,7 @@ public void initZygote(IXposedHookZygoteInit.StartupParam startupParam) {
 
 @Override
 public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) {
-    HCInit.initOther(/* 你模块的包名 */, /* tag */, /* 日志等级 */); // 必须 tip：建议放在第一位
+    HCInit.initOther(/* 你模块的包名 */, /* tag */, /* 日志等级 */); // 必须，tip：建议放在第一位
     HCInit.initLoadPackageParam(lpparam); // 必须
 }
 ```
@@ -85,7 +85,7 @@ public void test() {
 ```
 
 - 当然你也可以直接继承本工具打包好的类
-- // 强烈建议继承 BaseHook 使用！
+- // 强烈建议继承 BaseHC 使用！
 
 ```java
 // Hook 方
