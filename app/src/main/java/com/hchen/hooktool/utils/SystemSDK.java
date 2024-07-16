@@ -30,7 +30,7 @@ import android.os.Build;
 import java.util.Locale;
 
 /**
- * 此类用于获取设备基本信息。
+ * 此类用于获取设备基本信息
  */
 public class SystemSDK {
     private static String TAG;

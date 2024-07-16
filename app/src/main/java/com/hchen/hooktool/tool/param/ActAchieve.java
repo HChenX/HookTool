@@ -23,7 +23,7 @@ import com.hchen.hooktool.itool.IDynamic;
 import de.robv.android.xposed.XC_MethodHook;
 
 /**
- * 动作类
+ * 动作
  */
 public class ActAchieve {
     protected XC_MethodHook.MethodHookParam methodHookParam;

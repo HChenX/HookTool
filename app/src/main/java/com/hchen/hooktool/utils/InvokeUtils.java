@@ -27,7 +27,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 
 /**
- * 本类为反射工具，提供简易的反射功能。
+ * 本类为反射工具，提供简易的反射功能
  */
 public class InvokeUtils {
     private static final HashMap<String, Method> methodCache = new HashMap<>();
@@ -129,7 +129,8 @@ public class InvokeUtils {
             } else
                 return (T) declaredField.get(instance);
         } catch (NoSuchFieldException | IllegalAccessException e) {
-            AndroidLog.logE(TAG, "reflection call method failed! class: [" + (clz != null ? clz.getName() : null) + "], field: " + field, e);
+            AndroidLog.logE(TAG, "reflection call method failed! class: " +
+                    "[" + (clz != null ? clz.getName() : null) + "], field: " + field, e);
             return null;
         }
     }

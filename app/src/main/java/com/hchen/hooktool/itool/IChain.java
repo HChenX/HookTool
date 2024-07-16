@@ -20,6 +20,11 @@ package com.hchen.hooktool.itool;
 
 import com.hchen.hooktool.tool.ChainTool;
 
+/**
+ * 链式调用接口
+ * 方法具体介绍请看实现类。<br/>
+ * {@link com.hchen.hooktool.tool.ChainTool}
+ */
 public interface IChain {
 
     void chain(String clazz, ChainTool chain);

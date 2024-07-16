@@ -39,7 +39,7 @@ import java.util.Set;
 import de.robv.android.xposed.XSharedPreferences;
 
 /**
- * prefs 工具。
+ * prefs 工具
  */
 public class PrefsTool {
     private ToolData data;

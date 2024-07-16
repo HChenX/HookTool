@@ -24,7 +24,7 @@ import com.hchen.hooktool.utils.ToolData;
 import de.robv.android.xposed.XposedBridge;
 
 /**
- * LSP 框架日志类。
+ * LSP 框架日志类
  */
 public class XposedLog {
     private static final String rootTag = ToolData.mInitTag; /*根 TAG*/

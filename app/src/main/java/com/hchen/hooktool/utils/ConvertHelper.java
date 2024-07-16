@@ -25,7 +25,7 @@ import com.hchen.hooktool.callback.IAction;
 import java.util.ArrayList;
 
 /**
- * 本工具的快捷转换类
+ * 本工具的快捷转换
  */
 public class ConvertHelper {
     protected ToolData data;

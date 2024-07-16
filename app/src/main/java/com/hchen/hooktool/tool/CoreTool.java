@@ -43,7 +43,7 @@ import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.XposedHelpers;
 
 /**
- * 核心工具类
+ * 核心工具
  */
 public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMember {
     private final FieldObserver observer;

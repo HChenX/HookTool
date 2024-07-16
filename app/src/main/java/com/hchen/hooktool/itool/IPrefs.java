@@ -23,6 +23,11 @@ import com.hchen.hooktool.tool.PrefsTool;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * prefs 工具接口，
+ * 方法具体介绍请看实现类。<br/>
+ * {@link com.hchen.hooktool.tool.PrefsTool}
+ */
 public interface IPrefs {
     String getString(String key, String def);
 

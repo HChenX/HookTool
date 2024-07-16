@@ -23,7 +23,7 @@ import android.util.Log;
 import com.hchen.hooktool.utils.ToolData;
 
 /**
- * 安卓日志类
+ * 安卓日志
  */
 public class AndroidLog {
     private static final String rootTag = ToolData.mInitTag; /*根 TAG*/

@@ -24,7 +24,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 
 /**
- * 本类为 prop 工具，可以获取或者写入系统 prop 条目。
+ * 本类为 prop 工具，可以获取或者写入系统 prop 条目
  */
 @SuppressLint("PrivateApi")
 public class PropUtils {

@@ -21,7 +21,7 @@ package com.hchen.hooktool.tool.param;
 import static com.hchen.hooktool.log.XposedLog.logE;
 
 /**
- * 参数操作类
+ * 参数操作
  */
 public class Arguments extends ActAchieve {
 
