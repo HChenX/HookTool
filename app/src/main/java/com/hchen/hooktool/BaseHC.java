@@ -152,7 +152,7 @@ public abstract class BaseHC implements IMember, IDynamic, IStatic, IChain {
     }
 
     @Override
-    public void chain(Class<?> clazz, ChainTool chain) {
+    final public void chain(Class<?> clazz, ChainTool chain) {
         iChain.chain(clazz, chain);
     }
 
@@ -409,6 +409,11 @@ public abstract class BaseHC implements IMember, IDynamic, IStatic, IChain {
     @Override
     final public ArrayList<Constructor<?>> filterMethod(Class<?> clazz, CoreTool.IFindConstructor iFindConstructor) {
         return iMember.filterMethod(clazz, iFindConstructor);
+    }
+
+    @Override
+    final public String getStackTrace() {
+        return iMember.getStackTrace();
     }
 
     @Override

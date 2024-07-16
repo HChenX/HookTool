@@ -67,6 +67,10 @@ public class ActionTool {
                             logW(this.data.getTAG(), "class: [" + data.clazz + "] name: [" + data.mName + "], " +
                                     "type: [" + data.mType + "]. all match is null! can't hook anything!");
                             data.stateEnum = StateEnum.FAILED;
+                        } else if (data.iAction == null) {
+                            logW(this.data.getTAG(), "class: [" + data.clazz + "] name: [" + data.mName + "], " +
+                                    "type: [" + data.mType + "]. iaction is null! can't hook!!");
+                            data.stateEnum = StateEnum.FAILED;
                         } else {
                             for (Member m : data.members) {
                                 if (m == null) {

@@ -77,7 +77,6 @@ public class MainTest extends BaseHC {
                     }
                 })
         );
-
         
         hook(findMethod("com.hchen.demo", "test"), new IAction() {
             @Override

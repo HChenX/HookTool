@@ -30,12 +30,17 @@ import com.hchen.hooktool.log.AndroidLog;
 import com.hchen.hooktool.utils.ContextUtils;
 import com.hchen.hooktool.utils.ToolData;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
 import de.robv.android.xposed.XSharedPreferences;
 
+/**
+ * prefs 工具。
+ */
 public class PrefsTool {
     private ToolData data;
     private final static String TAG = "PrefsTool";
@@ -49,24 +54,24 @@ public class PrefsTool {
     private final static HashMap<String, SharedPreferences> sPrefs = new HashMap<>();
 
     /**
-     * 模块实例
+     * 模块实例入口。
      */
     public PrefsTool() {
         isXposedEnvironment = false;
         isUsingNativeStorage = true;
         // 默认值，即设置的 tag 值后加 _prefs
-        prefsName = ToolData.spareTag.toLowerCase() + "_prefs";
+        prefsName = ToolData.spareTag.replace(" ", "").toLowerCase() + "_prefs";
     }
 
     /**
-     * 寄生实例
+     * 寄生实例入口，无需手动实例。
      */
     public PrefsTool(ToolData data) {
         this.data = data;
         isXposedEnvironment = true;
         isUsingNativeStorage = false;
         // 默认值，即设置的 tag 值后加 _prefs
-        prefsName = ToolData.spareTag.toLowerCase() + "_prefs";
+        prefsName = ToolData.spareTag.replace(" ", "").toLowerCase() + "_prefs";
         xposedPrefs = this;
     }
 
@@ -78,6 +83,9 @@ public class PrefsTool {
         return modulePrefs;
     }
 
+    /**
+     * 寄生应用读取配置一般使用。
+     */
     public IPrefs prefs() {
         return prefs(prefsName);
     }
@@ -90,6 +98,7 @@ public class PrefsTool {
             throw new RuntimeException(ToolData.mInitTag +
                     "[E]: not is xposed can't call this method! please use context method!");
         }
+        prefsName = prefsName.replace(" ", "").toLowerCase();
         if (isUsingNativeStorage) {
             return new Sprefs(currentSp(ContextUtils.getContext(ContextUtils.FLAG_CURRENT_APP), prefsName));
         }
@@ -100,6 +109,9 @@ public class PrefsTool {
                     "[E]: not supported new xshared prefs! can't use!");
     }
 
+    /**
+     * 模块应用读取配置一般使用。
+     */
     public IPrefs prefs(Context context) {
         return prefs(context, prefsName);
     }
@@ -108,6 +120,7 @@ public class PrefsTool {
      * 模块应用读取配置一般使用。
      */
     public IPrefs prefs(Context context, String prefsName) {
+        prefsName = prefsName.replace(" ", "").toLowerCase();
         if (isXposedEnvironment && !isUsingNativeStorage) {
             if (isUsingNewXSharedPreferences)
                 return new Xprefs(currentXsp(prefsName), data);
@@ -271,7 +284,11 @@ public class PrefsTool {
             return xSharedPreferences.getAll();
         }
 
+        /**
+         * Xprefs 不支持修改！
+         */
         @Override
+        @Nullable
         public Editor editor() {
             logW(data.getTAG(), "xposed can't edit prefs!");
             return null;

@@ -129,8 +129,12 @@ public interface IMember {
     boolean unHook(Member hookMember, XC_MethodHook xcMethodHook);
 
     // --------- 过滤方法 -----------
+    
     ArrayList<Method> filterMethod(Class<?> clazz, CoreTool.IFindMethod iFindMethod);
 
     ArrayList<Constructor<?>> filterMethod(Class<?> clazz, CoreTool.IFindConstructor iFindConstructor);
 
+    // ------- 打印堆栈 --------------
+    
+    String getStackTrace();
 }

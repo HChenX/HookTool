@@ -36,6 +36,7 @@ import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.function.Consumer;
 
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedBridge;
@@ -266,7 +267,7 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
     public ArrayList<XC_MethodHook.Unhook> hook(String clazz, IAction iAction) {
         return hook(findAnyConstructor(clazz), iAction);
     }
-    
+
     public XC_MethodHook.Unhook hook(String clazz, Object... params) {
         if (params.length == 0 || !(params[params.length - 1] instanceof IAction)) {
             logE(data.getTAG(), "params length == 0 or last param not is IAction! can't hook!!");
@@ -380,6 +381,28 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
 
     public interface IFindConstructor {
         boolean test(Constructor<?> constructor);
+    }
+
+    // --------- 打印堆栈 ----------
+
+    @Override
+    public String getStackTrace() {
+        StringBuilder stringBuilder = new StringBuilder();
+        StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
+        Arrays.stream(stackTraceElements).forEach(new Consumer<StackTraceElement>() {
+            @Override
+            public void accept(StackTraceElement stackTraceElement) {
+                String clazz = stackTraceElement.getClassName();
+                String method = stackTraceElement.getMethodName();
+                String field = stackTraceElement.getFileName();
+                int line = stackTraceElement.getLineNumber();
+                stringBuilder.append("\nat ").append(clazz).append(".")
+                        .append(method).append("(")
+                        .append(field).append(":")
+                        .append(line).append(")");
+            }
+        });
+        return stringBuilder.toString();
     }
 
     // ---------- 非静态 -----------
