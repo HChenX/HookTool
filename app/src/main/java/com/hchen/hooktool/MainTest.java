@@ -52,7 +52,7 @@ public class MainTest extends BaseHC {
                         "field");
             }
         };
-        
+
         chain("com.hchen.demo", method("test")
                 .hook(new IAction() {
                     @Override
@@ -77,14 +77,14 @@ public class MainTest extends BaseHC {
                     }
                 })
         );
-        
+
         hook(findMethod("com.hchen.demo", "test"), new IAction() {
             @Override
             public void before() throws Throwable {
                 super.before();
             }
         });
-        
+
         new IAction() {
             @Override
             public void before() throws Throwable {
@@ -94,17 +94,47 @@ public class MainTest extends BaseHC {
                 String string = first();
                 second(1);
 
-                // 非静态的本类内实例可直接使用 xx() 进行设置。
+                // 非静态本类内
                 setThisField("demo", 1);
                 callThisMethod("method");
                 getThisField("test");
 
+                // 非静态本类外
+                Object o = null;
+                setField(o, "demo", 1);
+                callMethod(o, "method");
+                getField(o, "test");
+
                 // 静态需要 class
                 String result = callThisMethod("call", new Object[]{thisObject(), first()});
-                callStaticMethod(findClass("com.demo.Main"), "callStatic", new Object[]{thisObject(), second()});
-                int i = getStaticField(findClass("com.demo.Main"), "field");
-                setStaticField(findClass("com.demo.Main"), "test", true);
+                callStaticMethod("com.demo.Main", "callStatic", new Object[]{thisObject(), second()});
+                int i = getStaticField("com.demo.Main", "field");
+                setStaticField("com.demo.Main", "test", true);
+
+                // 移除自身
+                removeSelf();
             }
         };
+    }
+
+    public static void test() {
+        sChain.chain("com.hchen.demo", sChain.method("test")
+                .hook(new IAction() {
+                    @Override
+                    public void before() throws Throwable {
+                        super.before();
+                    }
+                })
+
+                .anyConstructor()
+                .hook(new IAction() {
+                    @Override
+                    public void after() throws Throwable {
+                        super.after();
+                    }
+                })
+        );
+
+        sCore.callStaticMethod("com.hchen.demo", "test", "hello");
     }
 }

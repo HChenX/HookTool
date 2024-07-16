@@ -40,7 +40,7 @@ dependencyResolutionManagement {
 
 ```groovy
 dependencies {
-    implementation 'com.github.HChenX:HookTool:v.0.9.6.5'
+    implementation 'com.github.HChenX:HookTool:v.0.9.8'
 }
 ```
 
@@ -54,14 +54,24 @@ dependencies {
 
 @Override
 public void initZygote(IXposedHookZygoteInit.StartupParam startupParam) {
-    HCInit.initZygote(startupParam); // 初始化
+    HCInit.initStartupParam(startupParam); // 初始化
 }
 
 @Override
 public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) {
-    HCInit.setTAG("YourTag"); // 设置日志 TAG
-    HCInit.setLogLevel(HCInit.LOG_I); // 设置日志输出等级
-    HCInit.initLoadPackageParam(lpparam); // 初始化
+    HCInit.initOther(/* 你模块的包名 */, /* tag */, /* 日志等级 */); // 必须 tip：建议放在第一位
+    HCInit.initLoadPackageParam(lpparam); // 必须
+}
+```
+
+- 如果需要使用 prefs 工具或者使用模块的 log 类，那么你还需要在模块主界面初始化。
+
+```java
+public static class MainActivity {
+    @Override
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
+        HCInit.initOther(/* 你模块的包名 */, /* tag */, /* 日志等级 */); // 必须
+    }
 }
 ```
 
@@ -75,6 +85,7 @@ public void test() {
 ```
 
 - 当然你也可以直接继承本工具打包好的类
+- // 强烈建议继承 BaseHook 使用！
 
 ```java
 // Hook 方
@@ -86,6 +97,7 @@ public class MainTest extends BaseHC {
 
     // 可选项。
     // 时机为 zygote。
+    // 使用 initZygote 必须在 hook 入口处初始化 HCInit.initStartupParam(startupParam);
     @Override
     public void initZygote(IXposedHookZygoteInit.StartupParam startupParam) {
         super.initZygote(startupParam);
@@ -123,7 +135,7 @@ public class MainTest {
                     }
                 })
 
-                .method("test_1", String.class)
+                .anyMethod("test")
                 .hook(new IAction() {
                     @Override
                     public void after() throws Throwable {
@@ -144,7 +156,7 @@ public class MainTest {
 ```
 
 ```java
-// 独立工具，更建议直接继承 BaseHC 类获取更好体验！
+// 核心工具，更建议直接继承 BaseHC 类获取更好体验！
 public class MainTest {
     public void test() {
         Object object = null;
@@ -168,7 +180,6 @@ public class MainTest {
 
 ```java
 public class MainTest extends BaseHC {
-
     @Override
     public void init() {
         new XC_MethodHook() {
@@ -196,16 +207,25 @@ public class MainTest extends BaseHC {
                 String string = first();
                 second(1);
 
-                // 非静态的本类内实例可直接使用 param.xx() 进行设置。
-                setField("demo", 1);
-                callMethod("method");
-                getField("test");
+                // 非静态本类内
+                setThisField("demo", 1);
+                callThisMethod("method");
+                getThisField("test");
+
+                // 非静态本类外
+                Object o = null;
+                setField(o, "demo", 1);
+                callMethod(o, "method");
+                getField(o, "test");
 
                 // 静态需要 class
                 String result = callMethod("call", new Object[]{thisObject(), first()});
-                callStaticMethod(findClass("com.demo.Main"), "callStatic", new Object[]{thisObject(), second()});
-                int i = getStaticField(findClass("com.demo.Main"), "field");
-                setStaticField(findClass("com.demo.Main"), "test", true);
+                callStaticMethod("com.demo.Main", "callStatic", new Object[]{thisObject(), second()});
+                int i = getStaticField("com.demo.Main", "field");
+                setStaticField("com.demo.Main", "test", true);
+                
+                // 你可调用此方法，使得挂钩自己失效
+                removeSelf();
             }
         };
     }
@@ -230,7 +250,6 @@ public class MainTest extends BaseHC {
 
 ```java
 public class MainTest extends BaseHC {
-
     @Override
     public void init() {
         new XC_MethodHook() {
@@ -246,10 +265,32 @@ public class MainTest extends BaseHC {
             @Override
             public void before() throws Throwable {
                 // 本工具将其封装，可直接使用！
-                // thisObject(), first(), callMethod(), callStaticMethod(),等，所见即所用。
+                // thisObject(), first(), callThisMethod(), callStaticMethod(),等，所见即所用。
                 // 注：部分方法调用需要继承 BaseHC 才能简洁调用！
             }
         };
+    }
+
+    // 对于静态，工具提供了一些方法，具体参考 BaseHC.java 代码。
+    public static void test() {
+        sChain.chain("com.hchen.demo", sChain.method("test")
+                .hook(new IAction() {
+                    @Override
+                    public void before() throws Throwable {
+                        super.before();
+                    }
+                })
+
+                .anyConstructor()
+                .hook(new IAction() {
+                    @Override
+                    public void after() throws Throwable {
+                        super.after();
+                    }
+                })
+        );
+
+        sCore.callStaticMethod("com.hchen.demo", "test", "hello");
     }
 }
 ```
@@ -266,7 +307,6 @@ public class MainTest extends BaseHC {
 
 ```java
 public class MainTest {
-
     public void test() {
         // 即可最简单的获取 context
         Context context = ContextUtils.getContext(ContextUtils.FLAG_ALL);
@@ -281,7 +321,6 @@ public class MainTest {
 
 ```java
 public class MainTest {
-
     public void test() {
         // 即可反射调用方法，其他反射操作同理。
         InvokeUtils.callMethod(InvokeUtils.findClass("com.hchen.hooktool.MainTest",
@@ -297,7 +336,6 @@ public class MainTest {
 
 ```java
 public class MainTest {
-
     public void test() {
         // 只能在系统核心中调用才能设置 prop
         PropUtils.setProp("ro.test.prop", "1");
@@ -305,6 +343,50 @@ public class MainTest {
         String result = PropUtils.getProp("ro.test.prop");
     }
 }
+```
+
+---
+
+- PrefsTool 类:
+- 提供 prefs 读取修改功能。
+
+```java
+// 寄生应用内
+public class MainTest extends BaseHC {
+    @Override
+    public void init() {
+        // 注意 xprefs 模式，即新模式下，寄生应用不能修改配置只能读取。
+        String s = prefs().getString("test", "1");  // 即可读取
+        s = prefs("myPrefs").getString("test", "1");  // 可指定读取文件名
+        Context context = null;
+        // nativePrefs() 即可切换为原生模式，配置会保存到寄生应用的私有目录，读取也会从寄生应用私有目录读取。
+        nativePrefs().prefs(context).editor().putString("test", "1").commit(); 
+        
+        // 如果不方便获取 context 可用使用此方法，异步获取寄生应用 context，再设置。
+        asynPrefs(new PrefsTool.IAsynPrefs() {
+            @Override
+            public void asyn(Context context) {
+                prefs(context).editor().putString("test", "1").commit();
+            }
+        });
+
+        // 切换回新模式。
+        xposedPrefs();
+        // 注意 nativePrefs() 和 xposedPrefs() 作用域是寄生应用全局。
+    }
+}
+
+// 模块内
+public class MainTest {
+    public void test() {
+        // 模块内使用必须传入上下文 context！
+        // 读取，写入同理。
+        Context context = null;
+        prefs(context).editor().putString("test", "1").commit();
+        prefs(context,"myPrefs").editor().putString("test", "1").commit(); 
+    }
+}
+
 ```
 
 ---

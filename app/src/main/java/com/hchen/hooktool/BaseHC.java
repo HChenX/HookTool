@@ -66,11 +66,13 @@ public abstract class BaseHC implements IMember, IDynamic, IStatic, IChain {
     // 当然你也可以在自己类内手动存储静态本类，实现日志正常。
     public static HCHook sHc;
     public static CoreTool sCore;
+    public static ChainTool sChain;
     public static PrefsTool sPrefs;
 
     static {
         sHc = new HCHook().setThisTag("StaticHC");
         sCore = sHc.core();
+        sChain = sHc.chain();
         sPrefs = sHc.prefs();
     }
 
@@ -417,8 +419,28 @@ public abstract class BaseHC implements IMember, IDynamic, IStatic, IChain {
     }
 
     @Override
+    public <T, R> R newInstance(String clz, T objects) {
+        return iStatic.newInstance(clz, objects);
+    }
+
+    @Override
+    public <T, R> R newInstance(String clz, ClassLoader classLoader, T objects) {
+        return iStatic.newInstance(clz, classLoader, objects);
+    }
+
+    @Override
     final public <T, C> C newInstance(Class<?> clz, T objects) {
         return iStatic.newInstance(clz, objects);
+    }
+
+    @Override
+    public <R> R newInstance(String clz) {
+        return iStatic.newInstance(clz);
+    }
+
+    @Override
+    public <R> R newInstance(String clz, ClassLoader classLoader) {
+        return iStatic.newInstance(clz, classLoader);
     }
 
     @Override
@@ -427,13 +449,43 @@ public abstract class BaseHC implements IMember, IDynamic, IStatic, IChain {
     }
 
     @Override
+    public <T, R> R callStaticMethod(String clz, String name, T objs) {
+        return iStatic.callStaticMethod(clz, name, objs);
+    }
+
+    @Override
+    public <T, R> R callStaticMethod(String clz, ClassLoader classLoader, String name, T objs) {
+        return iStatic.callStaticMethod(clz, classLoader, name, objs);
+    }
+
+    @Override
     final public <T, C> C callStaticMethod(Class<?> clz, String name, T objs) {
         return iStatic.callStaticMethod(clz, name, objs);
     }
 
     @Override
+    public <R> R callStaticMethod(String clz, String name) {
+        return iStatic.callStaticMethod(clz, name);
+    }
+
+    @Override
+    public <R> R callStaticMethod(String clz, ClassLoader classLoader, String name) {
+        return iStatic.callStaticMethod(clz, classLoader, name);
+    }
+
+    @Override
     final public <C> C callStaticMethod(Class<?> clz, String name) {
         return iStatic.callStaticMethod(clz, name);
+    }
+
+    @Override
+    public <T> T getStaticField(String clz, String name) {
+        return iStatic.getStaticField(clz, name);
+    }
+
+    @Override
+    public <T> T getStaticField(String clz, ClassLoader classLoader, String name) {
+        return iStatic.getStaticField(clz, classLoader, name);
     }
 
     @Override
@@ -447,6 +499,16 @@ public abstract class BaseHC implements IMember, IDynamic, IStatic, IChain {
     }
 
     @Override
+    public boolean setStaticField(String clz, String name, Object value) {
+        return iStatic.setStaticField(clz, name, value);
+    }
+
+    @Override
+    public boolean setStaticField(String clz, ClassLoader classLoader, String name, Object value) {
+        return iStatic.setStaticField(clz, classLoader, name, value);
+    }
+
+    @Override
     final public boolean setStaticField(Class<?> clz, String name, Object value) {
         return iStatic.setStaticField(clz, name, value);
     }
@@ -457,13 +519,43 @@ public abstract class BaseHC implements IMember, IDynamic, IStatic, IChain {
     }
 
     @Override
+    public boolean setAdditionalStaticField(String clz, String key, Object value) {
+        return iStatic.setAdditionalStaticField(clz, key, value);
+    }
+
+    @Override
+    public boolean setAdditionalStaticField(String clz, ClassLoader classLoader, String key, Object value) {
+        return iStatic.setAdditionalStaticField(clz, classLoader, key, value);
+    }
+
+    @Override
     final public boolean setAdditionalStaticField(Class<?> clz, String key, Object value) {
         return iStatic.setAdditionalStaticField(clz, key, value);
     }
 
     @Override
+    public <T> T getAdditionalStaticField(String clz, String key) {
+        return iStatic.getAdditionalStaticField(clz, key);
+    }
+
+    @Override
+    public <T> T getAdditionalStaticField(String clz, ClassLoader classLoader, String key) {
+        return iStatic.getAdditionalStaticField(clz, classLoader, key);
+    }
+
+    @Override
     final public <T> T getAdditionalStaticField(Class<?> clz, String key) {
         return iStatic.getAdditionalStaticField(clz, key);
+    }
+
+    @Override
+    public boolean removeAdditionalStaticField(String clz, String key) {
+        return iStatic.removeAdditionalStaticField(clz, key);
+    }
+
+    @Override
+    public boolean removeAdditionalStaticField(String clz, ClassLoader classLoader, String key) {
+        return iStatic.removeAdditionalStaticField(clz, classLoader, key);
     }
 
     @Override

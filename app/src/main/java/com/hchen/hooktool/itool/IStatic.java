@@ -27,29 +27,65 @@ import java.lang.reflect.Field;
  */
 public interface IStatic {
     // --------- 实例类 ------------
+    <T, R> R newInstance(String clz, T objects);
+
+    <T, R> R newInstance(String clz, ClassLoader classLoader, T objects);
+
     <T, R> R newInstance(Class<?> clz, T objects);
+
+    <R> R newInstance(String clz);
+
+    <R> R newInstance(String clz, ClassLoader classLoader);
 
     <R> R newInstance(Class<?> clz);
 
     // --------- 调用静态方法 ------------
+    <T, R> R callStaticMethod(String clz, String name, T objs);
+
+    <T, R> R callStaticMethod(String clz, ClassLoader classLoader, String name, T objs);
+
     <T, R> R callStaticMethod(Class<?> clz, String name, T objs);
+
+    <R> R callStaticMethod(String clz, String name);
+
+    <R> R callStaticMethod(String clz, ClassLoader classLoader, String name);
 
     <R> R callStaticMethod(Class<?> clz, String name);
 
     // --------- 获取静态字段 ------------
+    <T> T getStaticField(String clz, String name);
+
+    <T> T getStaticField(String clz, ClassLoader classLoader, String name);
+
     <T> T getStaticField(Class<?> clz, String name);
 
     <T> T getStaticField(Field field);
 
     // --------- 设置静态字段 ------------
+    boolean setStaticField(String clz, String name, Object value);
+
+    boolean setStaticField(String clz, ClassLoader classLoader, String name, Object value);
+
     boolean setStaticField(Class<?> clz, String name, Object value);
 
     boolean setStaticField(Field field, Object value);
 
     // --------- 设置获取删除自定义字段 ------------
+    boolean setAdditionalStaticField(String clz, String key, Object value);
+
+    boolean setAdditionalStaticField(String clz, ClassLoader classLoader, String key, Object value);
+
     boolean setAdditionalStaticField(Class<?> clz, String key, Object value);
 
+    <T> T getAdditionalStaticField(String clz, String key);
+
+    <T> T getAdditionalStaticField(String clz, ClassLoader classLoader, String key);
+
     <T> T getAdditionalStaticField(Class<?> clz, String key);
+
+    boolean removeAdditionalStaticField(String clz, String key);
+
+    boolean removeAdditionalStaticField(String clz, ClassLoader classLoader, String key);
 
     boolean removeAdditionalStaticField(Class<?> clz, String key);
 }
