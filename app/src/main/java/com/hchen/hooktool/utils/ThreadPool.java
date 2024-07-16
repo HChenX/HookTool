@@ -40,12 +40,4 @@ public class ThreadPool {
         }
         return executor;
     }
-
-    // 关闭线程池
-    public static synchronized void shutdown() {
-        if (executor != null && !executor.isShutdown()) {
-            executor.shutdown();
-            executor = null;
-        }
-    }
 }

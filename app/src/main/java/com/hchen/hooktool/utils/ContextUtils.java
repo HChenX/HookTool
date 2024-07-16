@@ -108,7 +108,7 @@ public class ContextUtils {
                 iContext.findContext(context);
             }
         });
-        ThreadPool.shutdown();
+        ThreadPool.getInstance().shutdown();
     }
 
     public interface IContext {
