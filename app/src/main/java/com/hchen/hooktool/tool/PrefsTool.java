@@ -137,7 +137,7 @@ public class PrefsTool {
      * <p>
      * 仅限寄生应用内调用，适用于不方便获取 context 的情况。
      */
-    public void asynPrefs(IAsynPrefs asynPrefs) {
+    public void asyncPrefs(IAsyncPrefs asyncPrefs) {
         if (!isXposedEnvironment) {
             throw new RuntimeException(ToolData.mInitTag +
                     "[E]: not is xposed can't call this method! please use context method!");
@@ -150,13 +150,13 @@ public class PrefsTool {
                     throw new RuntimeException(ToolData.mInitTag +
                             "[" + data.getTAG() + "][E]: asyn prefs context is null!!");
                 }
-                asynPrefs.asyn(context);
+                asyncPrefs.async(context);
             }
         }, false);
     }
 
-    public interface IAsynPrefs {
-        void asyn(Context context);
+    public interface IAsyncPrefs {
+        void async(Context context);
     }
 
     /**

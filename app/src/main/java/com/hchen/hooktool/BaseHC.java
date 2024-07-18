@@ -131,8 +131,8 @@ public abstract class BaseHC implements IMember, IDynamic, IStatic, IChain {
         return prefs.prefs(context, prefsName);
     }
 
-    final public void asynPrefs(PrefsTool.IAsynPrefs asynPrefs) {
-        prefs.asynPrefs(asynPrefs);
+    final public void asyncPrefs(PrefsTool.IAsyncPrefs asynPrefs) {
+        prefs.asyncPrefs(asynPrefs);
     }
 
     final public PrefsTool nativePrefs() {

@@ -161,7 +161,7 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
     public ArrayList<Method> findAnyMethod(Class<?> clazz, String name) {
         ArrayList<Method> methods = new ArrayList<>();
         if (clazz == null) {
-            logW(data.getTAG(), "class is null! can't find method: " + name);
+            logW(data.getTAG(), "class is null! can't find any method: " + name);
             return methods;
         }
         for (Method m : clazz.getDeclaredMethods()) {
@@ -203,7 +203,7 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
 
     public ArrayList<Constructor<?>> findAnyConstructor(Class<?> clazz) {
         if (clazz == null) {
-            logW(data.getTAG(), "class is null! can't find constructor!");
+            logW(data.getTAG(), "class is null! can't find any constructor!");
             return new ArrayList<>();
         }
         return new ArrayList<>(Arrays.asList(clazz.getDeclaredConstructors()));
@@ -258,7 +258,7 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
 
     public XC_MethodHook.Unhook hook(Class<?> clazz, String method, Object... params) {
         if (params.length == 0 || !(params[params.length - 1] instanceof IAction)) {
-            logE(data.getTAG(), "params length == 0 or last param not is IAction! can't hook!!");
+            logW(data.getTAG(), "params length == 0 or last param not is IAction! can't hook!!");
             return null;
         }
         return hook(findMethod(clazz, method, params), (IAction) params[params.length - 1]);

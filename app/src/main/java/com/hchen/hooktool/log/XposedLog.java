@@ -37,12 +37,12 @@ public class XposedLog {
 
     public static void logE(String tag, Throwable e) {
         if (level < 1) return;
-        XposedBridge.log(rootTag + "[" + tag + "]" + "[E]: " + LogExpand.printStackTrace(e));
+        XposedBridge.log(rootTag + "[" + tag + "]" + "[E]: \n" + LogExpand.printStackTrace(e));
     }
 
     public static void logE(String tag, String log, Throwable e) {
         if (level < 1) return;
-        XposedBridge.log(rootTag + "[" + tag + "]" + "[E]: " + log + " \nError Msg: " +
+        XposedBridge.log(rootTag + "[" + tag + "]" + "[E]: " + log + " \n[Error Msg]: " +
                 LogExpand.printStackTrace(e));
     }
 
@@ -53,7 +53,7 @@ public class XposedLog {
 
     public static void logW(String tag, Throwable e) {
         if (level < 2) return;
-        XposedBridge.log(rootTag + "[" + tag + "]" + "[W]: " + LogExpand.printStackTrace(e));
+        XposedBridge.log(rootTag + "[" + tag + "]" + "[W]: \n" + LogExpand.printStackTrace(e));
     }
 
     public static void logI(String tag, String log) {
@@ -68,7 +68,7 @@ public class XposedLog {
 
     public static void logD(String tag, Throwable e) {
         if (level < 4) return;
-        XposedBridge.log(rootTag + "[" + tag + "]" + "[D]: " + LogExpand.printStackTrace(e));
+        XposedBridge.log(rootTag + "[" + tag + "]" + "[D]: \n" + LogExpand.printStackTrace(e));
     }
 
     public static void logD(String tag, String log) {

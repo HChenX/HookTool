@@ -122,8 +122,8 @@ public class ChainTool implements IChain {
                 default -> mMembers = new ArrayList<>();
             }
             ArrayList<Member> cache = new ArrayList<>(mMembers);
-            ArrayList<Member> finalMMembers = mMembers;
-            if (chainDataList.stream().noneMatch(chainData -> chainData.members.equals(finalMMembers)))
+            ArrayList<Member> finalMembers = mMembers;
+            if (chainDataList.stream().noneMatch(chainData -> chainData.members.equals(finalMembers)))
                 chainDataList.add(new ChainData(clazz.getSimpleName(),
                         data.mName, data.mType, cache, data.iAction, StateEnum.NONE));
             mMembers.clear();
