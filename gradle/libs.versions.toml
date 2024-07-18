@@ -4,7 +4,7 @@ annotation = "1.8.0"
 xposed = "82"
 
 [libraries]
-annotation = { module = "androidx.annotation:annotation", version.ref = "annotation" }
+annotation = { module = "androidx.annotation:annotation-jvm", version.ref = "annotation" }
 xposed = { group = "de.robv.android.xposed", name = "api", version.ref = "xposed" }
 
 [plugins]
