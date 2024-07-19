@@ -30,6 +30,7 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 /**
  * 这是本工具的读写数据类，请不要继承重写。
+ * @hide 
  */
 public class ToolData {
     // HCInit
@@ -37,9 +38,7 @@ public class ToolData {
     public static int mInitLogLevel = HCInit.LOG_I;
     public static String spareTag = "Unknown";
     public static String modulePackageName = null;
-    public static boolean useLogExpand = false;
-    public static String[] filter = new String[]{};
-    public static boolean useFieldObserver = false;
+    public static boolean autoObserveCall = false;
     public static IXposedHookZygoteInit.StartupParam startupParam = null;
     // HCHook
     public static XC_LoadPackage.LoadPackageParam lpparam = null;

@@ -40,7 +40,7 @@ dependencyResolutionManagement {
 
 ```groovy
 dependencies {
-    implementation 'com.github.HChenX:HookTool:v.0.9.8'
+    implementation 'com.github.HChenX:HookTool:v.0.9.9'
 }
 ```
 
@@ -59,7 +59,7 @@ public void initZygote(IXposedHookZygoteInit.StartupParam startupParam) {
 
 @Override
 public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) {
-    HCInit.initOther(/* 你模块的包名 */, /* tag */, /* 日志等级 */); // 必须，tip：建议放在第一位
+    HCInit.initBasicData(/* 你模块的包名 */, /* tag */, /* 日志等级 */); // 必须，tip：建议放在第一位
     HCInit.initLoadPackageParam(lpparam); // 必须
 }
 ```
@@ -70,7 +70,7 @@ public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) {
 public static class MainActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
-        HCInit.initOther(/* 你模块的包名 */, /* tag */, /* 日志等级 */); // 必须
+        HCInit.initBasicData(/* 你模块的包名 */, /* tag */, /* 日志等级 */); // 必须
     }
 }
 ```
@@ -202,7 +202,6 @@ public class MainTest extends BaseHC {
             public void before() throws Throwable {
                 // hook 方法所属的类
                 Class<?> c = mClass;
-
                 Context context = thisObject();
                 String string = first();
                 second(1);
@@ -211,7 +210,6 @@ public class MainTest extends BaseHC {
                 setThisField("demo", 1);
                 callThisMethod("method");
                 getThisField("test");
-
                 // 非静态本类外
                 Object o = null;
                 setField(o, "demo", 1);
@@ -223,9 +221,13 @@ public class MainTest extends BaseHC {
                 callStaticMethod("com.demo.Main", "callStatic", new Object[]{thisObject(), second()});
                 int i = getStaticField("com.demo.Main", "field");
                 setStaticField("com.demo.Main", "test", true);
-                
+
                 // 你可调用此方法，使得挂钩自己失效
                 removeSelf();
+                // 观察调用
+                observeCall();
+                // 获取堆栈
+                getStackTrace();
             }
         };
     }
@@ -360,8 +362,8 @@ public class MainTest extends BaseHC {
         s = prefs("myPrefs").getString("test", "1");  // 可指定读取文件名
         Context context = null;
         // nativePrefs() 即可切换为原生模式，配置会保存到寄生应用的私有目录，读取也会从寄生应用私有目录读取。
-        nativePrefs().prefs(context).editor().putString("test", "1").commit(); 
-        
+        nativePrefs().prefs(context).editor().putString("test", "1").commit();
+
         // 如果不方便获取 context 可用使用此方法，异步获取寄生应用 context，再设置。
         asynPrefs(new PrefsTool.IAsynPrefs() {
             @Override
@@ -383,7 +385,7 @@ public class MainTest {
         // 读取，写入同理。
         Context context = null;
         prefs(context).editor().putString("test", "1").commit();
-        prefs(context,"myPrefs").editor().putString("test", "1").commit(); 
+        prefs(context, "myPrefs").editor().putString("test", "1").commit();
     }
 }
 
@@ -408,6 +410,14 @@ public class MainTest {
 - 具体参加源代码与注释。
 
 ----
+
+- PackagesUtils 类:
+- 快速获取软件包信息！
+
+----
+
+- BitmapUtils 类:
+- Drawable 转 Bitmap。
 
 - 其他更多精彩正在加载···
 

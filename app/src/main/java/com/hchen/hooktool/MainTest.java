@@ -28,6 +28,8 @@ import de.robv.android.xposed.XposedHelpers;
 
 /**
  * 测试和示例类
+ *
+ * @hide
  */
 public class MainTest extends BaseHC {
 
@@ -98,7 +100,6 @@ public class MainTest extends BaseHC {
                 setThisField("demo", 1);
                 callThisMethod("method");
                 getThisField("test");
-
                 // 非静态本类外
                 Object o = null;
                 setField(o, "demo", 1);
@@ -113,6 +114,10 @@ public class MainTest extends BaseHC {
 
                 // 移除自身
                 removeSelf();
+                // 观察调用
+                observeCall();
+                // 获取堆栈
+                getStackTrace();
             }
         };
     }

@@ -83,23 +83,24 @@ public class HCInit {
     /**
      * 务必设置！
      */
-    public static void initOther(String modulePackageName, String tag, @Duration int level) {
+    public static void initBasicData(String modulePackageName, String tag, @Duration int level) {
         setTag(tag); /* 设置 TAG */
         ToolData.mInitLogLevel = level; /* 设置日志等级 */
         ToolData.modulePackageName = modulePackageName; /* 设置模块包名 */
     }
 
+    /**
+     * 是否允许使用系统的 classloader，一般不需要开启。
+     */
     public static void canUseSystemClassLoader(boolean use) {
         canUseSystemClassLoader = use; /* 允许使用系统 classloader */
     }
 
-    public static void logFilter(boolean use, String[] filter) {
-        ToolData.useFieldObserver = use; /* 使用全局日志过滤 */
-        ToolData.filter = filter; /* 过滤规则 */
-    }
-
-    public static void filedObserver(boolean use) {
-        ToolData.useFieldObserver = use; /* 使用字段设置观察 */
+    /**
+     * 是否自动对每个被 hook 的方法，在其被调用时打印日志。
+     */
+    public static void autoObserveCall(boolean auto) {
+        ToolData.autoObserveCall = auto;
     }
     // ---------- END！----------
 
@@ -107,7 +108,6 @@ public class HCInit {
         ToolData.mInitTag = "[" + tag + "]";
         ToolData.spareTag = tag;
     }
-
 
     protected static XC_LoadPackage.LoadPackageParam getLoadPackageParam() {
         if (lpparam != null) return lpparam;

@@ -41,6 +41,9 @@ public class ParamTool extends Arguments {
 
     private XC_MethodHook xcMethodHook;
 
+    /**
+     * @hide
+     */
     final protected void putMethodHookParam(XC_MethodHook.MethodHookParam param) {
         if (param == null)
             throw new RuntimeException(ToolData.mInitTag + "[" + mTag + "][E]: param is null!!");
@@ -50,10 +53,16 @@ public class ParamTool extends Arguments {
         mArgs = param.args;
     }
 
+    /**
+     * @hide
+     */
     final protected void putXCMethodHook(XC_MethodHook xcMethodHook) {
         this.xcMethodHook = xcMethodHook;
     }
 
+    /**
+     * @hide
+     */
     final protected void putUtils(ToolData data) {
         mTag = data.getTAG();
         iDynamic = data.getCoreTool();

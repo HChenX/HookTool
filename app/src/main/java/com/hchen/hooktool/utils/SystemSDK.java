@@ -33,16 +33,6 @@ import java.util.Locale;
  * 此类用于获取设备基本信息
  */
 public class SystemSDK {
-    private static String TAG;
-
-    public SystemSDK() {
-
-    }
-
-    public SystemSDK(String tag) {
-        TAG = tag;
-    }
-
     public static String getSystemVersionIncremental() {
         return getProp("ro.system.build.version.incremental");
     }

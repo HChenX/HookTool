@@ -28,6 +28,9 @@ import java.util.ArrayList;
  * 本工具的快捷转换
  */
 public class ConvertHelper {
+    /**
+     * @hide 
+     */
     protected ToolData data;
 
     public ConvertHelper(ToolData data) {

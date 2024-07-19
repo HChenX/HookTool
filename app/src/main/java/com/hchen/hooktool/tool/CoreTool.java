@@ -27,7 +27,6 @@ import com.hchen.hooktool.itool.IDynamic;
 import com.hchen.hooktool.itool.IMember;
 import com.hchen.hooktool.itool.IStatic;
 import com.hchen.hooktool.utils.ConvertHelper;
-import com.hchen.hooktool.utils.FieldObserver;
 import com.hchen.hooktool.utils.ToolData;
 
 import java.lang.reflect.Constructor;
@@ -46,12 +45,9 @@ import de.robv.android.xposed.XposedHelpers;
  * 核心工具
  */
 public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMember {
-    private final FieldObserver observer;
-    private final boolean useFieldObserver = ToolData.useFieldObserver;
 
     public CoreTool(ToolData toolData) {
         super(toolData);
-        observer = new FieldObserver(data);
     }
 
     //------------ 检查指定类是否存在 --------------
@@ -282,7 +278,7 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
             return null;
         }
         try {
-            XC_MethodHook.Unhook unhook = XposedBridge.hookMethod(member, data.getActionTool().createHook(member, iAction));
+            XC_MethodHook.Unhook unhook = XposedBridge.hookMethod(member, data.getActionTool().createHook(iAction));
             logD(data.getTAG(), "success hook: " + member);
             return unhook;
         } catch (Throwable e) {
@@ -297,7 +293,7 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
             if (o instanceof Method || o instanceof Constructor<?>) {
                 try {
                     unhooks.add(XposedBridge.hookMethod((Member) o,
-                            data.getActionTool().createHook((Member) o, iAction)));
+                            data.getActionTool().createHook(iAction)));
                     logD(data.getTAG(), "success hook: " + o);
                 } catch (Throwable e) {
                     logE(data.getTAG(), "hook: [" + o + "], failed!", e);
@@ -462,8 +458,6 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
         }
         try {
             XposedHelpers.setObjectField(instance, name, value);
-            if (useFieldObserver)
-                observer.dynamicObserver(instance, name, value);
             return true;
         } catch (Throwable e) {
             logE(data.getTAG(), "set field failed!", e);
@@ -479,8 +473,6 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
             }
             field.setAccessible(true);
             field.set(instance, value);
-            if (useFieldObserver)
-                observer.dynamicObserver(field, instance, value);
             return true;
         } catch (Throwable e) {
             logE(data.getTAG(), "set field failed!", e);
@@ -638,8 +630,6 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
         if (clz != null) {
             try {
                 XposedHelpers.setStaticObjectField(clz, name, value);
-                if (useFieldObserver)
-                    observer.staticObserver(clz, name, value);
                 return true;
             } catch (Throwable e) {
                 logE(data.getTAG(), "set static field failed!", e);
@@ -652,8 +642,6 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
         try {
             field.setAccessible(true);
             field.set(null, value);
-            if (useFieldObserver)
-                observer.staticObserver(field, value);
             return true;
         } catch (Throwable e) {
             logE(data.getTAG(), "set static field failed!", e);

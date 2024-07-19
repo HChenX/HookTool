@@ -25,7 +25,6 @@ import static com.hchen.hooktool.log.XposedLog.logW;
 import com.hchen.hooktool.callback.IAction;
 import com.hchen.hooktool.data.ChainData;
 import com.hchen.hooktool.data.StateEnum;
-import com.hchen.hooktool.utils.LogExpand;
 import com.hchen.hooktool.utils.ToolData;
 
 import java.lang.reflect.Member;
@@ -38,6 +37,8 @@ import de.robv.android.xposed.XposedBridge;
 
 /**
  * Hook 执行
+ *
+ * @hide
  */
 public class ActionTool {
     private final ToolData data;
@@ -78,7 +79,7 @@ public class ActionTool {
                                             "type: [" + data.mType + "]. member is null, will skip hook!");
                                     continue;
                                 }
-                                XposedBridge.hookMethod(m, createHook(m, data.iAction));
+                                XposedBridge.hookMethod(m, createHook(data.iAction));
                                 logD(this.data.getTAG(), "success to hook: " + m);
                             }
                             data.stateEnum = StateEnum.HOOKED;
@@ -99,12 +100,14 @@ public class ActionTool {
         }
     }
 
-    protected Action createHook(Member member, IAction iAction) {
+    protected Action createHook(IAction iAction) {
         iAction.putUtils(data);
-        return new Action(member, data.getTAG()) {
+        return new Action(data.getTAG()) {
             @Override
             protected void before(MethodHookParam param) throws Throwable {
                 iAction.putMethodHookParam(param);
+                if (ToolData.autoObserveCall)
+                    iAction.observeCall();
                 iAction.before();
             }
 
@@ -122,9 +125,7 @@ public class ActionTool {
     }
 
     protected abstract static class Action extends XC_MethodHook {
-        private String TAG = null;
-        private LogExpand logExpand = null;
-        private boolean useLogExpand = false;
+        private final String TAG;
 
         protected void before(MethodHookParam param) throws Throwable {
         }
@@ -134,32 +135,22 @@ public class ActionTool {
 
         abstract void putThis(XC_MethodHook xcMethodHook);
 
-        public Action(Member member, String tag) {
+        public Action(String tag) {
             super();
             TAG = tag;
             putThis(this);
-            this.useLogExpand = ToolData.useLogExpand;
-            if (useLogExpand) this.logExpand = new LogExpand(member, TAG);
         }
 
-        public Action(Member member, String tag, int priority) {
+        public Action(String tag, int priority) {
             super(priority);
             TAG = tag;
             putThis(this);
-            this.useLogExpand = ToolData.useLogExpand;
-            if (useLogExpand) this.logExpand = new LogExpand(member, TAG);
         }
 
         @Override
         protected void beforeHookedMethod(MethodHookParam param) {
             try {
                 before(param);
-                if (useLogExpand) {
-                    if (logExpand != null) {
-                        logExpand.setParam(param);
-                        logExpand.detailedLogs();
-                    }
-                }
             } catch (Throwable e) {
                 logE(TAG + ":" + "before", e);
             }

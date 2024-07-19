@@ -18,12 +18,20 @@
  */
 package com.hchen.hooktool.data;
 
+import android.graphics.Bitmap;
+
 /**
- * 状态枚举
- * @hide 
+ * App 数据类
  */
-public enum StateEnum {
-    NONE, /*未 hook*/
-    HOOKED, /*成功 hook*/
-    FAILED /*hook 失败*/
+public class AppData {
+    public int user = 0; /* user id*/
+    public int uid = -1; /* uid */
+    public Bitmap icon; /* 图标 */
+    public String label; /* 应用名 */
+    public String packageName; /* 包名 */
+    public String activityName; /* 活动名 */
+    public String versionName; /* 版本名 */
+    public String versionCode; /* 版本号 */
+    public boolean isSystemApp; /* 是否为系统应用 */
+    public boolean enabled; /* 是否启用 */
 }

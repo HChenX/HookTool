@@ -25,6 +25,7 @@ import java.util.ArrayList;
 
 /**
  * 链式调用数据
+ * @hide 
  */
 public class ChainData {
     public ArrayList<Member> members = new ArrayList<>(); /*目标成员组*/

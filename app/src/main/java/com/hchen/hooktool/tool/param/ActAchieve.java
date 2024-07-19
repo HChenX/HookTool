@@ -19,6 +19,7 @@
 package com.hchen.hooktool.tool.param;
 
 import com.hchen.hooktool.itool.IDynamic;
+import com.hchen.hooktool.utils.LogExpand;
 
 import de.robv.android.xposed.XC_MethodHook;
 
@@ -26,9 +27,19 @@ import de.robv.android.xposed.XC_MethodHook;
  * 动作
  */
 public class ActAchieve {
+    /**
+     * @hide
+     */
     protected XC_MethodHook.MethodHookParam methodHookParam;
+    /**
+     * @hide
+     */
     protected String mTag;
+    /**
+     * @hide
+     */
     protected IDynamic iDynamic;
+    private LogExpand logExpand;
     // protected ToolData data;
 
     /**
@@ -98,6 +109,18 @@ public class ActAchieve {
         return (T) methodHookParam.getResultOrThrowable();
     }
 
+    // --------- 观察调用 --------------
+
+    /**
+     * 观察方法是否被调用，如果被调用则打印一些日志。
+     */
+    final public void observeCall() {
+        if (logExpand == null) {
+            logExpand = new LogExpand(methodHookParam, mTag);
+        }
+        logExpand.detailedLogs();
+    }
+
     // --------- 调用方法 --------------
     /**
      * 方法具体介绍请看实现类。<br/>
@@ -128,6 +151,7 @@ public class ActAchieve {
     }
 
     // ---------- 设置自定义字段 --------------
+    
     final public boolean setThisAdditionalInstanceField(String key, Object value) {
         return iDynamic.setAdditionalInstanceField(methodHookParam.thisObject, key, value);
     }
