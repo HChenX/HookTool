@@ -20,6 +20,10 @@ android {
         // noinspection HighAppVersionCode
         versionCode defVersionCode
         versionName defVersion
+
+        aarMetadata {
+            minCompileSdk = 29
+        }
     }
 
     buildTypes {
@@ -51,25 +55,26 @@ android {
     }
 }
 
-tasks.register('androidSourcesJar', Jar) {
+/*tasks.register('androidSourcesJar', Jar) {
     from android.sourceSets.main.java.srcDirs
-}
+}*/
 
 dependencies {
     compileOnly libs.xposed
     implementation libs.annotation
 }
 
-afterEvaluate {
-    publishing {
-        publications {
-            // Creates a Maven publication called "release".
-            release(MavenPublication) {
+publishing {
+    publications {
+        // Creates a Maven publication called "release".
+        release(MavenPublication) {
+            groupId = 'com.github.HChenX'
+            artifactId = 'HookTool'
+            version = defVersion
+            /*artifact androidSourcesJar*/
+            
+            afterEvaluate {
                 from components.release
-                groupId = 'com.github.HChenX'
-                artifactId = 'HookTool'
-                version = defVersion
-                artifact androidSourcesJar
             }
         }
     }
