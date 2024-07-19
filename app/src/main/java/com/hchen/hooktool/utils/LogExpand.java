@@ -56,8 +56,8 @@ public class LogExpand {
             methodName = method.getName();
             className = method.getDeclaringClass().getSimpleName();
         } else if (member instanceof Constructor<?> constructor) {
-            methodName = "Constructor";
             className = constructor.getDeclaringClass().getSimpleName();
+            methodName = "Constructor";
         } else {
             logE(TAG, "unknown type! member: " + member);
         }

@@ -30,7 +30,8 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 /**
  * 这是本工具的读写数据类，请不要继承重写。
- * @hide 
+ *
+ * @hide
  */
 public class ToolData {
     // HCInit
@@ -85,7 +86,7 @@ public class ToolData {
             throw new RuntimeException(mInitTag + "[" + getTAG() + "][E]: CreateChain is null!!");
         return chain;
     }
-    
+
     public PrefsTool getPrefsTool() {
         PrefsTool prefs = this.prefsTool;
         if (prefs == null)

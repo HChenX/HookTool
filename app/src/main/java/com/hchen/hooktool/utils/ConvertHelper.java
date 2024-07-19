@@ -29,7 +29,7 @@ import java.util.ArrayList;
  */
 public class ConvertHelper {
     /**
-     * @hide 
+     * @hide
      */
     protected ToolData data;
 

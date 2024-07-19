@@ -380,7 +380,7 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
     }
 
     // --------- 打印堆栈 ----------
-    
+
     public String getStackTrace() {
         StringBuilder stringBuilder = new StringBuilder();
         StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
@@ -542,19 +542,19 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
     public <R> R newInstance(Class<?> clz) {
         return newInstance(clz, new Object[]{});
     }
-    
+
     public <T, R> R newInstance(String clz, T objects) {
         return newInstance(findClass(clz), objects);
     }
-    
+
     public <T, R> R newInstance(String clz, ClassLoader classLoader, T objects) {
         return newInstance(findClass(clz, classLoader), objects);
     }
-    
+
     public <R> R newInstance(String clz) {
         return newInstance(findClass(clz));
     }
-    
+
     public <R> R newInstance(String clz, ClassLoader classLoader) {
         return newInstance(findClass(clz, classLoader));
     }
@@ -580,19 +580,19 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
     public <R> R callStaticMethod(Class<?> clz, String name) {
         return callStaticMethod(clz, name, new Object[]{});
     }
-    
+
     public <T, R> R callStaticMethod(String clz, String name, T objs) {
         return callStaticMethod(findClass(clz), name, objs);
     }
-    
+
     public <T, R> R callStaticMethod(String clz, ClassLoader classLoader, String name, T objs) {
         return callStaticMethod(findClass(clz, classLoader), name, objs);
     }
-    
+
     public <R> R callStaticMethod(String clz, String name) {
         return callStaticMethod(findClass(clz), name);
     }
-    
+
     public <R> R callStaticMethod(String clz, ClassLoader classLoader, String name) {
         return callStaticMethod(findClass(clz, classLoader), name);
     }
@@ -617,11 +617,11 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
         }
         return null;
     }
-    
+
     public <T> T getStaticField(String clz, String name) {
         return getStaticField(findClass(clz), name);
     }
-    
+
     public <T> T getStaticField(String clz, ClassLoader classLoader, String name) {
         return getStaticField(findClass(clz, classLoader), name);
     }
@@ -648,11 +648,11 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
         }
         return false;
     }
-    
+
     public boolean setStaticField(String clz, String name, Object value) {
         return setStaticField(findClass(clz), name, value);
     }
-    
+
     public boolean setStaticField(String clz, ClassLoader classLoader, String name, Object value) {
         return setStaticField(findClass(clz, classLoader), name, value);
     }
@@ -692,27 +692,27 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
             logW(data.getTAG(), "class is null, can't remove static additional: " + key);
         return false;
     }
-    
+
     public boolean setAdditionalStaticField(String clz, String key, Object value) {
         return setAdditionalStaticField(findClass(clz), key, value);
     }
-    
+
     public boolean setAdditionalStaticField(String clz, ClassLoader classLoader, String key, Object value) {
         return setAdditionalStaticField(findClass(clz, classLoader), key, value);
     }
-    
+
     public <T> T getAdditionalStaticField(String clz, String key) {
         return getAdditionalStaticField(findClass(clz), key);
     }
-    
+
     public <T> T getAdditionalStaticField(String clz, ClassLoader classLoader, String key) {
         return getAdditionalStaticField(findClass(key, classLoader), key);
     }
-    
+
     public boolean removeAdditionalStaticField(String clz, String key) {
         return removeAdditionalStaticField(findClass(clz), key);
     }
-    
+
     public boolean removeAdditionalStaticField(String clz, ClassLoader classLoader, String key) {
         return removeAdditionalStaticField(findClass(clz, classLoader), key);
     }
