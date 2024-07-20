@@ -88,16 +88,16 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
     /**
      * 检查指定方法是否存在，不存在则返回 false。
      */
-    public boolean existsMethod(String clazz, String name, Object... ojbs) {
-        return existsMethod(clazz, data.getClassLoader(), name, ojbs);
+    public boolean existsMethod(String clazz, String name, Object... objs) {
+        return existsMethod(clazz, data.getClassLoader(), name, objs);
     }
 
     public boolean existsMethod(String clazz, ClassLoader classLoader,
-                                String name, Object... ojbs) {
+                                String name, Object... objs) {
         try {
             Class<?> cl = XposedHelpers.findClassIfExists(clazz, classLoader);
             if (cl == null) return false;
-            Class<?>[] classes = arrayToClass(classLoader, ojbs);
+            Class<?>[] classes = arrayToClass(classLoader, objs);
             cl.getDeclaredMethod(name, classes);
         } catch (NoSuchMethodException ignored) {
             return false;

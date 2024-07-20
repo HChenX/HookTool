@@ -135,6 +135,10 @@ public class InvokeUtils {
         }
     }
 
+    public static Class<?> findClass(String className) {
+        return findClass(className, ClassLoader.getSystemClassLoader());
+    }
+
     public static Class<?> findClass(String className, ClassLoader classLoader) {
         try {
             if (classLoader == null) {

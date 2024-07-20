@@ -21,14 +21,12 @@ package com.hchen.hooktool.utils;
 import static com.hchen.hooktool.log.XposedLog.logE;
 
 import android.annotation.SuppressLint;
-import android.app.Application;
 import android.content.Context;
 
 import androidx.annotation.IntDef;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.lang.reflect.Method;
 
 /**
  * 本类为 context 上下文获取工具
@@ -74,7 +72,7 @@ public class ContextUtils {
      * 使用方法:
      * <pre> {@code
      * handler = new Handler();
-     * ContextUtils.getWaitContext(new ContextUtils.IContext() {
+     * ContextUtils.getAsyncContext(new ContextUtils.IContext() {
      *   @Override
      *   public void findContext(Context context) {
      *      handler.post(new Runnable() {
@@ -90,7 +88,7 @@ public class ContextUtils {
      * @param iContext 回调获取 Context
      * @author 焕晨HChen
      */
-    public static void getWaitContext(IContext iContext, boolean isSystem) {
+    public static void getAsyncContext(IContext iContext, boolean isSystem) {
         ThreadPool.getInstance().submit(() -> {
             Context context = getContextNoError(isSystem ? FlAG_ONLY_ANDROID : FLAG_CURRENT_APP);
             if (context == null) {
@@ -140,20 +138,14 @@ public class ContextUtils {
 
     private static Context currentApp(Class<?> clz) throws Throwable {
         // 获取当前界面应用 Context
-        Method currentApplication = clz.getDeclaredMethod("currentApplication");
-        currentApplication.setAccessible(true);
-        return (Application) currentApplication.invoke(null);
+        return InvokeUtils.callStaticMethod(clz, "currentApplication", new Class[]{});
     }
 
     private static Context android(Class<?> clz) throws Throwable {
         // 获取 Android
         Context context;
-        Method currentActivityThread = clz.getDeclaredMethod("currentActivityThread");
-        currentActivityThread.setAccessible(true);
-        Object o = currentActivityThread.invoke(null);
-        Method getSystemContext = clz.getDeclaredMethod("getSystemContext");
-        getSystemContext.setAccessible(true);
-        context = (Context) getSystemContext.invoke(o);
+        Object o = InvokeUtils.callStaticMethod(clz, "currentActivityThread", new Class[]{});
+        context = InvokeUtils.callMethod(o, "getSystemContext", new Class[]{});
         if (context == null) {
             // 这里获取的 context 可能存在问题。
             // 所以暂时注释。

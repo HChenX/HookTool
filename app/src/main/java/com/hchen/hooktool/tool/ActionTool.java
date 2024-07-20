@@ -37,8 +37,6 @@ import de.robv.android.xposed.XposedBridge;
 
 /**
  * Hook 执行
- *
- * @hide
  */
 public class ActionTool {
     private final ToolData data;

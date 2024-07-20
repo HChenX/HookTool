@@ -244,13 +244,13 @@ public abstract class BaseHC implements IMember, IDynamic, IStatic, IChain {
     }
 
     @Override
-    final public boolean existsMethod(String clazz, String name, Object... ojbs) {
-        return iMember.existsMethod(clazz, name, ojbs);
+    final public boolean existsMethod(String clazz, String name, Object... objs) {
+        return iMember.existsMethod(clazz, name, objs);
     }
 
     @Override
-    final public boolean existsMethod(String clazz, ClassLoader classLoader, String name, Object... ojbs) {
-        return iMember.existsMethod(clazz, classLoader, name, ojbs);
+    final public boolean existsMethod(String clazz, ClassLoader classLoader, String name, Object... objs) {
+        return iMember.existsMethod(clazz, classLoader, name, objs);
     }
 
     @Override

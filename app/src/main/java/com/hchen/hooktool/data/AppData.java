@@ -24,7 +24,7 @@ import android.graphics.Bitmap;
  * App 数据类
  */
 public class AppData {
-    public int user = 0; /* user id*/
+    public int user = 0; /* user id */
     public int uid = -1; /* uid */
     public Bitmap icon; /* 图标 */
     public String label; /* 应用名 */

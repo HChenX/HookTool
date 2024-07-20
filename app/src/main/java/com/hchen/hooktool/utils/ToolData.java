@@ -30,8 +30,6 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 /**
  * 这是本工具的读写数据类，请不要继承重写。
- *
- * @hide
  */
 public class ToolData {
     // HCInit

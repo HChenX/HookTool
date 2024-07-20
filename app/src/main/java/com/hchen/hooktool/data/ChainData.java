@@ -25,13 +25,11 @@ import java.util.ArrayList;
 
 /**
  * 链式调用数据
- *
- * @hide
  */
 public class ChainData {
-    public ArrayList<Member> members = new ArrayList<>(); /*目标成员组*/
-    public IAction iAction; /*hook 动作*/
-    public StateEnum stateEnum; /*状态*/
+    public ArrayList<Member> members = new ArrayList<>(); /* 目标成员组 */
+    public IAction iAction; /* hook 动作 */
+    public StateEnum stateEnum; /* 状态 */
     public String clazz; /* 类名 */
 
     public ChainData(String clazz, String name, String type,
@@ -51,10 +49,10 @@ public class ChainData {
     public static final String TYPE_CONSTRUCTOR = "CONSTRUCTOR";
     public static final String TYPE_ANY_CONSTRUCTOR = "ANY_CONSTRUCTOR";
 
-    public String mName; /*方法名*/
-    public String mType; /*类型*/
-    public Object[] mParams; /*参数*/
-
+    public String mName; /* 方法名 */
+    public String mType; /* 类型 */
+    public Object[] mParams; /* 参数 */
+    
     public ChainData(String name, Object... params) {
         mName = name;
         mType = TYPE_METHOD;

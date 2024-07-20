@@ -27,17 +27,8 @@ import de.robv.android.xposed.XC_MethodHook;
  * 动作
  */
 public class ActAchieve {
-    /**
-     * @hide
-     */
     protected XC_MethodHook.MethodHookParam methodHookParam;
-    /**
-     * @hide
-     */
     protected String mTag;
-    /**
-     * @hide
-     */
     protected IDynamic iDynamic;
     private LogExpand logExpand;
     // protected ToolData data;

@@ -99,13 +99,13 @@ public class ResHelper {
     public static Resources loadModuleRes(Context context) {
         boolean load = false;
         if (context == null) {
-            logE(TAG, "context can't is null!!");
+            logW(TAG, "context can't is null!!");
             return null;
         }
         if (mModulePath == null) {
             mModulePath = ToolData.startupParam.modulePath;
             if (mModulePath == null) {
-                logE(TAG, "module path is null! can't load module res! please call initResHelper!");
+                logW(TAG, "module path is null! can't load module res! please call initResHelper!");
                 return null;
             }
         }

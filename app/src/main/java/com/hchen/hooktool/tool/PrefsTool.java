@@ -143,12 +143,12 @@ public class PrefsTool {
                     "[E]: not is xposed can't call this method! please use context method!");
         }
         isUsingNativeStorage = true;
-        ContextUtils.getWaitContext(new ContextUtils.IContext() {
+        ContextUtils.getAsyncContext(new ContextUtils.IContext() {
             @Override
             public void findContext(Context context) {
                 if (context == null) {
                     throw new RuntimeException(ToolData.mInitTag +
-                            "[" + data.getTAG() + "][E]: asyn prefs context is null!!");
+                            "[" + data.getTAG() + "][E]: async prefs context is null!!");
                 }
                 asyncPrefs.async(context);
             }

@@ -3,8 +3,8 @@ plugins {
     id 'maven-publish'
 }
 
-def defVersion = 'v.0.9.9'
-int defVersionCode = 2024071900
+def defVersion = 'v.0.9.9.4'
+int defVersionCode = 2024072003
 
 group = 'com.github.HChenX'
 version = defVersion
@@ -55,26 +55,26 @@ android {
     }
 }
 
-/*tasks.register('androidSourcesJar', Jar) {
+tasks.register('androidSourcesJar', Jar) {
     from android.sourceSets.main.java.srcDirs
-}*/
+}
 
 dependencies {
     compileOnly libs.xposed
     implementation libs.annotation
 }
 
-publishing {
-    publications {
-        // Creates a Maven publication called "release".
-        release(MavenPublication) {
-            groupId = 'com.github.HChenX'
-            artifactId = 'HookTool'
-            version = defVersion
-            /*artifact androidSourcesJar*/
-            
-            afterEvaluate {
+afterEvaluate {
+    publishing {
+        publications {
+            // Creates a Maven publication called "release".
+            release(MavenPublication) {
                 from components.release
+                groupId = 'com.github.HChenX'
+                artifactId = 'HookTool'
+                version = defVersion
+                
+                artifact androidSourcesJar
             }
         }
     }

@@ -50,10 +50,10 @@ public interface IMember {
     /**
      * 检查指定方法是否存在，不存在则返回 false。
      */
-    boolean existsMethod(String clazz, String name, Object... ojbs);
+    boolean existsMethod(String clazz, String name, Object... objs);
 
     boolean existsMethod(String clazz, ClassLoader classLoader,
-                         String name, Object... ojbs);
+                         String name, Object... objs);
 
     /**
      * 检查指定方法名是否存在，不存在则返回 false。
@@ -129,12 +129,12 @@ public interface IMember {
     boolean unHook(Member hookMember, XC_MethodHook xcMethodHook);
 
     // --------- 过滤方法 -----------
-    
+
     ArrayList<Method> filterMethod(Class<?> clazz, CoreTool.IFindMethod iFindMethod);
 
     ArrayList<Constructor<?>> filterMethod(Class<?> clazz, CoreTool.IFindConstructor iFindConstructor);
 
     // ------- 打印堆栈 --------------
-    
+
     String getStackTrace();
 }

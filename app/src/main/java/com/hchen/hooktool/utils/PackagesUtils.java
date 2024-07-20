@@ -57,7 +57,7 @@ public class PackagesUtils {
             packageManager.getPackageInfo(pkg, PackageManager.MATCH_ALL);
             return false;
         } catch (PackageManager.NameNotFoundException e) {
-            AndroidLog.logW(TAG,
+            AndroidLog.logE(TAG,
                     "didn't find this app on the machine, it may have been uninstalled! pkg: " + pkg, e);
             return true;
         }
