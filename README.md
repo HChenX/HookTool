@@ -40,7 +40,11 @@ dependencyResolutionManagement {
 
 ```groovy
 dependencies {
-    implementation 'com.github.HChenX:HookTool:v.0.9.9'
+    // jitpack
+    implementation 'com.github.HChenX:HookTool:v.0.9.4'
+    // maven
+    implementation 'io.github.hchenx:hooktool:0.9.9.4'
+    // 二选一即可
 }
 ```
 
@@ -365,9 +369,9 @@ public class MainTest extends BaseHC {
         nativePrefs().prefs(context).editor().putString("test", "1").commit();
 
         // 如果不方便获取 context 可用使用此方法，异步获取寄生应用 context，再设置。
-        asynPrefs(new PrefsTool.IAsynPrefs() {
+        asyncPrefs(new PrefsTool.IAsyncPrefs() {
             @Override
-            public void asyn(Context context) {
+            public void async(Context context) {
                 prefs(context).editor().putString("test", "1").commit();
             }
         });
