@@ -41,9 +41,9 @@ dependencyResolutionManagement {
 ```groovy
 dependencies {
     // jitpack
-    implementation 'com.github.HChenX:HookTool:v.0.9.4'
+    implementation 'com.github.HChenX:HookTool:v.0.9.9.5'
     // maven
-    implementation 'io.github.hchenx:hooktool:0.9.9.4'
+    implementation 'io.github.hchenx:hooktool:0.9.9.5'
     // Choose either one
 }
 ```
