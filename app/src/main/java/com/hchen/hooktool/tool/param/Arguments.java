@@ -29,7 +29,6 @@ public class Arguments extends ActAchieve {
 
     // ------- 提供快捷获取 ---------
     // 依次返回指定的参数。
-
     final public <T> T first() {
         return getParam(0);
     }
@@ -72,7 +71,6 @@ public class Arguments extends ActAchieve {
 
     // ------- 提供快捷设置 ---------
     // 依次设置指定的参数
-
     final public <T> Arguments first(T value) {
         return setParam(0, value);
     }

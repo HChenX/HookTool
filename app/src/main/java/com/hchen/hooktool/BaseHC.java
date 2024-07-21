@@ -123,6 +123,7 @@ public abstract class BaseHC implements IMember, IDynamic, IStatic, IChain {
         }
     }
 
+    // ---------- prefs -----------
     final public IPrefs prefs() {
         return prefs.prefs();
     }
@@ -151,6 +152,7 @@ public abstract class BaseHC implements IMember, IDynamic, IStatic, IChain {
         return prefs.xposedPrefs();
     }
 
+    // ---------- 链式调用 ----------
     @Override
     final public void chain(String clazz, ChainTool chain) {
         iChain.chain(clazz, chain);
@@ -186,6 +188,260 @@ public abstract class BaseHC implements IMember, IDynamic, IStatic, IChain {
         return iChain.anyConstructor();
     }
 
+    // --------- 是否存在类 ------------
+    @Override
+    final public boolean existsClass(String clazz) {
+        return iMember.existsClass(clazz);
+    }
+
+    @Override
+    final public boolean existsClass(String clazz, ClassLoader classLoader) {
+        return iMember.existsClass(clazz, classLoader);
+    }
+
+    // --------- 查找类 --------------
+    @Override
+    final public Class<?> findClass(String name) {
+        return iMember.findClass(name);
+    }
+
+    @Override
+    final public Class<?> findClass(String name, ClassLoader classLoader) {
+        return iMember.findClass(name, classLoader);
+    }
+
+    // --------- 是否存在指定方法 ------------
+    @Override
+    final public boolean existsMethod(String clazz, String name, Object... objs) {
+        return iMember.existsMethod(clazz, name, objs);
+    }
+
+    @Override
+    final public boolean existsMethod(String clazz, ClassLoader classLoader, String name, Object... objs) {
+        return iMember.existsMethod(clazz, classLoader, name, objs);
+    }
+
+    // ---------- 是否存在指定方法名 -----------
+    @Override
+    final public boolean existsAnyMethod(String clazz, String name) {
+        return iMember.existsAnyMethod(clazz, name);
+    }
+
+    @Override
+    final public boolean existsAnyMethod(String clazz, ClassLoader classLoader, String name) {
+        return iMember.existsAnyMethod(clazz, classLoader, name);
+    }
+
+    // ----------- 查找方法 -------------
+    @Override
+    final public Method findMethod(String clazz, String name, Object... objects) {
+        return iMember.findMethod(clazz, name, objects);
+    }
+
+    @Override
+    final public Method findMethod(String clazz, ClassLoader classLoader, String name, Object... objects) {
+        return iMember.findMethod(clazz, classLoader, name, objects);
+    }
+
+    @Override
+    final public Method findMethod(Class<?> clazz, String name, Object... objects) {
+        return iMember.findMethod(clazz, name, objects);
+    }
+
+    // ------------ 查找匹配的方法名 ----------
+    @Override
+    final public ArrayList<Method> findAnyMethod(String clazz, String name) {
+        return iMember.findAnyMethod(clazz, name);
+    }
+
+    @Override
+    final public ArrayList<Method> findAnyMethod(String clazz, ClassLoader classLoader, String name) {
+        return iMember.findAnyMethod(clazz, classLoader, name);
+    }
+
+    @Override
+    final public ArrayList<Method> findAnyMethod(Class<?> clazz, String name) {
+        return iMember.findAnyMethod(clazz, name);
+    }
+
+    // --------- 查找构造函数 ------------
+    @Override
+    final public Constructor<?> findConstructor(String clazz, Object... objects) {
+        return iMember.findConstructor(clazz, objects);
+    }
+
+    @Override
+    final public Constructor<?> findConstructor(String clazz, ClassLoader classLoader, Object... objects) {
+        return iMember.findConstructor(clazz, classLoader, objects);
+    }
+
+    @Override
+    final public Constructor<?> findConstructor(Class<?> clazz, Object... objects) {
+        return iMember.findConstructor(clazz, objects);
+    }
+
+    // ----------- 查找匹配的构造函数 ------------
+    @Override
+    final public ArrayList<Constructor<?>> findAnyConstructor(String clazz) {
+        return iMember.findAnyConstructor(clazz);
+    }
+
+    @Override
+    final public ArrayList<Constructor<?>> findAnyConstructor(String clazz, ClassLoader classLoader) {
+        return iMember.findAnyConstructor(clazz, classLoader);
+    }
+
+    @Override
+    final public ArrayList<Constructor<?>> findAnyConstructor(Class<?> clazz) {
+        return iMember.findAnyConstructor(clazz);
+    }
+
+    // ------------ 是否存在指定字段 ----------
+    @Override
+    final public boolean existsField(String clazz, String name) {
+        return iMember.existsField(clazz, name);
+    }
+
+    @Override
+    final public boolean existsField(String clazz, ClassLoader classLoader, String name) {
+        return iMember.existsField(clazz, classLoader, name);
+    }
+
+    // ---------- 查找字段 ---------------
+    @Override
+    final public Field findField(String clazz, String name) {
+        return iMember.findField(clazz, name);
+    }
+
+    @Override
+    final public Field findField(String clazz, ClassLoader classLoader, String name) {
+        return iMember.findField(clazz, classLoader, name);
+    }
+
+    @Override
+    final public Field findField(Class<?> clazz, String name) {
+        return iMember.findField(clazz, name);
+    }
+
+    // ---------- hook 一般方法 ----------
+    @Override
+    final public XC_MethodHook.Unhook hook(String clazz, String method, Object... params) {
+        return iMember.hook(clazz, method, params);
+    }
+
+    @Override
+    final public XC_MethodHook.Unhook hook(String clazz, ClassLoader classLoader, String method, Object... params) {
+        return iMember.hook(clazz, classLoader, method, params);
+    }
+
+    @Override
+    final public XC_MethodHook.Unhook hook(Class<?> clazz, String method, Object... params) {
+        return iMember.hook(clazz, method, params);
+    }
+
+    @Override
+    final public ArrayList<XC_MethodHook.Unhook> hookAll(String clazz, String method, IAction iAction) {
+        return iMember.hookAll(clazz, method, iAction);
+    }
+
+    @Override
+    final public ArrayList<XC_MethodHook.Unhook> hookAll(String clazz, ClassLoader classLoader, String method, IAction iAction) {
+        return iMember.hookAll(clazz, classLoader, method, iAction);
+    }
+
+    @Override
+    final public ArrayList<XC_MethodHook.Unhook> hookAll(Class<?> clazz, String method, IAction iAction) {
+        return iMember.hookAll(clazz, method, iAction);
+    }
+
+    // ---------- hook 构造函数 ------------
+    @Override
+    final public XC_MethodHook.Unhook hook(String clazz, Object... params) {
+        return iMember.hook(clazz, params);
+    }
+
+    @Override
+    final public XC_MethodHook.Unhook hook(String clazz, ClassLoader classLoader, Object... params) {
+        return iMember.hook(clazz, classLoader, params);
+    }
+
+    @Override
+    final public XC_MethodHook.Unhook hook(Class<?> clazz, Object... params) {
+        return iMember.hook(clazz, params);
+    }
+
+    @Override
+    final public ArrayList<XC_MethodHook.Unhook> hookAll(String clazz, IAction iAction) {
+        return iMember.hookAll(clazz, iAction);
+    }
+
+    @Override
+    final public ArrayList<XC_MethodHook.Unhook> hookAll(String clazz, ClassLoader classLoader, IAction iAction) {
+        return iMember.hookAll(clazz, classLoader, iAction);
+    }
+
+    @Override
+    final public ArrayList<XC_MethodHook.Unhook> hookAll(Class<?> clazz, IAction iAction) {
+        return iMember.hookAll(clazz, iAction);
+    }
+
+    // ----------- 核心方法 ------------
+    @Override
+    final public XC_MethodHook.Unhook hook(Member member, IAction iAction) {
+        return iMember.hook(member, iAction);
+    }
+
+    @Override
+    final public ArrayList<XC_MethodHook.Unhook> hookAll(ArrayList<?> members, IAction iAction) {
+        return iMember.hookAll(members, iAction);
+    }
+
+    // ----------- 快捷方法 -------------
+    @Override
+    final public IAction returnResult(Object result) {
+        return iMember.returnResult(result);
+    }
+
+    @Override
+    final public IAction doNothing() {
+        return iMember.doNothing();
+    }
+
+    // --------- 解除 hook ---------------
+    @Override
+    final public boolean unHook(XC_MethodHook.Unhook unhook) {
+        return iMember.unHook(unhook);
+    }
+
+    @Override
+    final public boolean unHook(Member hookMember, XC_MethodHook xcMethodHook) {
+        return iMember.unHook(hookMember, xcMethodHook);
+    }
+
+    @Override
+    final public boolean unHookAll(ArrayList<XC_MethodHook.Unhook> unhooks) {
+        return iMember.unHookAll(unhooks);
+    }
+
+    // ----------- 过滤方法 -------------
+    @Override
+    final public ArrayList<Method> filterMethod(Class<?> clazz, CoreTool.IFindMethod iFindMethod) {
+        return iMember.filterMethod(clazz, iFindMethod);
+    }
+
+    @Override
+    final public ArrayList<Constructor<?>> filterMethod(Class<?> clazz, CoreTool.IFindConstructor iFindConstructor) {
+        return iMember.filterMethod(clazz, iFindConstructor);
+    }
+
+    // ---------- 打印堆栈 --------------
+    @Override
+    final public String getStackTrace() {
+        return iMember.getStackTrace();
+    }
+
+
+    // ---------- 非静态 ---------------
     @Override
     final public <T, C> C callMethod(Object instance, String name, T ts) {
         return iDynamic.callMethod(instance, name, ts);
@@ -231,208 +487,14 @@ public abstract class BaseHC implements IMember, IDynamic, IStatic, IChain {
         return iDynamic.removeAdditionalInstanceField(instance, key);
     }
 
+    // --------- 静态 --------------
     @Override
-    final public boolean existsClass(String clazz) {
-        return iMember.existsClass(clazz);
-    }
-
-    @Override
-    final public boolean existsClass(String clazz, ClassLoader classLoader) {
-        return iMember.existsClass(clazz, classLoader);
-    }
-
-    @Override
-    final public Class<?> findClass(String name) {
-        return iMember.findClass(name);
-    }
-
-    @Override
-    final public Class<?> findClass(String name, ClassLoader classLoader) {
-        return iMember.findClass(name, classLoader);
-    }
-
-    @Override
-    final public boolean existsMethod(String clazz, String name, Object... objs) {
-        return iMember.existsMethod(clazz, name, objs);
-    }
-
-    @Override
-    final public boolean existsMethod(String clazz, ClassLoader classLoader, String name, Object... objs) {
-        return iMember.existsMethod(clazz, classLoader, name, objs);
-    }
-
-    @Override
-    final public boolean existsAnyMethod(String clazz, String name) {
-        return iMember.existsAnyMethod(clazz, name);
-    }
-
-    @Override
-    final public boolean existsAnyMethod(String clazz, ClassLoader classLoader, String name) {
-        return iMember.existsAnyMethod(clazz, classLoader, name);
-    }
-
-    @Override
-    final public Method findMethod(String clazz, String name, Object... objects) {
-        return iMember.findMethod(clazz, name, objects);
-    }
-
-    @Override
-    final public Method findMethod(String clazz, ClassLoader classLoader, String name, Object... objects) {
-        return iMember.findMethod(clazz, classLoader, name, objects);
-    }
-
-    @Override
-    final public Method findMethod(Class<?> clazz, String name, Object... objects) {
-        return iMember.findMethod(clazz, name, objects);
-    }
-
-    @Override
-    final public ArrayList<Method> findAnyMethod(String clazz, String name) {
-        return iMember.findAnyMethod(clazz, name);
-    }
-
-    @Override
-    final public ArrayList<Method> findAnyMethod(String clazz, ClassLoader classLoader, String name) {
-        return iMember.findAnyMethod(clazz, classLoader, name);
-    }
-
-    @Override
-    final public ArrayList<Method> findAnyMethod(Class<?> clazz, String name) {
-        return iMember.findAnyMethod(clazz, name);
-    }
-
-    @Override
-    final public Constructor<?> findConstructor(String clazz, Object... objects) {
-        return iMember.findConstructor(clazz, objects);
-    }
-
-    @Override
-    final public Constructor<?> findConstructor(String clazz, ClassLoader classLoader, Object... objects) {
-        return iMember.findConstructor(clazz, classLoader, objects);
-    }
-
-    @Override
-    final public Constructor<?> findConstructor(Class<?> clazz, Object... objects) {
-        return iMember.findConstructor(clazz, objects);
-    }
-
-    @Override
-    final public ArrayList<Constructor<?>> findAnyConstructor(String clazz) {
-        return iMember.findAnyConstructor(clazz);
-    }
-
-    @Override
-    final public ArrayList<Constructor<?>> findAnyConstructor(String clazz, ClassLoader classLoader) {
-        return iMember.findAnyConstructor(clazz, classLoader);
-    }
-
-    @Override
-    final public ArrayList<Constructor<?>> findAnyConstructor(Class<?> clazz) {
-        return iMember.findAnyConstructor(clazz);
-    }
-
-    @Override
-    final public boolean existsField(String clazz, String name) {
-        return iMember.existsField(clazz, name);
-    }
-
-    @Override
-    final public boolean existsField(String clazz, ClassLoader classLoader, String name) {
-        return iMember.existsField(clazz, classLoader, name);
-    }
-
-    @Override
-    final public Field findField(String clazz, String name) {
-        return iMember.findField(clazz, name);
-    }
-
-    @Override
-    final public Field findField(String clazz, ClassLoader classLoader, String name) {
-        return iMember.findField(clazz, classLoader, name);
-    }
-
-    @Override
-    final public Field findField(Class<?> clazz, String name) {
-        return iMember.findField(clazz, name);
-    }
-
-    @Override
-    final public XC_MethodHook.Unhook hook(String clazz, String method, Object... params) {
-        return iMember.hook(clazz, method, params);
-    }
-
-    @Override
-    final public XC_MethodHook.Unhook hook(String clazz, ClassLoader classLoader, String method, Object... params) {
-        return iMember.hook(clazz, classLoader, method, params);
-    }
-
-    @Override
-    final public XC_MethodHook.Unhook hook(Class<?> clazz, String method, Object... params) {
-        return iMember.hook(clazz, method, params);
-    }
-
-    @Override
-    final public ArrayList<XC_MethodHook.Unhook> hook(String clazz, IAction iAction) {
-        return iMember.hook(clazz, iAction);
-    }
-
-    @Override
-    final public XC_MethodHook.Unhook hook(String clazz, Object... params) {
-        return iMember.hook(clazz, params);
-    }
-
-    @Override
-    final public XC_MethodHook.Unhook hook(Member member, IAction iAction) {
-        return iMember.hook(member, iAction);
-    }
-
-    @Override
-    final public ArrayList<XC_MethodHook.Unhook> hook(ArrayList<?> members, IAction iAction) {
-        return iMember.hook(members, iAction);
-    }
-
-    @Override
-    final public boolean unHook(XC_MethodHook.Unhook unhook) {
-        return iMember.unHook(unhook);
-    }
-
-    @Override
-    final public boolean unHook(Member hookMember, XC_MethodHook xcMethodHook) {
-        return iMember.unHook(hookMember, xcMethodHook);
-    }
-
-    @Override
-    final public IAction returnResult(Object result) {
-        return iMember.returnResult(result);
-    }
-
-    @Override
-    final public IAction doNothing() {
-        return iMember.doNothing();
-    }
-
-    @Override
-    final public ArrayList<Method> filterMethod(Class<?> clazz, CoreTool.IFindMethod iFindMethod) {
-        return iMember.filterMethod(clazz, iFindMethod);
-    }
-
-    @Override
-    final public ArrayList<Constructor<?>> filterMethod(Class<?> clazz, CoreTool.IFindConstructor iFindConstructor) {
-        return iMember.filterMethod(clazz, iFindConstructor);
-    }
-
-    @Override
-    final public String getStackTrace() {
-        return iMember.getStackTrace();
-    }
-
-    @Override
-    public <T, R> R newInstance(String clz, T objects) {
+    final public <T, R> R newInstance(String clz, T objects) {
         return iStatic.newInstance(clz, objects);
     }
 
     @Override
-    public <T, R> R newInstance(String clz, ClassLoader classLoader, T objects) {
+    final public <T, R> R newInstance(String clz, ClassLoader classLoader, T objects) {
         return iStatic.newInstance(clz, classLoader, objects);
     }
 
@@ -442,12 +504,12 @@ public abstract class BaseHC implements IMember, IDynamic, IStatic, IChain {
     }
 
     @Override
-    public <R> R newInstance(String clz) {
+    final public <R> R newInstance(String clz) {
         return iStatic.newInstance(clz);
     }
 
     @Override
-    public <R> R newInstance(String clz, ClassLoader classLoader) {
+    final public <R> R newInstance(String clz, ClassLoader classLoader) {
         return iStatic.newInstance(clz, classLoader);
     }
 
@@ -457,12 +519,12 @@ public abstract class BaseHC implements IMember, IDynamic, IStatic, IChain {
     }
 
     @Override
-    public <T, R> R callStaticMethod(String clz, String name, T objs) {
+    final public <T, R> R callStaticMethod(String clz, String name, T objs) {
         return iStatic.callStaticMethod(clz, name, objs);
     }
 
     @Override
-    public <T, R> R callStaticMethod(String clz, ClassLoader classLoader, String name, T objs) {
+    final public <T, R> R callStaticMethod(String clz, ClassLoader classLoader, String name, T objs) {
         return iStatic.callStaticMethod(clz, classLoader, name, objs);
     }
 
@@ -472,12 +534,12 @@ public abstract class BaseHC implements IMember, IDynamic, IStatic, IChain {
     }
 
     @Override
-    public <R> R callStaticMethod(String clz, String name) {
+    final public <R> R callStaticMethod(String clz, String name) {
         return iStatic.callStaticMethod(clz, name);
     }
 
     @Override
-    public <R> R callStaticMethod(String clz, ClassLoader classLoader, String name) {
+    final public <R> R callStaticMethod(String clz, ClassLoader classLoader, String name) {
         return iStatic.callStaticMethod(clz, classLoader, name);
     }
 
@@ -487,12 +549,12 @@ public abstract class BaseHC implements IMember, IDynamic, IStatic, IChain {
     }
 
     @Override
-    public <T> T getStaticField(String clz, String name) {
+    final public <T> T getStaticField(String clz, String name) {
         return iStatic.getStaticField(clz, name);
     }
 
     @Override
-    public <T> T getStaticField(String clz, ClassLoader classLoader, String name) {
+    final public <T> T getStaticField(String clz, ClassLoader classLoader, String name) {
         return iStatic.getStaticField(clz, classLoader, name);
     }
 
@@ -507,12 +569,12 @@ public abstract class BaseHC implements IMember, IDynamic, IStatic, IChain {
     }
 
     @Override
-    public boolean setStaticField(String clz, String name, Object value) {
+    final public boolean setStaticField(String clz, String name, Object value) {
         return iStatic.setStaticField(clz, name, value);
     }
 
     @Override
-    public boolean setStaticField(String clz, ClassLoader classLoader, String name, Object value) {
+    final public boolean setStaticField(String clz, ClassLoader classLoader, String name, Object value) {
         return iStatic.setStaticField(clz, classLoader, name, value);
     }
 
@@ -527,12 +589,12 @@ public abstract class BaseHC implements IMember, IDynamic, IStatic, IChain {
     }
 
     @Override
-    public boolean setAdditionalStaticField(String clz, String key, Object value) {
+    final public boolean setAdditionalStaticField(String clz, String key, Object value) {
         return iStatic.setAdditionalStaticField(clz, key, value);
     }
 
     @Override
-    public boolean setAdditionalStaticField(String clz, ClassLoader classLoader, String key, Object value) {
+    final public boolean setAdditionalStaticField(String clz, ClassLoader classLoader, String key, Object value) {
         return iStatic.setAdditionalStaticField(clz, classLoader, key, value);
     }
 
@@ -542,12 +604,12 @@ public abstract class BaseHC implements IMember, IDynamic, IStatic, IChain {
     }
 
     @Override
-    public <T> T getAdditionalStaticField(String clz, String key) {
+    final public <T> T getAdditionalStaticField(String clz, String key) {
         return iStatic.getAdditionalStaticField(clz, key);
     }
 
     @Override
-    public <T> T getAdditionalStaticField(String clz, ClassLoader classLoader, String key) {
+    final public <T> T getAdditionalStaticField(String clz, ClassLoader classLoader, String key) {
         return iStatic.getAdditionalStaticField(clz, classLoader, key);
     }
 
@@ -557,12 +619,12 @@ public abstract class BaseHC implements IMember, IDynamic, IStatic, IChain {
     }
 
     @Override
-    public boolean removeAdditionalStaticField(String clz, String key) {
+    final public boolean removeAdditionalStaticField(String clz, String key) {
         return iStatic.removeAdditionalStaticField(clz, key);
     }
 
     @Override
-    public boolean removeAdditionalStaticField(String clz, ClassLoader classLoader, String key) {
+    final public boolean removeAdditionalStaticField(String clz, ClassLoader classLoader, String key) {
         return iStatic.removeAdditionalStaticField(clz, classLoader, key);
     }
 

@@ -70,7 +70,7 @@ public class ContextUtils {
     }
 
     /**
-     * 循环获取当前应用的 Context 为了防止过早获取导致的 null.
+     * 异步获取当前应用的 Context，为了防止过早获取导致的 null。
      * 使用方法:
      * <pre> {@code
      * handler = new Handler();
@@ -88,7 +88,7 @@ public class ContextUtils {
      * }
      * 当然 Handler 是可选项, 适用于 Toast 显示等场景。
      * <p>
-     * Loop to get the context of the current application in order to prevent premature fetching of null.
+     * Asynchronously obtain the context of the current application to prevent null caused by premature acquisition.
      * @param iContext 回调获取 Context
      * @author 焕晨HChen
      */

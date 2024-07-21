@@ -26,7 +26,7 @@ import de.robv.android.xposed.XC_MethodHook;
 /**
  * 动作
  * <p>
- * action
+ * Action
  */
 public class ActAchieve {
     protected XC_MethodHook.MethodHookParam methodHookParam;
@@ -48,7 +48,7 @@ public class ActAchieve {
      * before 中使用拦截方法执行并直接返回设定值。<br/>
      * after 中使用修改返回结果。
      * <p>
-     * before, using the interception method and returns the setpoint directly.
+     * before, interception method and returns the setpoint directly.
      * <p>
      * after, to modify the returned result.
      */
@@ -105,7 +105,7 @@ public class ActAchieve {
     /**
      * 引发异常，在 before 中使用可阻止方法执行。
      * <p>
-     * An exception is thrown, which is used in before to prevent the method from executing.
+     * An exception is thrown. if used in before to prevent the method from executing.
      */
     final public void makeCrash(Throwable t) {
         methodHookParam.setThrowable(t);
@@ -121,7 +121,6 @@ public class ActAchieve {
     }
 
     // --------- 观察调用 --------------
-
     /**
      * 观察方法是否被调用，如果被调用则打印一些日志。
      * <p>
@@ -135,13 +134,6 @@ public class ActAchieve {
     }
 
     // --------- 调用方法 --------------
-    /**
-     * 方法具体介绍请看实现类。<br/>
-     * <br/>
-     * For more information about methods, see Implementation Classes.
-     * {@link com.hchen.hooktool.tool.CoreTool}
-     */
-
     /**
      * 请使用 new Object[]{} 传入参数。<br/>
      * 如果仅传入一个参数可以不使用 new Object[]{}<br/>
@@ -160,7 +152,6 @@ public class ActAchieve {
     }
 
     // ----------- 获取/修改 字段 -------------
-
     final public <T> T getThisField(String name) {
         return iDynamic.getField(methodHookParam.thisObject, name);
     }
@@ -170,7 +161,6 @@ public class ActAchieve {
     }
 
     // ---------- 设置自定义字段 --------------
-
     final public boolean setThisAdditionalInstanceField(String key, Object value) {
         return iDynamic.setAdditionalInstanceField(methodHookParam.thisObject, key, value);
     }

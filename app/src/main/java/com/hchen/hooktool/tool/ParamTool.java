@@ -62,9 +62,9 @@ public class ParamTool extends Arguments {
     }
 
     /**
-     * 本类的实例。
+     * 被 hook 类的实例。
      * <p>
-     * An instance of this class.
+     * An instance of the hook class.
      */
     final public <T> T thisObject() {
         return (T) methodHookParam.thisObject;
@@ -80,18 +80,18 @@ public class ParamTool extends Arguments {
     }
 
     /**
-     * 返回此实例的类加载器。
+     * 返回被 hook 实例的类加载器。
      * <p>
-     * Returns the classloader for this instance.
+     * Returns the classloader of the hooked instance.
      */
     final public ClassLoader classLoader() {
         return methodHookParam.thisObject.getClass().getClassLoader();
     }
 
     /**
-     * 获取原 param 参数。
+     * 获取原参数。
      * <p>
-     * 获取原 param 参数。
+     * Get the original parameters.
      */
     final public XC_MethodHook.MethodHookParam originalParam() {
         return methodHookParam;

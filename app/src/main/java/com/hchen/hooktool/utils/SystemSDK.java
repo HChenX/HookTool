@@ -171,7 +171,7 @@ public class SystemSDK {
     /**
      * 判断是否大于等于某个 HyperOS 版本。
      * <p>
-     * 判断是否大于等于某个 HyperOS 版本。
+     * Determine whether the HyperOS version is greater than or equal to.
      */
     public static boolean isMoreHyperOSVersion(float version) {
         return getHyperOSVersion() >= version;

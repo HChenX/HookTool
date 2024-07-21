@@ -93,7 +93,7 @@ public class ChainTool implements IChain {
     /**
      * 查找构造函数。
      * <p>
-     * find constructor.
+     * Find constructor.
      *
      * @param params 参数
      */
@@ -145,9 +145,9 @@ public class ChainTool implements IChain {
         }
 
         /**
-         * hook 动作。
+         * Hook 动作。
          * <p>
-         * hook action.
+         * Hook action.
          */
         public ChainTool hook(IAction iAction) {
             chain.chainData.iAction = iAction;

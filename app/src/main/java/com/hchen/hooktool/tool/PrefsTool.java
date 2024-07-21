@@ -92,7 +92,7 @@ public class PrefsTool {
     /**
      * 寄生应用读取配置一般使用。
      * <p>
-     * Parasitic application read configuration is generally used.
+     * Parasitic application read prefs is generally used.
      */
     public IPrefs prefs() {
         return prefs(prefsName);
@@ -101,7 +101,7 @@ public class PrefsTool {
     /**
      * 寄生应用读取配置一般使用。
      * <p>
-     * Parasitic application read configuration is generally used.
+     * Parasitic application read prefs is generally used.
      */
     public IPrefs prefs(String prefsName) {
         if (!isXposedEnvironment) {
@@ -122,7 +122,7 @@ public class PrefsTool {
     /**
      * 模块应用读取配置一般使用。
      * <p>
-     * The module application read configuration is generally used.
+     * The module application read prefs is generally used.
      */
     public IPrefs prefs(Context context) {
         return prefs(context, prefsName);
@@ -131,7 +131,7 @@ public class PrefsTool {
     /**
      * 模块应用读取配置一般使用。
      * <p>
-     * The module application read configuration is generally used.
+     * The module application read prefs is generally used.
      */
     public IPrefs prefs(Context context, String prefsName) {
         prefsName = prefsName.replace(" ", "").toLowerCase();

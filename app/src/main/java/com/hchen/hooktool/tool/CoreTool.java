@@ -44,7 +44,7 @@ import de.robv.android.xposed.XposedHelpers;
 /**
  * 核心工具
  * <p>
- * core tool
+ * Core tool
  */
 public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMember {
 
@@ -69,7 +69,6 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
     }
 
     // --------- 查找类 -----------
-
     public Class<?> findClass(String name) {
         return findClass(name, data.getClassLoader());
     }
@@ -132,7 +131,6 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
     }
 
     // ------------ 查找方法 --------------
-
     public Method findMethod(String clazz, String name, Object... objects) {
         return findMethod(findClass(clazz), name, objects);
     }
@@ -175,7 +173,6 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
     }
 
     // --------- 查找构造函数 -----------
-
     public Constructor<?> findConstructor(String clazz, Object... objects) {
         return findConstructor(findClass(clazz), objects);
     }
@@ -216,9 +213,9 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
     //------------ 检查指定字段是否存在 --------------
 
     /**
-     * 查找指定字段是否存在，不存在返回 false
+     * 查找指定字段是否存在，不存在返回 false。
      * <p>
-     * If the specified field exists, it returns false if it does not
+     * If the specified field exists, it returns false if it does not.
      */
     public boolean existsField(String clazz, String name) {
         return existsField(clazz, data.getClassLoader(), name);
@@ -253,7 +250,7 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
     }
 
     // --------- 执行 hook -----------
-
+    // --------- 普通方法 -------------
     public XC_MethodHook.Unhook hook(String clazz, String method, Object... params) {
         return hook(clazz, data.getClassLoader(), method, params);
     }
@@ -269,12 +266,29 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
         }
         return hook(findMethod(clazz, method, params), (IAction) params[params.length - 1]);
     }
-
-    public ArrayList<XC_MethodHook.Unhook> hook(String clazz, IAction iAction) {
-        return hook(findAnyConstructor(clazz), iAction);
+    
+    public ArrayList<XC_MethodHook.Unhook> hookAll(String clazz, String method, IAction iAction) {
+        return hookAll(findClass(clazz), method, iAction);
+    }
+    
+    public ArrayList<XC_MethodHook.Unhook> hookAll(String clazz, ClassLoader classLoader, String method, IAction iAction) {
+        return hookAll(findClass(clazz, classLoader), method, iAction);
+    }
+    
+    public ArrayList<XC_MethodHook.Unhook> hookAll(Class<?> clazz, String method, IAction iAction) {
+        return hookAll(findAnyMethod(clazz, method), iAction);
     }
 
+    // --------- 构造函数 ------------
     public XC_MethodHook.Unhook hook(String clazz, Object... params) {
+        return hook(findClass(clazz), params);
+    }
+    
+    public XC_MethodHook.Unhook hook(String clazz, ClassLoader classLoader, Object... params) {
+        return hook(findClass(clazz, classLoader), params);
+    }
+    
+    public XC_MethodHook.Unhook hook(Class<?> clazz, Object... params) {
         if (params.length == 0 || !(params[params.length - 1] instanceof IAction)) {
             logE(data.getTAG(), "params length == 0 or last param not is IAction! can't hook!!");
             return null;
@@ -282,6 +296,19 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
         return hook(findConstructor(clazz, params), (IAction) params[params.length - 1]);
     }
 
+    public ArrayList<XC_MethodHook.Unhook> hookAll(String clazz, IAction iAction) {
+        return hookAll(findAnyConstructor(clazz), iAction);
+    }
+    
+    public ArrayList<XC_MethodHook.Unhook> hookAll(String clazz, ClassLoader classLoader, IAction iAction) {
+        return hookAll(findAnyConstructor(clazz, classLoader), iAction);
+    }
+    
+    public ArrayList<XC_MethodHook.Unhook> hookAll(Class<?> clazz, IAction iAction) {
+        return hookAll(findAnyConstructor(clazz), iAction);
+    }
+
+    // ----------- 核心实现 ---------------
     public XC_MethodHook.Unhook hook(Member member, IAction iAction) {
         if (member == null || iAction == null) {
             logW(data.getTAG(), "member or iAction is null, can't hook!");
@@ -297,7 +324,7 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
         return null;
     }
 
-    public ArrayList<XC_MethodHook.Unhook> hook(ArrayList<?> members, IAction iAction) {
+    public ArrayList<XC_MethodHook.Unhook> hookAll(ArrayList<?> members, IAction iAction) {
         ArrayList<XC_MethodHook.Unhook> unhooks = new ArrayList<>();
         for (Object o : members) {
             if (o instanceof Method || o instanceof Constructor<?>) {
@@ -313,6 +340,7 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
         return unhooks;
     }
 
+    // --------- 快捷方法 -----------
     public IAction returnResult(final Object result) {
         return new IAction() {
             @Override
@@ -332,7 +360,6 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
     }
 
     // --------- 解除 hook ---------
-
     public boolean unHook(XC_MethodHook.Unhook unhook) {
         try {
             unhook.unhook();
@@ -350,9 +377,19 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
             return false;
         }
     }
+    
+    public boolean unHookAll(ArrayList<XC_MethodHook.Unhook> unhooks) {
+        try {
+            for (XC_MethodHook.Unhook unhook : unhooks) {
+                unhook.unhook();
+            }
+            return true;
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
 
     // --------- 过滤方法 -----------
-
     public ArrayList<Method> filterMethod(Class<?> clazz, IFindMethod iFindMethod) {
         ArrayList<Method> methods = new ArrayList<>();
         for (Method m : clazz.getDeclaredMethods()) {
@@ -390,7 +427,6 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
     }
 
     // --------- 打印堆栈 ----------
-
     public String getStackTrace() {
         StringBuilder stringBuilder = new StringBuilder();
         StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
@@ -411,7 +447,6 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
     }
 
     // ---------- 非静态 -----------
-
     /**
      * 请使用 new Object[]{} 传入参数。<br/>
      * 如果仅传入一个参数可以不使用 new Object[]{}<br/>
@@ -536,7 +571,6 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
     }
 
     // ---------- 静态 ------------
-
     /**
      * 请使用 new Object[]{} 传入参数。<br/>
      * 如果仅传入一个参数可以不使用 new Object[]{}<br/>

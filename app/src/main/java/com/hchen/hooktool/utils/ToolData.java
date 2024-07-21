@@ -29,9 +29,9 @@ import de.robv.android.xposed.IXposedHookZygoteInit;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 /**
- * 这是本工具的读写数据类，请不要继承重写。
+ * 这是本工具的读写数据类，请不要继承或重写。
  * <p>
- * This is the read and write data class of this tool, please do not inherit the override.
+ * This is the read and write data class of this tool, please do not extends or override.
  */
 public class ToolData {
     // HCInit

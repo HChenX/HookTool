@@ -95,20 +95,38 @@ public interface IMember {
     Field findField(Class<?> clazz, String name);
 
     // --------- 执行 hook -----------
+    // --------- 普通方法 -------------
     XC_MethodHook.Unhook hook(String clazz, String method, Object... params);
 
     XC_MethodHook.Unhook hook(String clazz, ClassLoader classLoader, String method, Object... params);
 
-    ArrayList<XC_MethodHook.Unhook> hook(String clazz, IAction iAction);
-
-    XC_MethodHook.Unhook hook(String clazz, Object... params);
-
     XC_MethodHook.Unhook hook(Class<?> clazz, String method, Object... params);
 
+    ArrayList<XC_MethodHook.Unhook> hookAll(String clazz, String method, IAction iAction);
+
+    ArrayList<XC_MethodHook.Unhook> hookAll(String clazz, ClassLoader classLoader, String method, IAction iAction);
+
+    ArrayList<XC_MethodHook.Unhook> hookAll(Class<?> clazz, String method, IAction iAction);
+
+    // --------- 构造函数 ------------
+    XC_MethodHook.Unhook hook(String clazz, Object... params);
+
+    XC_MethodHook.Unhook hook(String clazz, ClassLoader classLoader, Object... params);
+
+    XC_MethodHook.Unhook hook(Class<?> clazz, Object... params);
+
+    ArrayList<XC_MethodHook.Unhook> hookAll(String clazz, IAction iAction);
+
+    ArrayList<XC_MethodHook.Unhook> hookAll(String clazz, ClassLoader classLoader, IAction iAction);
+
+    ArrayList<XC_MethodHook.Unhook> hookAll(Class<?> clazz, IAction iAction);
+
+    // --------- 核心实现 -------------
     XC_MethodHook.Unhook hook(Member member, IAction iAction);
 
-    ArrayList<XC_MethodHook.Unhook> hook(ArrayList<?> members, IAction iAction);
+    ArrayList<XC_MethodHook.Unhook> hookAll(ArrayList<?> members, IAction iAction);
 
+    // --------- 快捷方法 -------------
     IAction returnResult(final Object result);
 
     IAction doNothing();
@@ -117,6 +135,8 @@ public interface IMember {
     boolean unHook(XC_MethodHook.Unhook unhook);
 
     boolean unHook(Member hookMember, XC_MethodHook xcMethodHook);
+
+    boolean unHookAll(ArrayList<XC_MethodHook.Unhook> unhooks);
 
     // --------- 过滤方法 -----------
     ArrayList<Method> filterMethod(Class<?> clazz, CoreTool.IFindMethod iFindMethod);
