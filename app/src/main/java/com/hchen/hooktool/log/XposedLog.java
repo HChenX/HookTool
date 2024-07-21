@@ -25,6 +25,8 @@ import de.robv.android.xposed.XposedBridge;
 
 /**
  * LSP 框架日志类
+ * <p>
+ * LSP framework log class
  */
 public class XposedLog {
     private static final String rootTag = ToolData.mInitTag; /*根 TAG*/

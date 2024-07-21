@@ -22,6 +22,8 @@ import android.graphics.Bitmap;
 
 /**
  * App 数据类
+ * <p>
+ * App data class
  */
 public class AppData {
     public int user = 0; /* user id */

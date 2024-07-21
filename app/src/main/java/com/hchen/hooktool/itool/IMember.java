@@ -32,6 +32,8 @@ import de.robv.android.xposed.XC_MethodHook;
 /**
  * 成员操作接口，
  * 方法具体介绍请看实现类。<br/>
+ * <p>
+ * For more information about member operation interfaces and methods, please refer to the implementation class. <br>
  * {@link com.hchen.hooktool.tool.CoreTool}
  */
 public interface IMember {
@@ -46,18 +48,11 @@ public interface IMember {
     Class<?> findClass(String name, ClassLoader classLoader);
 
     // --------- 检查指定方法是否存在 ------
-
-    /**
-     * 检查指定方法是否存在，不存在则返回 false。
-     */
     boolean existsMethod(String clazz, String name, Object... objs);
 
     boolean existsMethod(String clazz, ClassLoader classLoader,
                          String name, Object... objs);
 
-    /**
-     * 检查指定方法名是否存在，不存在则返回 false。
-     */
     boolean existsAnyMethod(String clazz, String name);
 
     boolean existsAnyMethod(String clazz, ClassLoader classLoader, String name);
@@ -89,10 +84,6 @@ public interface IMember {
     ArrayList<Constructor<?>> findAnyConstructor(Class<?> clazz);
 
     // --------- 查找字段 -----------
-
-    /**
-     * 查找指定字段是否存在，不存在返回 false
-     */
     boolean existsField(String clazz, String name);
 
     boolean existsField(String clazz, ClassLoader classLoader, String name);
@@ -123,18 +114,15 @@ public interface IMember {
     IAction doNothing();
 
     // --------- 解除 hook ---------
-
     boolean unHook(XC_MethodHook.Unhook unhook);
 
     boolean unHook(Member hookMember, XC_MethodHook xcMethodHook);
 
     // --------- 过滤方法 -----------
-
     ArrayList<Method> filterMethod(Class<?> clazz, CoreTool.IFindMethod iFindMethod);
 
     ArrayList<Constructor<?>> filterMethod(Class<?> clazz, CoreTool.IFindConstructor iFindConstructor);
 
     // ------- 打印堆栈 --------------
-
     String getStackTrace();
 }

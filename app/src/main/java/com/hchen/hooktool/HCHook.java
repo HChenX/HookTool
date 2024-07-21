@@ -28,6 +28,8 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 /**
  * 工具入口
+ * <p>
+ * Tool entry
  */
 public class HCHook {
     private final ToolData data;
@@ -39,6 +41,8 @@ public class HCHook {
 
     /**
      * 实例化本类开始使用
+     * <p>
+     * Instantiate this class to get started
      */
     public HCHook() {
         data = new ToolData();

@@ -30,6 +30,8 @@ import java.lang.annotation.RetentionPolicy;
 
 /**
  * 本类为 context 上下文获取工具
+ * <p>
+ * This class is a context getter
  */
 @SuppressLint({"PrivateApi", "SoonBlockedPrivateApi", "DiscouragedPrivateApi"})
 public class ContextUtils {
@@ -85,6 +87,8 @@ public class ContextUtils {
      * }, true/false);
      * }
      * 当然 Handler 是可选项, 适用于 Toast 显示等场景。
+     * <p>
+     * Loop to get the context of the current application in order to prevent premature fetching of null.
      * @param iContext 回调获取 Context
      * @author 焕晨HChen
      */

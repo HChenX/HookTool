@@ -28,6 +28,8 @@ import java.util.HashMap;
 
 /**
  * 本类为反射工具，提供简易的反射功能
+ * <p>
+ * This class is a reflection tool that provides a simple reflection function
  */
 public class InvokeUtils {
     private static final HashMap<String, Method> methodCache = new HashMap<>();

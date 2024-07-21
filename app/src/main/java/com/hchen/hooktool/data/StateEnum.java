@@ -20,6 +20,8 @@ package com.hchen.hooktool.data;
 
 /**
  * 状态枚举
+ * <p>
+ * State enumeration
  */
 public enum StateEnum {
     NONE, /*未 hook*/

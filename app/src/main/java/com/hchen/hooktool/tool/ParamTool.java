@@ -28,6 +28,8 @@ import de.robv.android.xposed.XposedBridge;
 
 /**
  * 参数工具
+ * <p>
+ * Parameter tool
  */
 public class ParamTool extends Arguments {
     // hook 的方法的所在类
@@ -40,7 +42,7 @@ public class ParamTool extends Arguments {
     public ParamTool paramTool = this;
 
     private XC_MethodHook xcMethodHook;
-    
+
     final protected void putMethodHookParam(XC_MethodHook.MethodHookParam param) {
         if (param == null)
             throw new RuntimeException(ToolData.mInitTag + "[" + mTag + "][E]: param is null!!");
@@ -49,11 +51,11 @@ public class ParamTool extends Arguments {
         mMember = param.method;
         mArgs = param.args;
     }
-    
+
     final protected void putXCMethodHook(XC_MethodHook xcMethodHook) {
         this.xcMethodHook = xcMethodHook;
     }
-    
+
     final protected void putUtils(ToolData data) {
         mTag = data.getTAG();
         iDynamic = data.getCoreTool();
@@ -61,6 +63,8 @@ public class ParamTool extends Arguments {
 
     /**
      * 本类的实例。
+     * <p>
+     * An instance of this class.
      */
     final public <T> T thisObject() {
         return (T) methodHookParam.thisObject;
@@ -68,6 +72,8 @@ public class ParamTool extends Arguments {
 
     /**
      * 移除 hook 自身。
+     * <p>
+     * Remove the hook itself.
      */
     final public void removeSelf() {
         XposedBridge.unhookMethod(mMember, xcMethodHook);
@@ -75,12 +81,16 @@ public class ParamTool extends Arguments {
 
     /**
      * 返回此实例的类加载器。
+     * <p>
+     * Returns the classloader for this instance.
      */
     final public ClassLoader classLoader() {
         return methodHookParam.thisObject.getClass().getClassLoader();
     }
 
     /**
+     * 获取原 param 参数。
+     * <p>
      * 获取原 param 参数。
      */
     final public XC_MethodHook.MethodHookParam originalParam() {

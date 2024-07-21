@@ -33,6 +33,8 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 /**
  * 初始化类，请在 Hook 入口处初始化本类。
+ * <p>
+ * To initialize the class, initialize this class at the entrance to the hook.
  */
 public class HCInit {
     // ------- 可选日志等级 ------
@@ -61,6 +63,8 @@ public class HCInit {
 
     /**
      * 务必设置！
+     * <p>
+     * Be sure to set it up!
      */
     public static void initLoadPackageParam(XC_LoadPackage.LoadPackageParam loadPackageParam) {
         if (loadPackageParam == null) {
@@ -75,6 +79,8 @@ public class HCInit {
 
     /**
      * 务必设置！
+     * <p>
+     * Be sure to set it up!
      */
     public static void initStartupParam(IXposedHookZygoteInit.StartupParam startupParam) {
         ToolData.startupParam = startupParam;
@@ -82,6 +88,8 @@ public class HCInit {
 
     /**
      * 务必设置！
+     * <p>
+     * Be sure to set it up!
      */
     public static void initBasicData(String modulePackageName, String tag, @Duration int level) {
         setTag(tag); /* 设置 TAG */
@@ -91,6 +99,8 @@ public class HCInit {
 
     /**
      * 是否允许使用系统的 classloader，一般不需要开启。
+     * <p>
+     * Whether to allow the use of the system's classloader, generally does not need to be enabled.
      */
     public static void canUseSystemClassLoader(boolean use) {
         canUseSystemClassLoader = use; /* 允许使用系统 classloader */
@@ -98,6 +108,8 @@ public class HCInit {
 
     /**
      * 是否自动对每个被 hook 的方法，在其被调用时打印日志。
+     * <p>
+     * Whether to automatically print a log for each method that is hooked when it is called.
      */
     public static void autoObserveCall(boolean auto) {
         ToolData.autoObserveCall = auto;
@@ -130,6 +142,13 @@ public class HCInit {
      * fieldName 传入字段名。<br/>
      * value 输入值。<br/>
      * 随后模块本身检查这个字段是否被更改即可。
+     * <p>
+     * Whether the module is activated or not. How to use:
+     * <br> lpparam is passed into the module itself.
+     * <br> path to the specified class.
+     * <br> fieldName is passed in the field name.
+     * <br> value to enter a value.
+     * <br> The module itself then checks to see if this field has been changed.
      */
     public static boolean isXposedModuleActive(XC_LoadPackage.LoadPackageParam lpparam,
                                                String path, String fieldName, Object value) {

@@ -40,6 +40,8 @@ import de.robv.android.xposed.XSharedPreferences;
 
 /**
  * prefs 工具
+ * <p>
+ * prefs tool
  */
 public class PrefsTool {
     private ToolData data;
@@ -55,6 +57,8 @@ public class PrefsTool {
 
     /**
      * 模块实例入口。
+     * <p>
+     * Module instance entry.
      */
     public PrefsTool() {
         isXposedEnvironment = false;
@@ -65,6 +69,8 @@ public class PrefsTool {
 
     /**
      * 寄生实例入口，无需手动实例。
+     * <p>
+     * Parasitic instance entry, no manual instance is required.
      */
     public PrefsTool(ToolData data) {
         this.data = data;
@@ -85,6 +91,8 @@ public class PrefsTool {
 
     /**
      * 寄生应用读取配置一般使用。
+     * <p>
+     * Parasitic application read configuration is generally used.
      */
     public IPrefs prefs() {
         return prefs(prefsName);
@@ -92,6 +100,8 @@ public class PrefsTool {
 
     /**
      * 寄生应用读取配置一般使用。
+     * <p>
+     * Parasitic application read configuration is generally used.
      */
     public IPrefs prefs(String prefsName) {
         if (!isXposedEnvironment) {
@@ -111,6 +121,8 @@ public class PrefsTool {
 
     /**
      * 模块应用读取配置一般使用。
+     * <p>
+     * The module application read configuration is generally used.
      */
     public IPrefs prefs(Context context) {
         return prefs(context, prefsName);
@@ -118,6 +130,8 @@ public class PrefsTool {
 
     /**
      * 模块应用读取配置一般使用。
+     * <p>
+     * The module application read configuration is generally used.
      */
     public IPrefs prefs(Context context, String prefsName) {
         prefsName = prefsName.replace(" ", "").toLowerCase();
@@ -136,6 +150,10 @@ public class PrefsTool {
      * 异步设置配置。
      * <p>
      * 仅限寄生应用内调用，适用于不方便获取 context 的情况。
+     * <p>
+     * Asynchronous setup prefs.
+     * <p>
+     * Parasitic in-app calls only, for situations where it's inconvenient to get context.
      */
     public void asyncPrefs(IAsyncPrefs asyncPrefs) {
         if (!isXposedEnvironment) {
@@ -161,6 +179,8 @@ public class PrefsTool {
 
     /**
      * 使寄生应用独立存储配置。
+     * <p>
+     * Make parasitic applications independent of storage prefs.
      */
     public PrefsTool nativePrefs() {
         isUsingNativeStorage = true;
@@ -169,6 +189,8 @@ public class PrefsTool {
 
     /**
      * 使寄生应用使用模块的配置。
+     * <p>
+     * Make the parasitic app use the prefs of the module.
      */
     public PrefsTool xposedPrefs() {
         isUsingNativeStorage = false;
@@ -286,6 +308,8 @@ public class PrefsTool {
 
         /**
          * Xprefs 不支持修改！
+         * <p>
+         * Xprefs doesn't support editor!
          */
         @Override
         @Nullable

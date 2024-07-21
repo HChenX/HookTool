@@ -34,8 +34,9 @@ import java.io.File;
 import java.io.IOException;
 
 /**
- * 资源注入工具，
- * 可能不是很稳定。
+ * 资源注入工具，可能不是很稳定。
+ * <p>
+ * Resource injection tools may not be very stable.
  */
 public class ResHelper {
     private static ResourcesLoader resourcesLoader = null;
@@ -44,6 +45,8 @@ public class ResHelper {
 
     /**
      * 请在 initZygote 中初始化。
+     * <p>
+     * Please initialize in initZygote.
      *
      * @param modulePath startupParam.modulePath 即可
      */
@@ -53,6 +56,8 @@ public class ResHelper {
 
     /**
      * 来自 QA 的方法
+     * <p>
+     * from QA
      */
     @RequiresApi(api = Build.VERSION_CODES.R)
     private static boolean loadResAboveApi30(Context context) {
@@ -83,6 +88,9 @@ public class ResHelper {
     /**
      * 把本项目资源注入目标作用域上下文。一般调用本方法即可。<br/>
      * 请在 build.gradle 添加如下代码。
+     * <p>
+     * Inject this project resource into the target scope context. Generally, this method can be called. <br>
+     * Please add the following code to build.gradle.
      * <pre> {@code
      * Kotlin Gradle DSL:
      *

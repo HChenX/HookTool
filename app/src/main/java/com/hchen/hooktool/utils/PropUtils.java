@@ -25,6 +25,8 @@ import android.content.Context;
 
 /**
  * 本类为 prop 工具，可以获取或者写入系统 prop 条目
+ * <p>
+ * This class is a prop tool, which can be obtained or written to the system prop entry
  */
 @SuppressLint("PrivateApi")
 public class PropUtils {
@@ -92,8 +94,8 @@ public class PropUtils {
     /**
      * 只有系统核心可以调用。
      * 返回 true 表示成功。
-     *
-     * @return boolean
+     * <p>
+     * Only the system core can be called. Returning true indicates success.
      */
     public static boolean setProp(String key, String vale) {
         try {

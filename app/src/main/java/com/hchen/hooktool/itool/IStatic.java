@@ -23,6 +23,8 @@ import java.lang.reflect.Field;
 /**
  * 静态方法类，
  * 方法具体介绍请看实现类。<br/>
+ * <p>
+ * Static method class, for more information about methods, please see Implementation class. <br>
  * {@link com.hchen.hooktool.tool.CoreTool}
  */
 public interface IStatic {

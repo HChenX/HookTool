@@ -39,6 +39,8 @@ import java.util.Objects;
 
 /**
  * 软件包实用程序
+ * <p>
+ * Package utility
  */
 public class PackagesUtils {
     private static final String TAG = "PackagesUtils";
@@ -49,6 +51,8 @@ public class PackagesUtils {
 
     /**
      * 判断目标包名应用是否已经被卸载。
+     * <p>
+     * Check whether the application with the target package name has been uninstalled.
      */
     public static boolean isUninstall(Context context, String pkg) {
         if (context == null) return false;
@@ -69,6 +73,8 @@ public class PackagesUtils {
 
     /**
      * 获取包名应用是否被禁用。
+     * <p>
+     * Get the package name and whether the app is disabled.
      */
     public static boolean isDisable(Context context, String pkg) {
         if (context == null) return false;
@@ -90,6 +96,8 @@ public class PackagesUtils {
 
     /**
      * 获取包名应用是否被 Hidden，一般来说被隐藏视为未安装，可以使用 isUninstall() 来判断。
+     * <p>
+     * Whether the application is hidden, generally speaking, it is considered uninstalled if it is hidden, and you can use isUninstall() to determine whether the application is hidden.
      */
     public static boolean isHidden(Context context, String pkg) {
         try {
@@ -118,6 +126,8 @@ public class PackagesUtils {
      * <p>
      * 类型的返回值.
      * 返回使用 return new ArrayList<>(XX); 包裹。
+     * <p>
+     * Get the package information through custom code.
      *
      * @param iCode 需要执行的代码
      * @return ListAppData 包含各种应用详细信息
@@ -226,6 +236,8 @@ public class PackagesUtils {
 
     /**
      * 根据 uid 获取 user id。
+     * <p>
+     * Get user id based on uid.
      */
     public static int getUserId(int uid) {
         return InvokeUtils.callStaticMethod(UserHandle.class, "getUserId", new Class[]{int.class}, uid);
@@ -234,8 +246,8 @@ public class PackagesUtils {
     /**
      * 可用于判断是否是系统应用。
      * 如果 app 为 null 则固定返回 false，请注意检查 app 是否为 null。
-     *
-     * @return 返回 true 代表是系统应用
+     * <p>
+     * It can be used to determine whether it is a system application. If the app is null, it will always return false, so be careful to check if the app is null.
      */
     public static boolean isSystem(ApplicationInfo app) {
         if (Objects.isNull(app)) {

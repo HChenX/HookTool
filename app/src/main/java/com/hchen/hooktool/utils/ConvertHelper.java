@@ -25,7 +25,9 @@ import com.hchen.hooktool.callback.IAction;
 import java.util.ArrayList;
 
 /**
- * 本工具的快捷转换
+ * 快捷转换
+ * <p>
+ * Quick conversion
  */
 public class ConvertHelper {
     protected ToolData data;
@@ -36,6 +38,8 @@ public class ConvertHelper {
 
     /**
      * 泛型转换为数组。
+     * <p>
+     * Generics are converted to arrays.
      *
      * @param ts 泛型
      * @return 数组
@@ -51,6 +55,8 @@ public class ConvertHelper {
 
     /**
      * 数组参数转为类。
+     * <p>
+     * Array parameters are converted to classes.
      */
     final public Class<?>[] arrayToClass(ClassLoader classLoader, Object... objs) {
         ArrayList<Class<?>> classes = new ArrayList<>();

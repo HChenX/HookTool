@@ -23,6 +23,8 @@ import com.hchen.hooktool.tool.ChainTool;
 /**
  * 链式调用接口
  * 方法具体介绍请看实现类。<br/>
+ * <p>
+ * For more information about the chained API method, see Implementation Class. <br>
  * {@link com.hchen.hooktool.tool.ChainTool}
  */
 public interface IChain {

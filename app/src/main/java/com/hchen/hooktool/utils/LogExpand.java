@@ -31,6 +31,8 @@ import de.robv.android.xposed.XC_MethodHook;
 
 /**
  * 日志增强
+ * <p>
+ * Logging enhancements
  */
 public class LogExpand {
     private final XC_MethodHook.MethodHookParam param;

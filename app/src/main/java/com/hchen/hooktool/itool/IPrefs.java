@@ -26,6 +26,8 @@ import java.util.Set;
 /**
  * prefs 工具接口，
  * 方法具体介绍请看实现类。<br/>
+ * <p>
+ * For the prefs tool interface, see Implementation Class for details of the method. <br>
  * {@link com.hchen.hooktool.tool.PrefsTool}
  */
 public interface IPrefs {

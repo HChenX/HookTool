@@ -35,6 +35,8 @@ import java.util.ArrayList;
 
 /**
  * 创建链式调用
+ * <p>
+ * Create a chain call
  */
 public class ChainTool implements IChain {
     private final ToolData data;
@@ -70,6 +72,8 @@ public class ChainTool implements IChain {
 
     /**
      * 查找方法。
+     * <p>
+     * Find method.
      *
      * @param name   方法名
      * @param params 方法参数
@@ -88,6 +92,8 @@ public class ChainTool implements IChain {
 
     /**
      * 查找构造函数。
+     * <p>
+     * find constructor.
      *
      * @param params 参数
      */
@@ -140,6 +146,8 @@ public class ChainTool implements IChain {
 
         /**
          * hook 动作。
+         * <p>
+         * hook action.
          */
         public ChainTool hook(IAction iAction) {
             chain.chainData.iAction = iAction;

@@ -43,6 +43,8 @@ import de.robv.android.xposed.XposedHelpers;
 
 /**
  * 核心工具
+ * <p>
+ * core tool
  */
 public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMember {
 
@@ -54,6 +56,8 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
 
     /**
      * 查找指定类是否存在。
+     * <p>
+     * Find if the specified class exists.
      */
     public boolean existsClass(String clazz) {
         return existsClass(clazz, data.getClassLoader());
@@ -87,6 +91,8 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
 
     /**
      * 检查指定方法是否存在，不存在则返回 false。
+     * <p>
+     * Check whether the specified method exists, and returns false if it does not.
      */
     public boolean existsMethod(String clazz, String name, Object... objs) {
         return existsMethod(clazz, data.getClassLoader(), name, objs);
@@ -107,6 +113,8 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
 
     /**
      * 检查指定方法名是否存在，不存在则返回 false。
+     * <p>
+     * Check whether the specified method name exists, and return false if it does not.
      */
     public boolean existsAnyMethod(String clazz, String name) {
         return existsAnyMethod(clazz, data.getClassLoader(), name);
@@ -209,6 +217,8 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
 
     /**
      * 查找指定字段是否存在，不存在返回 false
+     * <p>
+     * If the specified field exists, it returns false if it does not
      */
     public boolean existsField(String clazz, String name) {
         return existsField(clazz, data.getClassLoader(), name);
@@ -406,6 +416,10 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
      * 请使用 new Object[]{} 传入参数。<br/>
      * 如果仅传入一个参数可以不使用 new Object[]{}<br/>
      * 这是为了规避泛型与可变参数的冲突。
+     * <p>
+     * Use new Object[]{} to pass in the parameter. <br>
+     * If you pass in only one parameter, you can leave out new Object[]{}<br>
+     * to avoid conflicts between generics and variadics.
      */
     public <T, R> R callMethod(Object instance, String name, T ts) {
         if (instance == null) {
@@ -527,6 +541,10 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
      * 请使用 new Object[]{} 传入参数。<br/>
      * 如果仅传入一个参数可以不使用 new Object[]{}<br/>
      * 这是为了规避泛型与可变参数的冲突。
+     * <p>
+     * Use new Object[]{} to pass in the parameter. <br>
+     * If you pass in only one parameter, you can leave out new Object[]{}<br>
+     * to avoid conflicts between generics and variadics.
      */
     public <T, R> R newInstance(Class<?> clz, T objects) {
         if (clz != null) {
@@ -563,6 +581,10 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
      * 请使用 new Object[]{} 传入参数。<br/>
      * 如果仅传入一个参数可以不使用 new Object[]{}<br/>
      * 这是为了规避泛型与可变参数的冲突。
+     * <p>
+     * Use new Object[]{} to pass in the parameter. <br>
+     * If you pass in only one parameter, you can leave out new Object[]{}<br>
+     * to avoid conflicts between generics and variadics.
      */
     public <T, R> R callStaticMethod(Class<?> clz, String name, T objs) {
         if (clz != null) {

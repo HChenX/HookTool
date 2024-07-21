@@ -30,6 +30,8 @@ import java.io.ByteArrayOutputStream;
 
 /**
  * Drawable 转 Bitmap
+ * <p>
+ * Convert Drawable to Bitmap.
  */
 public class BitmapUtils {
     public static Bitmap drawableToBitmap(Drawable drawable) {

@@ -46,6 +46,8 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 /**
  * 对需要使用工具的类继承本类，可快速使用工具。
+ * <p>
+ * This class inherits from the class that requires the use of the tool, so that you can quickly use the tool.
  */
 public abstract class BaseHC implements IMember, IDynamic, IStatic, IChain {
     public String TAG = getClass().getSimpleName();
@@ -78,6 +80,8 @@ public abstract class BaseHC implements IMember, IDynamic, IStatic, IChain {
 
     /**
      * 正常阶段。
+     * <p>
+     * Normal stage.
      */
     public abstract void init();
 
@@ -85,6 +89,10 @@ public abstract class BaseHC implements IMember, IDynamic, IStatic, IChain {
      * zygote 阶段。
      * <p>
      * 如果 startupParam 为 null，请检查是否为工具初始化。
+     * <p>
+     * Zygote stages.
+     * <p>
+     * If startupParam is null, check if it is initialized for the tool.
      */
     public void initZygote(IXposedHookZygoteInit.StartupParam startupParam) {
     }

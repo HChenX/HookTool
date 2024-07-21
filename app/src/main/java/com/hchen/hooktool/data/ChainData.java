@@ -25,6 +25,8 @@ import java.util.ArrayList;
 
 /**
  * 链式调用数据
+ * <p>
+ * Chained data
  */
 public class ChainData {
     public ArrayList<Member> members = new ArrayList<>(); /* 目标成员组 */
@@ -52,7 +54,7 @@ public class ChainData {
     public String mName; /* 方法名 */
     public String mType; /* 类型 */
     public Object[] mParams; /* 参数 */
-    
+
     public ChainData(String name, Object... params) {
         mName = name;
         mType = TYPE_METHOD;

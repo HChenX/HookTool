@@ -28,6 +28,8 @@ import de.robv.android.xposed.XposedHelpers;
 
 /**
  * 测试和示例类
+ * <p>
+ * Test and sample classes
  */
 public class MainTest extends BaseHC {
 

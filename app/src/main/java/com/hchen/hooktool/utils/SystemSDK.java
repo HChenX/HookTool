@@ -31,6 +31,8 @@ import java.util.Locale;
 
 /**
  * 此类用于获取设备基本信息
+ * <p>
+ * This class is used to obtain basic information about the device
  */
 public class SystemSDK {
     public static String getSystemVersionIncremental() {
@@ -59,6 +61,8 @@ public class SystemSDK {
 
     /**
      * 获取安卓设备版本。
+     * <p>
+     * Get the Android version.
      */
     public static int getAndroidVersion() {
         return Build.VERSION.SDK_INT;
@@ -66,9 +70,9 @@ public class SystemSDK {
 
     /**
      * 获取小米设备 MIUI 版本
-     * 将获取到的字符串转换为浮点，以提供判断
-     *
-     * @return 一个 Float 值
+     * 将获取到的字符串转换为浮点，以提供判断。
+     * <p>
+     * Get the MIUI version of the Xiaomi device converts the acquired string to a floating point to provide a judgment.
      */
     public static float getMiuiVersion() {
         switch (getProp("ro.miui.ui.version.name")) {
@@ -101,9 +105,9 @@ public class SystemSDK {
 
     /**
      * 获取小米设备 HyperOS 版本
-     * 将获取到的字符串转换为浮点，以提供判断
-     *
-     * @return 一个 Float 值
+     * 将获取到的字符串转换为浮点，以提供判断。
+     * <p>
+     * Get Xiaomi Device HyperOS Version Convert the acquired string to floating-point to provide judgment.
      */
     public static float getHyperOSVersion() {
         switch (getProp("ro.mi.os.version.name")) {
@@ -120,60 +124,54 @@ public class SystemSDK {
     }
 
     /**
-     * 判断是否为指定某个 Android 版本
-     *
-     * @param version 传入的 Android SDK Int 数值
-     * @return 一个 Boolean 值
+     * 判断是否为指定某个 Android 版本。
+     * <p>
+     * Determines whether a specific Android version is specified.
      */
     public static boolean isAndroidVersion(int version) {
         return getAndroidVersion() == version;
     }
 
     /**
-     * 判断是否大于等于某个 Android 版本
-     *
-     * @param version 传入的 Android SDK Int 数值
-     * @return 一个 Boolean 值
+     * 判断是否大于等于某个 Android 版本。
+     * <p>
+     * Determine whether an Android version is greater than or greater.
      */
     public static boolean isMoreAndroidVersion(int version) {
         return getAndroidVersion() >= version;
     }
 
     /**
-     * 判断是否为指定某个 MIUI 版本
-     *
-     * @param version 传入的 MIUI 版本 Float 数值
-     * @return 一个 Boolean 值
+     * 判断是否为指定某个 MIUI 版本。
+     * <p>
+     * Determines whether a MIUI version is specified.
      */
     public static boolean isMiuiVersion(float version) {
         return getMiuiVersion() == version;
     }
 
     /**
-     * 判断是否大于等于某个 MIUI 版本
-     *
-     * @param version 传入的 MIUI 版本 Float 数值
-     * @return 一个 Boolean 值
+     * 判断是否大于等于某个 MIUI 版本。
+     * <p>
+     * Determine whether a MIUI version is greater than or equal to.
      */
     public static boolean isMoreMiuiVersion(float version) {
         return getMiuiVersion() >= version;
     }
 
     /**
-     * 判断是否为指定某个 HyperOS 版本
-     *
-     * @param version 传入的 HyperOS 版本 Float 数值
-     * @return 一个 Boolean 值
+     * 判断是否为指定某个 HyperOS 版本。
+     * <p>
+     * Determines whether a HyperOS version is specified.
      */
     public static boolean isHyperOSVersion(float version) {
         return getHyperOSVersion() == version;
     }
 
     /**
-     * 判断是否大于等于某个 HyperOS 版本
-     *
-     * @param version 传入的 HyperOS 版本 Float 数值
-     * @return 一个 Boolean 值
+     * 判断是否大于等于某个 HyperOS 版本。
+     * <p>
+     * 判断是否大于等于某个 HyperOS 版本。
      */
     public static boolean isMoreHyperOSVersion(float version) {
         return getHyperOSVersion() >= version;
@@ -191,10 +189,9 @@ public class SystemSDK {
     }
 
     /**
-     * 函数调用，适用于其他一些需要判断的情况，仅支持小米设备的判断
-     * 2024-04-20 更新对非小米设备的判断方式，仅防止闪退
-     *
-     * @return 一个 Boolean 值，true 代表是平板，false 代表不是平板
+     * 判断是否是平板。
+     * <p>
+     * Determine whether it is a pad.
      */
     public static boolean isPad() {
         if (IS_TABLET()) return true;
@@ -202,9 +199,9 @@ public class SystemSDK {
     }
 
     /**
-     * 函数调用，适用于其他一些需要判断的情况，仅支持小米设备的判断
-     *
-     * @return 一个 Boolean 值，true 代表是国际版系统，false 代表不是国际版系统
+     * 判断小米设备是否是国际版。
+     * <p>
+     * Determine if the Xiaomi device is an international version.
      */
     public static boolean isInternational() {
         return IS_INTERNATIONAL_BUILD();
