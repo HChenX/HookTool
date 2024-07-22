@@ -80,8 +80,7 @@ public class PrefsTool {
      * If parasitic applications are stored in their private directory and reads are read from their private directory.
      */
     public static IPrefs prefs(Context context) {
-        initModulePrefs();
-        return new Sprefs(modulePrefs.currentSp(context, prefsName));
+        return prefs(context, prefsName);
     }
 
     /**
@@ -195,43 +194,50 @@ public class PrefsTool {
         private final ToolData data;
         private final XSharedPreferences xSharedPreferences;
 
-        public Xprefs(XSharedPreferences xSharedPreferences, ToolData data) {
+        private Xprefs(XSharedPreferences xSharedPreferences, ToolData data) {
             this.data = data;
             this.xSharedPreferences = xSharedPreferences;
         }
 
         @Override
         public String getString(String key, String def) {
+            reload();
             return xSharedPreferences.getString(key, def);
         }
 
         @Override
         public Set<String> getStringSet(String key, Set<String> def) {
+            reload();
             return xSharedPreferences.getStringSet(key, def);
         }
 
         @Override
         public boolean getBoolean(String key, boolean def) {
+            reload();
             return xSharedPreferences.getBoolean(key, def);
         }
 
         @Override
         public int getInt(String key, int def) {
+            reload();
             return xSharedPreferences.getInt(key, def);
         }
 
         @Override
         public float getFloat(String key, float def) {
+            reload();
             return xSharedPreferences.getFloat(key, def);
         }
 
         @Override
         public long getLong(String key, long def) {
+            reload();
             return xSharedPreferences.getLong(key, def);
         }
 
         @Override
         public Object get(String key, Object def) {
+            reload();
             try {
                 if (def instanceof String s) {
                     return getString(key, s);
@@ -254,11 +260,13 @@ public class PrefsTool {
 
         @Override
         public boolean contains(String key) {
+            reload();
             return xSharedPreferences.contains(key);
         }
 
         @Override
         public Map<String, ?> getAll() {
+            reload();
             return xSharedPreferences.getAll();
         }
 
@@ -273,12 +281,20 @@ public class PrefsTool {
             logW(data.getTag(), "xposed can't edit prefs!");
             return null;
         }
+
+        private void reload() {
+            if (ToolData.autoReload) {
+                if (xSharedPreferences.hasFileChanged()) {
+                    xSharedPreferences.reload();
+                }
+            }
+        }
     }
 
     public static class Sprefs implements IPrefs {
         private final SharedPreferences preferences;
 
-        public Sprefs(SharedPreferences preferences) {
+        private Sprefs(SharedPreferences preferences) {
             this.preferences = preferences;
         }
 

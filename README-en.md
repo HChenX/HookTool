@@ -41,9 +41,9 @@ dependencyResolutionManagement {
 ```groovy
 dependencies {
     // jitpack
-    implementation 'com.github.HChenX:HookTool:v.0.9.9.5'
+    implementation 'com.github.HChenX:HookTool:v.0.9.9.6'
     // maven
-    implementation 'io.github.hchenx:hooktool:0.9.9.5'
+    implementation 'io.github.hchenx:hooktool:0.9.9.6'
     // Choose either one
 }
 ```
@@ -83,9 +83,11 @@ public static class MainActivity {
 - Call in the code
 
 ```java
-public void test() {
+public class MainTest {
+  public void test() {
     HCHook hcHook = new HCHook(); // Instantiate the tool
-    hcHook.setThisTag(TAG); // Set a specific TAG, such as the class name "test".
+    hcHook.setThisTag(TAG); // Set a specific TAG, such as the class name "MainTest".
+  }
 }
 ```
 
@@ -168,7 +170,7 @@ public class MainTest {
         Object object = null;
         Class<?> clazz = null;
         HCHook hcHook = new HCHook();
-        CoreTool coreTool = new HCHook().coreTool();
+        CoreTool coreTool = new HCHook().core();
         coreTool.callMethod(object, "call");
         coreTool.setField(object, "field", null);
         coreTool.getField(object, "field");

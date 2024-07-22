@@ -41,9 +41,9 @@ dependencyResolutionManagement {
 ```groovy
 dependencies {
     // jitpack
-    implementation 'com.github.HChenX:HookTool:v.0.9.9.5'
+    implementation 'com.github.HChenX:HookTool:v.0.9.9.6'
     // maven
-    implementation 'io.github.hchenx:hooktool:0.9.9.5'
+    implementation 'io.github.hchenx:hooktool:0.9.9.6'
     // 二选一即可
 }
 ```
@@ -82,9 +82,11 @@ public static class MainActivity {
 - 在代码处调用
 
 ```java
-public void test() {
-    HCHook hcHook = new HCHook(); // 实例工具
-    hcHook.setThisTag(TAG); // 设置具体 TAG，比如本类名 "test"。
+public class MainTest {
+    public void test() {
+        HCHook hcHook = new HCHook(); // 实例工具
+        hcHook.setThisTag(TAG); // 设置具体 TAG，比如本类名 "MainTest"。
+    }
 }
 ```
 
@@ -166,7 +168,7 @@ public class MainTest {
         Object object = null;
         Class<?> clazz = null;
         HCHook hcHook = new HCHook();
-        CoreTool coreTool = new HCHook().coreTool();
+        CoreTool coreTool = new HCHook().core();
         coreTool.callMethod(object, "call");
         coreTool.setField(object, "field", null);
         coreTool.getField(object, "field");
@@ -362,7 +364,7 @@ public class MainTest extends BaseHC {
         // 注意 xprefs 模式，寄生应用不能修改配置只能读取。
         String s = prefs().getString("test", "1");  // 即可读取
         s = prefs("myPrefs").getString("test", "1");  // 可指定读取文件名
-        
+
         // sprefs模式：
         Context context = null;
         // 如果继承了 BaseHC 可直接使用 prefs(Context)，配置会保存到寄生应用的私有目录，读取也会从寄生应用私有目录读取。
@@ -388,7 +390,7 @@ public static class MainActivity {
         // ！！！如果使用 xprefs 模式，请在模块主界面调用 PrefsTool.prefs(context); 初始化一下，否则可能不可用！！！！！
         PrefsTool.prefs(this); // 或
         PrefsTool.prefs(this,/* 你自己的 prefs 名称 */);
-        
+
         // 使用方法
         prefs(this).editor().putString("test", "1").commit();
         prefs(this, "myPrefs").editor().putString("test", "1").commit();

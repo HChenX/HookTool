@@ -432,6 +432,11 @@ public abstract class BaseHC implements IMember, IDynamic, IStatic, IChain {
         return iMember.getStackTrace();
     }
 
+    // --------- 耗时检查 -----------
+    @Override
+    final public long timeConsumption(Runnable runnable) {
+        return iMember.timeConsumption(runnable);
+    }
 
     // ---------- 非静态 ---------------
     @Override

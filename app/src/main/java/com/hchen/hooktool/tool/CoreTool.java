@@ -34,6 +34,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.function.Consumer;
@@ -443,6 +445,24 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
         return stringBuilder.toString();
     }
 
+    // --------- 耗时检查 -----------
+    /**
+     * 返回指定代码逻辑的耗时，单位是 ms。
+     * <p>
+     * Return the time consumption of the specified code logic, in milliseconds.
+     */
+    public long timeConsumption(Runnable runnable) {
+        try {
+            Instant start = Instant.now();
+            runnable.run();
+            Instant end = Instant.now();
+            return Duration.between(start, end).toMillis();
+        } catch (Throwable e) {
+            logE(data.getTag(), "code time consumption check failed!", e);
+            return -1L;
+        }
+    }
+
     // ---------- 非静态 -----------
     public <T> T callMethod(Object instance, String name, Object... objs) {
         if (instance == null) {
@@ -594,7 +614,7 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
     public <T> T callStaticMethod(String clz, ClassLoader classLoader, String name, Object... objs) {
         return callStaticMethod(findClass(clz, classLoader), name, objs);
     }
-    
+
     public <T> T callStaticMethod(Method method, Object... objs) {
         try {
             method.setAccessible(true);

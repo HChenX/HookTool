@@ -145,4 +145,7 @@ public interface IMember {
 
     // ------- 打印堆栈 --------------
     String getStackTrace();
+
+    // --------- 耗时检查 ------------
+    long timeConsumption(Runnable runnable);
 }

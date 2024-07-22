@@ -113,6 +113,19 @@ public class HCInit {
     public static void autoObserveCall(boolean auto) {
         ToolData.autoObserveCall = auto;
     }
+
+    /**
+     * 是否自动更新 xprefs 数据。
+     * <p>
+     * 工具默认开启，但可能会增加耗时。
+     * <p>
+     * Whether xPrefs data is automatically updated.
+     * <p>
+     * The tool is enabled by default, but it can take more time.
+     */
+    public static void xPrefsAutoReload(boolean auto) {
+        ToolData.autoReload = auto;
+    }
     // ---------- END！----------
 
     private static void setTag(String tag) {

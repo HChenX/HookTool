@@ -41,6 +41,7 @@ public class ToolData {
     public static String spareTag = "Unknown";
     public static String modulePackageName = null;
     public static boolean autoObserveCall = false;
+    public static boolean autoReload = true;
     public static IXposedHookZygoteInit.StartupParam startupParam = null;
     // HCHook
     public static XC_LoadPackage.LoadPackageParam lpparam = null;
