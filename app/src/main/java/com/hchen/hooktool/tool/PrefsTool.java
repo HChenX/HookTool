@@ -47,22 +47,14 @@ public class PrefsTool {
     private ToolData data;
     private final static String TAG = "PrefsTool";
     private static String prefsName;
-    private boolean isUsingNativeStorage = false;
-    private boolean isXposedEnvironment = false;
-    private boolean isUsingNewXSharedPreferences = false;
     private static PrefsTool xposedPrefs = null;
-    private final static PrefsTool modulePrefs = new PrefsTool();
+    private static PrefsTool modulePrefs = null;
     private final static HashMap<String, XSharedPreferences> xPrefs = new HashMap<>();
     private final static HashMap<String, SharedPreferences> sPrefs = new HashMap<>();
 
-    /**
-     * 模块实例入口。
-     * <p>
-     * Module instance entry.
-     */
-    public PrefsTool() {
-        isXposedEnvironment = false;
-        isUsingNativeStorage = true;
+    // ------------ 模块使用 ----------------
+    // ---------- 寄生应用使用则存自身私有路径内 -----------
+    private PrefsTool() {
         // 默认值，即设置的 tag 值后加 _prefs
         prefsName = ToolData.spareTag.replace(" ", "").toLowerCase() + "_prefs";
     }
@@ -73,20 +65,48 @@ public class PrefsTool {
      * Parasitic instance entry, no manual instance is required.
      */
     public PrefsTool(ToolData data) {
-        this.data = data;
-        isXposedEnvironment = true;
-        isUsingNativeStorage = false;
         // 默认值，即设置的 tag 值后加 _prefs
         prefsName = ToolData.spareTag.replace(" ", "").toLowerCase() + "_prefs";
+        this.data = data;
         xposedPrefs = this;
     }
 
-    public static PrefsTool getXposedPrefs() {
-        return xposedPrefs;
+    /**
+     * 模块使用。
+     * <p>
+     * 寄生应用使用则存其私有目录内，读取也从其私有目录读取。
+     * <p>
+     * Module use. <p>
+     * If parasitic applications are stored in their private directory and reads are read from their private directory.
+     */
+    public static IPrefs prefs(Context context) {
+        initModulePrefs();
+        return new Sprefs(modulePrefs.currentSp(context, prefsName));
     }
 
-    public static PrefsTool modulePrefs() {
-        return modulePrefs;
+    /**
+     * 模块使用。
+     * <p>
+     * 寄生应用使用则存其私有目录内，读取也从其私有目录读取。
+     * <p>
+     * Module use. <p>
+     * If parasitic applications are stored in their private directory and reads are read from their private directory.
+     */
+    public static IPrefs prefs(Context context, String prefsName) {
+        initModulePrefs();
+        return new Sprefs(modulePrefs.currentSp(context, prefsName));
+    }
+
+    // ---------------- 寄生应用使用 -----------------
+
+    private static void initModulePrefs() {
+        if (modulePrefs == null) {
+            modulePrefs = new PrefsTool();
+        }
+    }
+
+    public static PrefsTool xposedPrefs() {
+        return xposedPrefs;
     }
 
     /**
@@ -104,46 +124,8 @@ public class PrefsTool {
      * Parasitic application read prefs is generally used.
      */
     public IPrefs prefs(String prefsName) {
-        if (!isXposedEnvironment) {
-            throw new RuntimeException(ToolData.mInitTag +
-                    "[E]: not is xposed can't call this method! please use context method!");
-        }
         prefsName = prefsName.replace(" ", "").toLowerCase();
-        if (isUsingNativeStorage) {
-            return new Sprefs(currentSp(ContextUtils.getContext(ContextUtils.FLAG_CURRENT_APP), prefsName));
-        }
-        if (isUsingNewXSharedPreferences)
-            return new Xprefs(currentXsp(prefsName), data);
-        else
-            throw new RuntimeException(ToolData.mInitTag +
-                    "[E]: not supported new xshared prefs! can't use!");
-    }
-
-    /**
-     * 模块应用读取配置一般使用。
-     * <p>
-     * The module application read prefs is generally used.
-     */
-    public IPrefs prefs(Context context) {
-        return prefs(context, prefsName);
-    }
-
-    /**
-     * 模块应用读取配置一般使用。
-     * <p>
-     * The module application read prefs is generally used.
-     */
-    public IPrefs prefs(Context context, String prefsName) {
-        prefsName = prefsName.replace(" ", "").toLowerCase();
-        if (isXposedEnvironment && !isUsingNativeStorage) {
-            if (isUsingNewXSharedPreferences)
-                return new Xprefs(currentXsp(prefsName), data);
-            else
-                throw new RuntimeException(ToolData.mInitTag +
-                        "[E]: not supported new xshared prefs! can't use!");
-        } else {
-            return new Sprefs(currentSp(context, prefsName));
-        }
+        return new Xprefs(currentXsp(prefsName), data);
     }
 
     /**
@@ -156,17 +138,12 @@ public class PrefsTool {
      * Parasitic in-app calls only, for situations where it's inconvenient to get context.
      */
     public void asyncPrefs(IAsyncPrefs asyncPrefs) {
-        if (!isXposedEnvironment) {
-            throw new RuntimeException(ToolData.mInitTag +
-                    "[E]: not is xposed can't call this method! please use context method!");
-        }
-        isUsingNativeStorage = true;
         ContextUtils.getAsyncContext(new ContextUtils.IContext() {
             @Override
             public void findContext(Context context) {
                 if (context == null) {
                     throw new RuntimeException(ToolData.mInitTag +
-                            "[" + data.getTAG() + "][E]: async prefs context is null!!");
+                            "[" + data.getTag() + "][E]: async prefs context is null!!");
                 }
                 asyncPrefs.async(context);
             }
@@ -177,31 +154,11 @@ public class PrefsTool {
         void async(Context context);
     }
 
-    /**
-     * 使寄生应用独立存储配置。
-     * <p>
-     * Make parasitic applications independent of storage prefs.
-     */
-    public PrefsTool nativePrefs() {
-        isUsingNativeStorage = true;
-        return this;
-    }
-
-    /**
-     * 使寄生应用使用模块的配置。
-     * <p>
-     * Make the parasitic app use the prefs of the module.
-     */
-    public PrefsTool xposedPrefs() {
-        isUsingNativeStorage = false;
-        return this;
-    }
-
     private XSharedPreferences currentXsp(String prefsName) {
         if (xPrefs.get(prefsName) == null) {
             if (ToolData.modulePackageName == null) {
                 throw new RuntimeException(ToolData.mInitTag +
-                        "[" + data.getTAG() + "][E]: module package name is null!!");
+                        "[" + data.getTag() + "][E]: module package name is null!!");
             }
             XSharedPreferences x = new XSharedPreferences(ToolData.modulePackageName, prefsName);
             x.makeWorldReadable();
@@ -223,10 +180,9 @@ public class PrefsTool {
             SharedPreferences s;
             try {
                 s = context.getSharedPreferences(prefsName, Context.MODE_WORLD_READABLE);
-                isUsingNewXSharedPreferences = true;
             } catch (Throwable ignored) {
                 s = context.getSharedPreferences(prefsName, Context.MODE_PRIVATE);
-                isUsingNewXSharedPreferences = false;
+                AndroidLog.logW(TAG, "maybe can't use xSharedPreferences!");
             }
             sPrefs.put(context + prefsName, s);
             return s;
@@ -291,7 +247,7 @@ public class PrefsTool {
                     return getLong(key, l);
                 }
             } catch (Throwable e) {
-                logE(data.getTAG(), "unknown error!", e);
+                logE(data.getTag(), "unknown error!", e);
             }
             return null;
         }
@@ -314,7 +270,7 @@ public class PrefsTool {
         @Override
         @Nullable
         public Editor editor() {
-            logW(data.getTAG(), "xposed can't edit prefs!");
+            logW(data.getTag(), "xposed can't edit prefs!");
             return null;
         }
     }

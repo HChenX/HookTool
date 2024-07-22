@@ -52,7 +52,7 @@ public class ActAchieve {
      * <p>
      * after, to modify the returned result.
      */
-    final public <T> void setResult(T value) {
+    final public void setResult(Object value) {
         methodHookParam.setResult(value);
     }
 
@@ -134,21 +134,8 @@ public class ActAchieve {
     }
 
     // --------- 调用方法 --------------
-    /**
-     * 请使用 new Object[]{} 传入参数。<br/>
-     * 如果仅传入一个参数可以不使用 new Object[]{}<br/>
-     * 这是为了规避泛型与可变参数的冲突。
-     * <p>
-     * Use new Object[]{} to pass in the parameter. <br>
-     * If you pass in only one parameter, you can leave out new Object[]{}<br>
-     * to avoid conflicts between generics and variadics.
-     */
-    final public <T, R> R callThisMethod(String name, T ts) {
-        return iDynamic.callMethod(methodHookParam.thisObject, name, ts);
-    }
-
-    final public <R> R callThisMethod(String name) {
-        return iDynamic.callMethod(methodHookParam.thisObject, name);
+    final public <T> T callThisMethod(String name, Object... objs) {
+        return iDynamic.callMethod(methodHookParam.thisObject, name, objs);
     }
 
     // ----------- 获取/修改 字段 -------------

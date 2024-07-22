@@ -71,43 +71,43 @@ public class Arguments extends ActAchieve {
 
     // ------- 提供快捷设置 ---------
     // 依次设置指定的参数
-    final public <T> Arguments first(T value) {
+    final public Arguments first(Object value) {
         return setParam(0, value);
     }
 
-    final public <T> Arguments second(T value) {
+    final public Arguments second(Object value) {
         return setParam(1, value);
     }
 
-    final public <T> Arguments third(T value) {
+    final public Arguments third(Object value) {
         return setParam(2, value);
     }
 
-    final public <T> Arguments fourth(T value) {
+    final public Arguments fourth(Object value) {
         return setParam(3, value);
     }
 
-    final public <T> Arguments fifth(T value) {
+    final public Arguments fifth(Object value) {
         return setParam(4, value);
     }
 
-    final public <T> Arguments sixth(T value) {
+    final public Arguments sixth(Object value) {
         return setParam(5, value);
     }
 
-    final public <T> Arguments seventh(T value) {
+    final public Arguments seventh(Object value) {
         return setParam(6, value);
     }
 
-    final public <T> Arguments eighth(T value) {
+    final public Arguments eighth(Object value) {
         return setParam(7, value);
     }
 
-    final public <T> Arguments ninth(T value) {
+    final public Arguments ninth(Object value) {
         return setParam(8, value);
     }
 
-    final public <T> Arguments tenth(T value) {
+    final public Arguments tenth(Object value) {
         return setParam(9, value);
     }
 
@@ -145,7 +145,7 @@ public class Arguments extends ActAchieve {
      * @param index 索引
      * @param value 目标值
      */
-    final public <T> Arguments setParam(int index, T value) {
+    final public Arguments setParam(int index, Object value) {
         if (size() < index + 1) {
             logE(mTag, "method: [" + methodHookParam.method.getName() +
                     "], param max size: [" + size() + "], index: [" + index + "]!!");

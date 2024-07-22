@@ -57,7 +57,7 @@ public class ParamTool extends Arguments {
     }
 
     final protected void putUtils(ToolData data) {
-        mTag = data.getTAG();
+        mTag = data.getTag();
         iDynamic = data.getCoreTool();
     }
 

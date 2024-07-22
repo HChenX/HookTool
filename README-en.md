@@ -169,7 +169,7 @@ public class MainTest {
         Class<?> clazz = null;
         HCHook hcHook = new HCHook();
         CoreTool coreTool = new HCHook().coreTool();
-        coreTool.callMethod(object, "call", new Object[]{});
+        coreTool.callMethod(object, "call");
         coreTool.setField(object, "field", null);
         coreTool.getField(object, "field");
         coreTool.callStaticMethod(clazz, "callStatic");
@@ -224,8 +224,8 @@ public class MainTest extends BaseHC {
                 getField(o, "test");
 
                 // Static requires class
-                String result = callMethod("call", new Object[]{thisObject(), first()});
-                callStaticMethod("com.demo.Main", "callStatic", new Object[]{thisObject(), second()});
+                String result = callThisMethod("call", thisObject(), first());
+                callStaticMethod("com.demo.Main", "callStatic", thisObject(), second());
                 int i = getStaticField("com.demo.Main", "field");
                 setStaticField("com.demo.Main", "test", true);
 
@@ -241,10 +241,6 @@ public class MainTest extends BaseHC {
 }
 
 ```
-
-- ### **⚠Important Reminder**
-- Due to conflicts between generics and varargs, when using methods that accept multiple parameters
-  in this tool, they need to be wrapped with **`new Object[]{}`**!!!
 
 # ⚡Safe Calls
 
@@ -362,42 +358,46 @@ public class MainTest {
 - Provides prefs reading and modification functions.
 
 ```java
-// Within a parasitic application
+// In the host application
 public class MainTest extends BaseHC {
-    @Override
-    public void init() {
-        // Note: In xprefs mode, parasitic applications can only read configuration and cannot modify it.
-        String s = prefs().getString("test", "1");  // Read configuration
-        s = prefs("myPrefs").getString("test", "1");  // Specify the filename to read
-        Context context = null;
-        // nativePrefs() switches to native mode, the configuration will be saved in the private directory of the parasitic application.
-        nativePrefs().prefs(context).editor().putString("test", "1").commit();
+  @Override
+  public void init() {
+    // xprefs mode:
+    // Note: In xprefs mode, the host application can only read the configuration, not modify it.
+    String s = prefs().getString("test", "1");  // Read configuration
+    s = prefs("myPrefs").getString("test", "1");  // Specify the file name to read
 
-        // If it is inconvenient to get context, use this method to asynchronously get the context of the parasitic application, and then set it.
-        asyncPrefs(new PrefsTool.IAsyncPrefs() {
-            @Override
-            public void async(Context context) {
-                prefs(context).editor().putString("test", "1").commit();
-            }
-        });
+    // sprefs mode:
+    Context context = null;
+    // If you extend BaseHC, you can directly use prefs(Context). The configuration will be saved to the host application's private directory, and reading will also be from the host application's private directory.
+    prefs(context).editor().putString("test", "1").commit();
+    // If you do not extend BaseHC, you can call it like this.
+    PrefsTool.prefs(context).editor().putString("test", "2").commit();
+    // Note: sprefs mode and xprefs mode are independent of each other and can coexist.
 
-        // Switch back to new mode.
-        xposedPrefs();
-        // Note: The scope of nativePrefs() and xposedPrefs() is global for the parasitic application.
-    }
-}
-
-// Within a module
-public class MainTest {
-    public void test() {
-        // Must pass in context when used within a module!
-        // Reading and writing are similar.
-        Context context = null;
+    // If it is inconvenient to get context, you can use this method to asynchronously get the host application's context and then set it.
+    asyncPrefs(new PrefsTool.IAsyncPrefs() {
+      @Override
+      public void async(Context context) {
         prefs(context).editor().putString("test", "1").commit();
-        prefs(context, "myPrefs").editor().putString("test", "1").commit();
-    }
+      }
+    });
+  }
 }
 
+// In the module
+public static class MainActivity {
+  @Override
+  protected void onCreate(@Nullable Bundle savedInstanceState) {
+    // !!! If using xprefs mode, please call PrefsTool.prefs(context); in the main interface of the module to initialize it, otherwise it may not be available !!!
+    PrefsTool.prefs(this); // or
+    PrefsTool.prefs(this, /* your own prefs name */);
+
+    // Usage
+    prefs(this).editor().putString("test", "1").commit();
+    prefs(this, "myPrefs").editor().putString("test", "1").commit();
+  }
+}
 ```
 
 ---

@@ -107,8 +107,8 @@ public class MainTest extends BaseHC {
                 getField(o, "test");
 
                 // 静态需要 class
-                String result = callThisMethod("call", new Object[]{thisObject(), first()});
-                callStaticMethod("com.demo.Main", "callStatic", new Object[]{thisObject(), second()});
+                String result = callThisMethod("call", thisObject(), first());
+                callStaticMethod("com.demo.Main", "callStatic", thisObject(), second());
                 int i = getStaticField("com.demo.Main", "field");
                 setStaticField("com.demo.Main", "test", true);
 

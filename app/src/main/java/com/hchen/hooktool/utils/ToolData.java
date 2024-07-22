@@ -20,6 +20,7 @@ package com.hchen.hooktool.utils;
 
 import com.hchen.hooktool.HCHook;
 import com.hchen.hooktool.HCInit;
+import com.hchen.hooktool.ToolRestrict;
 import com.hchen.hooktool.tool.ActionTool;
 import com.hchen.hooktool.tool.ChainTool;
 import com.hchen.hooktool.tool.CoreTool;
@@ -51,6 +52,12 @@ public class ToolData {
     public ChainTool chainTool = null;
     public PrefsTool prefsTool = null;
 
+    private ToolData() {
+    }
+    
+    public ToolData(ToolRestrict helper) {
+    }
+
     public ClassLoader getClassLoader() {
         return classLoader;
     }
@@ -62,39 +69,39 @@ public class ToolData {
     public HCHook getHCHook() {
         HCHook hcHook = this.hcHook;
         if (hcHook == null)
-            throw new RuntimeException(mInitTag + "[" + getTAG() + "][E]: HCHook is null!!");
+            throw new RuntimeException(mInitTag + "[" + getTag() + "][E]: HCHook is null!!");
         return hcHook;
     }
 
     public ActionTool getActionTool() {
         ActionTool actionTool = this.actionTool;
         if (actionTool == null)
-            throw new RuntimeException(mInitTag + "[" + getTAG() + "][E]: ActionTool is null!!");
+            throw new RuntimeException(mInitTag + "[" + getTag() + "][E]: ActionTool is null!!");
         return actionTool;
     }
 
     public CoreTool getCoreTool() {
         CoreTool coreTool = this.coreTool;
         if (coreTool == null)
-            throw new RuntimeException(mInitTag + "[" + getTAG() + "][E]: CoreTool is null!!");
+            throw new RuntimeException(mInitTag + "[" + getTag() + "][E]: CoreTool is null!!");
         return coreTool;
     }
 
     public ChainTool getChainTool() {
         ChainTool chain = this.chainTool;
         if (chain == null)
-            throw new RuntimeException(mInitTag + "[" + getTAG() + "][E]: CreateChain is null!!");
+            throw new RuntimeException(mInitTag + "[" + getTag() + "][E]: CreateChain is null!!");
         return chain;
     }
 
     public PrefsTool getPrefsTool() {
         PrefsTool prefs = this.prefsTool;
         if (prefs == null)
-            throw new RuntimeException(mInitTag + "[" + getTAG() + "][E]: PrefsTool is null!!");
+            throw new RuntimeException(mInitTag + "[" + getTag() + "][E]: PrefsTool is null!!");
         return prefs;
     }
 
-    public String getTAG() {
+    public String getTag() {
         if (mThisTag != null) return mThisTag;
         return spareTag;
     }

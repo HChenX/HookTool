@@ -28,56 +28,72 @@ import com.hchen.hooktool.utils.ToolData;
  * Android logs
  */
 public class AndroidLog {
-    private static final String rootTag = ToolData.mInitTag; /*根 TAG*/
-    private static final int level = ToolData.mInitLogLevel; /*日志等级*/
-
+    // ----------- logE ----------
     public static void logE(String tag, String log) {
-        if (level < 1) return;
-        Log.e(rootTag, "[" + tag + "]" + "[E]: " + log);
+        if (ToolData.mInitLogLevel < 1) return;
+        Log.e(ToolData.spareTag, "[" + tag + "]" + "[E]: " + log);
     }
 
     public static void logE(String tag, Throwable throwable) {
-        if (level < 1) return;
-        Log.e(rootTag, "[" + tag + "]" + "[E]: ", throwable);
+        if (ToolData.mInitLogLevel < 1) return;
+        Log.e(ToolData.spareTag, "[" + tag + "]" + "[E]: ", throwable);
     }
 
     public static void logE(String tag, String log, Throwable throwable) {
-        if (level < 1) return;
-        Log.e(rootTag, "[" + tag + "]" + "[E]: " + log, throwable);
+        if (ToolData.mInitLogLevel < 1) return;
+        Log.e(ToolData.spareTag, "[" + tag + "]" + "[E]: " + log, throwable);
     }
 
+    // -------- logW --------------
     public static void logW(String tag, String log) {
-        if (level < 2) return;
-        Log.w(rootTag, "[" + tag + "]" + "[W]: " + log);
+        if (ToolData.mInitLogLevel < 2) return;
+        Log.w(ToolData.spareTag, "[" + tag + "]" + "[W]: " + log);
+    }
+
+    public static void logW(String tag, Throwable throwable) {
+        if (ToolData.mInitLogLevel < 2) return;
+        Log.w(ToolData.spareTag, "[" + tag + "]" + "[W]: ", throwable);
     }
 
     public static void logW(String tag, String log, Throwable throwable) {
-        if (level < 2) return;
-        Log.w(rootTag, "[" + tag + "]" + "[W]: " + log, throwable);
+        if (ToolData.mInitLogLevel < 2) return;
+        Log.w(ToolData.spareTag, "[" + tag + "]" + "[W]: " + log, throwable);
     }
 
+    // ------------ logI -------------
     public static void logI(String tag, String pkg, String log) {
-        if (level < 3) return;
-        Log.i(rootTag, "[" + tag + "]" + "[" + pkg + "][I]: " + log);
+        if (ToolData.mInitLogLevel < 3) return;
+        Log.i(ToolData.spareTag, "[" + tag + "]" + "[" + pkg + "][I]: " + log);
     }
 
     public static void logI(String tag, String log) {
-        if (level < 3) return;
-        Log.i(rootTag, "[" + tag + "]" + "[I]: " + log);
+        if (ToolData.mInitLogLevel < 3) return;
+        Log.i(ToolData.spareTag, "[" + tag + "]" + "[I]: " + log);
+    }
+
+    public static void logI(String tag, Throwable throwable) {
+        if (ToolData.mInitLogLevel < 3) return;
+        Log.i(ToolData.spareTag, "[" + tag + "]" + "[I]: ", throwable);
     }
 
     public static void logI(String tag, String log, Throwable throwable) {
-        if (level < 3) return;
-        Log.i(rootTag, "[" + tag + "]" + "[I]: " + log, throwable);
+        if (ToolData.mInitLogLevel < 3) return;
+        Log.i(ToolData.spareTag, "[" + tag + "]" + "[I]: " + log, throwable);
     }
 
+    // ---------- logD ---------------
     public static void logD(String tag, String log) {
-        if (level < 4) return;
-        Log.d(rootTag, "[" + tag + "]" + "[E]: " + tag);
+        if (ToolData.mInitLogLevel < 4) return;
+        Log.d(ToolData.spareTag, "[" + tag + "]" + "[D]: " + log);
+    }
+
+    public static void logD(String tag, Throwable throwable) {
+        if (ToolData.mInitLogLevel < 4) return;
+        Log.d(ToolData.spareTag, "[" + tag + "]" + "[D]: ", throwable);
     }
 
     public static void logD(String tag, String log, Throwable throwable) {
-        if (level < 4) return;
-        Log.d(rootTag, "[" + tag + "]" + "[E]: " + tag, throwable);
+        if (ToolData.mInitLogLevel < 4) return;
+        Log.d(ToolData.spareTag, "[" + tag + "]" + "[D]: " + log, throwable);
     }
 }

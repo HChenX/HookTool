@@ -73,8 +73,7 @@ public class HCInit {
         lpparam = loadPackageParam;
         classLoader = loadPackageParam.classLoader;
         String packageName = lpparam.packageName;
-        logI(ToolData.spareTag, "init lpparam: [" + lpparam + "]," +
-                " classLoader: [" + classLoader + "], pkg name: " + packageName);
+        logI("init lpparam: [" + lpparam + "]," + " classLoader: [" + classLoader + "], pkg name: " + packageName);
     }
 
     /**

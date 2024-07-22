@@ -29,52 +29,76 @@ import de.robv.android.xposed.XposedBridge;
  * LSP framework log class
  */
 public class XposedLog {
-    private static final String rootTag = ToolData.mInitTag; /*根 TAG*/
-    private static final int level = ToolData.mInitLogLevel; /*日志等级*/
-
+    // -------- logE -------------
     public static void logE(String tag, String log) {
-        if (level < 1) return;
-        XposedBridge.log(rootTag + "[" + tag + "]" + "[E]: " + log);
+        if (ToolData.mInitLogLevel < 1) return;
+        XposedBridge.log(ToolData.mInitTag + "[" + tag + "]" + "[E]: " + log);
     }
 
     public static void logE(String tag, Throwable e) {
-        if (level < 1) return;
-        XposedBridge.log(rootTag + "[" + tag + "]" + "[E]: \n" + LogExpand.printStackTrace(e));
+        if (ToolData.mInitLogLevel < 1) return;
+        XposedBridge.log(ToolData.mInitTag + "[" + tag + "]" + "[E]: \n" + LogExpand.printStackTrace(e));
     }
 
     public static void logE(String tag, String log, Throwable e) {
-        if (level < 1) return;
-        XposedBridge.log(rootTag + "[" + tag + "]" + "[E]: " + log + " \n[Error Msg]: " +
+        if (ToolData.mInitLogLevel < 1) return;
+        XposedBridge.log(ToolData.mInitTag + "[" + tag + "]" + "[E]: " + log + " \n[Error Msg]: " +
                 LogExpand.printStackTrace(e));
     }
 
+    // ----------- logW --------------
     public static void logW(String tag, String log) {
-        if (level < 2) return;
-        XposedBridge.log(rootTag + "[" + tag + "]" + "[W]: " + log);
+        if (ToolData.mInitLogLevel < 2) return;
+        XposedBridge.log(ToolData.mInitTag + "[" + tag + "]" + "[W]: " + log);
     }
 
     public static void logW(String tag, Throwable e) {
-        if (level < 2) return;
-        XposedBridge.log(rootTag + "[" + tag + "]" + "[W]: \n" + LogExpand.printStackTrace(e));
+        if (ToolData.mInitLogLevel < 2) return;
+        XposedBridge.log(ToolData.mInitTag + "[" + tag + "]" + "[W]: \n" + LogExpand.printStackTrace(e));
+    }
+
+    public static void logW(String tag, String log, Throwable e) {
+        if (ToolData.mInitLogLevel < 2) return;
+        XposedBridge.log(ToolData.mInitTag + "[" + tag + "]" + "[W]: " + log + " \n[Warning Msg]: " +
+                LogExpand.printStackTrace(e));
+    }
+
+    // ----------- logI --------------
+    public static void logI(String log) {
+        if (ToolData.mInitLogLevel < 3) return;
+        XposedBridge.log(ToolData.mInitTag + "[I]: " + log);
     }
 
     public static void logI(String tag, String log) {
-        if (level < 3) return;
-        XposedBridge.log(rootTag + "[" + tag + "]" + "[I]: " + log);
+        if (ToolData.mInitLogLevel < 3) return;
+        XposedBridge.log(ToolData.mInitTag + "[" + tag + "]" + "[I]: " + log);
     }
 
     public static void logI(String tag, String pkg, String log) {
-        if (level < 3) return;
-        XposedBridge.log(rootTag + "[" + tag + "]" + "[" + pkg + "][I]: " + log);
+        if (ToolData.mInitLogLevel < 3) return;
+        XposedBridge.log(ToolData.mInitTag + "[" + tag + "]" + "[" + pkg + "][I]: " + log);
     }
 
+    public static void logI(String tag, String log, Throwable e) {
+        if (ToolData.mInitLogLevel < 3) return;
+        XposedBridge.log(ToolData.mInitTag + "[" + tag + "]" + "[I]: " + log + " \n[Info Msg]: " +
+                LogExpand.printStackTrace(e));
+    }
+
+    // ------------ logD --------------
     public static void logD(String tag, Throwable e) {
-        if (level < 4) return;
-        XposedBridge.log(rootTag + "[" + tag + "]" + "[D]: \n" + LogExpand.printStackTrace(e));
+        if (ToolData.mInitLogLevel < 4) return;
+        XposedBridge.log(ToolData.mInitTag + "[" + tag + "]" + "[D]: \n" + LogExpand.printStackTrace(e));
     }
 
     public static void logD(String tag, String log) {
-        if (level < 4) return;
-        XposedBridge.log(rootTag + "[" + tag + "]" + "[D]: " + log);
+        if (ToolData.mInitLogLevel < 4) return;
+        XposedBridge.log(ToolData.mInitTag + "[" + tag + "]" + "[D]: " + log);
+    }
+
+    public static void logD(String tag, String log, Throwable e) {
+        if (ToolData.mInitLogLevel < 4) return;
+        XposedBridge.log(ToolData.mInitTag + "[" + tag + "]" + "[D]: " + log + " \n[Debug Msg]: " +
+                LogExpand.printStackTrace(e));
     }
 }

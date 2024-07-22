@@ -63,7 +63,7 @@ public class ChainTool implements IChain {
     @Override
     public void chain(Class<?> clazz, ChainTool chain) {
         if (clazz == null) {
-            logW(data.getTAG(), "class is null! can't use chain!!");
+            logW(data.getTag(), "class is null! can't use chain!!");
             return;
         }
         chain.doFind(clazz);

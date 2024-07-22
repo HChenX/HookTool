@@ -72,7 +72,7 @@ public class ConvertHelper {
             } else if (o instanceof IAction) {
                 continue;
             } else {
-                logW(data.getTAG(), "unknown type: " + o);
+                logW(data.getTag(), "unknown type: " + o);
                 return new Class[]{};
             }
         }

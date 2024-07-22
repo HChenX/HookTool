@@ -29,9 +29,7 @@ import java.lang.reflect.Field;
  */
 public interface IDynamic {
 
-    <T, R> R callMethod(Object instance, String name, T ts);
-
-    <R> R callMethod(Object instance, String name);
+    <T> T callMethod(Object instance, String name, Object... objs);
 
     <T> T getField(Object instance, String name);
 

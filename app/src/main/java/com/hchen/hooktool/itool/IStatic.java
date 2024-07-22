@@ -19,6 +19,7 @@
 package com.hchen.hooktool.itool;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 
 /**
  * 静态方法类，
@@ -29,30 +30,20 @@ import java.lang.reflect.Field;
  */
 public interface IStatic {
     // --------- 实例类 ------------
-    <T, R> R newInstance(String clz, T objects);
+    <T> T newInstance(String clz, Object... objects);
 
-    <T, R> R newInstance(String clz, ClassLoader classLoader, T objects);
+    <T> T newInstance(String clz, ClassLoader classLoader, Object... objects);
 
-    <T, R> R newInstance(Class<?> clz, T objects);
-
-    <R> R newInstance(String clz);
-
-    <R> R newInstance(String clz, ClassLoader classLoader);
-
-    <R> R newInstance(Class<?> clz);
+    <T> T newInstance(Class<?> clz, Object... objects);
 
     // --------- 调用静态方法 ------------
-    <T, R> R callStaticMethod(String clz, String name, T objs);
+    <T> T callStaticMethod(String clz, String name, Object... objs);
 
-    <T, R> R callStaticMethod(String clz, ClassLoader classLoader, String name, T objs);
+    <T> T callStaticMethod(String clz, ClassLoader classLoader, String name, Object... objs);
 
-    <T, R> R callStaticMethod(Class<?> clz, String name, T objs);
+    <T> T callStaticMethod(Class<?> clz, String name, Object... objs);
 
-    <R> R callStaticMethod(String clz, String name);
-
-    <R> R callStaticMethod(String clz, ClassLoader classLoader, String name);
-
-    <R> R callStaticMethod(Class<?> clz, String name);
+    <T> T callStaticMethod(Method method, Object... objs);
 
     // --------- 获取静态字段 ------------
     <T> T getStaticField(String clz, String name);

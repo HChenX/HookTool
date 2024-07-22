@@ -45,14 +45,14 @@ public class HCHook {
      * Instantiate this class to get started
      */
     public HCHook() {
-        data = new ToolData();
+        data = new ToolData(new ToolRestrict());
         data.hcHook = this;
         data.actionTool = new ActionTool(data);
         data.coreTool = new CoreTool(data);
         data.chainTool = new ChainTool(data);
-        if (PrefsTool.getXposedPrefs() == null) {
+        if (PrefsTool.xposedPrefs() == null) {
             data.prefsTool = new PrefsTool(data);
-        } else data.prefsTool = PrefsTool.getXposedPrefs();
+        } else data.prefsTool = PrefsTool.xposedPrefs();
     }
 
     public HCHook setThisTag(String tag) {

@@ -133,23 +133,15 @@ public abstract class BaseHC implements IMember, IDynamic, IStatic, IChain {
     }
 
     final public IPrefs prefs(Context context) {
-        return prefs.prefs(context);
+        return PrefsTool.prefs(context);
     }
 
     final public IPrefs prefs(Context context, String prefsName) {
-        return prefs.prefs(context, prefsName);
+        return PrefsTool.prefs(context, prefsName);
     }
 
     final public void asyncPrefs(PrefsTool.IAsyncPrefs asyncPrefs) {
         prefs.asyncPrefs(asyncPrefs);
-    }
-
-    final public PrefsTool nativePrefs() {
-        return prefs.nativePrefs();
-    }
-
-    final public PrefsTool xposedPrefs() {
-        return prefs.xposedPrefs();
     }
 
     // ---------- 链式调用 ----------
@@ -443,13 +435,8 @@ public abstract class BaseHC implements IMember, IDynamic, IStatic, IChain {
 
     // ---------- 非静态 ---------------
     @Override
-    final public <T, C> C callMethod(Object instance, String name, T ts) {
-        return iDynamic.callMethod(instance, name, ts);
-    }
-
-    @Override
-    final public <C> C callMethod(Object instance, String name) {
-        return iDynamic.callMethod(instance, name);
+    final public <T> T callMethod(Object instance, String name, Object... objs) {
+        return iDynamic.callMethod(instance, name, objs);
     }
 
     @Override
@@ -489,63 +476,38 @@ public abstract class BaseHC implements IMember, IDynamic, IStatic, IChain {
 
     // --------- 静态 --------------
     @Override
-    final public <T, R> R newInstance(String clz, T objects) {
+    final public <T> T newInstance(String clz, Object... objects) {
         return iStatic.newInstance(clz, objects);
     }
 
     @Override
-    final public <T, R> R newInstance(String clz, ClassLoader classLoader, T objects) {
+    final public <T> T newInstance(String clz, ClassLoader classLoader, Object... objects) {
         return iStatic.newInstance(clz, classLoader, objects);
     }
 
     @Override
-    final public <T, C> C newInstance(Class<?> clz, T objects) {
+    final public <T> T newInstance(Class<?> clz, Object... objects) {
         return iStatic.newInstance(clz, objects);
     }
 
     @Override
-    final public <R> R newInstance(String clz) {
-        return iStatic.newInstance(clz);
-    }
-
-    @Override
-    final public <R> R newInstance(String clz, ClassLoader classLoader) {
-        return iStatic.newInstance(clz, classLoader);
-    }
-
-    @Override
-    final public <C> C newInstance(Class<?> clz) {
-        return iStatic.newInstance(clz);
-    }
-
-    @Override
-    final public <T, R> R callStaticMethod(String clz, String name, T objs) {
+    final public <T> T callStaticMethod(String clz, String name, Object... objs) {
         return iStatic.callStaticMethod(clz, name, objs);
     }
 
     @Override
-    final public <T, R> R callStaticMethod(String clz, ClassLoader classLoader, String name, T objs) {
+    final public <T> T callStaticMethod(String clz, ClassLoader classLoader, String name, Object... objs) {
         return iStatic.callStaticMethod(clz, classLoader, name, objs);
     }
 
     @Override
-    final public <T, C> C callStaticMethod(Class<?> clz, String name, T objs) {
+    final public <T> T callStaticMethod(Class<?> clz, String name, Object... objs) {
         return iStatic.callStaticMethod(clz, name, objs);
     }
 
     @Override
-    final public <R> R callStaticMethod(String clz, String name) {
-        return iStatic.callStaticMethod(clz, name);
-    }
-
-    @Override
-    final public <R> R callStaticMethod(String clz, ClassLoader classLoader, String name) {
-        return iStatic.callStaticMethod(clz, classLoader, name);
-    }
-
-    @Override
-    final public <C> C callStaticMethod(Class<?> clz, String name) {
-        return iStatic.callStaticMethod(clz, name);
+    final public <T> T callStaticMethod(Method method, Object... objs) {
+        return iStatic.callStaticMethod(method, objs);
     }
 
     @Override

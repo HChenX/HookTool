@@ -167,7 +167,7 @@ public class MainTest {
         Class<?> clazz = null;
         HCHook hcHook = new HCHook();
         CoreTool coreTool = new HCHook().coreTool();
-        coreTool.callMethod(object, "call", new Object[]{});
+        coreTool.callMethod(object, "call");
         coreTool.setField(object, "field", null);
         coreTool.getField(object, "field");
         coreTool.callStaticMethod(clazz, "callStatic");
@@ -221,8 +221,8 @@ public class MainTest extends BaseHC {
                 getField(o, "test");
 
                 // 静态需要 class
-                String result = callMethod("call", new Object[]{thisObject(), first()});
-                callStaticMethod("com.demo.Main", "callStatic", new Object[]{thisObject(), second()});
+                String result = callThisMethod("call", thisObject(), first());
+                callStaticMethod("com.demo.Main", "callStatic", thisObject(), second());
                 int i = getStaticField("com.demo.Main", "field");
                 setStaticField("com.demo.Main", "test", true);
 
@@ -238,9 +238,6 @@ public class MainTest extends BaseHC {
 }
 
 ```
-
-- ### **⚠️重要提醒**
-- 因为泛型和可变参数的冲突，所以在使用工具中接收泛型多个参数的方法时，需要 **`new Object[]{}`** 包裹！！！
 
 # ⚡安全调用
 
@@ -361,12 +358,18 @@ public class MainTest {
 public class MainTest extends BaseHC {
     @Override
     public void init() {
-        // 注意 xprefs 模式，即新模式下，寄生应用不能修改配置只能读取。
+        // xprefs 模式：
+        // 注意 xprefs 模式，寄生应用不能修改配置只能读取。
         String s = prefs().getString("test", "1");  // 即可读取
         s = prefs("myPrefs").getString("test", "1");  // 可指定读取文件名
+        
+        // sprefs模式：
         Context context = null;
-        // nativePrefs() 即可切换为原生模式，配置会保存到寄生应用的私有目录，读取也会从寄生应用私有目录读取。
-        nativePrefs().prefs(context).editor().putString("test", "1").commit();
+        // 如果继承了 BaseHC 可直接使用 prefs(Context)，配置会保存到寄生应用的私有目录，读取也会从寄生应用私有目录读取。
+        prefs(context).editor().putString("test", "1").commit();
+        // 如果没有继承 BaseHC 可以这样调用。
+        PrefsTool.prefs(context).editor().putString("test", "2").commit();
+        // 注意 sprefs模式 是和 xprefs 模式相互独立的，可共同存在。
 
         // 如果不方便获取 context 可用使用此方法，异步获取寄生应用 context，再设置。
         asyncPrefs(new PrefsTool.IAsyncPrefs() {
@@ -375,24 +378,22 @@ public class MainTest extends BaseHC {
                 prefs(context).editor().putString("test", "1").commit();
             }
         });
-
-        // 切换回新模式。
-        xposedPrefs();
-        // 注意 nativePrefs() 和 xposedPrefs() 作用域是寄生应用全局。
     }
 }
 
 // 模块内
-public class MainTest {
-    public void test() {
-        // 模块内使用必须传入上下文 context！
-        // 读取，写入同理。
-        Context context = null;
-        prefs(context).editor().putString("test", "1").commit();
-        prefs(context, "myPrefs").editor().putString("test", "1").commit();
+public static class MainActivity {
+    @Override
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
+        // ！！！如果使用 xprefs 模式，请在模块主界面调用 PrefsTool.prefs(context); 初始化一下，否则可能不可用！！！！！
+        PrefsTool.prefs(this); // 或
+        PrefsTool.prefs(this,/* 你自己的 prefs 名称 */);
+        
+        // 使用方法
+        prefs(this).editor().putString("test", "1").commit();
+        prefs(this, "myPrefs").editor().putString("test", "1").commit();
     }
 }
-
 ```
 
 ---

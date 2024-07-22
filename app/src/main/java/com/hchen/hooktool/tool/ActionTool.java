@@ -54,47 +54,47 @@ public class ActionTool {
         while (iterator.hasNext()) {
             ChainData data = iterator.next();
             if (data.iAction == null) {
-                logW(this.data.getTAG(), "member: " + data.members.toString() + "'s action is null! can't hook!");
+                logW(this.data.getTag(), "member: " + data.members.toString() + "'s action is null! can't hook!");
                 continue;
             }
             switch (data.stateEnum) {
                 case StateEnum.NONE -> {
                     try {
                         if (data.members.isEmpty()) {
-                            logW(this.data.getTAG(), "class: [" + data.clazz + "] name: [" + data.mName + "], " +
+                            logW(this.data.getTag(), "class: [" + data.clazz + "] name: [" + data.mName + "], " +
                                     "type: [" + data.mType + "]. members is empty, skip!");
                             data.stateEnum = StateEnum.FAILED;
                         } else if (data.members.stream().allMatch(Objects::isNull)) {
-                            logW(this.data.getTAG(), "class: [" + data.clazz + "] name: [" + data.mName + "], " +
+                            logW(this.data.getTag(), "class: [" + data.clazz + "] name: [" + data.mName + "], " +
                                     "type: [" + data.mType + "]. all match is null! can't hook anything!");
                             data.stateEnum = StateEnum.FAILED;
                         } else if (data.iAction == null) {
-                            logW(this.data.getTAG(), "class: [" + data.clazz + "] name: [" + data.mName + "], " +
+                            logW(this.data.getTag(), "class: [" + data.clazz + "] name: [" + data.mName + "], " +
                                     "type: [" + data.mType + "]. iaction is null! can't hook!!");
                             data.stateEnum = StateEnum.FAILED;
                         } else {
                             for (Member m : data.members) {
                                 if (m == null) {
-                                    logW(this.data.getTAG(), "class: [" + data.clazz + "] name: [" + data.mName + "], " +
+                                    logW(this.data.getTag(), "class: [" + data.clazz + "] name: [" + data.mName + "], " +
                                             "type: [" + data.mType + "]. member is null, will skip hook!");
                                     continue;
                                 }
                                 XposedBridge.hookMethod(m, createHook(data.iAction));
-                                logD(this.data.getTAG(), "success to hook: " + m);
+                                logD(this.data.getTag(), "success to hook: " + m);
                             }
                             data.stateEnum = StateEnum.HOOKED;
                         }
                     } catch (Throwable e) {
                         data.stateEnum = StateEnum.FAILED;
-                        logE(this.data.getTAG(), e);
+                        logE(this.data.getTag(), e);
                     }
                     iterator.set(data);
                 }
                 case StateEnum.HOOKED -> {
-                    logD(this.data.getTAG(), "this method is hooked: " + data.members);
+                    logD(this.data.getTag(), "this method is hooked: " + data.members);
                 }
                 case StateEnum.FAILED -> {
-                    logD(this.data.getTAG(), "this method is hook failed: " + data.members);
+                    logD(this.data.getTag(), "this method is hook failed: " + data.members);
                 }
             }
         }
@@ -102,7 +102,7 @@ public class ActionTool {
 
     protected Action createHook(IAction iAction) {
         iAction.putUtils(data);
-        return new Action(data.getTAG()) {
+        return new Action(data.getTag()) {
             @Override
             protected void before(MethodHookParam param) throws Throwable {
                 iAction.putMethodHookParam(param);
@@ -152,7 +152,7 @@ public class ActionTool {
             try {
                 before(param);
             } catch (Throwable e) {
-                logE(TAG + ":" + "before", e);
+                logE(TAG + ":before", e);
             }
         }
 
@@ -161,7 +161,7 @@ public class ActionTool {
             try {
                 after(param);
             } catch (Throwable e) {
-                logE(TAG + ":" + "after", e);
+                logE(TAG + ":after", e);
             }
         }
     }
