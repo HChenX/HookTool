@@ -219,6 +219,7 @@ public class MainTest extends BaseHC {
                 setThisField("demo", 1);
                 callThisMethod("method");
                 getThisField("test");
+                String result = callThisMethod("call", thisObject(), first());
                 // Non-static outside this class
                 Object o = null;
                 setField(o, "demo", 1);
@@ -226,7 +227,6 @@ public class MainTest extends BaseHC {
                 getField(o, "test");
 
                 // Static requires class
-                String result = callThisMethod("call", thisObject(), first());
                 callStaticMethod("com.demo.Main", "callStatic", thisObject(), second());
                 int i = getStaticField("com.demo.Main", "field");
                 setStaticField("com.demo.Main", "test", true);
