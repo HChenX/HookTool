@@ -26,6 +26,7 @@ import android.content.pm.ApplicationInfo;
 import com.hchen.hooktool.callback.IAction;
 import com.hchen.hooktool.itool.IChain;
 import com.hchen.hooktool.itool.IDynamic;
+import com.hchen.hooktool.itool.IFilter;
 import com.hchen.hooktool.itool.IMember;
 import com.hchen.hooktool.itool.IPrefs;
 import com.hchen.hooktool.itool.IStatic;
@@ -57,6 +58,9 @@ public abstract class BaseHC implements IMember, IDynamic, IStatic, IChain {
     public String packageName;
     public boolean isFirstApplication;
     public String processName;
+    // 在外处使用可以传递本参数。
+    public BaseHC baseHC;
+
     private PrefsTool prefs;
     private IDynamic iDynamic;
     private IMember iMember;
@@ -111,6 +115,7 @@ public abstract class BaseHC implements IMember, IDynamic, IStatic, IChain {
         packageName = lpparam.packageName;
         isFirstApplication = lpparam.isFirstApplication;
         processName = lpparam.processName;
+        baseHC = this;
         try {
             init();
         } catch (Throwable e) {
@@ -417,16 +422,41 @@ public abstract class BaseHC implements IMember, IDynamic, IStatic, IChain {
 
     // ----------- 过滤方法 -------------
     @Override
-    final public ArrayList<Method> filterMethod(Class<?> clazz, CoreTool.IFindMethod iFindMethod) {
-        return iMember.filterMethod(clazz, iFindMethod);
+    final public ArrayList<Method> filterMethod(String clazz, IFilter iFilter) {
+        return iMember.filterMethod(clazz, iFilter);
     }
 
     @Override
-    final public ArrayList<Constructor<?>> filterMethod(Class<?> clazz, CoreTool.IFindConstructor iFindConstructor) {
-        return iMember.filterMethod(clazz, iFindConstructor);
+    final public ArrayList<Method> filterMethod(String clazz, ClassLoader classLoader, IFilter iFilter) {
+        return iMember.filterMethod(clazz, classLoader, iFilter);
+    }
+
+    @Override
+    final public ArrayList<Method> filterMethod(Class<?> clazz, IFilter iFilter) {
+        return iMember.filterMethod(clazz, iFilter);
+    }
+
+    @Override
+    final public ArrayList<Constructor<?>> filterConstructor(String clazz, IFilter iFilter) {
+        return iMember.filterConstructor(clazz, iFilter);
+    }
+
+    @Override
+    final public ArrayList<Constructor<?>> filterConstructor(String clazz, ClassLoader classLoader, IFilter iFilter) {
+        return iMember.filterConstructor(clazz, classLoader, iFilter);
+    }
+
+    @Override
+    final public ArrayList<Constructor<?>> filterConstructor(Class<?> clazz, IFilter iFilter) {
+        return iMember.filterConstructor(clazz, iFilter);
     }
 
     // ---------- 打印堆栈 --------------
+    @Override
+    final public String getStackTrace(boolean autoLog) {
+        return iMember.getStackTrace(autoLog);
+    }
+
     @Override
     final public String getStackTrace() {
         return iMember.getStackTrace();

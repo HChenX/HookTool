@@ -18,8 +18,8 @@
  */
 package com.hchen.hooktool.utils;
 
+import static com.hchen.hooktool.log.AndroidLog.logE;
 import static com.hchen.hooktool.log.AndroidLog.logI;
-import static com.hchen.hooktool.log.XposedLog.logE;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -35,7 +35,7 @@ import de.robv.android.xposed.XC_MethodHook;
  * Logging enhancements
  */
 public class LogExpand {
-    private final XC_MethodHook.MethodHookParam param;
+    private XC_MethodHook.MethodHookParam param;
     private final String TAG;
     private String methodName;
     private String className;
@@ -63,6 +63,10 @@ public class LogExpand {
         } else {
             logE(TAG, "unknown type! member: " + member);
         }
+    }
+
+    public void update(XC_MethodHook.MethodHookParam param) {
+        this.param = param;
     }
 
     public void detailedLogs() {

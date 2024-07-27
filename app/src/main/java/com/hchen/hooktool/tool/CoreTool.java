@@ -20,13 +20,14 @@ package com.hchen.hooktool.tool;
 
 import static com.hchen.hooktool.log.XposedLog.logD;
 import static com.hchen.hooktool.log.XposedLog.logE;
+import static com.hchen.hooktool.log.XposedLog.logI;
 import static com.hchen.hooktool.log.XposedLog.logW;
 
 import com.hchen.hooktool.callback.IAction;
 import com.hchen.hooktool.itool.IDynamic;
+import com.hchen.hooktool.itool.IFilter;
 import com.hchen.hooktool.itool.IMember;
 import com.hchen.hooktool.itool.IStatic;
-import com.hchen.hooktool.utils.ConvertHelper;
 import com.hchen.hooktool.utils.ToolData;
 
 import java.lang.reflect.Constructor;
@@ -49,10 +50,11 @@ import de.robv.android.xposed.XposedHelpers;
  * <p>
  * Core tool
  */
-public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMember {
+public class CoreTool implements IDynamic, IStatic, IMember {
+    private final ToolData data;
 
     public CoreTool(ToolData toolData) {
-        super(toolData);
+        data = toolData;
     }
 
     //------------ 检查指定类是否存在 --------------
@@ -103,7 +105,7 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
         try {
             Class<?> cl = XposedHelpers.findClassIfExists(clazz, classLoader);
             if (cl == null) return false;
-            Class<?>[] classes = arrayToClass(classLoader, objs);
+            Class<?>[] classes = data.getConvertHelper().arrayToClass(classLoader, objs);
             cl.getDeclaredMethod(name, classes);
         } catch (NoSuchMethodException ignored) {
             return false;
@@ -137,7 +139,7 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
     }
 
     public Method findMethod(String clazz, ClassLoader classLoader, String name, Object... objects) {
-        return findMethod(findClass(clazz, classLoader), name, objects);
+        return findMethod(findClass(clazz, classLoader), name, (Object) data.getConvertHelper().arrayToClass(classLoader, objects));
     }
 
     public Method findMethod(Class<?> clazz, String name, Object... objects) {
@@ -146,7 +148,7 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
                 logW(data.getTag(), "class is null! can't find method: " + name);
                 return null;
             }
-            return clazz.getDeclaredMethod(name, arrayToClass(objects));
+            return clazz.getDeclaredMethod(name, data.getConvertHelper().arrayToClass(objects));
         } catch (NoSuchMethodException e) {
             logE(data.getTag(), e);
         }
@@ -179,7 +181,7 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
     }
 
     public Constructor<?> findConstructor(String clazz, ClassLoader classLoader, Object... objects) {
-        return findConstructor(findClass(clazz, classLoader), objects);
+        return findConstructor(findClass(clazz, classLoader), (Object) data.getConvertHelper().arrayToClass(classLoader, objects));
     }
 
     public Constructor<?> findConstructor(Class<?> clazz, Object... objects) {
@@ -188,7 +190,7 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
                 logW(data.getTag(), "class is null! can't find constructor!");
                 return null;
             }
-            return clazz.getDeclaredConstructor(arrayToClass(objects));
+            return clazz.getDeclaredConstructor(data.getConvertHelper().arrayToClass(objects));
         } catch (NoSuchMethodException e) {
             logE(data.getTag(), e);
         }
@@ -255,7 +257,7 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
     }
 
     public XC_MethodHook.Unhook hook(String clazz, ClassLoader classLoader, String method, Object... params) {
-        return hook(findClass(clazz, classLoader), method, params);
+        return hook(findClass(clazz, classLoader), method, data.getConvertHelper().toClassAsIAction(classLoader, params));
     }
 
     public XC_MethodHook.Unhook hook(Class<?> clazz, String method, Object... params) {
@@ -284,7 +286,7 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
     }
 
     public XC_MethodHook.Unhook hook(String clazz, ClassLoader classLoader, Object... params) {
-        return hook(findClass(clazz, classLoader), params);
+        return hook(findClass(clazz, classLoader), data.getConvertHelper().toClassAsIAction(classLoader, params));
     }
 
     public XC_MethodHook.Unhook hook(Class<?> clazz, Object... params) {
@@ -389,11 +391,19 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
     }
 
     // --------- 过滤方法 -----------
-    public ArrayList<Method> filterMethod(Class<?> clazz, IFindMethod iFindMethod) {
+    public ArrayList<Method> filterMethod(String clazz, IFilter iFilter) {
+        return filterMethod(findClass(clazz), iFilter);
+    }
+    
+    public ArrayList<Method> filterMethod(String clazz, ClassLoader classLoader, IFilter iFilter) {
+        return filterMethod(findClass(clazz, classLoader), iFilter);
+    }
+
+    public ArrayList<Method> filterMethod(Class<?> clazz, IFilter iFilter) {
         ArrayList<Method> methods = new ArrayList<>();
         for (Method m : clazz.getDeclaredMethods()) {
             try {
-                if (iFindMethod.test(m)) {
+                if (iFilter.test(m)) {
                     methods.add(m);
                 }
             } catch (Throwable e) {
@@ -402,12 +412,20 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
         }
         return methods;
     }
+    
+    public ArrayList<Constructor<?>> filterConstructor(String clazz, IFilter iFilter) {
+        return filterConstructor(findClass(clazz), iFilter);
+    }
+    
+    public ArrayList<Constructor<?>> filterConstructor(String clazz, ClassLoader classLoader, IFilter iFilter) {
+        return filterConstructor(findClass(clazz, classLoader), iFilter);
+    }
 
-    public ArrayList<Constructor<?>> filterMethod(Class<?> clazz, IFindConstructor iFindConstructor) {
+    public ArrayList<Constructor<?>> filterConstructor(Class<?> clazz, IFilter iFilter) {
         ArrayList<Constructor<?>> constructors = new ArrayList<>();
         for (Constructor<?> c : clazz.getDeclaredConstructors()) {
             try {
-                if (iFindConstructor.test(c)) {
+                if (iFilter.test(c)) {
                     constructors.add(c);
                 }
             } catch (Throwable e) {
@@ -416,16 +434,17 @@ public class CoreTool extends ConvertHelper implements IDynamic, IStatic, IMembe
         }
         return constructors;
     }
-
-    public interface IFindMethod {
-        boolean test(Method method);
-    }
-
-    public interface IFindConstructor {
-        boolean test(Constructor<?> constructor);
-    }
-
+    
     // --------- 打印堆栈 ----------
+    public String getStackTrace(boolean autoLog) {
+        String task = getStackTrace();
+        if (autoLog) {
+            logI(data.getTag(), task);
+            return "";
+        }
+        return task;
+    }
+
     public String getStackTrace() {
         StringBuilder stringBuilder = new StringBuilder();
         StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();

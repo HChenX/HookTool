@@ -22,6 +22,7 @@ import com.hchen.hooktool.tool.ActionTool;
 import com.hchen.hooktool.tool.ChainTool;
 import com.hchen.hooktool.tool.CoreTool;
 import com.hchen.hooktool.tool.PrefsTool;
+import com.hchen.hooktool.utils.ConvertHelper;
 import com.hchen.hooktool.utils.ToolData;
 
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
@@ -50,6 +51,7 @@ public class HCHook {
         data.actionTool = new ActionTool(data);
         data.coreTool = new CoreTool(data);
         data.chainTool = new ChainTool(data);
+        data.convertHelper = new ConvertHelper(data);
         if (PrefsTool.xposedPrefs() == null) {
             data.prefsTool = new PrefsTool(data);
         } else data.prefsTool = PrefsTool.xposedPrefs();

@@ -52,10 +52,11 @@ public class ToolData {
     public CoreTool coreTool = null;
     public ChainTool chainTool = null;
     public PrefsTool prefsTool = null;
+    public ConvertHelper convertHelper = null;
 
     private ToolData() {
     }
-    
+
     public ToolData(ToolRestrict helper) {
     }
 
@@ -100,6 +101,13 @@ public class ToolData {
         if (prefs == null)
             throw new RuntimeException(mInitTag + "[" + getTag() + "][E]: PrefsTool is null!!");
         return prefs;
+    }
+
+    public ConvertHelper getConvertHelper() {
+        ConvertHelper convertHelper = this.convertHelper;
+        if (convertHelper == null)
+            throw new RuntimeException(mInitTag + "[" + getTag() + "][E]: ConvertHelper is null!!");
+        return convertHelper;
     }
 
     public String getTag() {

@@ -41,6 +41,7 @@ import java.util.ArrayList;
 public class ChainTool implements IChain {
     private final ToolData data;
     private final ChainHook chainHook;
+    private ClassLoader classLoader = null;
     protected ChainData chainData;
     protected final ArrayList<ChainData> chainDataList = new ArrayList<>();
     private final ArrayList<ChainData> cacheData = new ArrayList<>();
@@ -52,11 +53,13 @@ public class ChainTool implements IChain {
 
     @Override
     public void chain(String clazz, ChainTool chain) {
+        classLoader = null;
         chain(data.getCoreTool().findClass(clazz), chain);
     }
 
     @Override
     public void chain(String clazz, ClassLoader classLoader, ChainTool chain) {
+        this.classLoader = classLoader;
         chain(data.getCoreTool().findClass(clazz, classLoader), chain);
     }
 
@@ -114,10 +117,18 @@ public class ChainTool implements IChain {
         for (ChainData data : cacheData) {
             switch (data.mType) {
                 case TYPE_METHOD -> {
-                    mMembers.add(this.data.getCoreTool().findMethod(clazz, data.mName, data.mParams));
+                    if (classLoader == null)
+                        mMembers.add(this.data.getCoreTool().findMethod(clazz, data.mName, data.mParams));
+                    else
+                        mMembers.add(this.data.getCoreTool().findMethod(clazz, data.mName,
+                                (Object) this.data.getConvertHelper().arrayToClass(classLoader, data.mParams)));
                 }
                 case TYPE_CONSTRUCTOR -> {
-                    mMembers.add(this.data.getCoreTool().findConstructor(clazz, data.mParams));
+                    if (classLoader == null)
+                        mMembers.add(this.data.getCoreTool().findConstructor(clazz, data.mParams));
+                    else
+                        mMembers.add(this.data.getCoreTool().findConstructor(clazz,
+                                (Object) this.data.getConvertHelper().arrayToClass(classLoader, data.mParams)));
                 }
                 case TYPE_ANY_METHOD -> {
                     mMembers.addAll(this.data.getCoreTool().findAnyMethod(clazz, data.mName));

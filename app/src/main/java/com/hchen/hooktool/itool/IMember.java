@@ -19,7 +19,6 @@
 package com.hchen.hooktool.itool;
 
 import com.hchen.hooktool.callback.IAction;
-import com.hchen.hooktool.tool.CoreTool;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -139,11 +138,21 @@ public interface IMember {
     boolean unHookAll(ArrayList<XC_MethodHook.Unhook> unhooks);
 
     // --------- 过滤方法 -----------
-    ArrayList<Method> filterMethod(Class<?> clazz, CoreTool.IFindMethod iFindMethod);
+    ArrayList<Method> filterMethod(String clazz, IFilter iFilter);
 
-    ArrayList<Constructor<?>> filterMethod(Class<?> clazz, CoreTool.IFindConstructor iFindConstructor);
+    ArrayList<Method> filterMethod(String clazz, ClassLoader classLoader,IFilter iFilter);
+
+    ArrayList<Method> filterMethod(Class<?> clazz, IFilter iFilter);
+
+    ArrayList<Constructor<?>> filterConstructor(String clazz, IFilter iFilter);
+
+    ArrayList<Constructor<?>> filterConstructor(String clazz, ClassLoader classLoader, IFilter iFilter);
+
+    ArrayList<Constructor<?>> filterConstructor(Class<?> clazz, IFilter iFilter);
 
     // ------- 打印堆栈 --------------
+    String getStackTrace(boolean autoLog);
+
     String getStackTrace();
 
     // --------- 耗时检查 ------------

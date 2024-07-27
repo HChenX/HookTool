@@ -130,6 +130,7 @@ public class ActAchieve {
         if (logExpand == null) {
             logExpand = new LogExpand(methodHookParam, mTag);
         }
+        logExpand.update(methodHookParam);
         logExpand.detailedLogs();
     }
 
