@@ -58,12 +58,12 @@ dependencies {
 
 @Override
 public void initZygote(IXposedHookZygoteInit.StartupParam startupParam) {
-    HCInit.initStartupParam(startupParam); // Initialization
+  HCInit.initBasicData(/* your module's package name */, /* tag */, /* log level */); // Mandatory. tip: recommended to be placed first
+  HCInit.initStartupParam(startupParam); // Initialization
 }
 
 @Override
 public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) {
-    HCInit.initBasicData(/* your module's package name */, /* tag */, /* log level */); // Mandatory. tip: recommended to be placed first
     HCInit.initLoadPackageParam(lpparam); // Mandatory
 }
 ```

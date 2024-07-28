@@ -58,12 +58,12 @@ dependencies {
 
 @Override
 public void initZygote(IXposedHookZygoteInit.StartupParam startupParam) {
+    HCInit.initBasicData(/* 你模块的包名 */, /* tag */, /* 日志等级 */); // 必须，tip：建议放在第一位
     HCInit.initStartupParam(startupParam); // 初始化
 }
 
 @Override
 public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) {
-    HCInit.initBasicData(/* 你模块的包名 */, /* tag */, /* 日志等级 */); // 必须，tip：建议放在第一位
     HCInit.initLoadPackageParam(lpparam); // 必须
 }
 ```
