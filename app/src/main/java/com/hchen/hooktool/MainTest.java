@@ -72,12 +72,7 @@ public class MainTest extends BaseHC {
                 })
 
                 .constructor()
-                .hook(new IAction() {
-                    @Override
-                    public void after() throws Throwable {
-                        super.after();
-                    }
-                })
+                .returnResult(false)
         );
 
         hook(findMethod("com.hchen.demo", "test"), new IAction() {

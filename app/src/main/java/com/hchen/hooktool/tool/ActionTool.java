@@ -48,53 +48,53 @@ public class ActionTool {
     }
 
     protected void doAction(ChainTool chain) {
-        ArrayList<ChainData> chainData = chain.chainDataList;
+        ArrayList<ChainData> chainDataList = chain.chainDataList;
 
-        ListIterator<ChainData> iterator = chainData.listIterator();
+        ListIterator<ChainData> iterator = chainDataList.listIterator();
         while (iterator.hasNext()) {
-            ChainData data = iterator.next();
-            if (data.iAction == null) {
-                logW(this.data.getTag(), "member: " + data.members.toString() + "'s action is null! can't hook!");
+            ChainData chainData = iterator.next();
+            if (chainData.iAction == null) {
+                logW(data.tag(), "member: " + chainData.members.toString() + "'s action is null! can't hook!");
                 continue;
             }
-            switch (data.stateEnum) {
+            switch (chainData.stateEnum) {
                 case StateEnum.NONE -> {
                     try {
-                        if (data.members.isEmpty()) {
-                            logW(this.data.getTag(), "class: [" + data.clazz + "] name: [" + data.mName + "], " +
-                                    "type: [" + data.mType + "]. members is empty, skip!");
-                            data.stateEnum = StateEnum.FAILED;
-                        } else if (data.members.stream().allMatch(Objects::isNull)) {
-                            logW(this.data.getTag(), "class: [" + data.clazz + "] name: [" + data.mName + "], " +
-                                    "type: [" + data.mType + "]. all match is null! can't hook anything!");
-                            data.stateEnum = StateEnum.FAILED;
-                        } else if (data.iAction == null) {
-                            logW(this.data.getTag(), "class: [" + data.clazz + "] name: [" + data.mName + "], " +
-                                    "type: [" + data.mType + "]. iaction is null! can't hook!!");
-                            data.stateEnum = StateEnum.FAILED;
+                        if (chainData.members.isEmpty()) {
+                            logW(data.tag(), "class: [" + chainData.clazz + "] name: [" + chainData.mName + "], " +
+                                    "type: [" + chainData.mType + "]. members is empty, skip!");
+                            chainData.stateEnum = StateEnum.FAILED;
+                        } else if (chainData.members.stream().allMatch(Objects::isNull)) {
+                            logW(data.tag(), "class: [" + chainData.clazz + "] name: [" + chainData.mName + "], " +
+                                    "type: [" + chainData.mType + "]. all match is null! can't hook anything!");
+                            chainData.stateEnum = StateEnum.FAILED;
+                        } else if (chainData.iAction == null) {
+                            logW(data.tag(), "class: [" + chainData.clazz + "] name: [" + chainData.mName + "], " +
+                                    "type: [" + chainData.mType + "]. iaction is null! can't hook!!");
+                            chainData.stateEnum = StateEnum.FAILED;
                         } else {
-                            for (Member m : data.members) {
+                            for (Member m : chainData.members) {
                                 if (m == null) {
-                                    logW(this.data.getTag(), "class: [" + data.clazz + "] name: [" + data.mName + "], " +
-                                            "type: [" + data.mType + "]. member is null, will skip hook!");
+                                    logW(data.tag(), "class: [" + chainData.clazz + "] name: [" + chainData.mName + "], " +
+                                            "type: [" + chainData.mType + "]. member is null, will skip hook!");
                                     continue;
                                 }
-                                XposedBridge.hookMethod(m, createHook(data.iAction));
-                                logD(this.data.getTag(), "success to hook: " + m);
+                                XposedBridge.hookMethod(m, createHook(chainData.iAction));
+                                logD(data.tag(), "success to hook: " + m);
                             }
-                            data.stateEnum = StateEnum.HOOKED;
+                            chainData.stateEnum = StateEnum.HOOKED;
                         }
                     } catch (Throwable e) {
-                        data.stateEnum = StateEnum.FAILED;
-                        logE(this.data.getTag(), e);
+                        chainData.stateEnum = StateEnum.FAILED;
+                        logE(data.tag(), e);
                     }
-                    iterator.set(data);
+                    iterator.set(chainData);
                 }
                 case StateEnum.HOOKED -> {
-                    logD(this.data.getTag(), "this method is hooked: " + data.members);
+                    logD(data.tag(), "this method is hooked: " + chainData.members);
                 }
                 case StateEnum.FAILED -> {
-                    logD(this.data.getTag(), "this method is hook failed: " + data.members);
+                    logD(data.tag(), "this method is hook failed: " + chainData.members);
                 }
             }
         }
@@ -102,7 +102,7 @@ public class ActionTool {
 
     protected Action createHook(IAction iAction) {
         iAction.putUtils(data);
-        return new Action(data.getTag()) {
+        return new Action(data.tag()) {
             @Override
             protected void before(MethodHookParam param) throws Throwable {
                 iAction.putMethodHookParam(param);

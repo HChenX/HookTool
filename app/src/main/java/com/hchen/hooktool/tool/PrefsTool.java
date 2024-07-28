@@ -142,7 +142,7 @@ public class PrefsTool {
             public void findContext(Context context) {
                 if (context == null) {
                     throw new RuntimeException(ToolData.mInitTag +
-                            "[" + data.getTag() + "][E]: async prefs context is null!!");
+                            "[" + data.tag() + "][E]: async prefs context is null!!");
                 }
                 asyncPrefs.async(context);
             }
@@ -157,7 +157,7 @@ public class PrefsTool {
         if (xPrefs.get(prefsName) == null) {
             if (ToolData.modulePackageName == null) {
                 throw new RuntimeException(ToolData.mInitTag +
-                        "[" + data.getTag() + "][E]: module package name is null!!");
+                        "[" + data.tag() + "][E]: module package name is null!!");
             }
             XSharedPreferences x = new XSharedPreferences(ToolData.modulePackageName, prefsName);
             x.makeWorldReadable();
@@ -253,7 +253,7 @@ public class PrefsTool {
                     return getLong(key, l);
                 }
             } catch (Throwable e) {
-                logE(data.getTag(), "unknown error!", e);
+                logE(data.tag(), "unknown error!", e);
             }
             return null;
         }
@@ -278,7 +278,7 @@ public class PrefsTool {
         @Override
         @Nullable
         public Editor editor() {
-            logW(data.getTag(), "xposed can't edit prefs!");
+            logW(data.tag(), "xposed can't edit prefs!");
             return null;
         }
 

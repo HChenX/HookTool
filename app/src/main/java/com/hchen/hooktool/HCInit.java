@@ -43,8 +43,8 @@ public class HCInit {
     public static final int LOG_W = 2;
     public static final int LOG_I = 3;
     public static final int LOG_D = 4;
-    // ------- END -------------
-    private static XC_LoadPackage.LoadPackageParam lpparam = null;
+    // ------- END --------------
+    
     private static ClassLoader classLoader = null;
     private static boolean canUseSystemClassLoader = false;
 
@@ -60,7 +60,6 @@ public class HCInit {
     }
 
     // ---------- 初始化工具 ----------
-
     /**
      * 务必设置！
      * <p>
@@ -70,10 +69,11 @@ public class HCInit {
         if (loadPackageParam == null) {
             throw new RuntimeException(ToolData.mInitTag + "[E]: load package param is null!!");
         }
-        lpparam = loadPackageParam;
+        ToolData.lpparam = loadPackageParam;
         classLoader = loadPackageParam.classLoader;
-        String packageName = lpparam.packageName;
-        logI("init lpparam: [" + lpparam + "]," + " classLoader: [" + classLoader + "], pkg name: " + packageName);
+        String packageName = loadPackageParam.packageName;
+        putClassLoader();
+        logI("init lpparam: [" + loadPackageParam + "]," + " classLoader: [" + classLoader + "], pkg name: " + packageName);
     }
 
     /**
@@ -133,15 +133,14 @@ public class HCInit {
         ToolData.spareTag = tag;
     }
 
-    protected static XC_LoadPackage.LoadPackageParam getLoadPackageParam() {
-        if (lpparam != null) return lpparam;
-        throw new RuntimeException(ToolData.mInitTag + "[E]: failed to obtain LoadPackageParam, it is null!");
-    }
-
-    protected static ClassLoader getClassLoader() {
-        if (classLoader != null) return classLoader;
+    private static void putClassLoader() {
+        if (classLoader != null) {
+            ToolData.classLoader = classLoader;
+            return;
+        }
         if (canUseSystemClassLoader) {
-            return ClassLoader.getSystemClassLoader();
+            ToolData.classLoader = ClassLoader.getSystemClassLoader();
+            return;
         }
         throw new RuntimeException(ToolData.mInitTag + "[E]: failed to obtain ClassLoader! it is null!");
     }

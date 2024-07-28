@@ -52,15 +52,21 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
  */
 public abstract class BaseHC implements IMember, IDynamic, IStatic, IChain {
     public String TAG = getClass().getSimpleName();
+
+    // onZygote 阶段以下均为 null 或 false
     public XC_LoadPackage.LoadPackageParam lpparam;
     public ClassLoader classLoader;
     public ApplicationInfo appInfo;
     public String packageName;
     public boolean isFirstApplication;
     public String processName;
+    // END
+
     // 在外处使用可以传递本参数。
     public BaseHC baseHC;
 
+    private boolean isZygote = false;
+    private HCHook hcHook;
     private PrefsTool prefs;
     private IDynamic iDynamic;
     private IMember iMember;
@@ -102,30 +108,45 @@ public abstract class BaseHC implements IMember, IDynamic, IStatic, IChain {
     }
 
     final public void onCreate() {
-        HCHook hcHook = new HCHook();
-        hcHook.setThisTag(TAG);
-        lpparam = hcHook.lpparam();
-        iDynamic = hcHook.core();
-        iStatic = hcHook.core();
-        iMember = hcHook.core();
-        iChain = hcHook.chain();
-        prefs = hcHook.prefs();
-        classLoader = lpparam.classLoader;
-        appInfo = lpparam.appInfo;
-        packageName = lpparam.packageName;
-        isFirstApplication = lpparam.isFirstApplication;
-        processName = lpparam.processName;
-        baseHC = this;
+        isZygote = false;
+        initTool();
         try {
             init();
         } catch (Throwable e) {
             logE(TAG, e);
         }
+    }
+
+    final public void onZygote() {
+        isZygote = true;
+        initTool();
         try {
             initZygote(ToolData.startupParam);
         } catch (Throwable e) {
             logE(TAG, e);
         }
+    }
+
+    private void initTool() {
+        if (hcHook == null) {
+            hcHook = new HCHook();
+            hcHook.setThisTag(TAG);
+            iDynamic = hcHook.core();
+            iStatic = hcHook.core();
+            iMember = hcHook.core();
+            iChain = hcHook.chain();
+            prefs = hcHook.prefs();
+        }
+        hcHook.setStateChange(isZygote);
+        if (!isZygote) {
+            lpparam = hcHook.lpparam();
+            classLoader = lpparam.classLoader;
+            appInfo = lpparam.appInfo;
+            packageName = lpparam.packageName;
+            isFirstApplication = lpparam.isFirstApplication;
+            processName = lpparam.processName;
+        }
+        baseHC = this;
     }
 
     // ---------- prefs -----------

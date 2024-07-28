@@ -41,9 +41,9 @@ dependencyResolutionManagement {
 ```groovy
 dependencies {
     // jitpack
-    implementation 'com.github.HChenX:HookTool:v.0.9.9.7'
+    implementation 'com.github.HChenX:HookTool:v.0.9.9.8'
     // maven
-    implementation 'io.github.hchenx:hooktool:0.9.9.7'
+    implementation 'io.github.hchenx:hooktool:0.9.9.8'
     // Choose either one
 }
 ```
@@ -112,9 +112,15 @@ public class MainTest extends BaseHC {
 }
 
 // Execution class
-public class RunHook {
-    public void run() {
+public class RunHook implements IXposedHookLoadPackage, IXposedHookZygoteInit {
+    @Override
+    public void handleLoadPackage(XC_LoadPackage.LoadPackageParam loadPackageParam) {
         new MainTest().onCreate(); // Execute the Hook.
+    }
+
+    @Override
+    public void initZygote(StartupParam startupParam) {
+        new MainTest().onZygote(); // initZygote Hook.
     }
 }
 
@@ -152,12 +158,7 @@ public class MainTest {
                 })
 
                 .constructor()
-                .hook(new IAction() {
-                    @Override
-                    public void after() throws Throwable {
-                        super.after();
-                    }
-                })
+                .returnResult(false)
         );
     }
 }

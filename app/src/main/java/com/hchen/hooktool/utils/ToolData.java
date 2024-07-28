@@ -18,6 +18,8 @@
  */
 package com.hchen.hooktool.utils;
 
+import static com.hchen.hooktool.log.XposedLog.logW;
+
 import com.hchen.hooktool.HCHook;
 import com.hchen.hooktool.HCInit;
 import com.hchen.hooktool.ToolRestrict;
@@ -42,11 +44,12 @@ public class ToolData {
     public static String modulePackageName = null;
     public static boolean autoObserveCall = false;
     public static boolean autoReload = true;
-    public static IXposedHookZygoteInit.StartupParam startupParam = null;
-    // HCHook
     public static XC_LoadPackage.LoadPackageParam lpparam = null;
     public static ClassLoader classLoader = null;
+    public static IXposedHookZygoteInit.StartupParam startupParam = null;
+    // HCHook
     public String mThisTag = null;
+    public boolean isZygote = false;
     public HCHook hcHook = null;
     public ActionTool actionTool = null;
     public CoreTool coreTool = null;
@@ -60,58 +63,62 @@ public class ToolData {
     public ToolData(ToolRestrict helper) {
     }
 
-    public ClassLoader getClassLoader() {
+    public ClassLoader classLoader() {
         return classLoader;
     }
-
-    public XC_LoadPackage.LoadPackageParam getLpparam() {
-        return lpparam;
-    }
-
-    public HCHook getHCHook() {
+    
+    public HCHook hcHook() {
         HCHook hcHook = this.hcHook;
         if (hcHook == null)
-            throw new RuntimeException(mInitTag + "[" + getTag() + "][E]: HCHook is null!!");
+            throw new RuntimeException(mInitTag + "[" + tag() + "][E]: HCHook is null!!");
         return hcHook;
     }
 
-    public ActionTool getActionTool() {
+    public ActionTool actionTool() {
         ActionTool actionTool = this.actionTool;
         if (actionTool == null)
-            throw new RuntimeException(mInitTag + "[" + getTag() + "][E]: ActionTool is null!!");
+            throw new RuntimeException(mInitTag + "[" + tag() + "][E]: ActionTool is null!!");
         return actionTool;
     }
 
-    public CoreTool getCoreTool() {
+    public CoreTool coreTool() {
         CoreTool coreTool = this.coreTool;
         if (coreTool == null)
-            throw new RuntimeException(mInitTag + "[" + getTag() + "][E]: CoreTool is null!!");
+            throw new RuntimeException(mInitTag + "[" + tag() + "][E]: CoreTool is null!!");
         return coreTool;
     }
 
-    public ChainTool getChainTool() {
+    public ChainTool chainTool() {
         ChainTool chain = this.chainTool;
         if (chain == null)
-            throw new RuntimeException(mInitTag + "[" + getTag() + "][E]: CreateChain is null!!");
+            throw new RuntimeException(mInitTag + "[" + tag() + "][E]: CreateChain is null!!");
         return chain;
     }
 
-    public PrefsTool getPrefsTool() {
+    public PrefsTool prefsTool() {
         PrefsTool prefs = this.prefsTool;
         if (prefs == null)
-            throw new RuntimeException(mInitTag + "[" + getTag() + "][E]: PrefsTool is null!!");
+            throw new RuntimeException(mInitTag + "[" + tag() + "][E]: PrefsTool is null!!");
         return prefs;
     }
 
-    public ConvertHelper getConvertHelper() {
+    public ConvertHelper convertHelper() {
         ConvertHelper convertHelper = this.convertHelper;
         if (convertHelper == null)
-            throw new RuntimeException(mInitTag + "[" + getTag() + "][E]: ConvertHelper is null!!");
+            throw new RuntimeException(mInitTag + "[" + tag() + "][E]: ConvertHelper is null!!");
         return convertHelper;
     }
 
-    public String getTag() {
+    public String tag() {
         if (mThisTag != null) return mThisTag;
         return spareTag;
+    }
+
+    public boolean isZygoteState() {
+        if (isZygote) {
+            logW(tag(), "in zygote state, please set classloader!");
+            return true;
+        }
+        return false;
     }
 }

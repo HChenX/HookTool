@@ -35,11 +35,6 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
 public class HCHook {
     private final ToolData data;
 
-    static {
-        ToolData.lpparam = HCInit.getLoadPackageParam();
-        ToolData.classLoader = HCInit.getClassLoader();
-    }
-
     /**
      * 实例化本类开始使用
      * <p>
@@ -59,26 +54,30 @@ public class HCHook {
 
     public HCHook setThisTag(String tag) {
         data.mThisTag = tag;
-        return data.getHCHook();
+        return data.hcHook();
     }
 
     public CoreTool core() {
-        return data.getCoreTool();
+        return data.coreTool();
     }
 
     public ChainTool chain() {
-        return data.getChainTool();
+        return data.chainTool();
     }
 
     public PrefsTool prefs() {
-        return data.getPrefsTool();
+        return data.prefsTool();
     }
 
     public XC_LoadPackage.LoadPackageParam lpparam() {
-        return data.getLpparam();
+        return ToolData.lpparam;
     }
 
     public ClassLoader classLoader() {
-        return data.getClassLoader();
+        return data.classLoader();
+    }
+
+    protected void setStateChange(boolean isZygote) {
+        data.isZygote = isZygote;
     }
 }

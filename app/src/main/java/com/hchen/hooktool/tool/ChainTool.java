@@ -44,50 +44,42 @@ public class ChainTool implements IChain {
     private ClassLoader classLoader = null;
     protected ChainData chainData;
     protected final ArrayList<ChainData> chainDataList = new ArrayList<>();
-    private final ArrayList<ChainData> cacheData = new ArrayList<>();
+    private final ArrayList<ChainData> cacheDataList = new ArrayList<>();
 
     public ChainTool(ToolData data) {
         this.data = data;
         chainHook = new ChainHook(this);
     }
 
-    @Override
     public void chain(String clazz, ChainTool chain) {
         classLoader = null;
-        chain(data.getCoreTool().findClass(clazz), chain);
+        chain(data.coreTool().findClass(clazz), chain);
     }
 
-    @Override
     public void chain(String clazz, ClassLoader classLoader, ChainTool chain) {
         this.classLoader = classLoader;
-        chain(data.getCoreTool().findClass(clazz, classLoader), chain);
+        chain(data.coreTool().findClass(clazz, classLoader), chain);
     }
 
-    @Override
     public void chain(Class<?> clazz, ChainTool chain) {
         if (clazz == null) {
-            logW(data.getTag(), "class is null! can't use chain!!");
+            logW(data.tag(), "class is null! can't use chain!!");
             return;
         }
         chain.doFind(clazz);
-        data.getActionTool().doAction(chain);
+        data.actionTool().doAction(chain);
     }
 
     /**
      * 查找方法。
      * <p>
      * Find method.
-     *
-     * @param name   方法名
-     * @param params 方法参数
      */
-    @Override
     public ChainHook method(String name, Object... params) {
         chainData = new ChainData(name, params);
         return chainHook;
     }
 
-    @Override
     public ChainHook anyMethod(String name) {
         chainData = new ChainData(name);
         return chainHook;
@@ -97,16 +89,12 @@ public class ChainTool implements IChain {
      * 查找构造函数。
      * <p>
      * Find constructor.
-     *
-     * @param params 参数
      */
-    @Override
     public ChainHook constructor(Object... params) {
         chainData = new ChainData(params);
         return chainHook;
     }
 
-    @Override
     public ChainHook anyConstructor() {
         chainData = new ChainData();
         return chainHook;
@@ -114,38 +102,38 @@ public class ChainTool implements IChain {
 
     protected void doFind(Class<?> clazz) {
         ArrayList<Member> mMembers = new ArrayList<>();
-        for (ChainData data : cacheData) {
-            switch (data.mType) {
+        for (ChainData chainData : cacheDataList) {
+            switch (chainData.mType) {
                 case TYPE_METHOD -> {
                     if (classLoader == null)
-                        mMembers.add(this.data.getCoreTool().findMethod(clazz, data.mName, data.mParams));
+                        mMembers.add(data.coreTool().findMethod(clazz, chainData.mName, chainData.mParams));
                     else
-                        mMembers.add(this.data.getCoreTool().findMethod(clazz, data.mName,
-                                (Object) this.data.getConvertHelper().arrayToClass(classLoader, data.mParams)));
+                        mMembers.add(data.coreTool().findMethod(clazz, chainData.mName,
+                                (Object) data.convertHelper().arrayToClass(classLoader, chainData.mParams)));
                 }
                 case TYPE_CONSTRUCTOR -> {
                     if (classLoader == null)
-                        mMembers.add(this.data.getCoreTool().findConstructor(clazz, data.mParams));
+                        mMembers.add(data.coreTool().findConstructor(clazz, chainData.mParams));
                     else
-                        mMembers.add(this.data.getCoreTool().findConstructor(clazz,
-                                (Object) this.data.getConvertHelper().arrayToClass(classLoader, data.mParams)));
+                        mMembers.add(data.coreTool().findConstructor(clazz,
+                                (Object) data.convertHelper().arrayToClass(classLoader, chainData.mParams)));
                 }
                 case TYPE_ANY_METHOD -> {
-                    mMembers.addAll(this.data.getCoreTool().findAnyMethod(clazz, data.mName));
+                    mMembers.addAll(data.coreTool().findAnyMethod(clazz, chainData.mName));
                 }
                 case TYPE_ANY_CONSTRUCTOR -> {
-                    mMembers.addAll(this.data.getCoreTool().findAnyConstructor(clazz));
+                    mMembers.addAll(data.coreTool().findAnyConstructor(clazz));
                 }
                 default -> mMembers = new ArrayList<>();
             }
             ArrayList<Member> cache = new ArrayList<>(mMembers);
             ArrayList<Member> finalMembers = mMembers;
-            if (chainDataList.stream().noneMatch(chainData -> chainData.members.equals(finalMembers)))
+            if (chainDataList.stream().noneMatch(d -> d.members.equals(finalMembers)))
                 chainDataList.add(new ChainData(clazz.getSimpleName(),
-                        data.mName, data.mType, cache, data.iAction, StateEnum.NONE));
+                        chainData.mName, chainData.mType, cache, chainData.iAction, StateEnum.NONE));
             mMembers.clear();
         }
-        cacheData.clear();
+        cacheDataList.clear();
     }
 
     public static class ChainHook {
@@ -162,7 +150,29 @@ public class ChainTool implements IChain {
          */
         public ChainTool hook(IAction iAction) {
             chain.chainData.iAction = iAction;
-            chain.cacheData.add(chain.chainData);
+            chain.cacheDataList.add(chain.chainData);
+            return chain;
+        }
+
+        /**
+         * 直接返回指定值。
+         * <p>
+         * Returns the specified value directly.
+         */
+        public ChainTool returnResult(final Object result) {
+            chain.chainData.iAction = chain.data.coreTool().returnResult(result);
+            chain.cacheDataList.add(chain.chainData);
+            return chain;
+        }
+
+        /**
+         * 拦截方法执行。
+         * <p>
+         * Intercept method execution.
+         */
+        public ChainTool doNothing() {
+            chain.chainData.iAction = chain.data.coreTool().doNothing();
+            chain.cacheDataList.add(chain.chainData);
             return chain;
         }
     }

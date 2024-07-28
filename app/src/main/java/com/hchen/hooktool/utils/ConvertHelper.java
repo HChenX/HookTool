@@ -51,7 +51,7 @@ public class ConvertHelper {
     }
 
     public Class<?>[] arrayToClass(Object... objs) {
-        return arrayToClass(data.getClassLoader(), objs);
+        return arrayToClass(data.classLoader(), objs);
     }
 
     /**
@@ -62,17 +62,18 @@ public class ConvertHelper {
     public Class<?>[] arrayToClass(ClassLoader classLoader, Object... objs) {
         ArrayList<Class<?>> classes = new ArrayList<>();
         if (objs.length == 0) {
-            logW(data.getTag(), "array length is 0!!");
+            logW(data.tag(), "array length is 0!!");
             return new Class<?>[]{};
         }
         if (objs.length == 1 && objs[0] instanceof Class<?>[] clazzArray) {
             return clazzArray;
         }
+        if (classLoader == null && data.isZygoteState()) return new Class[]{};
         for (Object o : objs) {
             if (o instanceof Class<?> c) {
                 classes.add(c);
             } else if (o instanceof String s) {
-                Class<?> ct = data.getCoreTool().findClass(s, classLoader);
+                Class<?> ct = data.coreTool().findClass(s, classLoader);
                 if (ct == null) {
                     return new Class[]{};
                 }
@@ -80,7 +81,7 @@ public class ConvertHelper {
             } else if (o instanceof IAction) {
                 break;
             } else {
-                logW(data.getTag(), "unknown type: " + o);
+                logW(data.tag(), "unknown type: " + o);
                 return new Class[]{};
             }
         }
@@ -89,7 +90,7 @@ public class ConvertHelper {
 
     public Object[] toClassAsIAction(ClassLoader classLoader, Object... objs) {
         if (objs.length == 0 || !(objs[objs.length - 1] instanceof IAction iAction)) {
-            logW(data.getTag(), "params length == 0 or last param not is IAction! can't convert!!");
+            logW(data.tag(), "params length == 0 or last param not is IAction! can't convert!!");
             return new Object[]{};
         }
         Class<?>[] classes = arrayToClass(classLoader, objs);
