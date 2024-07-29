@@ -276,28 +276,6 @@ public class MainTest extends BaseHC {
             }
         };
     }
-
-    // 对于静态，工具提供了一些方法，具体参考 BaseHC.java 代码。
-    public static void test() {
-        sChain.chain("com.hchen.demo", sChain.method("test")
-                .hook(new IAction() {
-                    @Override
-                    public void before() throws Throwable {
-                        super.before();
-                    }
-                })
-
-                .anyConstructor()
-                .hook(new IAction() {
-                    @Override
-                    public void after() throws Throwable {
-                        super.after();
-                    }
-                })
-        );
-
-        sCore.callStaticMethod("com.hchen.demo", "test", "hello");
-    }
 }
 ```
 

@@ -279,28 +279,6 @@ public class MainTest extends BaseHC {
             }
         };
     }
-
-    // For static, the tool provides some methods, refer to BaseHC.java code for details.
-    public static void test() {
-        sChain.chain("com.hchen.demo", sChain.method("test")
-                .hook(new IAction() {
-                    @Override
-                    public void before() throws Throwable {
-                        super.before();
-                    }
-                })
-
-                .anyConstructor()
-                .hook(new IAction() {
-                    @Override
-                    public void after() throws Throwable {
-                        super.after();
-                    }
-                })
-        );
-
-        sCore.callStaticMethod("com.hchen.demo", "test", "hello");
-    }
 }
 ```
 
