@@ -26,6 +26,8 @@ import java.io.StringWriter;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.function.Consumer;
 
 import de.robv.android.xposed.XC_MethodHook;
 
@@ -46,11 +48,36 @@ public class LogExpand {
         getName(param.method);
     }
 
+    /**
+     * 打印抛错信息的堆栈。
+     */
     public static String printStackTrace(Throwable t) {
         StringWriter stringWriter = new StringWriter();
         PrintWriter printWriter = new PrintWriter(stringWriter);
         t.printStackTrace(printWriter);
         return stringWriter.toString();
+    }
+
+    /**
+     * 打印方法调用的堆栈。
+     */
+    public static String getStackTrace() {
+        StringBuilder stringBuilder = new StringBuilder();
+        StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
+        Arrays.stream(stackTraceElements).forEach(new Consumer<StackTraceElement>() {
+            @Override
+            public void accept(StackTraceElement stackTraceElement) {
+                String clazz = stackTraceElement.getClassName();
+                String method = stackTraceElement.getMethodName();
+                String field = stackTraceElement.getFileName();
+                int line = stackTraceElement.getLineNumber();
+                stringBuilder.append("\nat ").append(clazz).append(".")
+                        .append(method).append("(")
+                        .append(field).append(":")
+                        .append(line).append(")");
+            }
+        });
+        return stringBuilder.toString();
     }
 
     private void getName(Member member) {
@@ -61,7 +88,7 @@ public class LogExpand {
             className = constructor.getDeclaringClass().getSimpleName();
             methodName = "Constructor";
         } else {
-            logE(TAG, "unknown type! member: " + member);
+            logE(TAG, "LogExpand: unknown type! member: " + member + getStackTrace());
         }
     }
 

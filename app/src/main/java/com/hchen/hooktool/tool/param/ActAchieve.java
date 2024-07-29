@@ -29,9 +29,9 @@ import de.robv.android.xposed.XC_MethodHook;
  * Action
  */
 public class ActAchieve {
-    protected XC_MethodHook.MethodHookParam methodHookParam;
-    protected String mTag;
-    protected IDynamic iDynamic;
+    public XC_MethodHook.MethodHookParam methodHookParam;
+    public String mTag;
+    public IDynamic iDynamic;
     private LogExpand logExpand;
     // protected ToolData data;
 

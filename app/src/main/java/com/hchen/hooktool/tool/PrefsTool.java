@@ -20,6 +20,7 @@ package com.hchen.hooktool.tool;
 
 import static com.hchen.hooktool.log.XposedLog.logE;
 import static com.hchen.hooktool.log.XposedLog.logW;
+import static com.hchen.hooktool.utils.LogExpand.getStackTrace;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -142,7 +143,7 @@ public class PrefsTool {
             public void findContext(Context context) {
                 if (context == null) {
                     throw new RuntimeException(ToolData.mInitTag +
-                            "[" + data.tag() + "][E]: async prefs context is null!!");
+                            "[" + data.tag() + "][E]: PrefsTool: async prefs context is null!!" + getStackTrace());
                 }
                 asyncPrefs.async(context);
             }
@@ -157,7 +158,7 @@ public class PrefsTool {
         if (xPrefs.get(prefsName) == null) {
             if (ToolData.modulePackageName == null) {
                 throw new RuntimeException(ToolData.mInitTag +
-                        "[" + data.tag() + "][E]: module package name is null!!");
+                        "[" + data.tag() + "][E]: PrefsTool: module package name is null!!" + getStackTrace());
             }
             XSharedPreferences x = new XSharedPreferences(ToolData.modulePackageName, prefsName);
             x.makeWorldReadable();
@@ -173,7 +174,7 @@ public class PrefsTool {
     @SuppressLint("WorldReadableFiles")
     private SharedPreferences currentSp(Context context, String prefsName) {
         if (context == null) {
-            throw new RuntimeException(ToolData.mInitTag + "[E]: context is null!! can't create sprefs!");
+            throw new RuntimeException(ToolData.mInitTag + "[E]: PrefsTool: context is null!! can't create sprefs!" + getStackTrace());
         }
         if (sPrefs.get(context + prefsName) == null) {
             SharedPreferences s;
@@ -181,7 +182,7 @@ public class PrefsTool {
                 s = context.getSharedPreferences(prefsName, Context.MODE_WORLD_READABLE);
             } catch (Throwable ignored) {
                 s = context.getSharedPreferences(prefsName, Context.MODE_PRIVATE);
-                AndroidLog.logW(TAG, "maybe can't use xSharedPreferences!");
+                AndroidLog.logW(TAG, "PrefsTool: maybe can't use xSharedPreferences!" + getStackTrace());
             }
             sPrefs.put(context + prefsName, s);
             return s;
@@ -253,7 +254,7 @@ public class PrefsTool {
                     return getLong(key, l);
                 }
             } catch (Throwable e) {
-                logE(data.tag(), "unknown error!", e);
+                logE(data.tag(), "PrefsTool: unknown error!", e);
             }
             return null;
         }
@@ -278,7 +279,7 @@ public class PrefsTool {
         @Override
         @Nullable
         public Editor editor() {
-            logW(data.tag(), "xposed can't edit prefs!");
+            logW(data.tag(), "PrefsTool: xposed can't edit prefs!" + getStackTrace());
             return null;
         }
 
@@ -345,7 +346,7 @@ public class PrefsTool {
                     return getLong(key, l);
                 }
             } catch (Throwable e) {
-                AndroidLog.logE(TAG, "unknown error!", e);
+                AndroidLog.logE(TAG, "PrefsTool: unknown error!", e);
             }
             return null;
         }
@@ -419,7 +420,7 @@ public class PrefsTool {
                     return putLong(key, l);
                 }
             } catch (Throwable e) {
-                AndroidLog.logE(TAG, "unknown error!", e);
+                AndroidLog.logE(TAG, "PrefsTool: unknown error!", e);
             }
             return this;
         }

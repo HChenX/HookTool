@@ -19,6 +19,7 @@
 package com.hchen.hooktool.tool.param;
 
 import static com.hchen.hooktool.log.XposedLog.logE;
+import static com.hchen.hooktool.utils.LogExpand.getStackTrace;
 
 /**
  * 参数操作
@@ -71,44 +72,44 @@ public class Arguments extends ActAchieve {
 
     // ------- 提供快捷设置 ---------
     // 依次设置指定的参数
-    final public Arguments first(Object value) {
-        return setParam(0, value);
+    final public void first(Object value) {
+        setParam(0, value);
     }
 
-    final public Arguments second(Object value) {
-        return setParam(1, value);
+    final public void second(Object value) {
+        setParam(1, value);
     }
 
-    final public Arguments third(Object value) {
-        return setParam(2, value);
+    final public void third(Object value) {
+        setParam(2, value);
     }
 
-    final public Arguments fourth(Object value) {
-        return setParam(3, value);
+    final public void fourth(Object value) {
+        setParam(3, value);
     }
 
-    final public Arguments fifth(Object value) {
-        return setParam(4, value);
+    final public void fifth(Object value) {
+        setParam(4, value);
     }
 
-    final public Arguments sixth(Object value) {
-        return setParam(5, value);
+    final public void sixth(Object value) {
+        setParam(5, value);
     }
 
-    final public Arguments seventh(Object value) {
-        return setParam(6, value);
+    final public void seventh(Object value) {
+        setParam(6, value);
     }
 
-    final public Arguments eighth(Object value) {
-        return setParam(7, value);
+    final public void eighth(Object value) {
+        setParam(7, value);
     }
 
-    final public Arguments ninth(Object value) {
-        return setParam(8, value);
+    final public void ninth(Object value) {
+        setParam(8, value);
     }
 
-    final public Arguments tenth(Object value) {
-        return setParam(9, value);
+    final public void tenth(Object value) {
+        setParam(9, value);
     }
 
     /**
@@ -124,14 +125,10 @@ public class Arguments extends ActAchieve {
      * 获取指定参数。
      * <p>
      * Obtain the specified parameters.
-     *
-     * @param index 索引
-     * @return 获取到的参数或 null
      */
     final public <T> T getParam(int index) {
         if (size() < index + 1) {
-            logE(mTag, "method: [" + methodHookParam.method.getName() +
-                    "], param max size: [" + size() + "], index: [" + index + "]!!");
+            logE(mTag, "Arguments: exceeding the index!" + getStackTrace());
             return null;
         }
         return (T) methodHookParam.args[index];
@@ -141,18 +138,13 @@ public class Arguments extends ActAchieve {
      * 设置指定参数。
      * <p>
      * Set the specified parameters.
-     *
-     * @param index 索引
-     * @param value 目标值
      */
-    final public Arguments setParam(int index, Object value) {
+    final public void setParam(int index, Object value) {
         if (size() < index + 1) {
-            logE(mTag, "method: [" + methodHookParam.method.getName() +
-                    "], param max size: [" + size() + "], index: [" + index + "]!!");
-            return this;
+            logE(mTag, "Arguments: exceeding the index!" + getStackTrace());
+            return;
         }
         methodHookParam.args[index] = value;
-        return this;
     }
 
 }

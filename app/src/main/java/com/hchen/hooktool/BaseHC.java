@@ -31,7 +31,6 @@ import com.hchen.hooktool.itool.IMember;
 import com.hchen.hooktool.itool.IPrefs;
 import com.hchen.hooktool.itool.IStatic;
 import com.hchen.hooktool.tool.ChainTool;
-import com.hchen.hooktool.tool.CoreTool;
 import com.hchen.hooktool.tool.PrefsTool;
 import com.hchen.hooktool.utils.ToolData;
 
@@ -61,10 +60,10 @@ public abstract class BaseHC implements IMember, IDynamic, IStatic, IChain {
     public boolean isFirstApplication;
     public String processName;
     // END
-
+    
     // 在外处使用可以传递本参数。
     public BaseHC baseHC;
-
+    
     private boolean isZygote = false;
     private HCHook hcHook;
     private PrefsTool prefs;
@@ -72,21 +71,6 @@ public abstract class BaseHC implements IMember, IDynamic, IStatic, IChain {
     private IMember iMember;
     private IStatic iStatic;
     private IChain iChain;
-
-    // 工具为了保持日志易读性，无法全部静态化，但您仍然可以直接调用此静态字段使用本工具。
-    // 唯一区别是工具日志 tag 始终为 ”StaticHC“（不影响手动设置的 log tag。
-    // 当然你也可以在自己类内手动存储静态本类，实现日志正常。
-    public static HCHook sHc;
-    public static CoreTool sCore;
-    public static ChainTool sChain;
-    public static PrefsTool sPrefs;
-
-    static {
-        sHc = new HCHook().setThisTag("StaticHC");
-        sCore = sHc.core();
-        sChain = sHc.chain();
-        sPrefs = sHc.prefs();
-    }
 
     /**
      * 正常阶段。

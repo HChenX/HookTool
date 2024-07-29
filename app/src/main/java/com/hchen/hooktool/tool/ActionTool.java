@@ -21,6 +21,7 @@ package com.hchen.hooktool.tool;
 import static com.hchen.hooktool.log.XposedLog.logD;
 import static com.hchen.hooktool.log.XposedLog.logE;
 import static com.hchen.hooktool.log.XposedLog.logW;
+import static com.hchen.hooktool.utils.LogExpand.getStackTrace;
 
 import com.hchen.hooktool.callback.IAction;
 import com.hchen.hooktool.data.ChainData;
@@ -53,34 +54,25 @@ public class ActionTool {
         ListIterator<ChainData> iterator = chainDataList.listIterator();
         while (iterator.hasNext()) {
             ChainData chainData = iterator.next();
-            if (chainData.iAction == null) {
-                logW(data.tag(), "member: " + chainData.members.toString() + "'s action is null! can't hook!");
-                continue;
-            }
             switch (chainData.stateEnum) {
                 case StateEnum.NONE -> {
                     try {
                         if (chainData.members.isEmpty()) {
-                            logW(data.tag(), "class: [" + chainData.clazz + "] name: [" + chainData.mName + "], " +
-                                    "type: [" + chainData.mType + "]. members is empty, skip!");
+                            logW(data.tag(), "ChainData: members is empty! debug: [class: " + chainData.clazz +
+                                    " , method: " + chainData.mName + " , type: " + chainData.mType + " ]" + getStackTrace());
                             chainData.stateEnum = StateEnum.FAILED;
                         } else if (chainData.members.stream().allMatch(Objects::isNull)) {
-                            logW(data.tag(), "class: [" + chainData.clazz + "] name: [" + chainData.mName + "], " +
-                                    "type: [" + chainData.mType + "]. all match is null! can't hook anything!");
+                            logW(data.tag(), "ChainData: all member is null! debug: [class: " + chainData.clazz +
+                                    " , method: " + chainData.mName + " , type: " + chainData.mType + " ]" + getStackTrace());
                             chainData.stateEnum = StateEnum.FAILED;
                         } else if (chainData.iAction == null) {
-                            logW(data.tag(), "class: [" + chainData.clazz + "] name: [" + chainData.mName + "], " +
-                                    "type: [" + chainData.mType + "]. iaction is null! can't hook!!");
+                            logW(data.tag(), "ChainData: action is null! debug: [class: " + chainData.clazz +
+                                    " , method: " + chainData.mName + " , type: " + chainData.mType + " ]" + getStackTrace());
                             chainData.stateEnum = StateEnum.FAILED;
                         } else {
                             for (Member m : chainData.members) {
-                                if (m == null) {
-                                    logW(data.tag(), "class: [" + chainData.clazz + "] name: [" + chainData.mName + "], " +
-                                            "type: [" + chainData.mType + "]. member is null, will skip hook!");
-                                    continue;
-                                }
                                 XposedBridge.hookMethod(m, createHook(chainData.iAction));
-                                logD(data.tag(), "success to hook: " + m);
+                                logD(data.tag(), "ChainData: Success Hook: " + m);
                             }
                             chainData.stateEnum = StateEnum.HOOKED;
                         }
@@ -91,10 +83,10 @@ public class ActionTool {
                     iterator.set(chainData);
                 }
                 case StateEnum.HOOKED -> {
-                    logD(data.tag(), "this method is hooked: " + chainData.members);
+                    logD(data.tag(), "ChainData: members hooked: " + chainData.members);
                 }
                 case StateEnum.FAILED -> {
-                    logD(data.tag(), "this method is hook failed: " + chainData.members);
+                    logD(data.tag(), "ChainData: members hook failed: " + chainData.members);
                 }
             }
         }
@@ -106,8 +98,6 @@ public class ActionTool {
             @Override
             protected void before(MethodHookParam param) throws Throwable {
                 iAction.putMethodHookParam(param);
-                if (ToolData.autoObserveCall)
-                    iAction.observeCall();
                 iAction.before();
             }
 

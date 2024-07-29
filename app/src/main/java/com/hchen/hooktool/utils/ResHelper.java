@@ -20,6 +20,7 @@ package com.hchen.hooktool.utils;
 
 import static com.hchen.hooktool.log.XposedLog.logE;
 import static com.hchen.hooktool.log.XposedLog.logW;
+import static com.hchen.hooktool.utils.LogExpand.getStackTrace;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -69,7 +70,7 @@ public class ResHelper {
                 loader.addProvider(provider);
                 resourcesLoader = loader;
             } catch (IOException e) {
-                logE(TAG, "failed to add resource!: " + e);
+                logE(TAG, "failed to add resource!", e);
                 return false;
             }
         }
@@ -107,20 +108,20 @@ public class ResHelper {
     public static Resources loadModuleRes(Context context) {
         boolean load = false;
         if (context == null) {
-            logW(TAG, "context can't is null!!");
+            logW(TAG, "context can't is null!!" + getStackTrace());
             return null;
         }
         if (mModulePath == null) {
             mModulePath = ToolData.startupParam.modulePath;
             if (mModulePath == null) {
-                logW(TAG, "module path is null! can't load module res! please call initResHelper!");
+                logW(TAG, "module path is null! can't load module res! please call initResHelper!" + getStackTrace());
                 return null;
             }
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             load = loadResAboveApi30(context);
         } else {
-            logW(TAG, "sdk so low, can't load module res!");
+            logW(TAG, "sdk so low, can't load module res!" + getStackTrace());
         }
         if (!load) {
             /*try {

@@ -19,6 +19,7 @@
 package com.hchen.hooktool.utils;
 
 import static com.hchen.hooktool.log.XposedLog.logE;
+import static com.hchen.hooktool.utils.LogExpand.getStackTrace;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -133,10 +134,10 @@ public class ContextUtils {
                 context = android(clz);
             }
             default -> {
-                throw new Throwable("unexpected flag");
+                throw new Throwable("unexpected flag!" + getStackTrace());
             }
         }
-        if (context == null) throw new Throwable("context is null");
+        if (context == null) throw new Throwable("context is null!" + getStackTrace());
         return context;
     }
 

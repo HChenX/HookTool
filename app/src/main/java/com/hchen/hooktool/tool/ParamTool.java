@@ -18,6 +18,8 @@
  */
 package com.hchen.hooktool.tool;
 
+import static com.hchen.hooktool.utils.LogExpand.getStackTrace;
+
 import com.hchen.hooktool.tool.param.Arguments;
 import com.hchen.hooktool.utils.ToolData;
 
@@ -45,7 +47,8 @@ public class ParamTool extends Arguments {
 
     final protected void putMethodHookParam(XC_MethodHook.MethodHookParam param) {
         if (param == null)
-            throw new RuntimeException(ToolData.mInitTag + "[" + mTag + "][E]: param is null!!");
+            throw new RuntimeException(ToolData.mInitTag + 
+                    "[" + mTag + "][E]: ParamTool: param is null!" + getStackTrace());
         this.methodHookParam = param;
         mClass = param.method.getDeclaringClass();
         mMember = param.method;

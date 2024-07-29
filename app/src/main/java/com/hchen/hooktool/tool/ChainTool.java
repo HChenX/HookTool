@@ -23,6 +23,7 @@ import static com.hchen.hooktool.data.ChainData.TYPE_ANY_METHOD;
 import static com.hchen.hooktool.data.ChainData.TYPE_CONSTRUCTOR;
 import static com.hchen.hooktool.data.ChainData.TYPE_METHOD;
 import static com.hchen.hooktool.log.XposedLog.logW;
+import static com.hchen.hooktool.utils.LogExpand.getStackTrace;
 
 import com.hchen.hooktool.callback.IAction;
 import com.hchen.hooktool.data.ChainData;
@@ -63,7 +64,7 @@ public class ChainTool implements IChain {
 
     public void chain(Class<?> clazz, ChainTool chain) {
         if (clazz == null) {
-            logW(data.tag(), "class is null! can't use chain!!");
+            logW(data.tag(), "ChainTool: class is null!" + getStackTrace());
             return;
         }
         chain.doFind(clazz);

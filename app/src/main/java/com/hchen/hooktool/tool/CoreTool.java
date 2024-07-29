@@ -28,6 +28,7 @@ import com.hchen.hooktool.itool.IDynamic;
 import com.hchen.hooktool.itool.IFilter;
 import com.hchen.hooktool.itool.IMember;
 import com.hchen.hooktool.itool.IStatic;
+import com.hchen.hooktool.utils.LogExpand;
 import com.hchen.hooktool.utils.ToolData;
 
 import java.lang.reflect.Constructor;
@@ -39,7 +40,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.function.Consumer;
 
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedBridge;
@@ -58,6 +58,7 @@ public class CoreTool implements IDynamic, IStatic, IMember {
     }
 
     //------------ 检查指定类是否存在 --------------
+
     /**
      * 查找指定类是否存在。
      * <p>
@@ -82,7 +83,8 @@ public class CoreTool implements IDynamic, IStatic, IMember {
     public Class<?> findClass(String name, ClassLoader classLoader) {
         try {
             if (classLoader == null) {
-                logW(data.tag(), "classLoader is null! can't find class: " + name);
+                logW(data.tag(), "CoreTool: classloader is null, " +
+                        "can't find class: " + name + getStackTrace());
                 return null;
             }
             return XposedHelpers.findClass(name, classLoader);
@@ -93,6 +95,7 @@ public class CoreTool implements IDynamic, IStatic, IMember {
     }
 
     //------------ 检查指定方法是否存在 --------------
+
     /**
      * 检查指定方法是否存在，不存在则返回 false。
      * <p>
@@ -149,7 +152,7 @@ public class CoreTool implements IDynamic, IStatic, IMember {
     public Method findMethod(Class<?> clazz, String name, Object... objects) {
         try {
             if (clazz == null) {
-                logW(data.tag(), "class is null! can't find method: " + name);
+                logW(data.tag(), "CoreTool: class is null, can't find method: " + name + getStackTrace());
                 return null;
             }
             return clazz.getDeclaredMethod(name, data.convertHelper().arrayToClass(objects));
@@ -170,7 +173,7 @@ public class CoreTool implements IDynamic, IStatic, IMember {
     public ArrayList<Method> findAnyMethod(Class<?> clazz, String name) {
         ArrayList<Method> methods = new ArrayList<>();
         if (clazz == null) {
-            logW(data.tag(), "class is null! can't find any method: " + name);
+            logW(data.tag(), "CoreTool: class is null, can't find any method: " + name + getStackTrace());
             return methods;
         }
         for (Method m : clazz.getDeclaredMethods()) {
@@ -191,7 +194,7 @@ public class CoreTool implements IDynamic, IStatic, IMember {
     public Constructor<?> findConstructor(Class<?> clazz, Object... objects) {
         try {
             if (clazz == null) {
-                logW(data.tag(), "class is null! can't find constructor!");
+                logW(data.tag(), "CoreTool: class is null, can't find constructor!" + getStackTrace());
                 return null;
             }
             return clazz.getDeclaredConstructor(data.convertHelper().arrayToClass(objects));
@@ -211,7 +214,7 @@ public class CoreTool implements IDynamic, IStatic, IMember {
 
     public ArrayList<Constructor<?>> findAnyConstructor(Class<?> clazz) {
         if (clazz == null) {
-            logW(data.tag(), "class is null! can't find any constructor!");
+            logW(data.tag(), "CoreTool: class is null, can't find any constructor!" + getStackTrace());
             return new ArrayList<>();
         }
         return new ArrayList<>(Arrays.asList(clazz.getDeclaredConstructors()));
@@ -245,7 +248,7 @@ public class CoreTool implements IDynamic, IStatic, IMember {
 
     public Field findField(Class<?> clazz, String name) {
         if (clazz == null) {
-            logW(data.tag(), "class is null! can't find field: " + name);
+            logW(data.tag(), "CoreTool: class is null, can't find field: " + name + getStackTrace());
             return null;
         }
         try {
@@ -268,8 +271,9 @@ public class CoreTool implements IDynamic, IStatic, IMember {
     }
 
     public XC_MethodHook.Unhook hook(Class<?> clazz, String method, Object... params) {
+        if (params == null) return null;
         if (params.length == 0 || !(params[params.length - 1] instanceof IAction)) {
-            logW(data.tag(), "params length == 0 or last param not is IAction! can't hook!!");
+            logW(data.tag(), "CoreTool: params length == 0 or last param not is IAction! can't hook!!" + getStackTrace());
             return null;
         }
         return hook(findMethod(clazz, method, params), (IAction) params[params.length - 1]);
@@ -297,8 +301,9 @@ public class CoreTool implements IDynamic, IStatic, IMember {
     }
 
     public XC_MethodHook.Unhook hook(Class<?> clazz, Object... params) {
+        if (params == null) return null;
         if (params.length == 0 || !(params[params.length - 1] instanceof IAction)) {
-            logE(data.tag(), "params length == 0 or last param not is IAction! can't hook!!");
+            logE(data.tag(), "CoreTool: params length == 0 or last param not is IAction! can't hook!!" + getStackTrace());
             return null;
         }
         return hook(findConstructor(clazz, params), (IAction) params[params.length - 1]);
@@ -318,16 +323,12 @@ public class CoreTool implements IDynamic, IStatic, IMember {
 
     // ----------- 核心实现 ---------------
     public XC_MethodHook.Unhook hook(Member member, IAction iAction) {
-        if (member == null || iAction == null) {
-            logW(data.tag(), "member or iAction is null, can't hook!");
-            return null;
-        }
         try {
             XC_MethodHook.Unhook unhook = XposedBridge.hookMethod(member, data.actionTool().createHook(iAction));
-            logD(data.tag(), "success hook: " + member);
+            logD(data.tag(), "CoreTool: Success Hook: " + member);
             return unhook;
         } catch (Throwable e) {
-            logE(data.tag(), "hook: [" + member + "], failed!", e);
+            logE(data.tag(), "CoreTool: hook: [" + member + "], failed!", e);
         }
         return null;
     }
@@ -339,9 +340,9 @@ public class CoreTool implements IDynamic, IStatic, IMember {
                 try {
                     unhooks.add(XposedBridge.hookMethod((Member) o,
                             data.actionTool().createHook(iAction)));
-                    logD(data.tag(), "success hook: " + o);
+                    logD(data.tag(), "CoreTool: Success Hook: " + o);
                 } catch (Throwable e) {
-                    logE(data.tag(), "hook: [" + o + "], failed!", e);
+                    logE(data.tag(), "CoreTool: hook: [" + o + "], failed!", e);
                 }
             }
         }
@@ -414,7 +415,7 @@ public class CoreTool implements IDynamic, IStatic, IMember {
                     methods.add(m);
                 }
             } catch (Throwable e) {
-                logE(data.tag(), "do find method failed!", e);
+                logE(data.tag(), "CoreTool: filter method failed!", e);
             }
         }
         return methods;
@@ -436,7 +437,7 @@ public class CoreTool implements IDynamic, IStatic, IMember {
                     constructors.add(c);
                 }
             } catch (Throwable e) {
-                logE(data.tag(), "do find constructor failed!", e);
+                logE(data.tag(), "CoreTool: filter constructor failed!", e);
             }
         }
         return constructors;
@@ -453,25 +454,11 @@ public class CoreTool implements IDynamic, IStatic, IMember {
     }
 
     public String getStackTrace() {
-        StringBuilder stringBuilder = new StringBuilder();
-        StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
-        Arrays.stream(stackTraceElements).forEach(new Consumer<StackTraceElement>() {
-            @Override
-            public void accept(StackTraceElement stackTraceElement) {
-                String clazz = stackTraceElement.getClassName();
-                String method = stackTraceElement.getMethodName();
-                String field = stackTraceElement.getFileName();
-                int line = stackTraceElement.getLineNumber();
-                stringBuilder.append("\nat ").append(clazz).append(".")
-                        .append(method).append("(")
-                        .append(field).append(":")
-                        .append(line).append(")");
-            }
-        });
-        return stringBuilder.toString();
+        return LogExpand.getStackTrace();
     }
 
     // --------- 耗时检查 -----------
+
     /**
      * 返回指定代码逻辑的耗时，单位是 ms。
      * <p>
@@ -484,7 +471,7 @@ public class CoreTool implements IDynamic, IStatic, IMember {
             Instant end = Instant.now();
             return Duration.between(start, end).toMillis();
         } catch (Throwable e) {
-            logE(data.tag(), "code time consumption check failed!", e);
+            logE(data.tag(), "CoreTool: code time consumption check failed!", e);
             return -1L;
         }
     }
@@ -492,26 +479,26 @@ public class CoreTool implements IDynamic, IStatic, IMember {
     // ---------- 非静态 -----------
     public <T> T callMethod(Object instance, String name, Object... objs) {
         if (instance == null) {
-            logW(data.tag(), "instance is null! can't call method: " + name);
+            logW(data.tag(), "CoreTool: instance is null, can't call method: " + name + getStackTrace());
             return null;
         }
         try {
             return (T) XposedHelpers.callMethod(instance, name, objs);
         } catch (Throwable e) {
-            logE(data.tag(), "call method failed!", e);
+            logE(data.tag(), "CoreTool: call method failed!", e);
         }
         return null;
     }
 
     public <T> T getField(Object instance, String name) {
         if (instance == null) {
-            logW(data.tag(), "instance is null! can't set field: " + name);
+            logW(data.tag(), "CoreTool: instance is null, can't set field: " + name + getStackTrace());
             return null;
         }
         try {
             return (T) XposedHelpers.getObjectField(instance, name);
         } catch (Throwable e) {
-            logE(data.tag(), "get field failed!", e);
+            logE(data.tag(), "CoreTool: get field failed!", e);
         }
         return null;
     }
@@ -519,27 +506,27 @@ public class CoreTool implements IDynamic, IStatic, IMember {
     public <T> T getField(Object instance, Field field) {
         try {
             if (instance == null) {
-                logW(data.tag(), "instance is null! can't get field: " + field.getName());
+                logW(data.tag(), "CoreTool: instance is null, can't get field: " + field.getName() + getStackTrace());
                 return null;
             }
             field.setAccessible(true);
             return (T) field.get(instance);
         } catch (Throwable e) {
-            logE(data.tag(), "get field failed!", e);
+            logE(data.tag(), "CoreTool: get field failed!", e);
         }
         return null;
     }
 
     public boolean setField(Object instance, String name, Object value) {
         if (instance == null) {
-            logW(data.tag(), "instance is null! can't set field: " + name);
+            logW(data.tag(), "CoreTool: instance is null, can't set field: " + name + getStackTrace());
             return false;
         }
         try {
             XposedHelpers.setObjectField(instance, name, value);
             return true;
         } catch (Throwable e) {
-            logE(data.tag(), "set field failed!", e);
+            logE(data.tag(), "CoreTool: set field failed!", e);
         }
         return false;
     }
@@ -547,55 +534,55 @@ public class CoreTool implements IDynamic, IStatic, IMember {
     public boolean setField(Object instance, Field field, Object value) {
         try {
             if (instance == null) {
-                logW(data.tag(), "instance is null! can't set field: " + field.getName());
+                logW(data.tag(), "CoreTool: instance is null, can't set field: " + field.getName() + getStackTrace());
                 return false;
             }
             field.setAccessible(true);
             field.set(instance, value);
             return true;
         } catch (Throwable e) {
-            logE(data.tag(), "set field failed!", e);
+            logE(data.tag(), "CoreTool: set field failed!", e);
         }
         return false;
     }
 
     public boolean setAdditionalInstanceField(Object instance, String key, Object value) {
         if (instance == null) {
-            logW(data.tag(), "instance is null! can't remove additional: " + key);
+            logW(data.tag(), "CoreTool: instance is null, can't remove additional: " + key + getStackTrace());
             return false;
         }
         try {
             XposedHelpers.setAdditionalInstanceField(instance, key, value);
             return true;
         } catch (Throwable e) {
-            logE(data.tag(), "set additional failed!", e);
+            logE(data.tag(), "CoreTool: set additional failed!", e);
         }
         return false;
     }
 
     public <T> T getAdditionalInstanceField(Object instance, String key) {
         if (instance == null) {
-            logW(data.tag(), "instance is null! can't get additional: " + key);
+            logW(data.tag(), "CoreTool: instance is null, can't get additional: " + key + getStackTrace());
             return null;
         }
         try {
             return (T) XposedHelpers.getAdditionalInstanceField(instance, key);
         } catch (Throwable e) {
-            logE(data.tag(), "get additional failed!", e);
+            logE(data.tag(), "CoreTool: get additional failed!", e);
         }
         return null;
     }
 
     public boolean removeAdditionalInstanceField(Object instance, String key) {
         if (instance == null) {
-            logW(data.tag(), "instance is null! can't remove additional: " + key);
+            logW(data.tag(), "CoreTool: instance is null, can't remove additional: " + key + getStackTrace());
             return false;
         }
         try {
             XposedHelpers.removeAdditionalInstanceField(instance, key);
             return true;
         } catch (Throwable e) {
-            logE(data.tag(), "remove additional failed!", e);
+            logE(data.tag(), "CoreTool: remove additional failed!", e);
         }
         return false;
     }
@@ -606,9 +593,9 @@ public class CoreTool implements IDynamic, IStatic, IMember {
             try {
                 return (T) XposedHelpers.newInstance(clz, objects);
             } catch (Throwable e) {
-                logE(data.tag(), "new instance failed!", e);
+                logE(data.tag(), "CoreTool: new instance failed!", e);
             }
-        } else logW(data.tag(), "class is null, can't new instance.");
+        } else logW(data.tag(), "CoreTool: class is null, can't new instance." + getStackTrace());
         return null;
     }
 
@@ -625,10 +612,10 @@ public class CoreTool implements IDynamic, IStatic, IMember {
             try {
                 return (T) XposedHelpers.callStaticMethod(clz, name, objs);
             } catch (Throwable e) {
-                logE(data.tag(), "call static method failed!", e);
+                logE(data.tag(), "CoreTool: call static method failed!", e);
             }
         } else {
-            logW(data.tag(), "class is null, can't call static method: " + name);
+            logW(data.tag(), "CoreTool: class is null, can't call static method: " + name + getStackTrace());
         }
         return null;
     }
@@ -646,7 +633,7 @@ public class CoreTool implements IDynamic, IStatic, IMember {
             method.setAccessible(true);
             return (T) method.invoke(null, objs);
         } catch (IllegalAccessException | InvocationTargetException e) {
-            logE(data.tag(), "call static method failed!", e);
+            logE(data.tag(), "CoreTool: call static method failed!", e);
         }
         return null;
     }
@@ -656,19 +643,10 @@ public class CoreTool implements IDynamic, IStatic, IMember {
             try {
                 return (T) XposedHelpers.getStaticObjectField(clz, name);
             } catch (Throwable e) {
-                logE(data.tag(), "get static field failed!", e);
+                logE(data.tag(), "CoreTool: get static field failed!", e);
             }
-        } else logW(data.tag(), "class is null, can't get static field: " + name);
-        return null;
-    }
-
-    public <T> T getStaticField(Field field) {
-        try {
-            field.setAccessible(true);
-            return (T) field.get(null);
-        } catch (Throwable e) {
-            logE(data.tag(), "get static field failed!", e);
-        }
+        } else
+            logW(data.tag(), "CoreTool: class is null, can't get static field: " + name + getStackTrace());
         return null;
     }
 
@@ -680,15 +658,26 @@ public class CoreTool implements IDynamic, IStatic, IMember {
         return getStaticField(findClass(clz, classLoader), name);
     }
 
+    public <T> T getStaticField(Field field) {
+        try {
+            field.setAccessible(true);
+            return (T) field.get(null);
+        } catch (Throwable e) {
+            logE(data.tag(), "CoreTool: get static field failed!", e);
+        }
+        return null;
+    }
+
     public boolean setStaticField(Class<?> clz, String name, Object value) {
         if (clz != null) {
             try {
                 XposedHelpers.setStaticObjectField(clz, name, value);
                 return true;
             } catch (Throwable e) {
-                logE(data.tag(), "set static field failed!", e);
+                logE(data.tag(), "CoreTool: set static field failed!", e);
             }
-        } else logW(data.tag(), "class is null, can't set static field: " + name);
+        } else
+            logW(data.tag(), "CoreTool: class is null, can't set static field: " + name + getStackTrace());
         return false;
     }
 
@@ -698,7 +687,7 @@ public class CoreTool implements IDynamic, IStatic, IMember {
             field.set(null, value);
             return true;
         } catch (Throwable e) {
-            logE(data.tag(), "set static field failed!", e);
+            logE(data.tag(), "CoreTool: set static field failed!", e);
         }
         return false;
     }
@@ -717,9 +706,10 @@ public class CoreTool implements IDynamic, IStatic, IMember {
                 XposedHelpers.setAdditionalStaticField(clz, key, value);
                 return true;
             } catch (Throwable e) {
-                logE(data.tag(), "set additional static field failed!", e);
+                logE(data.tag(), "CoreTool: set additional static field failed!", e);
             }
-        } else logW(data.tag(), "class is null, can't static additional: " + key);
+        } else
+            logW(data.tag(), "CoreTool: class is null, can't static additional: " + key + getStackTrace());
         return false;
     }
 
@@ -728,9 +718,10 @@ public class CoreTool implements IDynamic, IStatic, IMember {
             try {
                 return (T) XposedHelpers.getAdditionalStaticField(clz, key);
             } catch (Throwable e) {
-                logE(data.tag(), "get additional static field failed!", e);
+                logE(data.tag(), "CoreTool: get additional static field failed!", e);
             }
-        } else logW(data.tag(), "class is null, can't get static additional: " + key);
+        } else
+            logW(data.tag(), "CoreTool: class is null, can't get static additional: " + key + getStackTrace());
         return null;
     }
 
@@ -740,10 +731,10 @@ public class CoreTool implements IDynamic, IStatic, IMember {
                 XposedHelpers.removeAdditionalStaticField(clz, key);
                 return true;
             } catch (Throwable e) {
-                logE(data.tag(), "remove additional static field failed!", e);
+                logE(data.tag(), "CoreTool: remove additional static field failed!", e);
             }
         } else
-            logW(data.tag(), "class is null, can't remove static additional: " + key);
+            logW(data.tag(), "CoreTool: class is null, can't remove static additional: " + key + getStackTrace());
         return false;
     }
 

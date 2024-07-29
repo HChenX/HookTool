@@ -18,6 +18,8 @@
  */
 package com.hchen.hooktool.utils;
 
+import static com.hchen.hooktool.utils.LogExpand.getStackTrace;
+
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
@@ -251,7 +253,7 @@ public class PackagesUtils {
      */
     public static boolean isSystem(ApplicationInfo app) {
         if (Objects.isNull(app)) {
-            AndroidLog.logE(TAG, "isSystem app is null, will return false");
+            AndroidLog.logE(TAG, "isSystem app is null, will return false" + getStackTrace());
             return false;
         }
         if (app.uid < 10000) {
@@ -275,7 +277,7 @@ public class PackagesUtils {
             context = ContextUtils.getContext(ContextUtils.FlAG_ONLY_ANDROID);
         }
         if (context == null) {
-            throw new Throwable("context is null");
+            throw new Throwable("context is null" + getStackTrace());
         }
         return context;
     }

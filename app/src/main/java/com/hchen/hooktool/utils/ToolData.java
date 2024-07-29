@@ -19,6 +19,7 @@
 package com.hchen.hooktool.utils;
 
 import static com.hchen.hooktool.log.XposedLog.logW;
+import static com.hchen.hooktool.utils.LogExpand.getStackTrace;
 
 import com.hchen.hooktool.HCHook;
 import com.hchen.hooktool.HCInit;
@@ -42,7 +43,6 @@ public class ToolData {
     public static int mInitLogLevel = HCInit.LOG_I;
     public static String spareTag = "Unknown";
     public static String modulePackageName = null;
-    public static boolean autoObserveCall = false;
     public static boolean autoReload = true;
     public static XC_LoadPackage.LoadPackageParam lpparam = null;
     public static ClassLoader classLoader = null;
@@ -70,42 +70,42 @@ public class ToolData {
     public HCHook hcHook() {
         HCHook hcHook = this.hcHook;
         if (hcHook == null)
-            throw new RuntimeException(mInitTag + "[" + tag() + "][E]: HCHook is null!!");
+            throw new RuntimeException(mInitTag + "[" + tag() + "][E]: HCHook is null!!" + getStackTrace());
         return hcHook;
     }
 
     public ActionTool actionTool() {
         ActionTool actionTool = this.actionTool;
         if (actionTool == null)
-            throw new RuntimeException(mInitTag + "[" + tag() + "][E]: ActionTool is null!!");
+            throw new RuntimeException(mInitTag + "[" + tag() + "][E]: ActionTool is null!!" + getStackTrace());
         return actionTool;
     }
 
     public CoreTool coreTool() {
         CoreTool coreTool = this.coreTool;
         if (coreTool == null)
-            throw new RuntimeException(mInitTag + "[" + tag() + "][E]: CoreTool is null!!");
+            throw new RuntimeException(mInitTag + "[" + tag() + "][E]: CoreTool is null!!" + getStackTrace());
         return coreTool;
     }
 
     public ChainTool chainTool() {
         ChainTool chain = this.chainTool;
         if (chain == null)
-            throw new RuntimeException(mInitTag + "[" + tag() + "][E]: CreateChain is null!!");
+            throw new RuntimeException(mInitTag + "[" + tag() + "][E]: CreateChain is null!!" + getStackTrace());
         return chain;
     }
 
     public PrefsTool prefsTool() {
         PrefsTool prefs = this.prefsTool;
         if (prefs == null)
-            throw new RuntimeException(mInitTag + "[" + tag() + "][E]: PrefsTool is null!!");
+            throw new RuntimeException(mInitTag + "[" + tag() + "][E]: PrefsTool is null!!" + getStackTrace());
         return prefs;
     }
 
     public ConvertHelper convertHelper() {
         ConvertHelper convertHelper = this.convertHelper;
         if (convertHelper == null)
-            throw new RuntimeException(mInitTag + "[" + tag() + "][E]: ConvertHelper is null!!");
+            throw new RuntimeException(mInitTag + "[" + tag() + "][E]: ConvertHelper is null!!" + getStackTrace());
         return convertHelper;
     }
 
@@ -116,7 +116,7 @@ public class ToolData {
 
     public boolean isZygoteState() {
         if (isZygote) {
-            logW(tag(), "in zygote state, please set classloader!");
+            logW(tag(), "in zygote state, please set classloader!" + getStackTrace());
             return true;
         }
         return false;

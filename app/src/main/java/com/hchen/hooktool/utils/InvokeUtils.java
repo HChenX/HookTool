@@ -18,6 +18,8 @@
  */
 package com.hchen.hooktool.utils;
 
+import static com.hchen.hooktool.utils.LogExpand.getStackTrace;
+
 import com.hchen.hooktool.log.AndroidLog;
 
 import java.lang.reflect.Field;
@@ -70,7 +72,7 @@ public class InvokeUtils {
                                           Class<?>[] param /* 方法参数 */, Object... value /* 值 */) {
         Method declaredMethod;
         if (clz == null && instance == null) {
-            AndroidLog.logW(TAG, "class is null! can't invoke method: " + method);
+            AndroidLog.logW(TAG, "class is null! can't invoke method: " + method + getStackTrace());
             return null;
         } else if (clz == null) {
             clz = instance.getClass();
@@ -85,7 +87,7 @@ public class InvokeUtils {
             declaredMethod.setAccessible(true);
             return (T) declaredMethod.invoke(instance, value);
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-            AndroidLog.logE(TAG, "reflection call method failed! class: [" + clz.getName() + "], method: " + method, e);
+            AndroidLog.logE(TAG, "reflection call method failed! class: [" + clz.getSimpleName() + "], method: " + method, e);
             return null;
         }
     }
@@ -97,7 +99,7 @@ public class InvokeUtils {
                                          boolean set /* 是否为 set 模式 */, Object value /* 指定值 */) {
         Field declaredField = null;
         if (clz == null && instance == null) {
-            AndroidLog.logW(TAG, "class is null! can't invoke field: " + field);
+            AndroidLog.logW(TAG, "class is null! can't invoke field: " + field + getStackTrace());
             return null;
         } else if (clz == null) {
             clz = instance.getClass();
@@ -131,7 +133,7 @@ public class InvokeUtils {
             } else
                 return (T) declaredField.get(instance);
         } catch (NoSuchFieldException | IllegalAccessException e) {
-            AndroidLog.logE(TAG, "reflection call method failed! class: " +
+            AndroidLog.logE(TAG, "reflection field failed! class: " +
                     "[" + (clz != null ? clz.getName() : null) + "], field: " + field, e);
             return null;
         }

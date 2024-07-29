@@ -19,6 +19,7 @@
 package com.hchen.hooktool;
 
 import static com.hchen.hooktool.log.XposedLog.logI;
+import static com.hchen.hooktool.utils.LogExpand.getStackTrace;
 
 import androidx.annotation.IntDef;
 
@@ -44,7 +45,7 @@ public class HCInit {
     public static final int LOG_I = 3;
     public static final int LOG_D = 4;
     // ------- END --------------
-    
+
     private static ClassLoader classLoader = null;
     private static boolean canUseSystemClassLoader = false;
 
@@ -60,6 +61,7 @@ public class HCInit {
     }
 
     // ---------- 初始化工具 ----------
+
     /**
      * 务必设置！
      * <p>
@@ -73,7 +75,7 @@ public class HCInit {
         classLoader = loadPackageParam.classLoader;
         String packageName = loadPackageParam.packageName;
         putClassLoader();
-        logI("init lpparam: [" + loadPackageParam + "]," + " classLoader: [" + classLoader + "], pkg name: " + packageName);
+        logI("HCInit: init classLoader: [" + classLoader + "], pkg name: " + packageName);
     }
 
     /**
@@ -106,15 +108,6 @@ public class HCInit {
     }
 
     /**
-     * 是否自动对每个被 hook 的方法，在其被调用时打印日志。
-     * <p>
-     * Whether to automatically print a log for each method that is hooked when it is called.
-     */
-    public static void autoObserveCall(boolean auto) {
-        ToolData.autoObserveCall = auto;
-    }
-
-    /**
      * 是否自动更新 xprefs 数据。
      * <p>
      * 工具默认开启，但可能会增加耗时。
@@ -142,7 +135,7 @@ public class HCInit {
             ToolData.classLoader = ClassLoader.getSystemClassLoader();
             return;
         }
-        throw new RuntimeException(ToolData.mInitTag + "[E]: failed to obtain ClassLoader! it is null!");
+        throw new RuntimeException(ToolData.mInitTag + "[E]: HCInit: failed to obtain ClassLoader! it is null!" + getStackTrace());
     }
 
     /**
