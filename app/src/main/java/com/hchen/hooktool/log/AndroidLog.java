@@ -20,7 +20,7 @@ package com.hchen.hooktool.log;
 
 import android.util.Log;
 
-import com.hchen.hooktool.utils.ToolData;
+import com.hchen.hooktool.data.ToolData;
 
 /**
  * 安卓日志

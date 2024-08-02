@@ -16,7 +16,7 @@
 
  * Copyright (C) 2023-2024 HookTool Contributions
  */
-package com.hchen.hooktool.utils;
+package com.hchen.hooktool.additional;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;

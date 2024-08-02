@@ -18,7 +18,7 @@
  */
 package com.hchen.hooktool.log;
 
-import com.hchen.hooktool.utils.ToolData;
+import com.hchen.hooktool.data.ToolData;
 
 import de.robv.android.xposed.XposedBridge;
 

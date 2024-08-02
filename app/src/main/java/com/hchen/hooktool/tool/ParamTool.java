@@ -20,8 +20,8 @@ package com.hchen.hooktool.tool;
 
 import static com.hchen.hooktool.log.LogExpand.getStackTrace;
 
+import com.hchen.hooktool.data.ToolData;
 import com.hchen.hooktool.helper.param.Arguments;
-import com.hchen.hooktool.utils.ToolData;
 
 import java.lang.reflect.Member;
 

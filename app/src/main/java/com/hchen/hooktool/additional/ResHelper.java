@@ -16,7 +16,7 @@
 
  * Copyright (C) 2023-2024 HookTool Contributions
  */
-package com.hchen.hooktool.utils;
+package com.hchen.hooktool.additional;
 
 import static com.hchen.hooktool.log.LogExpand.getStackTrace;
 import static com.hchen.hooktool.log.XposedLog.logE;
@@ -30,6 +30,8 @@ import android.os.Build;
 import android.os.ParcelFileDescriptor;
 
 import androidx.annotation.RequiresApi;
+
+import com.hchen.hooktool.data.ToolData;
 
 import java.io.File;
 import java.io.IOException;

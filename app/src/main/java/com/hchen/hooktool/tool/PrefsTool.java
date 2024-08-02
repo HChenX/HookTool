@@ -26,10 +26,10 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import com.hchen.hooktool.additional.ContextUtils;
+import com.hchen.hooktool.data.ToolData;
 import com.hchen.hooktool.itool.IPrefs;
 import com.hchen.hooktool.log.AndroidLog;
-import com.hchen.hooktool.utils.ContextUtils;
-import com.hchen.hooktool.utils.ToolData;
 
 import org.jetbrains.annotations.Nullable;
 

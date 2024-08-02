@@ -22,7 +22,7 @@ import static com.hchen.hooktool.log.LogExpand.getStackTrace;
 import static com.hchen.hooktool.log.XposedLog.logW;
 
 import com.hchen.hooktool.callback.IAction;
-import com.hchen.hooktool.utils.ToolData;
+import com.hchen.hooktool.data.ToolData;
 
 import java.util.ArrayList;
 import java.util.Arrays;

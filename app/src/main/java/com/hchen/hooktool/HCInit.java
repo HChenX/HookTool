@@ -23,7 +23,7 @@ import static com.hchen.hooktool.log.XposedLog.logI;
 
 import androidx.annotation.IntDef;
 
-import com.hchen.hooktool.utils.ToolData;
+import com.hchen.hooktool.data.ToolData;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

@@ -16,9 +16,9 @@
 
  * Copyright (C) 2023-2024 HookTool Contributions
  */
-package com.hchen.hooktool.utils;
+package com.hchen.hooktool.additional;
 
-import static com.hchen.hooktool.utils.PropUtils.getProp;
+import static com.hchen.hooktool.additional.PropUtils.getProp;
 
 import android.annotation.SuppressLint;
 import android.content.res.Configuration;

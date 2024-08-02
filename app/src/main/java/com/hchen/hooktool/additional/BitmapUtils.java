@@ -16,7 +16,7 @@
 
  * Copyright (C) 2023-2024 HookTool Contributions
  */
-package com.hchen.hooktool.utils;
+package com.hchen.hooktool.additional;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;

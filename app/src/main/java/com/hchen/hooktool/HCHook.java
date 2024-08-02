@@ -18,12 +18,12 @@
  */
 package com.hchen.hooktool;
 
+import com.hchen.hooktool.data.ToolData;
 import com.hchen.hooktool.helper.ConvertHelper;
 import com.hchen.hooktool.helper.HookFactory;
 import com.hchen.hooktool.tool.ChainTool;
 import com.hchen.hooktool.tool.CoreTool;
 import com.hchen.hooktool.tool.PrefsTool;
-import com.hchen.hooktool.utils.ToolData;
 
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 

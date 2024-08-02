@@ -16,7 +16,7 @@
 
  * Copyright (C) 2023-2024 HookTool Contributions
  */
-package com.hchen.hooktool.utils;
+package com.hchen.hooktool.additional;
 
 import static com.hchen.hooktool.log.LogExpand.getStackTrace;
 

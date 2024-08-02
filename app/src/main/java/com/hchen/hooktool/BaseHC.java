@@ -24,6 +24,7 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 
 import com.hchen.hooktool.callback.IAction;
+import com.hchen.hooktool.data.ToolData;
 import com.hchen.hooktool.itool.IChain;
 import com.hchen.hooktool.itool.IDynamic;
 import com.hchen.hooktool.itool.IFilter;
@@ -33,7 +34,6 @@ import com.hchen.hooktool.itool.IStatic;
 import com.hchen.hooktool.tool.ChainTool;
 import com.hchen.hooktool.tool.CoreTool;
 import com.hchen.hooktool.tool.PrefsTool;
-import com.hchen.hooktool.utils.ToolData;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;

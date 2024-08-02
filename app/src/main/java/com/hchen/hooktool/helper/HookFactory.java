@@ -20,7 +20,7 @@ package com.hchen.hooktool.helper;
 
 import com.hchen.hooktool.callback.IAction;
 import com.hchen.hooktool.data.Priority;
-import com.hchen.hooktool.utils.ToolData;
+import com.hchen.hooktool.data.ToolData;
 
 import de.robv.android.xposed.XC_MethodHook;
 
