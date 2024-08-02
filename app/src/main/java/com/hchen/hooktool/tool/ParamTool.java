@@ -18,9 +18,9 @@
  */
 package com.hchen.hooktool.tool;
 
-import static com.hchen.hooktool.utils.LogExpand.getStackTrace;
+import static com.hchen.hooktool.log.LogExpand.getStackTrace;
 
-import com.hchen.hooktool.tool.param.Arguments;
+import com.hchen.hooktool.helper.param.Arguments;
 import com.hchen.hooktool.utils.ToolData;
 
 import java.lang.reflect.Member;
@@ -32,6 +32,8 @@ import de.robv.android.xposed.XposedBridge;
  * 参数工具
  * <p>
  * Parameter tool
+ * 
+ * @author 焕晨HChen
  */
 public class ParamTool extends Arguments {
     // hook 的方法的所在类
@@ -40,37 +42,16 @@ public class ParamTool extends Arguments {
     public Member mMember;
     // hook 的方法的参数
     public Object[] mArgs;
-    // 自身
-    public ParamTool paramTool = this;
 
     private XC_MethodHook xcMethodHook;
-
-    final protected void putMethodHookParam(XC_MethodHook.MethodHookParam param) {
-        if (param == null)
-            throw new RuntimeException(ToolData.mInitTag + 
-                    "[" + mTag + "][E]: ParamTool: param is null!" + getStackTrace());
-        this.methodHookParam = param;
-        mClass = param.method.getDeclaringClass();
-        mMember = param.method;
-        mArgs = param.args;
-    }
-
-    final protected void putXCMethodHook(XC_MethodHook xcMethodHook) {
-        this.xcMethodHook = xcMethodHook;
-    }
-
-    final protected void putUtils(ToolData data) {
-        mTag = data.tag();
-        iDynamic = data.coreTool();
-    }
-
+    
     /**
      * 被 hook 类的实例。
      * <p>
      * An instance of the hook class.
      */
     final public <T> T thisObject() {
-        return (T) methodHookParam.thisObject;
+        return (T) MethodHookParam.thisObject;
     }
 
     /**
@@ -88,15 +69,25 @@ public class ParamTool extends Arguments {
      * Returns the classloader of the hooked instance.
      */
     final public ClassLoader classLoader() {
-        return methodHookParam.thisObject.getClass().getClassLoader();
+        return MethodHookParam.thisObject.getClass().getClassLoader();
     }
 
-    /**
-     * 获取原参数。
-     * <p>
-     * Get the original parameters.
-     */
-    final public XC_MethodHook.MethodHookParam originalParam() {
-        return methodHookParam;
+    final public void MethodHookParam(XC_MethodHook.MethodHookParam param) {
+        if (param == null)
+            throw new RuntimeException(ToolData.mInitTag +
+                    "[" + mTag + "][E]: ParamTool: param is null!" + getStackTrace());
+        this.MethodHookParam = param;
+        mClass = param.method.getDeclaringClass();
+        mMember = param.method;
+        mArgs = param.args;
+    }
+
+    final public void XCMethodHook(XC_MethodHook xcMethodHook) {
+        this.xcMethodHook = xcMethodHook;
+    }
+
+    final public void ToolData(ToolData data) {
+        mTag = data.tag();
+        Dynamic = data.coreTool;
     }
 }

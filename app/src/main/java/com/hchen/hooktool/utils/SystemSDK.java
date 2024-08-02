@@ -33,6 +33,8 @@ import java.util.Locale;
  * 此类用于获取设备基本信息
  * <p>
  * This class is used to obtain basic information about the device
+ * 
+ * @author 焕晨HChen
  */
 public class SystemSDK {
     public static String getSystemVersionIncremental() {

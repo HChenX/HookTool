@@ -18,7 +18,7 @@
  */
 package com.hchen.hooktool.utils;
 
-import static com.hchen.hooktool.utils.LogExpand.getStackTrace;
+import static com.hchen.hooktool.log.LogExpand.getStackTrace;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -43,6 +43,8 @@ import java.util.Objects;
  * 软件包实用程序
  * <p>
  * Package utility
+ * 
+ * @author 焕晨HChen
  */
 public class PackagesUtils {
     private static final String TAG = "PackagesUtils";

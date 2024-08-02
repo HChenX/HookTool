@@ -18,7 +18,7 @@
  */
 package com.hchen.hooktool.utils;
 
-import static com.hchen.hooktool.utils.LogExpand.getStackTrace;
+import static com.hchen.hooktool.log.LogExpand.getStackTrace;
 
 import com.hchen.hooktool.log.AndroidLog;
 
@@ -32,6 +32,8 @@ import java.util.HashMap;
  * 本类为反射工具，提供简易的反射功能
  * <p>
  * This class is a reflection tool that provides a simple reflection function
+ * 
+ * @author 焕晨HChen
  */
 public class InvokeUtils {
     private static final HashMap<String, Method> methodCache = new HashMap<>();

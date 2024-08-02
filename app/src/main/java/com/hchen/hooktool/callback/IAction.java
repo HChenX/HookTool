@@ -18,20 +18,33 @@
  */
 package com.hchen.hooktool.callback;
 
+import com.hchen.hooktool.data.Priority;
 import com.hchen.hooktool.tool.ParamTool;
 
 /**
  * Hook 动作接口
  * <p>
  * Hook action interface
+ * 
+ * @author 焕晨HChen
  */
 public abstract class IAction extends ParamTool {
+    public final Priority priority;
+
+    public IAction() {
+        this.priority = Priority.DEFAULT;
+    }
+
+    public IAction(Priority priority) {
+        this.priority = priority;
+    }
+
     /**
      * 在目标方法调用前回调。
      * <p>
      * Callback before the target method is called.
      */
-    public void before() throws Throwable {
+    public void before() {
     }
 
     /**
@@ -39,6 +52,6 @@ public abstract class IAction extends ParamTool {
      * <p>
      * Callbacks after the target method is called.
      */
-    public void after() throws Throwable {
+    public void after() {
     }
 }

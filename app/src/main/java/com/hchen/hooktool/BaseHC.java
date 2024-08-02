@@ -31,6 +31,7 @@ import com.hchen.hooktool.itool.IMember;
 import com.hchen.hooktool.itool.IPrefs;
 import com.hchen.hooktool.itool.IStatic;
 import com.hchen.hooktool.tool.ChainTool;
+import com.hchen.hooktool.tool.CoreTool;
 import com.hchen.hooktool.tool.PrefsTool;
 import com.hchen.hooktool.utils.ToolData;
 
@@ -45,9 +46,11 @@ import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 /**
- * 对需要使用工具的类继承本类，可快速使用工具。
+ * 对需要使用工具的类继承本类，可快速使用工具
  * <p>
- * This class inherits from the class that requires the use of the tool, so that you can quickly use the tool.
+ * This class inherits from the class that requires the use of the tool, so that you can quickly use the tool
+ * 
+ * @author 焕晨HChen
  */
 public abstract class BaseHC implements IMember, IDynamic, IStatic, IChain {
     public String TAG = getClass().getSimpleName();
@@ -60,10 +63,10 @@ public abstract class BaseHC implements IMember, IDynamic, IStatic, IChain {
     public boolean isFirstApplication;
     public String processName;
     // END
-    
+
     // 在外处使用可以传递本参数。
     public BaseHC baseHC;
-    
+
     private boolean isZygote = false;
     private HCHook hcHook;
     private PrefsTool prefs;
@@ -246,7 +249,12 @@ public abstract class BaseHC implements IMember, IDynamic, IStatic, IChain {
     }
 
     @Override
-    final public Method findMethod(Class<?> clazz, String name, Object... objects) {
+    final public Method findMethod(Class<?> clazz, ClassLoader classLoader, String name, Object... objects) {
+        return iMember.findMethod(clazz, classLoader, name, objects);
+    }
+
+    @Override
+    final public Method findMethod(Class<?> clazz, String name, Class<?>... objects) {
         return iMember.findMethod(clazz, name, objects);
     }
 
@@ -278,7 +286,12 @@ public abstract class BaseHC implements IMember, IDynamic, IStatic, IChain {
     }
 
     @Override
-    final public Constructor<?> findConstructor(Class<?> clazz, Object... objects) {
+    final public Constructor<?> findConstructor(Class<?> clazz, ClassLoader classLoader, Object... objects) {
+        return iMember.findConstructor(clazz, classLoader, objects);
+    }
+
+    @Override
+    final public Constructor<?> findConstructor(Class<?> clazz, Class<?>... objects) {
         return iMember.findConstructor(clazz, objects);
     }
 
@@ -327,74 +340,84 @@ public abstract class BaseHC implements IMember, IDynamic, IStatic, IChain {
 
     // ---------- hook 一般方法 ----------
     @Override
-    final public XC_MethodHook.Unhook hook(String clazz, String method, Object... params) {
+    final public CoreTool.UnHook hook(String clazz, String method, Object... params) {
         return iMember.hook(clazz, method, params);
     }
 
     @Override
-    final public XC_MethodHook.Unhook hook(String clazz, ClassLoader classLoader, String method, Object... params) {
+    final public CoreTool.UnHook hook(String clazz, ClassLoader classLoader, String method, Object... params) {
         return iMember.hook(clazz, classLoader, method, params);
     }
 
     @Override
-    final public XC_MethodHook.Unhook hook(Class<?> clazz, String method, Object... params) {
+    final public CoreTool.UnHook hook(Class<?> clazz, ClassLoader classLoader, String method, Object... params) {
+        return iMember.hook(clazz, classLoader, method, params);
+    }
+
+    @Override
+    final public CoreTool.UnHook hook(Class<?> clazz, String method, Object... params) {
         return iMember.hook(clazz, method, params);
     }
 
     @Override
-    final public ArrayList<XC_MethodHook.Unhook> hookAll(String clazz, String method, IAction iAction) {
+    final public CoreTool.UnHookList hookAll(String clazz, String method, IAction iAction) {
         return iMember.hookAll(clazz, method, iAction);
     }
 
     @Override
-    final public ArrayList<XC_MethodHook.Unhook> hookAll(String clazz, ClassLoader classLoader, String method, IAction iAction) {
+    final public CoreTool.UnHookList hookAll(String clazz, ClassLoader classLoader, String method, IAction iAction) {
         return iMember.hookAll(clazz, classLoader, method, iAction);
     }
 
     @Override
-    final public ArrayList<XC_MethodHook.Unhook> hookAll(Class<?> clazz, String method, IAction iAction) {
+    final public CoreTool.UnHookList hookAll(Class<?> clazz, String method, IAction iAction) {
         return iMember.hookAll(clazz, method, iAction);
     }
 
     // ---------- hook 构造函数 ------------
     @Override
-    final public XC_MethodHook.Unhook hook(String clazz, Object... params) {
+    final public CoreTool.UnHook hook(String clazz, Object... params) {
         return iMember.hook(clazz, params);
     }
 
     @Override
-    final public XC_MethodHook.Unhook hook(String clazz, ClassLoader classLoader, Object... params) {
+    final public CoreTool.UnHook hook(String clazz, ClassLoader classLoader, Object... params) {
         return iMember.hook(clazz, classLoader, params);
     }
 
     @Override
-    final public XC_MethodHook.Unhook hook(Class<?> clazz, Object... params) {
+    final public CoreTool.UnHook hook(Class<?> clazz, ClassLoader classLoader, Object... params) {
+        return iMember.hook(clazz, classLoader, params);
+    }
+
+    @Override
+    final public CoreTool.UnHook hook(Class<?> clazz, Object... params) {
         return iMember.hook(clazz, params);
     }
 
     @Override
-    final public ArrayList<XC_MethodHook.Unhook> hookAll(String clazz, IAction iAction) {
+    final public CoreTool.UnHookList hookAll(String clazz, IAction iAction) {
         return iMember.hookAll(clazz, iAction);
     }
 
     @Override
-    final public ArrayList<XC_MethodHook.Unhook> hookAll(String clazz, ClassLoader classLoader, IAction iAction) {
+    final public CoreTool.UnHookList hookAll(String clazz, ClassLoader classLoader, IAction iAction) {
         return iMember.hookAll(clazz, classLoader, iAction);
     }
 
     @Override
-    final public ArrayList<XC_MethodHook.Unhook> hookAll(Class<?> clazz, IAction iAction) {
+    final public CoreTool.UnHookList hookAll(Class<?> clazz, IAction iAction) {
         return iMember.hookAll(clazz, iAction);
     }
 
     // ----------- 核心方法 ------------
     @Override
-    final public XC_MethodHook.Unhook hook(Member member, IAction iAction) {
+    final public CoreTool.UnHook hook(Member member, IAction iAction) {
         return iMember.hook(member, iAction);
     }
 
     @Override
-    final public ArrayList<XC_MethodHook.Unhook> hookAll(ArrayList<?> members, IAction iAction) {
+    final public CoreTool.UnHookList hookAll(ArrayList<?> members, IAction iAction) {
         return iMember.hookAll(members, iAction);
     }
 
@@ -409,20 +432,10 @@ public abstract class BaseHC implements IMember, IDynamic, IStatic, IChain {
         return iMember.doNothing();
     }
 
-    // --------- 解除 hook ---------------
-    @Override
-    final public boolean unHook(XC_MethodHook.Unhook unhook) {
-        return iMember.unHook(unhook);
-    }
-
+    // --------- 解除 hook ---------
     @Override
     final public boolean unHook(Member hookMember, XC_MethodHook xcMethodHook) {
         return iMember.unHook(hookMember, xcMethodHook);
-    }
-
-    @Override
-    final public boolean unHookAll(ArrayList<XC_MethodHook.Unhook> unhooks) {
-        return iMember.unHookAll(unhooks);
     }
 
     // ----------- 过滤方法 -------------

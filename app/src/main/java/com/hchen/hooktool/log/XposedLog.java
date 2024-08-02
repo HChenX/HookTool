@@ -18,7 +18,6 @@
  */
 package com.hchen.hooktool.log;
 
-import com.hchen.hooktool.utils.LogExpand;
 import com.hchen.hooktool.utils.ToolData;
 
 import de.robv.android.xposed.XposedBridge;
@@ -27,6 +26,8 @@ import de.robv.android.xposed.XposedBridge;
  * LSP 框架日志类
  * <p>
  * LSP framework log class
+ * 
+ * @author 焕晨HChen
  */
 public class XposedLog {
     // -------- logE -------------

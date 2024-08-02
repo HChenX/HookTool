@@ -16,10 +16,10 @@
 
  * Copyright (C) 2023-2024 HookTool Contributions
  */
-package com.hchen.hooktool.tool.param;
+package com.hchen.hooktool.helper.param;
 
 import com.hchen.hooktool.itool.IDynamic;
-import com.hchen.hooktool.utils.LogExpand;
+import com.hchen.hooktool.log.LogExpand;
 
 import de.robv.android.xposed.XC_MethodHook;
 
@@ -27,13 +27,14 @@ import de.robv.android.xposed.XC_MethodHook;
  * 动作
  * <p>
  * Action
+ * 
+ * @author 焕晨HChen
  */
 public class ActAchieve {
-    public XC_MethodHook.MethodHookParam methodHookParam;
+    public XC_MethodHook.MethodHookParam MethodHookParam;
     public String mTag;
-    public IDynamic iDynamic;
+    public IDynamic Dynamic;
     private LogExpand logExpand;
-    // protected ToolData data;
 
     /**
      * 获取方法执行完毕后的返回值。
@@ -41,7 +42,7 @@ public class ActAchieve {
      * Obtain the return value after the method is executed.
      */
     final public <T> T getResult() {
-        return (T) methodHookParam.getResult();
+        return (T) MethodHookParam.getResult();
     }
 
     /**
@@ -53,7 +54,7 @@ public class ActAchieve {
      * after, to modify the returned result.
      */
     final public void setResult(Object value) {
-        methodHookParam.setResult(value);
+        MethodHookParam.setResult(value);
     }
 
     /**
@@ -63,7 +64,7 @@ public class ActAchieve {
      * before, to invalidate the method. after, to modify the returned result.
      */
     final public void returnNull() {
-        methodHookParam.setResult(null);
+        MethodHookParam.setResult(null);
     }
 
     /**
@@ -72,7 +73,7 @@ public class ActAchieve {
      * Causes the method to return the specified boolean value of true.
      */
     final public void returnTure() {
-        methodHookParam.setResult(true);
+        MethodHookParam.setResult(true);
     }
 
     /**
@@ -81,7 +82,7 @@ public class ActAchieve {
      * Causes the method to return the specified boolean value of false.
      */
     final public void returnFalse() {
-        methodHookParam.setResult(false);
+        MethodHookParam.setResult(false);
     }
 
     /**
@@ -90,7 +91,7 @@ public class ActAchieve {
      * If the method throws an exception, it returns true.
      */
     final public boolean hasCrash() {
-        return methodHookParam.hasThrowable();
+        return MethodHookParam.hasThrowable();
     }
 
     /**
@@ -99,7 +100,7 @@ public class ActAchieve {
      * Returns an exception thrown by the method or returns null.
      */
     final public Throwable getCrash() {
-        return methodHookParam.getThrowable();
+        return MethodHookParam.getThrowable();
     }
 
     /**
@@ -108,7 +109,7 @@ public class ActAchieve {
      * An exception is thrown. if used in before to prevent the method from executing.
      */
     final public void makeCrash(Throwable t) {
-        methodHookParam.setThrowable(t);
+        MethodHookParam.setThrowable(t);
     }
 
     /**
@@ -117,7 +118,7 @@ public class ActAchieve {
      * Returns the result of a method call, or gets an exception for that method.
      */
     final public <T> T getResultOrThrowable() throws Throwable {
-        return (T) methodHookParam.getResultOrThrowable();
+        return (T) MethodHookParam.getResultOrThrowable();
     }
 
     // --------- 观察调用 --------------
@@ -128,36 +129,36 @@ public class ActAchieve {
      */
     final public void observeCall() {
         if (logExpand == null) {
-            logExpand = new LogExpand(methodHookParam, mTag);
+            logExpand = new LogExpand(MethodHookParam, mTag);
         }
-        logExpand.update(methodHookParam);
+        logExpand.update(MethodHookParam);
         logExpand.detailedLogs();
     }
 
     // --------- 调用方法 --------------
     final public <T> T callThisMethod(String name, Object... objs) {
-        return iDynamic.callMethod(methodHookParam.thisObject, name, objs);
+        return Dynamic.callMethod(MethodHookParam.thisObject, name, objs);
     }
 
     // ----------- 获取/修改 字段 -------------
     final public <T> T getThisField(String name) {
-        return iDynamic.getField(methodHookParam.thisObject, name);
+        return Dynamic.getField(MethodHookParam.thisObject, name);
     }
 
     final public boolean setThisField(String name, Object value) {
-        return iDynamic.setField(methodHookParam.thisObject, name, value);
+        return Dynamic.setField(MethodHookParam.thisObject, name, value);
     }
 
     // ---------- 设置自定义字段 --------------
     final public boolean setThisAdditionalInstanceField(String key, Object value) {
-        return iDynamic.setAdditionalInstanceField(methodHookParam.thisObject, key, value);
+        return Dynamic.setAdditionalInstanceField(MethodHookParam.thisObject, key, value);
     }
 
     final public <T> T getThisAdditionalInstanceField(String key) {
-        return iDynamic.getAdditionalInstanceField(methodHookParam.thisObject, key);
+        return Dynamic.getAdditionalInstanceField(MethodHookParam.thisObject, key);
     }
 
     final public boolean removeThisAdditionalInstanceField(String key) {
-        return iDynamic.removeAdditionalInstanceField(methodHookParam.thisObject, key);
+        return Dynamic.removeAdditionalInstanceField(MethodHookParam.thisObject, key);
     }
 }

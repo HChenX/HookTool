@@ -18,9 +18,9 @@
  */
 package com.hchen.hooktool.tool;
 
+import static com.hchen.hooktool.log.LogExpand.getStackTrace;
 import static com.hchen.hooktool.log.XposedLog.logE;
 import static com.hchen.hooktool.log.XposedLog.logW;
-import static com.hchen.hooktool.utils.LogExpand.getStackTrace;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -43,6 +43,8 @@ import de.robv.android.xposed.XSharedPreferences;
  * prefs 工具
  * <p>
  * prefs tool
+ * 
+ * @author 焕晨HChen
  */
 public class PrefsTool {
     private ToolData data;

@@ -26,6 +26,8 @@ import com.hchen.hooktool.tool.ChainTool;
  * <p>
  * For more information about the chained API method, see Implementation Class. <br>
  * {@link com.hchen.hooktool.tool.ChainTool}
+ * 
+ * @author 焕晨HChen
  */
 public interface IChain {
 

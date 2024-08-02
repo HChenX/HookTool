@@ -19,6 +19,7 @@
 package com.hchen.hooktool.itool;
 
 import com.hchen.hooktool.callback.IAction;
+import com.hchen.hooktool.tool.CoreTool;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -34,6 +35,8 @@ import de.robv.android.xposed.XC_MethodHook;
  * <p>
  * For more information about member operation interfaces and methods, please refer to the implementation class. <br>
  * {@link com.hchen.hooktool.tool.CoreTool}
+ * 
+ * @author 焕晨HChen
  */
 public interface IMember {
     // ---------- 查找类是否存在 -------------
@@ -61,7 +64,9 @@ public interface IMember {
 
     Method findMethod(String clazz, ClassLoader classLoader, String name, Object... objects);
 
-    Method findMethod(Class<?> clazz, String name, Object... objects);
+    Method findMethod(Class<?> clazz, ClassLoader classLoader, String name, Object... objects);
+
+    Method findMethod(Class<?> clazz, String name, Class<?>... objects);
 
     ArrayList<Method> findAnyMethod(String clazz, String name);
 
@@ -74,7 +79,9 @@ public interface IMember {
 
     Constructor<?> findConstructor(String clazz, ClassLoader classLoader, Object... objects);
 
-    Constructor<?> findConstructor(Class<?> clazz, Object... objects);
+    Constructor<?> findConstructor(Class<?> clazz, ClassLoader classLoader, Object... objects);
+
+    Constructor<?> findConstructor(Class<?> clazz, Class<?>... objects);
 
     ArrayList<Constructor<?>> findAnyConstructor(String clazz);
 
@@ -95,52 +102,52 @@ public interface IMember {
 
     // --------- 执行 hook -----------
     // --------- 普通方法 -------------
-    XC_MethodHook.Unhook hook(String clazz, String method, Object... params);
+    CoreTool.UnHook hook(String clazz, String method, Object... params);
 
-    XC_MethodHook.Unhook hook(String clazz, ClassLoader classLoader, String method, Object... params);
+    CoreTool.UnHook hook(String clazz, ClassLoader classLoader, String method, Object... params);
 
-    XC_MethodHook.Unhook hook(Class<?> clazz, String method, Object... params);
+    CoreTool.UnHook hook(Class<?> clazz, ClassLoader classLoader, String method, Object... params);
 
-    ArrayList<XC_MethodHook.Unhook> hookAll(String clazz, String method, IAction iAction);
+    CoreTool.UnHook hook(Class<?> clazz, String method, Object... params);
 
-    ArrayList<XC_MethodHook.Unhook> hookAll(String clazz, ClassLoader classLoader, String method, IAction iAction);
+    CoreTool.UnHookList hookAll(String clazz, String method, IAction iAction);
 
-    ArrayList<XC_MethodHook.Unhook> hookAll(Class<?> clazz, String method, IAction iAction);
+    CoreTool.UnHookList hookAll(String clazz, ClassLoader classLoader, String method, IAction iAction);
+
+    CoreTool.UnHookList hookAll(Class<?> clazz, String method, IAction iAction);
 
     // --------- 构造函数 ------------
-    XC_MethodHook.Unhook hook(String clazz, Object... params);
+    CoreTool.UnHook hook(String clazz, Object... params);
 
-    XC_MethodHook.Unhook hook(String clazz, ClassLoader classLoader, Object... params);
+    CoreTool.UnHook hook(String clazz, ClassLoader classLoader, Object... params);
 
-    XC_MethodHook.Unhook hook(Class<?> clazz, Object... params);
+    CoreTool.UnHook hook(Class<?> clazz, ClassLoader classLoader, Object... params);
 
-    ArrayList<XC_MethodHook.Unhook> hookAll(String clazz, IAction iAction);
+    CoreTool.UnHook hook(Class<?> clazz, Object... params);
 
-    ArrayList<XC_MethodHook.Unhook> hookAll(String clazz, ClassLoader classLoader, IAction iAction);
+    CoreTool.UnHookList hookAll(String clazz, IAction iAction);
 
-    ArrayList<XC_MethodHook.Unhook> hookAll(Class<?> clazz, IAction iAction);
+    CoreTool.UnHookList hookAll(String clazz, ClassLoader classLoader, IAction iAction);
+
+    CoreTool.UnHookList hookAll(Class<?> clazz, IAction iAction);
 
     // --------- 核心实现 -------------
-    XC_MethodHook.Unhook hook(Member member, IAction iAction);
+    CoreTool.UnHook hook(Member member, IAction iAction);
 
-    ArrayList<XC_MethodHook.Unhook> hookAll(ArrayList<?> members, IAction iAction);
+    CoreTool.UnHookList hookAll(ArrayList<?> members, IAction iAction);
 
     // --------- 快捷方法 -------------
     IAction returnResult(final Object result);
 
     IAction doNothing();
 
-    // --------- 解除 hook ---------
-    boolean unHook(XC_MethodHook.Unhook unhook);
-
+    // --------- 解除 hook ------------
     boolean unHook(Member hookMember, XC_MethodHook xcMethodHook);
-
-    boolean unHookAll(ArrayList<XC_MethodHook.Unhook> unhooks);
 
     // --------- 过滤方法 -----------
     ArrayList<Method> filterMethod(String clazz, IFilter iFilter);
 
-    ArrayList<Method> filterMethod(String clazz, ClassLoader classLoader,IFilter iFilter);
+    ArrayList<Method> filterMethod(String clazz, ClassLoader classLoader, IFilter iFilter);
 
     ArrayList<Method> filterMethod(Class<?> clazz, IFilter iFilter);
 

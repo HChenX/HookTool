@@ -27,6 +27,8 @@ import java.lang.reflect.Method;
  * <p>
  * Static method class, for more information about methods, please see Implementation class. <br>
  * {@link com.hchen.hooktool.tool.CoreTool}
+ * 
+ * @author 焕晨HChen
  */
 public interface IStatic {
     // --------- 实例类 ------------

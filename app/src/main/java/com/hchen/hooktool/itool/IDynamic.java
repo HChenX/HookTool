@@ -26,6 +26,8 @@ import java.lang.reflect.Field;
  * <p>
  * Dynamic method interface, see Implementation class for specific introduction of methods. <br>
  * {@link com.hchen.hooktool.tool.CoreTool}
+ * 
+ * @author 焕晨HChen
  */
 public interface IDynamic {
 

@@ -27,6 +27,8 @@ import android.content.Context;
  * 本类为 prop 工具，可以获取或者写入系统 prop 条目
  * <p>
  * This class is a prop tool, which can be obtained or written to the system prop entry
+ * 
+ * @author 焕晨HChen
  */
 @SuppressLint("PrivateApi")
 public class PropUtils {

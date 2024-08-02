@@ -28,7 +28,7 @@ import com.hchen.hooktool.itool.IDynamic;
 import com.hchen.hooktool.itool.IFilter;
 import com.hchen.hooktool.itool.IMember;
 import com.hchen.hooktool.itool.IStatic;
-import com.hchen.hooktool.utils.LogExpand;
+import com.hchen.hooktool.log.LogExpand;
 import com.hchen.hooktool.utils.ToolData;
 
 import java.lang.reflect.Constructor;
@@ -40,6 +40,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedBridge;
@@ -49,6 +50,8 @@ import de.robv.android.xposed.XposedHelpers;
  * 核心工具
  * <p>
  * Core tool
+ * 
+ * @author 焕晨HChen
  */
 public class CoreTool implements IDynamic, IStatic, IMember {
     private final ToolData data;
@@ -66,7 +69,7 @@ public class CoreTool implements IDynamic, IStatic, IMember {
      */
     public boolean existsClass(String clazz) {
         if (data.isZygoteState()) return false;
-        return existsClass(clazz, data.classLoader());
+        return existsClass(clazz, ToolData.classLoader);
     }
 
     public boolean existsClass(String clazz, ClassLoader classLoader) {
@@ -77,14 +80,14 @@ public class CoreTool implements IDynamic, IStatic, IMember {
     // --------- 查找类 -----------
     public Class<?> findClass(String name) {
         if (data.isZygoteState()) return null;
-        return findClass(name, data.classLoader());
+        return findClass(name, ToolData.classLoader);
     }
 
     public Class<?> findClass(String name, ClassLoader classLoader) {
         try {
             if (classLoader == null) {
                 logW(data.tag(), "CoreTool: classloader is null, " +
-                        "can't find class: " + name + getStackTrace());
+                        "can't find class: [" + name + "]" + getStackTrace());
                 return null;
             }
             return XposedHelpers.findClass(name, classLoader);
@@ -103,7 +106,7 @@ public class CoreTool implements IDynamic, IStatic, IMember {
      */
     public boolean existsMethod(String clazz, String name, Object... objs) {
         if (data.isZygoteState()) return false;
-        return existsMethod(clazz, data.classLoader(), name, objs);
+        return existsMethod(clazz, ToolData.classLoader, name, objs);
     }
 
     public boolean existsMethod(String clazz, ClassLoader classLoader,
@@ -111,8 +114,7 @@ public class CoreTool implements IDynamic, IStatic, IMember {
         try {
             Class<?> cl = XposedHelpers.findClassIfExists(clazz, classLoader);
             if (cl == null) return false;
-            Class<?>[] classes = data.convertHelper().arrayToClass(classLoader, objs);
-            cl.getDeclaredMethod(name, classes);
+            cl.getDeclaredMethod(name, data.convertHelper.arrayToClass(classLoader, objs));
         } catch (NoSuchMethodException ignored) {
             return false;
         }
@@ -126,7 +128,7 @@ public class CoreTool implements IDynamic, IStatic, IMember {
      */
     public boolean existsAnyMethod(String clazz, String name) {
         if (data.isZygoteState()) return false;
-        return existsAnyMethod(clazz, data.classLoader(), name);
+        return existsAnyMethod(clazz, ToolData.classLoader, name);
     }
 
     public boolean existsAnyMethod(String clazz, ClassLoader classLoader, String name) {
@@ -142,20 +144,24 @@ public class CoreTool implements IDynamic, IStatic, IMember {
 
     // ------------ 查找方法 --------------
     public Method findMethod(String clazz, String name, Object... objects) {
-        return findMethod(findClass(clazz), name, objects);
+        return findMethod(findClass(clazz), name, data.convertHelper.arrayToClass(objects));
     }
 
     public Method findMethod(String clazz, ClassLoader classLoader, String name, Object... objects) {
-        return findMethod(findClass(clazz, classLoader), name, (Object) data.convertHelper().arrayToClass(classLoader, objects));
+        return findMethod(findClass(clazz, classLoader), name, data.convertHelper.arrayToClass(classLoader, objects));
     }
 
-    public Method findMethod(Class<?> clazz, String name, Object... objects) {
+    public Method findMethod(Class<?> clazz, ClassLoader classLoader, String name, Object... objects) {
+        return findMethod(clazz, name, data.convertHelper.arrayToClass(classLoader, objects));
+    }
+
+    public Method findMethod(Class<?> clazz, String name, Class<?>... objects) {
         try {
             if (clazz == null) {
-                logW(data.tag(), "CoreTool: class is null, can't find method: " + name + getStackTrace());
+                logW(data.tag(), "CoreTool: class is null, can't find method: [" + name + "]" + getStackTrace());
                 return null;
             }
-            return clazz.getDeclaredMethod(name, data.convertHelper().arrayToClass(objects));
+            return clazz.getDeclaredMethod(name, objects);
         } catch (NoSuchMethodException e) {
             logE(data.tag(), e);
         }
@@ -173,7 +179,7 @@ public class CoreTool implements IDynamic, IStatic, IMember {
     public ArrayList<Method> findAnyMethod(Class<?> clazz, String name) {
         ArrayList<Method> methods = new ArrayList<>();
         if (clazz == null) {
-            logW(data.tag(), "CoreTool: class is null, can't find any method: " + name + getStackTrace());
+            logW(data.tag(), "CoreTool: class is null, can't find any method: [" + name + "]" + getStackTrace());
             return methods;
         }
         for (Method m : clazz.getDeclaredMethods()) {
@@ -184,20 +190,24 @@ public class CoreTool implements IDynamic, IStatic, IMember {
 
     // --------- 查找构造函数 -----------
     public Constructor<?> findConstructor(String clazz, Object... objects) {
-        return findConstructor(findClass(clazz), objects);
+        return findConstructor(findClass(clazz), data.convertHelper.arrayToClass(objects));
     }
 
     public Constructor<?> findConstructor(String clazz, ClassLoader classLoader, Object... objects) {
-        return findConstructor(findClass(clazz, classLoader), (Object) data.convertHelper().arrayToClass(classLoader, objects));
+        return findConstructor(findClass(clazz, classLoader), data.convertHelper.arrayToClass(classLoader, objects));
     }
 
-    public Constructor<?> findConstructor(Class<?> clazz, Object... objects) {
+    public Constructor<?> findConstructor(Class<?> clazz, ClassLoader classLoader, Object... objects) {
+        return findConstructor(clazz, data.convertHelper.arrayToClass(classLoader, objects));
+    }
+
+    public Constructor<?> findConstructor(Class<?> clazz, Class<?>... objects) {
         try {
             if (clazz == null) {
                 logW(data.tag(), "CoreTool: class is null, can't find constructor!" + getStackTrace());
                 return null;
             }
-            return clazz.getDeclaredConstructor(data.convertHelper().arrayToClass(objects));
+            return clazz.getDeclaredConstructor(objects);
         } catch (NoSuchMethodException e) {
             logE(data.tag(), e);
         }
@@ -229,11 +239,11 @@ public class CoreTool implements IDynamic, IStatic, IMember {
      */
     public boolean existsField(String clazz, String name) {
         if (data.isZygoteState()) return false;
-        return existsField(clazz, data.classLoader(), name);
+        return existsField(clazz, ToolData.classLoader, name);
     }
 
     public boolean existsField(String clazz, ClassLoader classLoader, String name) {
-        Class<?> cl = data.coreTool().findClass(clazz, classLoader);
+        Class<?> cl = data.coreTool.findClass(clazz, classLoader);
         return XposedHelpers.findFieldIfExists(cl, name) != null;
     }
 
@@ -248,7 +258,7 @@ public class CoreTool implements IDynamic, IStatic, IMember {
 
     public Field findField(Class<?> clazz, String name) {
         if (clazz == null) {
-            logW(data.tag(), "CoreTool: class is null, can't find field: " + name + getStackTrace());
+            logW(data.tag(), "CoreTool: class is null, can't find field: [" + name + "]" + getStackTrace());
             return null;
         }
         try {
@@ -261,70 +271,97 @@ public class CoreTool implements IDynamic, IStatic, IMember {
 
     // --------- 执行 hook -----------
     // --------- 普通方法 -------------
-    public XC_MethodHook.Unhook hook(String clazz, String method, Object... params) {
+    public UnHook hook(String clazz, String method, Object... params) {
         if (data.isZygoteState()) return null;
-        return hook(clazz, data.classLoader(), method, params);
+        return hook(clazz, ToolData.classLoader, method, params);
     }
 
-    public XC_MethodHook.Unhook hook(String clazz, ClassLoader classLoader, String method, Object... params) {
-        return hook(findClass(clazz, classLoader), method, data.convertHelper().toClassAsIAction(classLoader, params));
+    public UnHook hook(String clazz, ClassLoader classLoader, String method, Object... params) {
+        return hook(findClass(clazz, classLoader), method, data.convertHelper.toClassAsIAction(classLoader, params));
     }
 
-    public XC_MethodHook.Unhook hook(Class<?> clazz, String method, Object... params) {
+    public UnHook hook(Class<?> clazz, ClassLoader classLoader, String method, Object... params) {
+        return hook(clazz, method, data.convertHelper.toClassAsIAction(classLoader, params));
+    }
+
+    public UnHook hook(Class<?> clazz, String method, Object... params) {
         if (params == null) return null;
         if (params.length == 0 || !(params[params.length - 1] instanceof IAction)) {
             logW(data.tag(), "CoreTool: params length == 0 or last param not is IAction! can't hook!!" + getStackTrace());
             return null;
         }
-        return hook(findMethod(clazz, method, params), (IAction) params[params.length - 1]);
+
+        try {
+            Class<?>[] classes = Arrays.stream(params)
+                    .limit(params.length - 1)
+                    .map(param -> (Class<?>) param).toArray(Class<?>[]::new);
+            return hook(findMethod(clazz, method, classes), (IAction) params[params.length - 1]);
+        } catch (Throwable e) {
+            logE(data.tag(), e);
+        }
+        return null;
     }
 
-    public ArrayList<XC_MethodHook.Unhook> hookAll(String clazz, String method, IAction iAction) {
+    public UnHookList hookAll(String clazz, String method, IAction iAction) {
         return hookAll(findClass(clazz), method, iAction);
     }
 
-    public ArrayList<XC_MethodHook.Unhook> hookAll(String clazz, ClassLoader classLoader, String method, IAction iAction) {
+    public UnHookList hookAll(String clazz, ClassLoader classLoader, String method, IAction iAction) {
         return hookAll(findClass(clazz, classLoader), method, iAction);
     }
 
-    public ArrayList<XC_MethodHook.Unhook> hookAll(Class<?> clazz, String method, IAction iAction) {
+    public UnHookList hookAll(Class<?> clazz, String method, IAction iAction) {
         return hookAll(findAnyMethod(clazz, method), iAction);
     }
 
     // --------- 构造函数 ------------
-    public XC_MethodHook.Unhook hook(String clazz, Object... params) {
+    public UnHook hook(String clazz, Object... params) {
         return hook(findClass(clazz), params);
     }
 
-    public XC_MethodHook.Unhook hook(String clazz, ClassLoader classLoader, Object... params) {
-        return hook(findClass(clazz, classLoader), data.convertHelper().toClassAsIAction(classLoader, params));
+    public UnHook hook(String clazz, ClassLoader classLoader, Object... params) {
+        return hook(findClass(clazz, classLoader), data.convertHelper.toClassAsIAction(classLoader, params));
     }
 
-    public XC_MethodHook.Unhook hook(Class<?> clazz, Object... params) {
+    public UnHook hook(Class<?> clazz, ClassLoader classLoader, Object... params) {
+        return hook(clazz, data.convertHelper.toClassAsIAction(classLoader, params));
+    }
+
+    public UnHook hook(Class<?> clazz, Object... params) {
         if (params == null) return null;
         if (params.length == 0 || !(params[params.length - 1] instanceof IAction)) {
             logE(data.tag(), "CoreTool: params length == 0 or last param not is IAction! can't hook!!" + getStackTrace());
             return null;
         }
-        return hook(findConstructor(clazz, params), (IAction) params[params.length - 1]);
+
+        try {
+            Class<?>[] classes = Arrays.stream(params)
+                    .limit(params.length - 1)
+                    .map(param -> (Class<?>) param).toArray(Class<?>[]::new);
+            return hook(findConstructor(clazz, classes), (IAction) params[params.length - 1]);
+        } catch (Throwable e) {
+            logE(data.tag(), e);
+        }
+        return null;
     }
 
-    public ArrayList<XC_MethodHook.Unhook> hookAll(String clazz, IAction iAction) {
+    public UnHookList hookAll(String clazz, IAction iAction) {
         return hookAll(findAnyConstructor(clazz), iAction);
     }
 
-    public ArrayList<XC_MethodHook.Unhook> hookAll(String clazz, ClassLoader classLoader, IAction iAction) {
+    public UnHookList hookAll(String clazz, ClassLoader classLoader, IAction iAction) {
         return hookAll(findAnyConstructor(clazz, classLoader), iAction);
     }
 
-    public ArrayList<XC_MethodHook.Unhook> hookAll(Class<?> clazz, IAction iAction) {
+    public UnHookList hookAll(Class<?> clazz, IAction iAction) {
         return hookAll(findAnyConstructor(clazz), iAction);
     }
 
     // ----------- 核心实现 ---------------
-    public XC_MethodHook.Unhook hook(Member member, IAction iAction) {
+    public UnHook hook(Member member, IAction iAction) {
         try {
-            XC_MethodHook.Unhook unhook = XposedBridge.hookMethod(member, data.actionTool().createHook(iAction));
+            UnHook unhook = new UnHook(
+                    XposedBridge.hookMethod(member, data.hookFactory.createHook(iAction)));
             logD(data.tag(), "CoreTool: Success Hook: " + member);
             return unhook;
         } catch (Throwable e) {
@@ -333,13 +370,13 @@ public class CoreTool implements IDynamic, IStatic, IMember {
         return null;
     }
 
-    public ArrayList<XC_MethodHook.Unhook> hookAll(ArrayList<?> members, IAction iAction) {
-        ArrayList<XC_MethodHook.Unhook> unhooks = new ArrayList<>();
+    public UnHookList hookAll(ArrayList<?> members, IAction iAction) {
+        UnHookList unhooks = new UnHookList();
         for (Object o : members) {
             if (o instanceof Method || o instanceof Constructor<?>) {
                 try {
                     unhooks.add(XposedBridge.hookMethod((Member) o,
-                            data.actionTool().createHook(iAction)));
+                            data.hookFactory.createHook(iAction)));
                     logD(data.tag(), "CoreTool: Success Hook: " + o);
                 } catch (Throwable e) {
                     logE(data.tag(), "CoreTool: hook: [" + o + "], failed!", e);
@@ -353,7 +390,7 @@ public class CoreTool implements IDynamic, IStatic, IMember {
     public IAction returnResult(final Object result) {
         return new IAction() {
             @Override
-            public void before() throws Throwable {
+            public void before() {
                 setResult(result);
             }
         };
@@ -362,36 +399,47 @@ public class CoreTool implements IDynamic, IStatic, IMember {
     public IAction doNothing() {
         return new IAction() {
             @Override
-            public void before() throws Throwable {
+            public void before() {
                 setResult(null);
             }
         };
     }
 
     // --------- 解除 hook ---------
-    public boolean unHook(XC_MethodHook.Unhook unhook) {
-        try {
+    public static class UnHook {
+        private final XC_MethodHook.Unhook unhook;
+
+        private UnHook(XC_MethodHook.Unhook unhook) {
+            this.unhook = unhook;
+        }
+
+        public void unHook() {
             unhook.unhook();
-            return true;
-        } catch (Throwable ignored) {
-            return false;
+        }
+    }
+
+    public static class UnHookList {
+        private final List<XC_MethodHook.Unhook> unhooks = new ArrayList<>();
+
+        private UnHookList() {
+            unhooks.clear();
+        }
+
+        private void add(XC_MethodHook.Unhook unhook) {
+            unhooks.add(unhook);
+        }
+
+        public void unHookAll() {
+            for (XC_MethodHook.Unhook unhook : unhooks) {
+                unhook.unhook();
+            }
+            unhooks.clear();
         }
     }
 
     public boolean unHook(Member hookMember, XC_MethodHook xcMethodHook) {
         try {
             XposedBridge.unhookMethod(hookMember, xcMethodHook);
-            return true;
-        } catch (Throwable ignored) {
-            return false;
-        }
-    }
-
-    public boolean unHookAll(ArrayList<XC_MethodHook.Unhook> unhooks) {
-        try {
-            for (XC_MethodHook.Unhook unhook : unhooks) {
-                unhook.unhook();
-            }
             return true;
         } catch (Throwable ignored) {
             return false;

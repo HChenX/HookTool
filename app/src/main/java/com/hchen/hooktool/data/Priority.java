@@ -19,12 +19,14 @@
 package com.hchen.hooktool.data;
 
 /**
- * 状态枚举
+ * 优先级枚举类
  * <p>
- * State enumeration
+ * Priority enumeration classes
+ *
+ * @author 焕晨HChen
  */
-public enum StateEnum {
-    NONE, /*未 hook*/
-    HOOKED, /*成功 hook*/
-    FAILED /*hook 失败*/
+public enum Priority {
+    DEFAULT, /* 默认优先级 */
+    LOWEST, /* 低优先级 */
+    HIGHEST /* 高优先级 */
 }

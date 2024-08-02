@@ -30,9 +30,11 @@ import de.robv.android.xposed.XposedHelpers;
  * 测试和示例类
  * <p>
  * Test and sample classes
+ * 
+ * @author 焕晨HChen
  */
 public class MainTest extends BaseHC {
-
+    public static BaseHC sHc;
     @Override
     public void initZygote(IXposedHookZygoteInit.StartupParam startupParam) {
         super.initZygote(startupParam);
@@ -40,6 +42,7 @@ public class MainTest extends BaseHC {
 
     @Override
     public void init() {
+        sHc = baseHC;
         new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) {
@@ -58,7 +61,7 @@ public class MainTest extends BaseHC {
         chain("com.hchen.demo", method("test")
                 .hook(new IAction() {
                     @Override
-                    public void before() throws Throwable {
+                    public void before() {
                         super.before();
                     }
                 })
@@ -66,7 +69,7 @@ public class MainTest extends BaseHC {
                 .method("test_1", String.class)
                 .hook(new IAction() {
                     @Override
-                    public void after() throws Throwable {
+                    public void after() {
                         super.after();
                     }
                 })
@@ -77,20 +80,20 @@ public class MainTest extends BaseHC {
 
         hook(findMethod("com.hchen.demo", "test"), new IAction() {
             @Override
-            public void before() throws Throwable {
+            public void before() {
                 super.before();
             }
-        });
+        }).unHook();
 
         new IAction() {
             @Override
-            public void before() throws Throwable {
+            public void before() {
                 // hook 方法所属的类
                 Class<?> c = mClass;
                 Context context = thisObject();
                 String string = first();
                 second(1);
-
+                
                 // 非静态本类内
                 setThisField("demo", 1);
                 callThisMethod("method");

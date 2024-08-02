@@ -26,6 +26,8 @@ import com.hchen.hooktool.utils.ToolData;
  * 安卓日志
  * <p>
  * Android logs
+ * 
+ * @author 焕晨HChen
  */
 public class AndroidLog {
     // ----------- logE ----------

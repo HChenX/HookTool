@@ -18,9 +18,9 @@
  */
 package com.hchen.hooktool.utils;
 
+import static com.hchen.hooktool.log.LogExpand.getStackTrace;
 import static com.hchen.hooktool.log.XposedLog.logE;
 import static com.hchen.hooktool.log.XposedLog.logW;
-import static com.hchen.hooktool.utils.LogExpand.getStackTrace;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -35,9 +35,11 @@ import java.io.File;
 import java.io.IOException;
 
 /**
- * 资源注入工具，可能不是很稳定。
+ * 资源注入工具，可能不是很稳定
  * <p>
- * Resource injection tools may not be very stable.
+ * Resource injection tools may not be very stable
+ * 
+ * @author 焕晨HChen
  */
 public class ResHelper {
     private static ResourcesLoader resourcesLoader = null;

@@ -18,8 +18,8 @@
  */
 package com.hchen.hooktool;
 
+import static com.hchen.hooktool.log.LogExpand.getStackTrace;
 import static com.hchen.hooktool.log.XposedLog.logI;
-import static com.hchen.hooktool.utils.LogExpand.getStackTrace;
 
 import androidx.annotation.IntDef;
 
@@ -33,9 +33,11 @@ import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 /**
- * 请在 Hook 入口处初始化本类。
+ * 请在 Hook 入口处初始化本类
  * <p>
- * Initialize this class at the hook entry.
+ * Initialize this class at the hook entry
+ * 
+ * @author 焕晨HChen
  */
 public class HCInit {
     // ------- 可选日志等级 ------

@@ -18,11 +18,11 @@
  */
 package com.hchen.hooktool;
 
-import com.hchen.hooktool.tool.ActionTool;
+import com.hchen.hooktool.helper.ConvertHelper;
+import com.hchen.hooktool.helper.HookFactory;
 import com.hchen.hooktool.tool.ChainTool;
 import com.hchen.hooktool.tool.CoreTool;
 import com.hchen.hooktool.tool.PrefsTool;
-import com.hchen.hooktool.utils.ConvertHelper;
 import com.hchen.hooktool.utils.ToolData;
 
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
@@ -31,6 +31,8 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
  * 工具入口
  * <p>
  * Tool entry
+ * 
+ * @author 焕晨HChen
  */
 public class HCHook {
     private final ToolData data;
@@ -43,10 +45,10 @@ public class HCHook {
     public HCHook() {
         data = new ToolData(new ToolRestrict());
         data.hcHook = this;
-        data.actionTool = new ActionTool(data);
         data.coreTool = new CoreTool(data);
         data.chainTool = new ChainTool(data);
         data.convertHelper = new ConvertHelper(data);
+        data.hookFactory = new HookFactory(data);
         if (PrefsTool.xposedPrefs() == null) {
             data.prefsTool = new PrefsTool(data);
         } else data.prefsTool = PrefsTool.xposedPrefs();
@@ -54,19 +56,19 @@ public class HCHook {
 
     public HCHook setThisTag(String tag) {
         data.mThisTag = tag;
-        return data.hcHook();
+        return data.hcHook;
     }
 
     public CoreTool core() {
-        return data.coreTool();
+        return data.coreTool;
     }
 
     public ChainTool chain() {
-        return data.chainTool();
+        return data.chainTool;
     }
 
     public PrefsTool prefs() {
-        return data.prefsTool();
+        return data.prefsTool;
     }
 
     public XC_LoadPackage.LoadPackageParam lpparam() {
@@ -74,7 +76,7 @@ public class HCHook {
     }
 
     public ClassLoader classLoader() {
-        return data.classLoader();
+        return ToolData.classLoader;
     }
 
     protected void setStateChange(boolean isZygote) {

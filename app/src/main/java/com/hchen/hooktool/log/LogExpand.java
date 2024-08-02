@@ -16,7 +16,7 @@
 
  * Copyright (C) 2023-2024 HookTool Contributions
  */
-package com.hchen.hooktool.utils;
+package com.hchen.hooktool.log;
 
 import static com.hchen.hooktool.log.AndroidLog.logE;
 import static com.hchen.hooktool.log.AndroidLog.logI;
@@ -35,6 +35,8 @@ import de.robv.android.xposed.XC_MethodHook;
  * 日志增强
  * <p>
  * Logging enhancements
+ * 
+ * @author 焕晨HChen
  */
 public class LogExpand {
     private XC_MethodHook.MethodHookParam param;

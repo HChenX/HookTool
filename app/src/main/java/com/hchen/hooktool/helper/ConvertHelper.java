@@ -16,12 +16,13 @@
 
  * Copyright (C) 2023-2024 HookTool Contributions
  */
-package com.hchen.hooktool.utils;
+package com.hchen.hooktool.helper;
 
+import static com.hchen.hooktool.log.LogExpand.getStackTrace;
 import static com.hchen.hooktool.log.XposedLog.logW;
-import static com.hchen.hooktool.utils.LogExpand.getStackTrace;
 
 import com.hchen.hooktool.callback.IAction;
+import com.hchen.hooktool.utils.ToolData;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,6 +31,8 @@ import java.util.Arrays;
  * 快捷转换
  * <p>
  * Quick conversion
+ * 
+ * @author 焕晨HChen
  */
 public class ConvertHelper {
     private final ToolData data;
@@ -52,7 +55,7 @@ public class ConvertHelper {
     }
 
     public Class<?>[] arrayToClass(Object... objs) {
-        return arrayToClass(data.classLoader(), objs);
+        return arrayToClass(ToolData.classLoader, objs);
     }
 
     /**
@@ -65,15 +68,12 @@ public class ConvertHelper {
         if (objs.length == 0) {
             return new Class<?>[]{};
         }
-        if (objs.length == 1 && objs[0] instanceof Class<?>[] clazzArray) {
-            return clazzArray;
-        }
         if (classLoader == null && data.isZygoteState()) return new Class[]{};
         for (Object o : objs) {
             if (o instanceof Class<?> c) {
                 classes.add(c);
             } else if (o instanceof String s) {
-                Class<?> ct = data.coreTool().findClass(s, classLoader);
+                Class<?> ct = data.coreTool.findClass(s, classLoader);
                 if (ct == null) {
                     return new Class[]{};
                 }

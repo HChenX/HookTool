@@ -18,8 +18,8 @@
  */
 package com.hchen.hooktool.utils;
 
+import static com.hchen.hooktool.log.LogExpand.getStackTrace;
 import static com.hchen.hooktool.log.XposedLog.logE;
-import static com.hchen.hooktool.utils.LogExpand.getStackTrace;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -33,6 +33,8 @@ import java.lang.annotation.RetentionPolicy;
  * 本类为 context 上下文获取工具
  * <p>
  * This class is a context getter
+ * 
+ * @author 焕晨HChen
  */
 @SuppressLint({"PrivateApi", "SoonBlockedPrivateApi", "DiscouragedPrivateApi"})
 public class ContextUtils {

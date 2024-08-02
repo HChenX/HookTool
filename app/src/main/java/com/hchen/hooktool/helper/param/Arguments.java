@@ -16,15 +16,17 @@
 
  * Copyright (C) 2023-2024 HookTool Contributions
  */
-package com.hchen.hooktool.tool.param;
+package com.hchen.hooktool.helper.param;
 
+import static com.hchen.hooktool.log.LogExpand.getStackTrace;
 import static com.hchen.hooktool.log.XposedLog.logE;
-import static com.hchen.hooktool.utils.LogExpand.getStackTrace;
 
 /**
  * 参数操作
  * <p>
  * Parameter operations
+ * 
+ * @author 焕晨HChen
  */
 public class Arguments extends ActAchieve {
 
@@ -118,7 +120,7 @@ public class Arguments extends ActAchieve {
      * The number of current method parameters.
      */
     final public int size() {
-        return methodHookParam.args.length;
+        return MethodHookParam.args.length;
     }
 
     /**
@@ -131,7 +133,7 @@ public class Arguments extends ActAchieve {
             logE(mTag, "Arguments: exceeding the index!" + getStackTrace());
             return null;
         }
-        return (T) methodHookParam.args[index];
+        return (T) MethodHookParam.args[index];
     }
 
     /**
@@ -144,7 +146,7 @@ public class Arguments extends ActAchieve {
             logE(mTag, "Arguments: exceeding the index!" + getStackTrace());
             return;
         }
-        methodHookParam.args[index] = value;
+        MethodHookParam.args[index] = value;
     }
 
 }

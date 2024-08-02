@@ -29,6 +29,8 @@ import java.util.Set;
  * <p>
  * For the prefs tool interface, see Implementation Class for details of the method. <br>
  * {@link com.hchen.hooktool.tool.PrefsTool}
+ * 
+ * @author 焕晨HChen
  */
 public interface IPrefs {
     String getString(String key, String def);
