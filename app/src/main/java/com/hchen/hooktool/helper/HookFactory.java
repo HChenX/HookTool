@@ -28,7 +28,7 @@ import de.robv.android.xposed.XC_MethodHook;
  * Hook 创建工厂
  * <p>
  * Hook to create a factory
- * 
+ *
  * @author 焕晨HChen
  */
 public class HookFactory {
@@ -40,11 +40,13 @@ public class HookFactory {
 
     public XposedCallBack createHook(IAction iAction) {
         iAction.ToolData(data);
-        return new XposedCallBack(data.tag(), switch (iAction.priority) {
-            case Priority.DEFAULT -> 50;
-            case Priority.LOWEST -> -10000;
-            case Priority.HIGHEST -> 10000;
-        }) {
+        int priority = 50;
+        switch (iAction.priority) {
+            case Priority.DEFAULT -> priority = 50;
+            case Priority.LOWEST -> priority = -10000;
+            case Priority.HIGHEST -> priority = 10000;
+        }
+        return new XposedCallBack(data.tag(), priority) {
             @Override
             public void before(MethodHookParam param) {
                 iAction.before();
