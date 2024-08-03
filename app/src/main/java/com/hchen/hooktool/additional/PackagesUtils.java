@@ -43,7 +43,7 @@ import java.util.Objects;
  * 软件包实用程序
  * <p>
  * Package utility
- * 
+ *
  * @author 焕晨HChen
  */
 public class PackagesUtils {
@@ -65,8 +65,7 @@ public class PackagesUtils {
             packageManager.getPackageInfo(pkg, PackageManager.MATCH_ALL);
             return false;
         } catch (PackageManager.NameNotFoundException e) {
-            AndroidLog.logE(TAG,
-                    "didn't find this app on the machine, it may have been uninstalled! pkg: " + pkg, e);
+            AndroidLog.logE(TAG, e);
             return true;
         }
     }
@@ -115,20 +114,34 @@ public class PackagesUtils {
     }
 
     /**
+     * 根据 uid 获取 user id。
+     * <p>
+     * Get user id based on uid.
+     */
+    public static int getUserId(int uid) {
+        return InvokeUtils.callStaticMethod(UserHandle.class, "getUserId", new Class[]{int.class}, uid);
+    }
+
+    /**
+     * 可用于判断是否是系统应用。
+     * 如果 app 为 null 则固定返回 false，请注意检查 app 是否为 null。
+     * <p>
+     * It can be used to determine whether it is a system application. If the app is null, it will always return false, so be careful to check if the app is null.
+     */
+    public static boolean isSystem(ApplicationInfo app) {
+        if (Objects.isNull(app)) {
+            AndroidLog.logE(TAG, "app is null, will return false!" + getStackTrace());
+            return false;
+        }
+        if (app.uid < 10000) {
+            return true;
+        }
+        return (app.flags & (ApplicationInfo.FLAG_SYSTEM | ApplicationInfo.FLAG_UPDATED_SYSTEM_APP)) != 0;
+    }
+
+    /**
      * 通过自定义代码获取 Package 信息，
-     * 支持
-     * <p>
-     * PackageInfo
-     * <p>
-     * ResolveInfo
-     * <p>
-     * ActivityInfo
-     * <p>
-     * ApplicationInfo
-     * <p>
-     * ProviderInfo
-     * <p>
-     * 类型的返回值.
+     * 支持: PackageInfo, ResolveInfo, ActivityInfo, ApplicationInfo, ProviderInfo. 类型的返回值.
      * 返回使用 return new ArrayList<>(XX); 包裹。
      * <p>
      * Get the package information through custom code.
@@ -137,33 +150,30 @@ public class PackagesUtils {
      * @return ListAppData 包含各种应用详细信息
      * @see #addAppData(Parcelable, PackageManager)
      */
-    public static List<AppData> getPackagesByCode(ICode iCode) {
+    public static List<AppData> getPackagesByCode(Context context, ICode iCode) {
         List<AppData> appDataList = new ArrayList<>();
-        Context context = context();
         if (context == null) return appDataList;
         PackageManager packageManager = context.getPackageManager();
-        Parcelable parcelable = iCode.getPackageCode(packageManager);
-        List<Parcelable> packageCodeList = iCode.getPackageCodeList(packageManager);
+        List<Parcelable> packageCodeList = iCode.action(packageManager);
         try {
-            if (parcelable != null) {
-                appDataList.add(addAppData(parcelable, packageManager));
-            } else {
-                if (packageCodeList != null) {
-                    for (Parcelable get : packageCodeList) {
-                        appDataList.add(addAppData(get, packageManager));
-                    }
+            if (packageCodeList != null) {
+                for (Parcelable get : packageCodeList) {
+                    appDataList.add(addAppData(get, packageManager));
                 }
             }
         } catch (Throwable e) {
-            AndroidLog.logE(TAG, "failed to get package via code!", e);
+            AndroidLog.logE(TAG, e);
         }
         return appDataList;
     }
 
+    public static List<AppData> getPackagesByCode(ICode iCode) {
+        return getPackagesByCode(context(), iCode);
+    }
+
     @SuppressLint("QueryPermissionsNeeded")
-    public static List<AppData> getInstalledPackages(int flag) {
+    public static List<AppData> getInstalledPackages(Context context, int flag) {
         List<AppData> appDataList = new ArrayList<>();
-        Context context = context();
         if (context == null) return appDataList;
         try {
             PackageManager packageManager = context.getPackageManager();
@@ -173,12 +183,18 @@ public class PackagesUtils {
             }
             return appDataList;
         } catch (Throwable e) {
-            AndroidLog.logE(TAG, "failed to get the list of installed apps via flag!", e);
+            AndroidLog.logE(TAG, e);
         }
         return appDataList;
     }
 
-    private static AppData addAppData(Parcelable parcelable, PackageManager pm) throws Throwable {
+
+    public static List<AppData> getInstalledPackages(int flag) {
+        return getInstalledPackages(context(), flag);
+    }
+
+    private static AppData addAppData(Parcelable parcelable, PackageManager pm) throws
+            Throwable {
         AppData appData = new AppData();
         try {
             if (parcelable instanceof PackageInfo) {
@@ -226,7 +242,7 @@ public class PackagesUtils {
                 appData.uid = ((ProviderInfo) parcelable).applicationInfo.uid;
             }
         } catch (Throwable e) {
-            throw new Throwable("error in obtaining application information: " + parcelable, e);
+            throw new Throwable(e);
         }
         return appData;
     }
@@ -238,59 +254,11 @@ public class PackagesUtils {
         return null;
     }
 
-    /**
-     * 根据 uid 获取 user id。
-     * <p>
-     * Get user id based on uid.
-     */
-    public static int getUserId(int uid) {
-        return InvokeUtils.callStaticMethod(UserHandle.class, "getUserId", new Class[]{int.class}, uid);
-    }
-
-    /**
-     * 可用于判断是否是系统应用。
-     * 如果 app 为 null 则固定返回 false，请注意检查 app 是否为 null。
-     * <p>
-     * It can be used to determine whether it is a system application. If the app is null, it will always return false, so be careful to check if the app is null.
-     */
-    public static boolean isSystem(ApplicationInfo app) {
-        if (Objects.isNull(app)) {
-            AndroidLog.logE(TAG, "isSystem app is null, will return false" + getStackTrace());
-            return false;
-        }
-        if (app.uid < 10000) {
-            return true;
-        }
-        return (app.flags & (ApplicationInfo.FLAG_SYSTEM | ApplicationInfo.FLAG_UPDATED_SYSTEM_APP)) != 0;
-    }
-
     private static Context context() {
-        try {
-            return getContext();
-        } catch (Throwable e) {
-            AndroidLog.logE(TAG, e);
-            return null;
-        }
-    }
-
-    private static Context getContext() throws Throwable {
-        Context context = ContextUtils.getContext(ContextUtils.FLAG_CURRENT_APP);
-        if (context == null) {
-            context = ContextUtils.getContext(ContextUtils.FlAG_ONLY_ANDROID);
-        }
-        if (context == null) {
-            throw new Throwable("context is null" + getStackTrace());
-        }
-        return context;
+        return ContextUtils.getContext(ContextUtils.FLAG_ALL);
     }
 
     public interface ICode {
-        default Parcelable getPackageCode(PackageManager pm) {
-            return null;
-        }
-
-        default List<Parcelable> getPackageCodeList(PackageManager pm) {
-            return null;
-        }
+        List<Parcelable> action(PackageManager pm);
     }
 }

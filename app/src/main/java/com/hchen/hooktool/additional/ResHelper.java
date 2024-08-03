@@ -22,11 +22,15 @@ import static com.hchen.hooktool.log.LogExpand.getStackTrace;
 import static com.hchen.hooktool.log.XposedLog.logE;
 import static com.hchen.hooktool.log.XposedLog.logW;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.res.AssetManager;
 import android.content.res.Resources;
 import android.content.res.loader.ResourcesLoader;
 import android.content.res.loader.ResourcesProvider;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.ParcelFileDescriptor;
 
 import androidx.annotation.RequiresApi;
@@ -35,18 +39,20 @@ import com.hchen.hooktool.data.ToolData;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Method;
 
 /**
- * 资源注入工具，可能不是很稳定
+ * 资源注入工具
  * <p>
- * Resource injection tools may not be very stable
- * 
+ * Resource injection tools
+ *
  * @author 焕晨HChen
  */
 public class ResHelper {
     private static ResourcesLoader resourcesLoader = null;
     private static final String TAG = "ResHelper";
     private static String mModulePath = null;
+    private static Handler mHandler = null;
 
     /**
      * 请在 initZygote 中初始化。
@@ -57,37 +63,6 @@ public class ResHelper {
      */
     public static void initResHelper(String modulePath) {
         mModulePath = modulePath;
-    }
-
-    /**
-     * 来自 QA 的方法
-     * <p>
-     * from QA
-     */
-    @RequiresApi(api = Build.VERSION_CODES.R)
-    private static boolean loadResAboveApi30(Context context) {
-        if (resourcesLoader == null) {
-            try (ParcelFileDescriptor pfd = ParcelFileDescriptor.open(new File(mModulePath),
-                    ParcelFileDescriptor.MODE_READ_ONLY)) {
-                ResourcesProvider provider = ResourcesProvider.loadFromApk(pfd);
-                ResourcesLoader loader = new ResourcesLoader();
-                loader.addProvider(provider);
-                resourcesLoader = loader;
-            } catch (IOException e) {
-                logE(TAG, "failed to add resource!", e);
-                return false;
-            }
-        }
-        // if (Looper.myLooper() == Looper.getMainLooper()) {
-        context.getResources().addLoaders(resourcesLoader);
-        // } else {
-        //     if (mHandler != null) {
-        //         mHandler.post(() -> context.getResources().addLoaders(resourcesLoader));
-        //     } else {
-        //         return false;
-        //     }
-        // }
-        return true;
     }
 
     /**
@@ -106,26 +81,26 @@ public class ResHelper {
      * aaptOptions.additionalParameters '--allow-reserved-package-id', '--package-id', '0x64'
      *
      * }<br/>
-     * `0x64` is the resource id, you can change it to any value you want.(recommended [0x30 to 0x6F])
+     * Tip: `0x64` is the resource id, you can change it to any value you want.(recommended [0x30 to 0x6F])
      * @noinspection UnusedReturnValue
      */
-    public static Resources loadModuleRes(Context context) {
+    public static Resources loadModuleRes(Resources resources, boolean doOnMainLooper) {
         boolean load = false;
-        if (context == null) {
-            logW(TAG, "context can't is null!!" + getStackTrace());
+        if (resources == null) {
+            logW(TAG, "context can't is null!" + getStackTrace());
             return null;
         }
         if (mModulePath == null) {
             mModulePath = ToolData.startupParam.modulePath;
             if (mModulePath == null) {
-                logW(TAG, "module path is null! can't load module res! please call initResHelper!" + getStackTrace());
+                logW(TAG, "module path is null, can't load module res, please call initResHelper!" + getStackTrace());
                 return null;
             }
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            load = loadResAboveApi30(context);
+            load = loadResAboveApi30(resources, doOnMainLooper);
         } else {
-            logW(TAG, "sdk so low, can't load module res!" + getStackTrace());
+            load = loadResBelowApi30(resources);
         }
         if (!load) {
             /*try {
@@ -134,10 +109,93 @@ public class ResHelper {
                 logE(TAG, "failed to load resource! critical error!! scope may crash!!", e);
             }*/
         }
-        return context.getResources();
+        return resources;
     }
 
-    // 下面注入方法存在风险，可能导致资源混乱，暂抛弃。
+    public static Resources loadModuleRes(Resources resources) {
+        return loadModuleRes(resources, false);
+    }
+    
+    public static Resources loadModuleRes(Context context, boolean doOnMainLooper) {
+        return loadModuleRes(context.getResources(), doOnMainLooper);
+    }
+
+    public static Resources loadModuleRes(Context context) {
+        return loadModuleRes(context, false);
+    }
+
+    /**
+     * 来自 QA 的方法
+     * <p>
+     * from QA
+     */
+    @RequiresApi(api = Build.VERSION_CODES.R)
+    private static boolean loadResAboveApi30(Resources resources, boolean doOnMainLooper) {
+        if (resourcesLoader == null) {
+            try (ParcelFileDescriptor pfd = ParcelFileDescriptor.open(new File(mModulePath),
+                    ParcelFileDescriptor.MODE_READ_ONLY)) {
+                ResourcesProvider provider = ResourcesProvider.loadFromApk(pfd);
+                ResourcesLoader loader = new ResourcesLoader();
+                loader.addProvider(provider);
+                resourcesLoader = loader;
+            } catch (IOException e) {
+                logE(TAG, "failed to add resource! debug: above api 30.", e);
+                return false;
+            }
+        }
+        if (doOnMainLooper)
+            if (Looper.myLooper() == Looper.getMainLooper()) {
+                return addLoaders(resources);
+            } else {
+                if (mHandler == null) {
+                    mHandler = new Handler(Looper.getMainLooper());
+                }
+                mHandler.post(() -> {
+                    addLoaders(resources);
+                });
+                return true; // 此状态下保持返回 true，请观察日志是否有报错来判断是否成功。
+            }
+        else
+            return addLoaders(resources);
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.R)
+    private static boolean addLoaders(Resources resources) {
+        try {
+            resources.addLoaders(resourcesLoader);
+        } catch (IllegalArgumentException e) {
+            String expected1 = "Cannot modify resource loaders of ResourcesImpl not registered with ResourcesManager";
+            if (expected1.equals(e.getMessage())) {
+                // fallback to below API 30
+                return loadResBelowApi30(resources);
+            } else {
+                logE(TAG, "failed to add loaders!", e);
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /** @noinspection JavaReflectionMemberAccess */
+    @SuppressLint("DiscouragedPrivateApi")
+    private static boolean loadResBelowApi30(Resources resources) {
+        try {
+            AssetManager assets = resources.getAssets();
+            Method addAssetPath = AssetManager.class.getDeclaredMethod("addAssetPath", String.class);
+            addAssetPath.setAccessible(true);
+            Integer cookie = (Integer) addAssetPath.invoke(assets, mModulePath);
+            if (cookie == null || cookie == 0) {
+                logW(TAG, "addAssetPath result 0, maybe load res failed!" + getStackTrace());
+                return false;
+            }
+        } catch (Throwable e) {
+            logE(TAG, "failed to add resource! debug: below api 30.", e);
+            return false;
+        }
+        return true;
+    }
+
+    // 下面注入方法存在风险，可能导致资源混乱，抛弃。
     /*public static Context getModuleContext(Context context)
             throws PackageManager.NameNotFoundException {
         return getModuleContext(context, null);

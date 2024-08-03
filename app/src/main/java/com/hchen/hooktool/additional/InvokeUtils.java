@@ -32,7 +32,7 @@ import java.util.HashMap;
  * 本类为反射工具，提供简易的反射功能
  * <p>
  * This class is a reflection tool that provides a simple reflection function
- * 
+ *
  * @author 焕晨HChen
  */
 public class InvokeUtils {
@@ -74,13 +74,13 @@ public class InvokeUtils {
                                           Class<?>[] param /* 方法参数 */, Object... value /* 值 */) {
         Method declaredMethod;
         if (clz == null && instance == null) {
-            AndroidLog.logW(TAG, "class is null! can't invoke method: " + method + getStackTrace());
+            AndroidLog.logW(TAG, "class and instance is null, can't invoke method: [" + method + "]" + getStackTrace());
             return null;
         } else if (clz == null) {
             clz = instance.getClass();
         }
         try {
-            String methodTag = clz.getName() + "." + method + Arrays.toString(param);
+            String methodTag = clz.getName() + "#" + method + "#" + Arrays.toString(param);
             declaredMethod = methodCache.get(methodTag);
             if (declaredMethod == null) {
                 declaredMethod = clz.getDeclaredMethod(method, param);
@@ -89,7 +89,7 @@ public class InvokeUtils {
             declaredMethod.setAccessible(true);
             return (T) declaredMethod.invoke(instance, value);
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-            AndroidLog.logE(TAG, "reflection call method failed! class: [" + clz.getSimpleName() + "], method: " + method, e);
+            AndroidLog.logE(TAG, e);
             return null;
         }
     }
@@ -101,7 +101,7 @@ public class InvokeUtils {
                                          boolean set /* 是否为 set 模式 */, Object value /* 指定值 */) {
         Field declaredField = null;
         if (clz == null && instance == null) {
-            AndroidLog.logW(TAG, "class is null! can't invoke field: " + field + getStackTrace());
+            AndroidLog.logW(TAG, "class and instance is null, can't invoke field: [" + field + "]" + getStackTrace());
             return null;
         } else if (clz == null) {
             clz = instance.getClass();
@@ -124,7 +124,7 @@ public class InvokeUtils {
                         } catch (NoSuchFieldException ignored) {
                         }
                     }
-                    if (clz == null || declaredField == null) throw e;
+                    if (declaredField == null) throw e;
                 }
                 fieldCache.put(fieldTag, declaredField);
             }
@@ -135,14 +135,13 @@ public class InvokeUtils {
             } else
                 return (T) declaredField.get(instance);
         } catch (NoSuchFieldException | IllegalAccessException e) {
-            AndroidLog.logE(TAG, "reflection field failed! class: " +
-                    "[" + (clz != null ? clz.getName() : null) + "], field: " + field, e);
+            AndroidLog.logE(TAG, e);
             return null;
         }
     }
 
     public static Class<?> findClass(String className) {
-        return findClass(className, ClassLoader.getSystemClassLoader());
+        return findClass(className, null);
     }
 
     public static Class<?> findClass(String className, ClassLoader classLoader) {
@@ -151,7 +150,7 @@ public class InvokeUtils {
                 classLoader = ClassLoader.getSystemClassLoader();
             }
             return classLoader.loadClass(className);
-        } catch (Throwable e) {
+        } catch (ClassNotFoundException e) {
             AndroidLog.logE(TAG, e);
         }
         return null;

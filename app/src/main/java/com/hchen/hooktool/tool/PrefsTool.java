@@ -28,8 +28,8 @@ import android.content.SharedPreferences;
 
 import com.hchen.hooktool.additional.ContextUtils;
 import com.hchen.hooktool.data.ToolData;
-import com.hchen.hooktool.itool.IPrefs;
 import com.hchen.hooktool.log.AndroidLog;
+import com.hchen.hooktool.tool.itool.IPrefs;
 
 import org.jetbrains.annotations.Nullable;
 

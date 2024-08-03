@@ -31,7 +31,7 @@ import com.hchen.hooktool.callback.IAction;
 import com.hchen.hooktool.data.ChainData;
 import com.hchen.hooktool.data.HookState;
 import com.hchen.hooktool.data.ToolData;
-import com.hchen.hooktool.itool.IChain;
+import com.hchen.hooktool.tool.itool.IChain;
 
 import java.lang.reflect.Member;
 import java.util.ArrayList;

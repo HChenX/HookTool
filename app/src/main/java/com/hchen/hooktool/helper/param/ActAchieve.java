@@ -18,8 +18,8 @@
  */
 package com.hchen.hooktool.helper.param;
 
-import com.hchen.hooktool.itool.IDynamic;
 import com.hchen.hooktool.log.LogExpand;
+import com.hchen.hooktool.tool.itool.IDynamic;
 
 import de.robv.android.xposed.XC_MethodHook;
 

@@ -33,7 +33,7 @@ import java.lang.annotation.RetentionPolicy;
  * 本类为 context 上下文获取工具
  * <p>
  * This class is a context getter
- * 
+ *
  * @author 焕晨HChen
  */
 @SuppressLint({"PrivateApi", "SoonBlockedPrivateApi", "DiscouragedPrivateApi"})
@@ -59,7 +59,7 @@ public class ContextUtils {
         try {
             return invokeMethod(flag);
         } catch (Throwable e) {
-            logE(TAG, "get context failed!", e);
+            logE(TAG, e);
             return null;
         }
     }
@@ -104,7 +104,6 @@ public class ContextUtils {
                 while (true) {
                     long nowTime = System.currentTimeMillis();
                     context = getContextNoError(isSystem ? FlAG_ONLY_ANDROID : FLAG_CURRENT_APP);
-                    // AndroidLogUtils.LogI(TAG, "getWaitContext: " + context);
                     if (context != null || nowTime - time > timeout) {
                         break;
                     }

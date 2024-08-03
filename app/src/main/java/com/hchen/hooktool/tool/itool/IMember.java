@@ -16,7 +16,7 @@
 
  * Copyright (C) 2023-2024 HookTool Contributions
  */
-package com.hchen.hooktool.itool;
+package com.hchen.hooktool.tool.itool;
 
 import com.hchen.hooktool.callback.IAction;
 import com.hchen.hooktool.tool.CoreTool;

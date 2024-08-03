@@ -25,15 +25,15 @@ import android.content.pm.ApplicationInfo;
 
 import com.hchen.hooktool.callback.IAction;
 import com.hchen.hooktool.data.ToolData;
-import com.hchen.hooktool.itool.IChain;
-import com.hchen.hooktool.itool.IDynamic;
-import com.hchen.hooktool.itool.IFilter;
-import com.hchen.hooktool.itool.IMember;
-import com.hchen.hooktool.itool.IPrefs;
-import com.hchen.hooktool.itool.IStatic;
 import com.hchen.hooktool.tool.ChainTool;
 import com.hchen.hooktool.tool.CoreTool;
 import com.hchen.hooktool.tool.PrefsTool;
+import com.hchen.hooktool.tool.itool.IChain;
+import com.hchen.hooktool.tool.itool.IDynamic;
+import com.hchen.hooktool.tool.itool.IFilter;
+import com.hchen.hooktool.tool.itool.IMember;
+import com.hchen.hooktool.tool.itool.IPrefs;
+import com.hchen.hooktool.tool.itool.IStatic;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;

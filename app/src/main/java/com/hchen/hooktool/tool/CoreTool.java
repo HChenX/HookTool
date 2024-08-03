@@ -25,11 +25,11 @@ import static com.hchen.hooktool.log.XposedLog.logW;
 
 import com.hchen.hooktool.callback.IAction;
 import com.hchen.hooktool.data.ToolData;
-import com.hchen.hooktool.itool.IDynamic;
-import com.hchen.hooktool.itool.IFilter;
-import com.hchen.hooktool.itool.IMember;
-import com.hchen.hooktool.itool.IStatic;
 import com.hchen.hooktool.log.LogExpand;
+import com.hchen.hooktool.tool.itool.IDynamic;
+import com.hchen.hooktool.tool.itool.IFilter;
+import com.hchen.hooktool.tool.itool.IMember;
+import com.hchen.hooktool.tool.itool.IStatic;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;

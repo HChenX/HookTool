@@ -16,32 +16,40 @@
 
  * Copyright (C) 2023-2024 HookTool Contributions
  */
-package com.hchen.hooktool.itool;
+package com.hchen.hooktool.tool.itool;
 
-import com.hchen.hooktool.tool.ChainTool;
+import com.hchen.hooktool.tool.PrefsTool;
+
+import java.util.Map;
+import java.util.Set;
 
 /**
- * 链式调用接口
+ * prefs 工具接口，
  * 方法具体介绍请看实现类。<br/>
  * <p>
- * For more information about the chained API method, see Implementation Class. <br>
- * {@link com.hchen.hooktool.tool.ChainTool}
+ * For the prefs tool interface, see Implementation Class for details of the method. <br>
+ * {@link com.hchen.hooktool.tool.PrefsTool}
  * 
  * @author 焕晨HChen
  */
-public interface IChain {
+public interface IPrefs {
+    String getString(String key, String def);
 
-    void chain(String clazz, ChainTool chain);
+    Set<String> getStringSet(String key, Set<String> def);
 
-    void chain(String clazz, ClassLoader classLoader, ChainTool chain);
+    boolean getBoolean(String key, boolean def);
 
-    void chain(Class<?> clazz, ChainTool chain);
+    int getInt(String key, int def);
 
-    ChainTool.ChainHook method(String name, Object... params);
+    float getFloat(String key, float def);
 
-    ChainTool.ChainHook anyMethod(String name);
+    long getLong(String key, long def);
 
-    ChainTool.ChainHook constructor(Object... params);
+    Object get(String key, Object def);
 
-    ChainTool.ChainHook anyConstructor();
+    boolean contains(String key);
+
+    Map<String, ?> getAll();
+
+    PrefsTool.Editor editor();
 }
