@@ -49,7 +49,7 @@ public class PropUtils {
 
     public static long getProp(String key, long def) {
         return (long) Optional.ofNullable(invokeMethod("getLong", new Class[]{String.class, long.class}, key, def))
-                .orElse(0L);
+                .orElse(-1L);
     }
 
     public static String getProp(String key, String def) {

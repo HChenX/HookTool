@@ -142,7 +142,7 @@ public class PrefsTool {
     public void asyncPrefs(IAsyncPrefs asyncPrefs) {
         ContextUtils.getAsyncContext(new ContextUtils.IContext() {
             @Override
-            public void findContext(Context context) {
+            public void find(Context context) {
                 if (context == null) {
                     throw new RuntimeException(ToolData.mInitTag +
                             "[" + data.tag() + "][E]: PrefsTool: async prefs context is null!!" + getStackTrace());

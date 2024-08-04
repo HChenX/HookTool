@@ -33,10 +33,10 @@ import com.hchen.hooktool.data.HookState;
 import com.hchen.hooktool.data.ToolData;
 import com.hchen.hooktool.tool.itool.IChain;
 
-import java.lang.reflect.Member;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.ListIterator;
-import java.util.Objects;
+import java.util.stream.Collectors;
 
 import de.robv.android.xposed.XposedBridge;
 
@@ -62,12 +62,12 @@ public class ChainTool implements IChain {
 
     public void chain(String clazz, ChainTool chain) {
         classLoader = null;
-        chain(data.coreTool.findClass(clazz), chain);
+        chain(data.core.findClass(clazz), chain);
     }
 
     public void chain(String clazz, ClassLoader classLoader, ChainTool chain) {
         this.classLoader = classLoader;
-        chain(data.coreTool.findClass(clazz, classLoader), chain);
+        chain(data.core.findClass(clazz, classLoader), chain);
     }
 
     public void chain(Class<?> clazz, ChainTool chain) {
@@ -109,91 +109,107 @@ public class ChainTool implements IChain {
         return chainHook;
     }
 
+    // 各种奇奇怪怪的添加 >.<
     private void doFind(Class<?> clazz) {
-        ArrayList<Member> mMembers = new ArrayList<>();
+        ArrayList<ChainData> memberWithState = new ArrayList<>();
         for (ChainData chainData : cacheDataList) {
+            String UUID = "";
             switch (chainData.mType) {
                 case TYPE_METHOD -> {
+                    UUID = chainData.mType + "#" + clazz.getName() + "#" + chainData.mName + "#" + Arrays.toString(chainData.mParams);
                     if (classLoader == null)
-                        mMembers.add(data.coreTool.findMethod(clazz, chainData.mName,
-                                data.convertHelper.arrayToClass(chainData.mParams)));
+                        memberWithState.add(new ChainData(
+                                data.core.findMethod(clazz, chainData.mName, data.convert.arrayToClass(chainData.mParams)),
+                                HookState.NONE));
                     else
-                        mMembers.add(data.coreTool.findMethod(clazz, chainData.mName,
-                                data.convertHelper.arrayToClass(classLoader, chainData.mParams)));
+                        memberWithState.add(new ChainData(
+                                data.core.findMethod(clazz, chainData.mName, data.convert.arrayToClass(classLoader, chainData.mParams)),
+                                HookState.NONE));
                 }
                 case TYPE_CONSTRUCTOR -> {
+                    UUID = chainData.mType + "#" + clazz.getName() + "#" + Arrays.toString(chainData.mParams);
                     if (classLoader == null)
-                        mMembers.add(data.coreTool.findConstructor(clazz, 
-                                data.convertHelper.arrayToClass(chainData.mParams)));
+                        memberWithState.add(new ChainData(
+                                data.core.findConstructor(clazz, data.convert.arrayToClass(chainData.mParams)),
+                                HookState.NONE));
                     else
-                        mMembers.add(data.coreTool.findConstructor(clazz,
-                                data.convertHelper.arrayToClass(classLoader, chainData.mParams)));
+                        memberWithState.add(new ChainData(
+                                data.core.findConstructor(clazz, data.convert.arrayToClass(classLoader, chainData.mParams)),
+                                HookState.NONE));
                 }
                 case TYPE_ANY_METHOD -> {
-                    mMembers.addAll(data.coreTool.findAnyMethod(clazz, chainData.mName));
+                    UUID = chainData.mType + "#" + clazz.getName() + "#" + chainData.mName;
+                    memberWithState.addAll(data.core.findAnyMethod(clazz, chainData.mName).stream().map(
+                            method -> new ChainData(method, HookState.NONE)).collect(Collectors.toCollection(ArrayList::new)));
                 }
                 case TYPE_ANY_CONSTRUCTOR -> {
-                    mMembers.addAll(data.coreTool.findAnyConstructor(clazz));
+                    UUID = chainData.mType + "#" + clazz.getName();
+                    memberWithState.addAll(data.core.findAnyConstructor(clazz).stream().map(
+                            constructor -> new ChainData(constructor, HookState.NONE)).collect(Collectors.toCollection(ArrayList::new)));
                 }
-                default -> mMembers = new ArrayList<>();
+                default -> memberWithState = new ArrayList<>();
             }
-            ArrayList<Member> cache = new ArrayList<>(mMembers);
-            ArrayList<Member> finalMembers = mMembers;
-            if (chainDataList.stream().noneMatch(d -> d.members.equals(finalMembers)))
+            ArrayList<ChainData> cache = new ArrayList<>(memberWithState);
+            String finalUUID = UUID;
+            if (chainDataList.stream().noneMatch(c -> c.UUID.equals(finalUUID))) {
                 chainDataList.add(new ChainData(clazz.getSimpleName(),
-                        chainData.mName, chainData.mType, cache, chainData.iAction, HookState.NONE));
-            else
-                logW(data.tag(), "ChainTool: this members maybe repeated! debug: [class: " + clazz.getSimpleName()
-                        + " , method: " + chainData.mName + " , type: " + chainData.mType + " , members: " + mMembers + " ]");
-            mMembers.clear();
+                        chainData.mName, cache, chainData.iAction, UUID));
+            } else
+                logW(data.tag(), "ChainTool: this member maybe repeated! debug: [uuid: " + UUID + " ]");
+            memberWithState.clear();
         }
         cacheDataList.clear();
     }
 
+    // 太复杂啦，我也迷糊了 >.<
     public void doChainHook(ChainTool chain) {
         ArrayList<ChainData> chainDataList = chain.chainDataList;
 
         ListIterator<ChainData> iterator = chainDataList.listIterator();
         while (iterator.hasNext()) {
             ChainData chainData = iterator.next();
-            switch (chainData.hookState) {
-                case HookState.NONE -> {
-                    try {
-                        if (chainData.members.isEmpty()) {
-                            logW(data.tag(), "ChainTool: members is empty! debug: [class: " + chainData.clazz +
-                                    " , method: " + chainData.mName + " , type: " + chainData.mType + " ]");
-                            chainData.hookState = HookState.FAILED;
-                        } else if (chainData.members.stream().allMatch(Objects::isNull)) {
-                            logW(data.tag(), "ChainTool: all member is null! debug: [class: " + chainData.clazz +
-                                    " , method: " + chainData.mName + " , type: " + chainData.mType + " ]");
-                            chainData.hookState = HookState.FAILED;
-                        } else if (chainData.iAction == null) {
-                            logW(data.tag(), "ChainTool: action is null! debug: [class: " + chainData.clazz +
-                                    " , method: " + chainData.mName + " , type: " + chainData.mType + " ]");
-                            chainData.hookState = HookState.FAILED;
+            String UUID = chainData.UUID;
+            if (chainData.iAction == null) {
+                logW(data.tag(), "ChainTool: action is null, can't hook! will remove this! debug: [uuid: " + UUID + " ]");
+                iterator.remove();
+                continue;
+            }
+            if (chainData.memberWithState.isEmpty()) {
+                logW(data.tag(), "ChainTool: members is empty! debug: [uuid: " + UUID + " ]");
+                continue;
+            }
+            ListIterator<ChainData> iteratorMember = chainData.memberWithState.listIterator();
+            while (iteratorMember.hasNext()) {
+                ChainData memberData = iteratorMember.next();
+                switch (memberData.hookState) {
+                    case NONE -> {
+                        if (memberData.member == null) {
+                            logW(data.tag(), "ChainTool: member is null, can't hook! will remove this! debug: [uuid: " + UUID + " ]");
+                            memberData.hookState = HookState.FAILED;
+                            iteratorMember.remove();
                         } else {
-                            for (Member m : chainData.members) {
-                                XposedBridge.hookMethod(m, data.hookFactory.createHook(chainData.iAction));
-                                logD(data.tag(), "ChainTool: success hook: " + m);
+                            try {
+                                XposedBridge.hookMethod(memberData.member, data.hook.createHook(chainData.iAction));
+                                memberData.hookState = HookState.HOOKED;
+                                logD(data.tag(), "ChainTool: success hook: " + memberData.member);
+                            } catch (Throwable e) {
+                                memberData.hookState = HookState.FAILED;
+                                logE(data.tag(), e);
                             }
-                            chainData.hookState = HookState.HOOKED;
                         }
-                    } catch (Throwable e) {
-                        chainData.hookState = HookState.FAILED;
-                        logE(data.tag(), e);
+                        iteratorMember.set(memberData);
                     }
-                    iterator.set(chainData);
-                }
-                case HookState.HOOKED -> {
-                    logD(data.tag(), "ChainTool: members hooked: " + chainData.members);
-                }
-                case HookState.FAILED -> {
-                    logD(data.tag(), "ChainTool: members hook failed: " + chainData.members);
+                    case FAILED -> {
+                        logD(data.tag(), "ChainTool: members hooked: " + memberData.member);
+                    }
+                    case HOOKED -> {
+                        logD(data.tag(), "ChainTool: members hook failed: " + memberData.member);
+                    }
                 }
             }
+            iterator.set(chainData);
         }
     }
-
 
     public static class ChainHook {
         private final ChainTool chain;
@@ -219,7 +235,7 @@ public class ChainTool implements IChain {
          * Returns the specified value directly.
          */
         public ChainTool returnResult(final Object result) {
-            chain.chainData.iAction = chain.data.coreTool.returnResult(result);
+            chain.chainData.iAction = chain.data.core.returnResult(result);
             chain.cacheDataList.add(chain.chainData);
             return chain;
         }
@@ -230,7 +246,7 @@ public class ChainTool implements IChain {
          * Intercept method execution.
          */
         public ChainTool doNothing() {
-            chain.chainData.iAction = chain.data.coreTool.doNothing();
+            chain.chainData.iAction = chain.data.core.doNothing();
             chain.cacheDataList.add(chain.chainData);
             return chain;
         }

@@ -64,7 +64,7 @@ public class ContextUtils {
         }
     }
 
-    public static Context getContextNoError(@Duration int flag) {
+    public static Context getContextNoLog(@Duration int flag) {
         try {
             return invokeMethod(flag);
         } catch (Throwable e) {
@@ -97,26 +97,27 @@ public class ContextUtils {
      */
     public static void getAsyncContext(IContext iContext, boolean isSystem) {
         ThreadPool.getInstance().submit(() -> {
-            Context context = getContextNoError(isSystem ? FlAG_ONLY_ANDROID : FLAG_CURRENT_APP);
+            Context context = getContextNoLog(isSystem ? FlAG_ONLY_ANDROID : FLAG_CURRENT_APP);
             if (context == null) {
                 long time = System.currentTimeMillis();
                 long timeout = 10000; // 10秒
                 while (true) {
                     long nowTime = System.currentTimeMillis();
-                    context = getContextNoError(isSystem ? FlAG_ONLY_ANDROID : FLAG_CURRENT_APP);
+                    context = getContextNoLog(isSystem ? FlAG_ONLY_ANDROID : FLAG_CURRENT_APP);
                     if (context != null || nowTime - time > timeout) {
                         break;
                     }
                 }
                 // context 可能为 null 请注意判断
-                iContext.findContext(context);
+                iContext.find(context);
             }
         });
         ThreadPool.getInstance().shutdown();
     }
 
-    public interface IContext {
-        void findContext(Context context);
+    private static Context currentApp(Class<?> clz) {
+        // 获取当前界面应用 Context
+        return InvokeUtils.callStaticMethod(clz, "currentApplication", new Class[]{});
     }
 
     private static Context invokeMethod(int flag) throws Throwable {
@@ -142,12 +143,7 @@ public class ContextUtils {
         return context;
     }
 
-    private static Context currentApp(Class<?> clz) throws Throwable {
-        // 获取当前界面应用 Context
-        return InvokeUtils.callStaticMethod(clz, "currentApplication", new Class[]{});
-    }
-
-    private static Context android(Class<?> clz) throws Throwable {
+    private static Context android(Class<?> clz) {
         // 获取 Android
         Context context;
         Object o = InvokeUtils.callStaticMethod(clz, "currentActivityThread", new Class[]{});
@@ -160,6 +156,10 @@ public class ContextUtils {
             // context = (Context) getSystemContext.invoke(o);
         }
         return context;
+    }
+
+    public interface IContext {
+        void find(Context context);
     }
 
 }

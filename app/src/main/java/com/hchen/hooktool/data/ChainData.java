@@ -27,22 +27,28 @@ import java.util.ArrayList;
  * 链式调用数据
  * <p>
  * Chained data
- * 
+ *
  * @author 焕晨HChen
  */
 public class ChainData {
-    public ArrayList<Member> members = new ArrayList<>(); /* 目标成员组 */
+    public ArrayList<ChainData> memberWithState = new ArrayList<>(); /* 目标成员组 */
+    public Member member; /* 查找到的成员 */
     public IAction iAction; /* hook 动作 */
     public HookState hookState; /* 状态 */
     public String clazz; /* 类名 */
+    public String UUID = "UNKNOWN"; /* 唯一标识符 */
 
-    public ChainData(String clazz, String name, String type,
-                     ArrayList<Member> members, IAction iAction, HookState hookState) {
+    public ChainData(String clazz, String name,
+                     ArrayList<ChainData> memberWithState, IAction iAction, String uuid) {
         this.clazz = clazz;
         this.mName = name;
-        this.mType = type;
-        this.members = members;
+        this.memberWithState = memberWithState;
         this.iAction = iAction;
+        this.UUID = uuid;
+    }
+
+    public ChainData(Member member, HookState hookState) {
+        this.member = member;
         this.hookState = hookState;
     }
 

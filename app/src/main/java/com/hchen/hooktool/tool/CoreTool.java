@@ -114,7 +114,7 @@ public class CoreTool implements IDynamic, IStatic, IMember {
         try {
             Class<?> cl = XposedHelpers.findClassIfExists(clazz, classLoader);
             if (cl == null) return false;
-            cl.getDeclaredMethod(name, data.convertHelper.arrayToClass(classLoader, objs));
+            cl.getDeclaredMethod(name, data.convert.arrayToClass(classLoader, objs));
         } catch (NoSuchMethodException ignored) {
             return false;
         }
@@ -144,15 +144,15 @@ public class CoreTool implements IDynamic, IStatic, IMember {
 
     // ------------ 查找方法 --------------
     public Method findMethod(String clazz, String name, Object... objects) {
-        return findMethod(findClass(clazz), name, data.convertHelper.arrayToClass(objects));
+        return findMethod(findClass(clazz), name, data.convert.arrayToClass(objects));
     }
 
     public Method findMethod(String clazz, ClassLoader classLoader, String name, Object... objects) {
-        return findMethod(findClass(clazz, classLoader), name, data.convertHelper.arrayToClass(classLoader, objects));
+        return findMethod(findClass(clazz, classLoader), name, data.convert.arrayToClass(classLoader, objects));
     }
 
     public Method findMethod(Class<?> clazz, ClassLoader classLoader, String name, Object... objects) {
-        return findMethod(clazz, name, data.convertHelper.arrayToClass(classLoader, objects));
+        return findMethod(clazz, name, data.convert.arrayToClass(classLoader, objects));
     }
 
     public Method findMethod(Class<?> clazz, String name, Class<?>... objects) {
@@ -190,15 +190,15 @@ public class CoreTool implements IDynamic, IStatic, IMember {
 
     // --------- 查找构造函数 -----------
     public Constructor<?> findConstructor(String clazz, Object... objects) {
-        return findConstructor(findClass(clazz), data.convertHelper.arrayToClass(objects));
+        return findConstructor(findClass(clazz), data.convert.arrayToClass(objects));
     }
 
     public Constructor<?> findConstructor(String clazz, ClassLoader classLoader, Object... objects) {
-        return findConstructor(findClass(clazz, classLoader), data.convertHelper.arrayToClass(classLoader, objects));
+        return findConstructor(findClass(clazz, classLoader), data.convert.arrayToClass(classLoader, objects));
     }
 
     public Constructor<?> findConstructor(Class<?> clazz, ClassLoader classLoader, Object... objects) {
-        return findConstructor(clazz, data.convertHelper.arrayToClass(classLoader, objects));
+        return findConstructor(clazz, data.convert.arrayToClass(classLoader, objects));
     }
 
     public Constructor<?> findConstructor(Class<?> clazz, Class<?>... objects) {
@@ -243,7 +243,7 @@ public class CoreTool implements IDynamic, IStatic, IMember {
     }
 
     public boolean existsField(String clazz, ClassLoader classLoader, String name) {
-        Class<?> cl = data.coreTool.findClass(clazz, classLoader);
+        Class<?> cl = data.core.findClass(clazz, classLoader);
         return XposedHelpers.findFieldIfExists(cl, name) != null;
     }
 
@@ -277,11 +277,11 @@ public class CoreTool implements IDynamic, IStatic, IMember {
     }
 
     public UnHook hook(String clazz, ClassLoader classLoader, String method, Object... params) {
-        return hook(findClass(clazz, classLoader), method, data.convertHelper.toClassAsIAction(classLoader, params));
+        return hook(findClass(clazz, classLoader), method, data.convert.toClassAsIAction(classLoader, params));
     }
 
     public UnHook hook(Class<?> clazz, ClassLoader classLoader, String method, Object... params) {
-        return hook(clazz, method, data.convertHelper.toClassAsIAction(classLoader, params));
+        return hook(clazz, method, data.convert.toClassAsIAction(classLoader, params));
     }
 
     public UnHook hook(Class<?> clazz, String method, Object... params) {
@@ -320,11 +320,11 @@ public class CoreTool implements IDynamic, IStatic, IMember {
     }
 
     public UnHook hook(String clazz, ClassLoader classLoader, Object... params) {
-        return hook(findClass(clazz, classLoader), data.convertHelper.toClassAsIAction(classLoader, params));
+        return hook(findClass(clazz, classLoader), data.convert.toClassAsIAction(classLoader, params));
     }
 
     public UnHook hook(Class<?> clazz, ClassLoader classLoader, Object... params) {
-        return hook(clazz, data.convertHelper.toClassAsIAction(classLoader, params));
+        return hook(clazz, data.convert.toClassAsIAction(classLoader, params));
     }
 
     public UnHook hook(Class<?> clazz, Object... params) {
@@ -361,7 +361,7 @@ public class CoreTool implements IDynamic, IStatic, IMember {
     public UnHook hook(Member member, IAction iAction) {
         try {
             UnHook unhook = new UnHook(
-                    XposedBridge.hookMethod(member, data.hookFactory.createHook(iAction)));
+                    XposedBridge.hookMethod(member, data.hook.createHook(iAction)));
             logD(data.tag(), "CoreTool: Success Hook: " + member);
             return unhook;
         } catch (Throwable e) {
@@ -376,7 +376,7 @@ public class CoreTool implements IDynamic, IStatic, IMember {
             if (o instanceof Method || o instanceof Constructor<?>) {
                 try {
                     unhooks.add(XposedBridge.hookMethod((Member) o,
-                            data.hookFactory.createHook(iAction)));
+                            data.hook.createHook(iAction)));
                     logD(data.tag(), "CoreTool: Success Hook: " + o);
                 } catch (Throwable e) {
                     logE(data.tag(), "CoreTool: hook: [" + o + "], failed!", e);

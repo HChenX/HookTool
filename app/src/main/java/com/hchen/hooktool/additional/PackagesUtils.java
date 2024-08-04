@@ -18,6 +18,7 @@
  */
 package com.hchen.hooktool.additional;
 
+import static com.hchen.hooktool.log.AndroidLog.logW;
 import static com.hchen.hooktool.log.LogExpand.getStackTrace;
 
 import android.annotation.SuppressLint;
@@ -38,6 +39,7 @@ import com.hchen.hooktool.log.AndroidLog;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * 软件包实用程序
@@ -59,7 +61,10 @@ public class PackagesUtils {
      * Check whether the application with the target package name has been uninstalled.
      */
     public static boolean isUninstall(Context context, String pkg) {
-        if (context == null) return false;
+        if (context == null) {
+            logW(TAG, "context is null, can't check if the app is uninstalled!" + getStackTrace());
+            return false;
+        }
         PackageManager packageManager = context.getPackageManager();
         try {
             packageManager.getPackageInfo(pkg, PackageManager.MATCH_ALL);
@@ -80,7 +85,10 @@ public class PackagesUtils {
      * Get the package name and whether the app is disabled.
      */
     public static boolean isDisable(Context context, String pkg) {
-        if (context == null) return false;
+        if (context == null) {
+            logW(TAG, "context is null, can't check if an app is disabled!" + getStackTrace());
+            return false;
+        }
         PackageManager packageManager = context.getPackageManager();
         try {
             ApplicationInfo result = packageManager.getApplicationInfo(pkg, 0);
@@ -104,7 +112,10 @@ public class PackagesUtils {
      */
     public static boolean isHidden(Context context, String pkg) {
         try {
-            if (context == null) return false;
+            if (context == null) {
+                logW(TAG, "context is null, can't check if an app is hidden!" + getStackTrace());
+                return false;
+            }
             PackageManager packageManager = context.getPackageManager();
             packageManager.getApplicationInfo(pkg, 0);
             return false;
@@ -119,7 +130,9 @@ public class PackagesUtils {
      * Get user id based on uid.
      */
     public static int getUserId(int uid) {
-        return InvokeUtils.callStaticMethod(UserHandle.class, "getUserId", new Class[]{int.class}, uid);
+        return (int) Optional.ofNullable(
+                        InvokeUtils.callStaticMethod(UserHandle.class, "getUserId", new Class[]{int.class}, uid))
+                .orElse(-1);
     }
 
     /**
@@ -130,7 +143,7 @@ public class PackagesUtils {
      */
     public static boolean isSystem(ApplicationInfo app) {
         if (Objects.isNull(app)) {
-            AndroidLog.logE(TAG, "app is null, will return false!" + getStackTrace());
+            AndroidLog.logE(TAG, "app is null, can't check if it's a system app!" + getStackTrace());
             return false;
         }
         if (app.uid < 10000) {
@@ -152,7 +165,10 @@ public class PackagesUtils {
      */
     public static List<AppData> getPackagesByCode(Context context, ICode iCode) {
         List<AppData> appDataList = new ArrayList<>();
-        if (context == null) return appDataList;
+        if (context == null) {
+            logW(TAG, "context is null, can't get packages by code!" + getStackTrace());
+            return appDataList;
+        }
         PackageManager packageManager = context.getPackageManager();
         List<Parcelable> packageCodeList = iCode.action(packageManager);
         try {
@@ -174,7 +190,10 @@ public class PackagesUtils {
     @SuppressLint("QueryPermissionsNeeded")
     public static List<AppData> getInstalledPackages(Context context, int flag) {
         List<AppData> appDataList = new ArrayList<>();
-        if (context == null) return appDataList;
+        if (context == null) {
+            logW(TAG, "context is null, can't get install packages!" + getStackTrace());
+            return appDataList;
+        }
         try {
             PackageManager packageManager = context.getPackageManager();
             List<PackageInfo> packageInfos = packageManager.getInstalledPackages(flag);
@@ -255,7 +274,7 @@ public class PackagesUtils {
     }
 
     private static Context context() {
-        return ContextUtils.getContext(ContextUtils.FLAG_ALL);
+        return ContextUtils.getContextNoLog(ContextUtils.FLAG_ALL);
     }
 
     public interface ICode {

@@ -43,8 +43,8 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
 public class ToolData {
     // HCInit
     public static String mInitTag = "[Unknown]";
-    public static int mInitLogLevel = HCInit.LOG_I;
     public static String spareTag = "Unknown";
+    public static int mInitLogLevel = HCInit.LOG_I;
     public static String modulePackageName = null;
     public static boolean autoReload = true;
     public static XC_LoadPackage.LoadPackageParam lpparam = null;
@@ -53,12 +53,12 @@ public class ToolData {
     // HCHook
     public String mThisTag = null;
     public boolean isZygote = false;
-    public HCHook hcHook = null;
-    public CoreTool coreTool = null;
-    public ChainTool chainTool = null;
-    public PrefsTool prefsTool = null;
-    public ConvertHelper convertHelper = null;
-    public HookFactory hookFactory = null;
+    public HCHook hc = null;
+    public CoreTool core = null;
+    public ChainTool chain = null;
+    public PrefsTool prefs = null;
+    public ConvertHelper convert = null;
+    public HookFactory hook = null;
 
     public ToolData(ToolRestrict helper) {
     }
@@ -70,7 +70,7 @@ public class ToolData {
 
     public boolean isZygoteState() {
         if (isZygote) {
-            logW(tag(), "in zygote state, please set classloader!" + getStackTrace());
+            logW(tag(), "in zygote state, call method please set classloader!" + getStackTrace());
             return true;
         }
         return false;

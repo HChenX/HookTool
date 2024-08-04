@@ -44,31 +44,31 @@ public class HCHook {
      */
     public HCHook() {
         data = new ToolData(new ToolRestrict());
-        data.hcHook = this;
-        data.coreTool = new CoreTool(data);
-        data.chainTool = new ChainTool(data);
-        data.convertHelper = new ConvertHelper(data);
-        data.hookFactory = new HookFactory(data);
+        data.hc = this;
+        data.core = new CoreTool(data);
+        data.chain = new ChainTool(data);
+        data.convert = new ConvertHelper(data);
+        data.hook = new HookFactory(data);
         if (PrefsTool.xposedPrefs() == null) {
-            data.prefsTool = new PrefsTool(data);
-        } else data.prefsTool = PrefsTool.xposedPrefs();
+            data.prefs = new PrefsTool(data);
+        } else data.prefs = PrefsTool.xposedPrefs();
     }
 
     public HCHook setThisTag(String tag) {
         data.mThisTag = tag;
-        return data.hcHook;
+        return data.hc;
     }
 
     public CoreTool core() {
-        return data.coreTool;
+        return data.core;
     }
 
     public ChainTool chain() {
-        return data.chainTool;
+        return data.chain;
     }
 
     public PrefsTool prefs() {
-        return data.prefsTool;
+        return data.prefs;
     }
 
     public XC_LoadPackage.LoadPackageParam lpparam() {

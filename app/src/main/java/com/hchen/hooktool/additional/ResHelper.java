@@ -93,7 +93,7 @@ public class ResHelper {
         if (mModulePath == null) {
             mModulePath = ToolData.startupParam.modulePath;
             if (mModulePath == null) {
-                logW(TAG, "module path is null, can't load module res, please call initResHelper!" + getStackTrace());
+                logW(TAG, "module path is null, can't load module res!" + getStackTrace());
                 return null;
             }
         }

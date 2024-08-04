@@ -73,7 +73,7 @@ public class ConvertHelper {
             if (o instanceof Class<?> c) {
                 classes.add(c);
             } else if (o instanceof String s) {
-                Class<?> ct = data.coreTool.findClass(s, classLoader);
+                Class<?> ct = data.core.findClass(s, classLoader);
                 if (ct == null) {
                     return new Class[]{};
                 }

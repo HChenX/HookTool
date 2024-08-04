@@ -88,6 +88,6 @@ public class ParamTool extends Arguments {
 
     final public void ToolData(ToolData data) {
         mTag = data.tag();
-        Dynamic = data.coreTool;
+        Dynamic = data.core;
     }
 }
