@@ -60,6 +60,7 @@ tasks.register('androidSourcesJar', Jar) {
 }
 
 dependencies {
+    compileOnly project(':stub')
     compileOnly libs.xposed
     implementation libs.annotation
 }

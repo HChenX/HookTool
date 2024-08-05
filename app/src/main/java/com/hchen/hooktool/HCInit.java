@@ -36,7 +36,7 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
  * 请在 Hook 入口处初始化本类
  * <p>
  * Initialize this class at the hook entry
- * 
+ *
  * @author 焕晨HChen
  */
 public class HCInit {
@@ -73,6 +73,7 @@ public class HCInit {
         if (loadPackageParam == null) {
             throw new RuntimeException(ToolData.mInitTag + "[E]: load package param is null!!");
         }
+        ToolData.isZygote = false;
         ToolData.lpparam = loadPackageParam;
         classLoader = loadPackageParam.classLoader;
         String packageName = loadPackageParam.packageName;
@@ -86,6 +87,7 @@ public class HCInit {
      * Be sure to set it up!
      */
     public static void initStartupParam(IXposedHookZygoteInit.StartupParam startupParam) {
+        ToolData.isZygote = true;
         ToolData.startupParam = startupParam;
     }
 

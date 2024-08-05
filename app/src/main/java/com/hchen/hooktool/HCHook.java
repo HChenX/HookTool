@@ -31,7 +31,7 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
  * 工具入口
  * <p>
  * Tool entry
- * 
+ *
  * @author 焕晨HChen
  */
 public class HCHook {
@@ -77,9 +77,5 @@ public class HCHook {
 
     public ClassLoader classLoader() {
         return ToolData.classLoader;
-    }
-
-    protected void setStateChange(boolean isZygote) {
-        data.isZygote = isZygote;
     }
 }

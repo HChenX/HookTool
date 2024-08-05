@@ -18,6 +18,7 @@
  */
 package com.hchen.hooktool;
 
+import static com.hchen.hooktool.data.ToolData.isZygote;
 import static com.hchen.hooktool.log.XposedLog.logE;
 
 import android.content.Context;
@@ -66,8 +67,7 @@ public abstract class BaseHC implements IMember, IDynamic, IStatic, IChain {
 
     // 在外处使用可以传递本参数。
     public BaseHC baseHC;
-
-    private boolean isZygote = false;
+    
     private HCHook hcHook;
     private PrefsTool prefs;
     private IDynamic iDynamic;
@@ -95,7 +95,6 @@ public abstract class BaseHC implements IMember, IDynamic, IStatic, IChain {
     }
 
     final public void onCreate() {
-        isZygote = false;
         initTool();
         try {
             init();
@@ -105,7 +104,6 @@ public abstract class BaseHC implements IMember, IDynamic, IStatic, IChain {
     }
 
     final public void onZygote() {
-        isZygote = true;
         initTool();
         try {
             initZygote(ToolData.startupParam);
@@ -124,7 +122,6 @@ public abstract class BaseHC implements IMember, IDynamic, IStatic, IChain {
             iChain = hcHook.chain();
             prefs = hcHook.prefs();
         }
-        hcHook.setStateChange(isZygote);
         if (!isZygote) {
             lpparam = hcHook.lpparam();
             classLoader = lpparam.classLoader;

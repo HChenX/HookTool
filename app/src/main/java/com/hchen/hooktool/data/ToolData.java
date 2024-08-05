@@ -47,12 +47,12 @@ public class ToolData {
     public static int mInitLogLevel = HCInit.LOG_I;
     public static String modulePackageName = null;
     public static boolean autoReload = true;
+    public static boolean isZygote = false;
     public static XC_LoadPackage.LoadPackageParam lpparam = null;
     public static ClassLoader classLoader = null;
     public static IXposedHookZygoteInit.StartupParam startupParam = null;
     // HCHook
     public String mThisTag = null;
-    public boolean isZygote = false;
     public HCHook hc = null;
     public CoreTool core = null;
     public ChainTool chain = null;

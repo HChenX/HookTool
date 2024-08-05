@@ -34,7 +34,7 @@ import de.robv.android.xposed.XposedHelpers;
  * @author 焕晨HChen
  */
 public class MainTest extends BaseHC {
-    public static BaseHC sHc;
+    
     @Override
     public void initZygote(IXposedHookZygoteInit.StartupParam startupParam) {
         super.initZygote(startupParam);
@@ -42,7 +42,6 @@ public class MainTest extends BaseHC {
 
     @Override
     public void init() {
-        sHc = baseHC;
         new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) {

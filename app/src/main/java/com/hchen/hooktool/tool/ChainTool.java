@@ -196,8 +196,8 @@ public class ChainTool implements IChain {
                                 memberData.hookState = HookState.FAILED;
                                 logE(data.tag(), e);
                             }
+                            iteratorMember.set(memberData);
                         }
-                        iteratorMember.set(memberData);
                     }
                     case FAILED -> {
                         logD(data.tag(), "ChainTool: members hooked: " + memberData.member);
