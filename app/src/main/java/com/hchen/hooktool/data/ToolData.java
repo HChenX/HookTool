@@ -18,17 +18,8 @@
  */
 package com.hchen.hooktool.data;
 
-import static com.hchen.hooktool.log.LogExpand.getStackTrace;
-import static com.hchen.hooktool.log.XposedLog.logW;
-
-import com.hchen.hooktool.HCHook;
 import com.hchen.hooktool.HCInit;
 import com.hchen.hooktool.ToolRestrict;
-import com.hchen.hooktool.helper.ConvertHelper;
-import com.hchen.hooktool.helper.HookFactory;
-import com.hchen.hooktool.tool.ChainTool;
-import com.hchen.hooktool.tool.CoreTool;
-import com.hchen.hooktool.tool.PrefsTool;
 
 import de.robv.android.xposed.IXposedHookZygoteInit;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
@@ -51,28 +42,7 @@ public class ToolData {
     public static XC_LoadPackage.LoadPackageParam lpparam = null;
     public static ClassLoader classLoader = null;
     public static IXposedHookZygoteInit.StartupParam startupParam = null;
-    // HCHook
-    public String mThisTag = null;
-    public HCHook hc = null;
-    public CoreTool core = null;
-    public ChainTool chain = null;
-    public PrefsTool prefs = null;
-    public ConvertHelper convert = null;
-    public HookFactory hook = null;
 
     public ToolData(ToolRestrict helper) {
-    }
-    
-    public String tag() {
-        if (mThisTag != null) return mThisTag;
-        return spareTag;
-    }
-
-    public boolean isZygoteState() {
-        if (isZygote) {
-            logW(tag(), "in zygote state, call method please set classloader!" + getStackTrace());
-            return true;
-        }
-        return false;
     }
 }

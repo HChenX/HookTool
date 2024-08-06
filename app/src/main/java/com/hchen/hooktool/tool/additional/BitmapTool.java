@@ -16,7 +16,7 @@
 
  * Copyright (C) 2023-2024 HookTool Contributions
  */
-package com.hchen.hooktool.additional;
+package com.hchen.hooktool.tool.additional;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -35,7 +35,7 @@ import java.io.ByteArrayOutputStream;
  * 
  * @author 焕晨HChen
  */
-public class BitmapUtils {
+public class BitmapTool {
     public static Bitmap drawableToBitmap(Drawable drawable) {
         // 取 drawable 的长宽
         int w = drawable.getIntrinsicWidth();

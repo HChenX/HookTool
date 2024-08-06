@@ -16,10 +16,9 @@
 
  * Copyright (C) 2023-2024 HookTool Contributions
  */
-package com.hchen.hooktool.helper.param;
+package com.hchen.hooktool.tool.param;
 
 import com.hchen.hooktool.log.LogExpand;
-import com.hchen.hooktool.tool.itool.IDynamic;
 
 import de.robv.android.xposed.XC_MethodHook;
 
@@ -33,7 +32,6 @@ import de.robv.android.xposed.XC_MethodHook;
 public class ActAchieve {
     public XC_MethodHook.MethodHookParam MethodHookParam;
     public String mTag;
-    public IDynamic Dynamic;
     private LogExpand logExpand;
 
     /**

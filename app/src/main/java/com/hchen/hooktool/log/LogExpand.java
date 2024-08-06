@@ -21,6 +21,8 @@ package com.hchen.hooktool.log;
 import static com.hchen.hooktool.log.AndroidLog.logE;
 import static com.hchen.hooktool.log.AndroidLog.logI;
 
+import android.annotation.SuppressLint;
+
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Constructor;
@@ -35,7 +37,7 @@ import de.robv.android.xposed.XC_MethodHook;
  * 日志增强
  * <p>
  * Logging enhancements
- * 
+ *
  * @author 焕晨HChen
  */
 public class LogExpand {
@@ -80,6 +82,30 @@ public class LogExpand {
             }
         });
         return stringBuilder.toString();
+    }
+
+    private static StackWalker stackWalker;
+    private static String tag = null;
+    private static boolean found = false;
+
+    @SuppressLint("NewApi")
+    public static String tag() {
+        if (stackWalker == null) {
+            stackWalker = StackWalker.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE);
+        }
+        tag = null;
+        found = false;
+        stackWalker.forEach(stackFrame -> {
+            if (found) {
+                if (tag == null) tag = stackFrame.getClassName();
+                return;
+            }
+            String name = stackFrame.getClassName();
+            if (name.contains("BaseHC")) {
+                found = true;
+            }
+        });
+        return tag;
     }
 
     private void getName(Member member) {

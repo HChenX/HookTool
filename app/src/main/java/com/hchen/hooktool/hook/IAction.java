@@ -16,7 +16,7 @@
 
  * Copyright (C) 2023-2024 HookTool Contributions
  */
-package com.hchen.hooktool.callback;
+package com.hchen.hooktool.hook;
 
 import com.hchen.hooktool.data.Priority;
 import com.hchen.hooktool.tool.ParamTool;

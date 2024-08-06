@@ -18,11 +18,14 @@
  */
 package com.hchen.hooktool.helper;
 
+import static com.hchen.hooktool.data.ToolData.isZygote;
 import static com.hchen.hooktool.log.LogExpand.getStackTrace;
 import static com.hchen.hooktool.log.XposedLog.logW;
+import static com.hchen.hooktool.tool.CoreTool.findClass;
 
-import com.hchen.hooktool.callback.IAction;
 import com.hchen.hooktool.data.ToolData;
+import com.hchen.hooktool.hook.IAction;
+import com.hchen.hooktool.log.LogExpand;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -31,16 +34,10 @@ import java.util.Arrays;
  * 快捷转换
  * <p>
  * Quick conversion
- * 
+ *
  * @author 焕晨HChen
  */
 public class ConvertHelper {
-    private final ToolData data;
-
-    public ConvertHelper(ToolData data) {
-        this.data = data;
-    }
-
     /**
      * 泛型转换为数组。
      * <p>
@@ -49,12 +46,12 @@ public class ConvertHelper {
      * @param ts 泛型
      * @return 数组
      */
-    public <T> Object[] genericToArray(T ts) {
+    public static <T> Object[] genericToArray(T ts) {
         if (ts instanceof Object[] objects) return objects;
         return new Object[]{ts};
     }
 
-    public Class<?>[] arrayToClass(Object... objs) {
+    public static Class<?>[] arrayToClass(Object... objs) {
         return arrayToClass(ToolData.classLoader, objs);
     }
 
@@ -63,17 +60,17 @@ public class ConvertHelper {
      * <p>
      * Array parameters are converted to classes.
      */
-    public Class<?>[] arrayToClass(ClassLoader classLoader, Object... objs) {
+    public static Class<?>[] arrayToClass(ClassLoader classLoader, Object... objs) {
         ArrayList<Class<?>> classes = new ArrayList<>();
         if (objs.length == 0) {
             return new Class<?>[]{};
         }
-        if (classLoader == null && data.isZygoteState()) return new Class[]{};
+        if (classLoader == null && isZygoteState()) return new Class[]{};
         for (Object o : objs) {
             if (o instanceof Class<?> c) {
                 classes.add(c);
             } else if (o instanceof String s) {
-                Class<?> ct = data.core.findClass(s, classLoader);
+                Class<?> ct = findClass(s, classLoader);
                 if (ct == null) {
                     return new Class[]{};
                 }
@@ -81,22 +78,34 @@ public class ConvertHelper {
             } else if (o instanceof IAction) {
                 break;
             } else {
-                logW(data.tag(), "ConvertHelper: unknown type: " + o + getStackTrace());
+                logW(tag(), "ConvertHelper: unknown type: " + o + getStackTrace());
                 return new Class[]{};
             }
         }
         return classes.toArray(new Class<?>[0]);
     }
 
-    public Object[] toClassAsIAction(ClassLoader classLoader, Object... objs) {
-        if (objs.length == 0 || !(objs[objs.length - 1] instanceof IAction iAction)) {
-            logW(data.tag(), "ConvertHelper: params length == 0 or last param not is IAction! can't convert!!" + getStackTrace());
-            return null; // 使其在下一阶段直接返回
-        }
+    public static Object[] toClassAsIAction(ClassLoader classLoader, Object... objs) {
+        if (objs.length == 0 || !(objs[objs.length - 1] instanceof IAction iAction))
+            return new Object[]{};
+        
         Class<?>[] classes = arrayToClass(classLoader, objs);
         ArrayList<Object> arrayList = new ArrayList<>(Arrays.asList(classes));
         arrayList.add(iAction);
         return arrayList.toArray(new Object[0]);
     }
 
+    private static boolean isZygoteState() {
+        if (isZygote) {
+            logW(tag(), "in zygote state, call method please set classloader!" + getStackTrace());
+            return true;
+        }
+        return false;
+    }
+
+    private static String tag() {
+        String tag = LogExpand.tag();
+        if (tag == null) return "ConvertHelper";
+        return tag;
+    }
 }

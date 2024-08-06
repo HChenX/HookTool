@@ -20,15 +20,14 @@ package com.hchen.hooktool.tool;
 
 import static com.hchen.hooktool.log.LogExpand.getStackTrace;
 import static com.hchen.hooktool.log.XposedLog.logE;
-import static com.hchen.hooktool.log.XposedLog.logW;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 
-import com.hchen.hooktool.additional.ContextUtils;
 import com.hchen.hooktool.data.ToolData;
 import com.hchen.hooktool.log.AndroidLog;
+import com.hchen.hooktool.tool.additional.ContextTool;
 import com.hchen.hooktool.tool.itool.IPrefs;
 
 import org.jetbrains.annotations.Nullable;
@@ -140,7 +139,7 @@ public class PrefsTool {
      * Parasitic in-app calls only, for situations where it's inconvenient to get context.
      */
     public void asyncPrefs(IAsyncPrefs asyncPrefs) {
-        ContextUtils.getAsyncContext(new ContextUtils.IContext() {
+        ContextTool.getAsyncContext(new ContextTool.IContext() {
             @Override
             public void find(Context context) {
                 if (context == null) {

@@ -16,7 +16,7 @@
 
  * Copyright (C) 2023-2024 HookTool Contributions
  */
-package com.hchen.hooktool.additional;
+package com.hchen.hooktool.tool.additional;
 
 import static com.hchen.hooktool.log.LogExpand.getStackTrace;
 
@@ -35,11 +35,11 @@ import java.util.HashMap;
  *
  * @author 焕晨HChen
  */
-public class InvokeUtils {
+public class InvokeTool {
     private static final HashMap<String, Method> methodCache = new HashMap<>();
     private static final HashMap<String, Field> fieldCache = new HashMap<>();
 
-    private final static String TAG = "invokeUtils";
+    private final static String TAG = "InvokeTool";
 
     // ----------------------------反射调用方法--------------------------------
     public static <T> T callMethod(Object instance, String method, Class<?>[] param, Object... value) {

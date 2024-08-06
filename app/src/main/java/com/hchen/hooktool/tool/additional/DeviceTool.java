@@ -16,9 +16,7 @@
 
  * Copyright (C) 2023-2024 HookTool Contributions
  */
-package com.hchen.hooktool.additional;
-
-import static com.hchen.hooktool.additional.PropUtils.getProp;
+package com.hchen.hooktool.tool.additional;
 
 import android.annotation.SuppressLint;
 import android.content.res.Configuration;
@@ -36,13 +34,13 @@ import java.util.Locale;
  * 
  * @author 焕晨HChen
  */
-public class SystemSDK {
+public class DeviceTool {
     public static String getSystemVersionIncremental() {
-        return getProp("ro.system.build.version.incremental");
+        return PropTool.getProp("ro.system.build.version.incremental");
     }
 
     public static String getBuildDate() {
-        return getProp("ro.system.build.date");
+        return PropTool.getProp("ro.system.build.date");
     }
 
     public static String getHost() {
@@ -50,15 +48,15 @@ public class SystemSDK {
     }
 
     public static String getBuilder() {
-        return getProp("ro.build.user");
+        return PropTool.getProp("ro.build.user");
     }
 
     public static String getBaseOs() {
-        return getProp("ro.build.version.base_os");
+        return PropTool.getProp("ro.build.version.base_os");
     }
 
     public static String getRomAuthor() {
-        return getProp("ro.rom.author") + getProp("ro.romid");
+        return PropTool.getProp("ro.rom.author") + PropTool.getProp("ro.romid");
     }
 
     /**
@@ -77,7 +75,7 @@ public class SystemSDK {
      * Get the MIUI version of the Xiaomi device converts the acquired string to a floating point to provide a judgment.
      */
     public static float getMiuiVersion() {
-        switch (getProp("ro.miui.ui.version.name")) {
+        switch (PropTool.getProp("ro.miui.ui.version.name")) {
             case "V150" -> {
                 return 15f;
             }
@@ -112,7 +110,7 @@ public class SystemSDK {
      * Get Xiaomi Device HyperOS Version Convert the acquired string to floating-point to provide judgment.
      */
     public static float getHyperOSVersion() {
-        switch (getProp("ro.mi.os.version.name")) {
+        switch (PropTool.getProp("ro.mi.os.version.name")) {
             case "OS2.0" -> {
                 return 2f;
             }
@@ -181,13 +179,13 @@ public class SystemSDK {
 
     // --------- 其他 --------
     public static boolean IS_TABLET() {
-        return Boolean.TRUE.equals(InvokeUtils.getStaticField(
-                InvokeUtils.findClass("miui.os.Build", null), "IS_TABLET"));
+        return Boolean.TRUE.equals(InvokeTool.getStaticField(
+                InvokeTool.findClass("miui.os.Build", null), "IS_TABLET"));
     }
 
     public static boolean IS_INTERNATIONAL_BUILD() {
-        return Boolean.TRUE.equals(InvokeUtils.getStaticField(
-                InvokeUtils.findClass("miui.os.Build", null), "IS_INTERNATIONAL_BUILD"));
+        return Boolean.TRUE.equals(InvokeTool.getStaticField(
+                InvokeTool.findClass("miui.os.Build", null), "IS_INTERNATIONAL_BUILD"));
     }
 
     /**
@@ -214,7 +212,7 @@ public class SystemSDK {
     }
 
     public static String getLocale() {
-        return getProp("ro.product.locale");
+        return PropTool.getProp("ro.product.locale");
     }
 
     public static String getLanguage() {
@@ -226,7 +224,7 @@ public class SystemSDK {
     }
 
     public static String getSoc() {
-        return getProp("ro.soc.model");
+        return PropTool.getProp("ro.soc.model");
     }
 
     public static String getDeviceName() {
@@ -234,7 +232,7 @@ public class SystemSDK {
     }
 
     public static String getMarketName() {
-        return getProp("ro.product.marketname");
+        return PropTool.getProp("ro.product.marketname");
     }
 
     public static String getModelName() {
@@ -250,27 +248,27 @@ public class SystemSDK {
     }
 
     public static String getModDevice() {
-        return getProp("ro.product.mod_device");
+        return PropTool.getProp("ro.product.mod_device");
     }
 
     public static String getCharacteristics() {
-        return getProp("ro.build.characteristics");
+        return PropTool.getProp("ro.build.characteristics");
     }
 
     public static String getSerial() {
-        return getProp("ro.serialno").replace("\n", "");
+        return PropTool.getProp("ro.serialno").replace("\n", "");
     }
 
     public static int getDensityDpi() {
-        return (int) (ContextUtils.getContext(ContextUtils.FLAG_ALL).getResources().getDisplayMetrics().widthPixels /
-                ContextUtils.getContext(ContextUtils.FLAG_ALL).getResources().getDisplayMetrics().density);
+        return (int) (ContextTool.getContext(ContextTool.FLAG_ALL).getResources().getDisplayMetrics().widthPixels /
+                ContextTool.getContext(ContextTool.FLAG_ALL).getResources().getDisplayMetrics().density);
     }
 
     @SuppressLint("DiscouragedApi")
     public static int getCornerRadiusTop() {
-        int resourceId = ContextUtils.getContext(ContextUtils.FLAG_ALL).getResources().getIdentifier(
+        int resourceId = ContextTool.getContext(ContextTool.FLAG_ALL).getResources().getIdentifier(
                 "rounded_corner_radius_top", "dimen", "android");
-        return resourceId > 0 ? ContextUtils.getContext(ContextUtils.FLAG_ALL).getResources().getDimensionPixelSize(resourceId) : 100;
+        return resourceId > 0 ? ContextTool.getContext(ContextTool.FLAG_ALL).getResources().getDimensionPixelSize(resourceId) : 100;
     }
 
     public static boolean isTablet() {
@@ -278,11 +276,11 @@ public class SystemSDK {
     }
 
     public static boolean isPadDevice() {
-        return isTablet() || PropUtils.getProp("persist.sys.muiltdisplay_type", 0) == 2;
+        return isTablet() || PropTool.getProp("persist.sys.muiltdisplay_type", 0) == 2;
     }
 
     public static boolean isDarkMode() {
-        return (ContextUtils.getContext(ContextUtils.FLAG_ALL).getResources().getConfiguration().uiMode &
+        return (ContextTool.getContext(ContextTool.FLAG_ALL).getResources().getConfiguration().uiMode &
                 Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
     }
 

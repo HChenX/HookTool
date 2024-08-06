@@ -16,11 +16,11 @@
 
  * Copyright (C) 2023-2024 HookTool Contributions
  */
-package com.hchen.hooktool.helper;
+package com.hchen.hooktool.hook;
 
-import com.hchen.hooktool.callback.IAction;
+import static com.hchen.hooktool.log.XposedLog.logE;
+
 import com.hchen.hooktool.data.Priority;
-import com.hchen.hooktool.data.ToolData;
 
 import de.robv.android.xposed.XC_MethodHook;
 
@@ -32,21 +32,14 @@ import de.robv.android.xposed.XC_MethodHook;
  * @author 焕晨HChen
  */
 public class HookFactory {
-    private final ToolData data;
-
-    public HookFactory(ToolData data) {
-        this.data = data;
-    }
-
-    public XposedCallBack createHook(IAction iAction) {
-        iAction.ToolData(data);
+    public static XposedCallBack createHook(String tag, IAction iAction) {
         int priority = 50;
         switch (iAction.priority) {
             case Priority.DEFAULT -> priority = 50;
             case Priority.LOWEST -> priority = -10000;
             case Priority.HIGHEST -> priority = 10000;
         }
-        return new XposedCallBack(data.tag(), priority) {
+        return new XposedCallBack(tag, priority) {
             @Override
             public void before(MethodHookParam param) {
                 iAction.before();
@@ -63,4 +56,41 @@ public class HookFactory {
             }
         };
     }
+
+    public static abstract class XposedCallBack extends XC_MethodHook {
+        private final String TAG;
+
+        public XposedCallBack(String tag, int priority) {
+            super(priority);
+            TAG = tag;
+            XC_MethodHook(this);
+        }
+
+        public void before(MethodHookParam param) {
+        }
+
+        public void after(MethodHookParam param) {
+        }
+
+        abstract void XC_MethodHook(XC_MethodHook xcMethodHook);
+
+        @Override
+        protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+            try {
+                before(param);
+            } catch (Throwable e) {
+                logE(TAG + ":before", e);
+            }
+        }
+
+        @Override
+        protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+            try {
+                after(param);
+            } catch (Throwable e) {
+                logE(TAG + ":after", e);
+            }
+        }
+    }
 }
+

@@ -16,7 +16,7 @@
 
  * Copyright (C) 2023-2024 HookTool Contributions
  */
-package com.hchen.hooktool.additional;
+package com.hchen.hooktool.tool.additional;
 
 import android.annotation.SuppressLint;
 
@@ -30,9 +30,9 @@ import java.util.Optional;
  * @author 焕晨HChen
  */
 @SuppressLint("PrivateApi")
-public class PropUtils {
-    private static final String TAG = "PropUtils";
-    private static final Class<?> clazz = InvokeUtils.findClass("android.os.SystemProperties");
+public class PropTool {
+    private static final String TAG = "PropTool";
+    private static final Class<?> clazz = InvokeTool.findClass("android.os.SystemProperties");
 
     public static String getProp(ClassLoader classLoader, String name) {
         return classLoaderMethod(classLoader, name);
@@ -74,7 +74,7 @@ public class PropUtils {
     }
 
     private static String classLoaderMethod(ClassLoader classLoader, String name) {
-        return (String) Optional.ofNullable(InvokeUtils.callStaticMethod(InvokeUtils.findClass("android.os.SystemProperties", classLoader),
+        return (String) Optional.ofNullable(InvokeTool.callStaticMethod(InvokeTool.findClass("android.os.SystemProperties", classLoader),
                 "get", new Class[]{String.class}, name)).orElse("");
     }
 
@@ -82,6 +82,6 @@ public class PropUtils {
      * @noinspection unchecked
      */
     private static <T> T invokeMethod(String str, Class<?>[] clsArr, Object... objArr) {
-        return InvokeUtils.callStaticMethod(clazz, str, clsArr, objArr);
+        return InvokeTool.callStaticMethod(clazz, str, clsArr, objArr);
     }
 }

@@ -16,7 +16,7 @@
 
  * Copyright (C) 2023-2024 HookTool Contributions
  */
-package com.hchen.hooktool.additional;
+package com.hchen.hooktool.tool.additional;
 
 import static com.hchen.hooktool.log.LogExpand.getStackTrace;
 import static com.hchen.hooktool.log.XposedLog.logE;
@@ -48,9 +48,9 @@ import java.lang.reflect.Method;
  *
  * @author 焕晨HChen
  */
-public class ResHelper {
+public class ResTool {
     private static ResourcesLoader resourcesLoader = null;
-    private static final String TAG = "ResHelper";
+    private static final String TAG = "ResTool";
     private static String mModulePath = null;
     private static Handler mHandler = null;
 

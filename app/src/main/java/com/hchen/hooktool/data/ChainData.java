@@ -18,7 +18,7 @@
  */
 package com.hchen.hooktool.data;
 
-import com.hchen.hooktool.callback.IAction;
+import com.hchen.hooktool.hook.IAction;
 
 import java.lang.reflect.Member;
 import java.util.ArrayList;

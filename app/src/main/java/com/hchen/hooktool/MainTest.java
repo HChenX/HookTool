@@ -18,9 +18,11 @@
  */
 package com.hchen.hooktool;
 
+import static com.hchen.hooktool.tool.ChainTool.method;
+
 import android.content.Context;
 
-import com.hchen.hooktool.callback.IAction;
+import com.hchen.hooktool.hook.IAction;
 
 import de.robv.android.xposed.IXposedHookZygoteInit;
 import de.robv.android.xposed.XC_MethodHook;
