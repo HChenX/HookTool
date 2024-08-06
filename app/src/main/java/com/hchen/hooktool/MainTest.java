@@ -18,8 +18,6 @@
  */
 package com.hchen.hooktool;
 
-import static com.hchen.hooktool.tool.ChainTool.method;
-
 import android.content.Context;
 
 import com.hchen.hooktool.hook.IAction;
@@ -78,7 +76,7 @@ public class MainTest extends BaseHC {
                 .constructor()
                 .returnResult(false)
         );
-
+        
         hook(findMethod("com.hchen.demo", "test"), new IAction() {
             @Override
             public void before() {

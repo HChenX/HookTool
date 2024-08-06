@@ -39,14 +39,17 @@ public class HookFactory {
             case Priority.LOWEST -> priority = -10000;
             case Priority.HIGHEST -> priority = 10000;
         }
+        iAction.mTag = tag;
         return new XposedCallBack(tag, priority) {
             @Override
             public void before(MethodHookParam param) {
+                iAction.MethodHookParam(param);
                 iAction.before();
             }
 
             @Override
             public void after(MethodHookParam param) {
+                iAction.MethodHookParam(param);
                 iAction.after();
             }
 

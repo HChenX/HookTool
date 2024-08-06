@@ -19,7 +19,6 @@
 package com.hchen.hooktool.data;
 
 import com.hchen.hooktool.HCInit;
-import com.hchen.hooktool.ToolRestrict;
 
 import de.robv.android.xposed.IXposedHookZygoteInit;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
@@ -42,7 +41,5 @@ public class ToolData {
     public static XC_LoadPackage.LoadPackageParam lpparam = null;
     public static ClassLoader classLoader = null;
     public static IXposedHookZygoteInit.StartupParam startupParam = null;
-
-    public ToolData(ToolRestrict helper) {
-    }
+    
 }

@@ -24,6 +24,7 @@ import static com.hchen.hooktool.log.XposedLog.logE;
 import android.content.pm.ApplicationInfo;
 
 import com.hchen.hooktool.data.ToolData;
+import com.hchen.hooktool.tool.ChainTool;
 
 import de.robv.android.xposed.IXposedHookZygoteInit;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
@@ -32,10 +33,10 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
  * 对需要使用工具的类继承本类，可快速使用工具
  * <p>
  * This class inherits from the class that requires the use of the tool, so that you can quickly use the tool
- * 
+ *
  * @author 焕晨HChen
  */
-public abstract class BaseHC {
+public abstract class BaseHC extends ChainTool {
     public String TAG = getClass().getSimpleName();
 
     // onZygote 阶段以下均为 null 或 false
@@ -46,7 +47,7 @@ public abstract class BaseHC {
     public boolean isFirstApplication;
     public String processName;
     // END
-    
+
     /**
      * 正常阶段。
      * <p>

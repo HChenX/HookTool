@@ -57,6 +57,10 @@ import de.robv.android.xposed.XposedHelpers;
  */
 public class CoreTool {
 
+    public static ClassLoader classLoader() {
+        return ToolData.classLoader;
+    }
+
     //------------ 检查指定类是否存在 --------------
     public static boolean existsClass(String clazz) {
         if (isZygoteState()) return false;
@@ -325,8 +329,22 @@ public class CoreTool {
         };
     }
 
+    // --------- 解除 hook ---------
     public static void unHook(Member hookMember, XC_MethodHook xcMethodHook) {
         XposedBridge.unhookMethod(hookMember, xcMethodHook);
+    }
+
+    public static class UnHook {
+        private XC_MethodHook.Unhook unhook;
+
+        private UnHook(XC_MethodHook.Unhook unhook) {
+            this.unhook = unhook;
+        }
+
+        public void unHook() {
+            if (unhook != null) unhook.unhook();
+            unhook = null;
+        }
     }
 
     public static class UnHookList {
@@ -597,21 +615,5 @@ public class CoreTool {
         String tag = LogExpand.tag();
         if (tag == null) return "CoreTool";
         return tag;
-    }
-
-    // --------- 解除 hook ---------
-    public static class UnHook {
-        private final XC_MethodHook.Unhook unhook;
-        private boolean isUnhooked = false;
-
-        private UnHook(XC_MethodHook.Unhook unhook) {
-            this.unhook = unhook;
-        }
-
-        public void unHook() {
-            if (isUnhooked) return;
-            if (unhook != null) unhook.unhook();
-            isUnhooked = true;
-        }
     }
 }

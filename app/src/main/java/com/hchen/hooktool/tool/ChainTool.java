@@ -24,15 +24,9 @@ import static com.hchen.hooktool.data.ChainData.TYPE_CONSTRUCTOR;
 import static com.hchen.hooktool.data.ChainData.TYPE_METHOD;
 import static com.hchen.hooktool.helper.ConvertHelper.arrayToClass;
 import static com.hchen.hooktool.hook.HookFactory.createHook;
-import static com.hchen.hooktool.log.LogExpand.getStackTrace;
 import static com.hchen.hooktool.log.XposedLog.logD;
 import static com.hchen.hooktool.log.XposedLog.logE;
 import static com.hchen.hooktool.log.XposedLog.logW;
-import static com.hchen.hooktool.tool.CoreTool.findAnyConstructor;
-import static com.hchen.hooktool.tool.CoreTool.findAnyMethod;
-import static com.hchen.hooktool.tool.CoreTool.findClass;
-import static com.hchen.hooktool.tool.CoreTool.findConstructor;
-import static com.hchen.hooktool.tool.CoreTool.findMethod;
 
 import com.hchen.hooktool.data.ChainData;
 import com.hchen.hooktool.data.HookState;
@@ -53,11 +47,11 @@ import de.robv.android.xposed.XposedBridge;
  *
  * @author 焕晨HChen
  */
-public class ChainTool {
+public class ChainTool extends CoreTool {
     private final ChainHook chainHook;
+    private ChainData chainData;
     private static ClassLoader classLoader = null;
     private final ArrayList<ChainData> chainDataList = new ArrayList<>();
-    private ChainData chainData;
     private final ArrayList<ChainData> cacheDataList = new ArrayList<>();
 
     public ChainTool() {
