@@ -21,10 +21,14 @@ package com.hchen.hooktool;
 import static com.hchen.hooktool.data.ToolData.isZygote;
 import static com.hchen.hooktool.log.XposedLog.logE;
 
+import android.content.Context;
 import android.content.pm.ApplicationInfo;
 
 import com.hchen.hooktool.data.ToolData;
 import com.hchen.hooktool.tool.ChainTool;
+import com.hchen.hooktool.tool.CoreTool;
+import com.hchen.hooktool.tool.PrefsTool;
+import com.hchen.hooktool.tool.itool.IPrefs;
 
 import de.robv.android.xposed.IXposedHookZygoteInit;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
@@ -36,7 +40,7 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
  *
  * @author 焕晨HChen
  */
-public abstract class BaseHC extends ChainTool {
+public abstract class BaseHC extends CoreTool {
     public String TAG = getClass().getSimpleName();
 
     // onZygote 阶段以下均为 null 或 false
@@ -47,6 +51,8 @@ public abstract class BaseHC extends ChainTool {
     public boolean isFirstApplication;
     public String processName;
     // END
+
+    private final ChainTool chainTool = new ChainTool();
 
     /**
      * 正常阶段。
@@ -94,5 +100,53 @@ public abstract class BaseHC extends ChainTool {
             isFirstApplication = lpparam.isFirstApplication;
             processName = lpparam.processName;
         }
+    }
+
+    public static void chain(String clazz, ChainTool chain) {
+        ChainTool.chain(clazz, chain);
+    }
+
+    public static void chain(String clazz, ClassLoader classLoader, ChainTool chain) {
+        ChainTool.chain(clazz, classLoader, chain);
+    }
+
+    public static void chain(Class<?> clazz, ChainTool chain) {
+        ChainTool.chain(clazz, chain);
+    }
+
+    public static IPrefs prefs(Context context) {
+        return PrefsTool.prefs(context);
+    }
+
+    public static IPrefs prefs(Context context, String prefsName) {
+        return PrefsTool.prefs(context, prefsName);
+    }
+
+    public static IPrefs prefs() {
+        return PrefsTool.prefs();
+    }
+
+    public static IPrefs prefs(String prefsName) {
+        return PrefsTool.prefs(prefsName);
+    }
+
+    public static void asyncPrefs(PrefsTool.IAsyncPrefs asyncPrefs) {
+        PrefsTool.asyncPrefs(asyncPrefs);
+    }
+    
+    public ChainTool.ChainHook method(String name, Object... params) {
+        return chainTool.method(name, params);
+    }
+    
+    public ChainTool.ChainHook anyMethod(String name) {
+        return chainTool.anyMethod(name);
+    }
+    
+    public ChainTool.ChainHook constructor(Object... params) {
+        return chainTool.constructor(params);
+    }
+    
+    public ChainTool.ChainHook anyConstructor() {
+        return chainTool.anyConstructor();
     }
 }

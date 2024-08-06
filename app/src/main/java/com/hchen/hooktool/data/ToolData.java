@@ -27,7 +27,7 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
  * 这是本工具的读写数据类，请不要继承或重写。
  * <p>
  * This is the read and write data class of this tool, please do not extends or override.
- * 
+ *
  * @author 焕晨HChen
  */
 public class ToolData {
@@ -38,8 +38,9 @@ public class ToolData {
     public static String modulePackageName = null;
     public static boolean autoReload = true;
     public static boolean isZygote = false;
+    public static boolean isXposed = false;
     public static XC_LoadPackage.LoadPackageParam lpparam = null;
     public static ClassLoader classLoader = null;
     public static IXposedHookZygoteInit.StartupParam startupParam = null;
-    
+
 }

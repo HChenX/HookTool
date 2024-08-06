@@ -74,6 +74,7 @@ public class HCInit {
             throw new RuntimeException(ToolData.mInitTag + "[E]: load package param is null!!");
         }
         ToolData.isZygote = false;
+        ToolData.isXposed = true;
         ToolData.lpparam = loadPackageParam;
         classLoader = loadPackageParam.classLoader;
         String packageName = loadPackageParam.packageName;
@@ -88,6 +89,7 @@ public class HCInit {
      */
     public static void initStartupParam(IXposedHookZygoteInit.StartupParam startupParam) {
         ToolData.isZygote = true;
+        ToolData.isXposed = true;
         ToolData.startupParam = startupParam;
     }
 
