@@ -49,7 +49,6 @@ import de.robv.android.xposed.XSharedPreferences;
  */
 public class PrefsTool {
     private final static String TAG = "PrefsTool";
-    private static String prefsName = null;
     private final static HashMap<String, XSharedPreferences> xPrefs = new HashMap<>();
     private final static HashMap<String, SharedPreferences> sPrefs = new HashMap<>();
 
@@ -65,7 +64,7 @@ public class PrefsTool {
      * If parasitic applications are stored in their private directory and reads are read from their private directory.
      */
     public static IPrefs prefs(Context context) {
-        return prefs(context, prefsName);
+        return prefs(context, null);
     }
 
     /**
@@ -77,7 +76,6 @@ public class PrefsTool {
      * If parasitic applications are stored in their private directory and reads are read from their private directory.
      */
     public static IPrefs prefs(Context context, String prefsName) {
-        prefsName = prefsName.replace(" ", "").toLowerCase();
         return new Sprefs(currentSp(context, prefsName));
     }
 
@@ -91,7 +89,7 @@ public class PrefsTool {
     public static IPrefs prefs() {
         if (!ToolData.isXposed)
             throw new RuntimeException(ToolData.mInitTag + "[PrefsTool][E]: Not xposed environment!" + getStackTrace());
-        return prefs(prefsName);
+        return prefs((String) null);
     }
 
     /**
@@ -102,7 +100,6 @@ public class PrefsTool {
     public static IPrefs prefs(String prefsName) {
         if (!ToolData.isXposed)
             throw new RuntimeException(ToolData.mInitTag + "[PrefsTool][E]: Not xposed environment!" + getStackTrace());
-        prefsName = prefsName.replace(" ", "").toLowerCase();
         return new Xprefs(currentXsp(prefsName));
     }
 
@@ -135,7 +132,7 @@ public class PrefsTool {
     }
 
     private static XSharedPreferences currentXsp(String prefsName) {
-        if (prefsName == null) initPrefsName();
+        prefsName = initPrefsName(prefsName);
         if (xPrefs.get(prefsName) == null) {
             if (ToolData.modulePackageName == null) {
                 throw new RuntimeException(ToolData.mInitTag +
@@ -154,7 +151,7 @@ public class PrefsTool {
     /** @noinspection deprecation */
     @SuppressLint("WorldReadableFiles")
     private static SharedPreferences currentSp(Context context, String prefsName) {
-        if (prefsName == null) initPrefsName();
+        prefsName = initPrefsName(prefsName);
         if (context == null) {
             throw new RuntimeException(ToolData.mInitTag + "[PrefsTool][E]: Context is null, can't create sprefs!" + getStackTrace());
         }
@@ -173,9 +170,10 @@ public class PrefsTool {
         }
     }
 
-    private static void initPrefsName() {
-        // 默认值，即设置的 tag 值后加 _prefs
-        prefsName = ToolData.spareTag.replace(" ", "").toLowerCase() + "_prefs";
+    private static String initPrefsName(String name) {
+        if (name == null)
+            return ToolData.spareTag.replace(" ", "").toLowerCase() + "_prefs";
+        else return name.replace(" ", "").toLowerCase() + "_prefs";
     }
 
     private static String tag() {
