@@ -26,7 +26,7 @@ import java.util.ArrayList;
 /**
  * 链式调用数据
  * <p>
- * Chained data
+ * Chain data
  *
  * @author 焕晨HChen
  */
@@ -38,6 +38,7 @@ public class ChainData {
     public String clazz; /* 类名 */
     public String UUID = "UNKNOWN"; /* 唯一标识符 */
 
+    // 核心方法
     public ChainData(String clazz, String name,
                      ArrayList<ChainData> memberWithState, IAction iAction, String uuid) {
         this.clazz = clazz;
@@ -47,6 +48,7 @@ public class ChainData {
         this.UUID = uuid;
     }
 
+    // memberWithState 内数据
     public ChainData(Member member, HookState hookState) {
         this.member = member;
         this.hookState = hookState;
@@ -63,23 +65,27 @@ public class ChainData {
     public String mType; /* 类型 */
     public Object[] mParams; /* 参数 */
 
+    // 类信息
     public ChainData(String name, Object... params) {
         mName = name;
         mType = TYPE_METHOD;
         mParams = params;
     }
 
+    // 类信息
     public ChainData(String name) {
         mName = name;
         mType = TYPE_ANY_METHOD;
     }
 
+    // 构造函数信息
     public ChainData(Object... params) {
         mName = "";
         mType = TYPE_CONSTRUCTOR;
         mParams = params;
     }
 
+    // 构造函数信息
     public ChainData() {
         mName = "";
         mType = TYPE_ANY_CONSTRUCTOR;

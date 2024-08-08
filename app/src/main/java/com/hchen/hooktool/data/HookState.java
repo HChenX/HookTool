@@ -26,7 +26,7 @@ package com.hchen.hooktool.data;
  * @author 焕晨HChen
  */
 public enum HookState {
-    NONE, /* 未 hook */
-    HOOKED, /* 成功 hook */
-    FAILED /* hook 失败 */
+    NONE, /* 无状态 */
+    HOOKED, /* 成功 */
+    FAILED /* 失败 */
 }

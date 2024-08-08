@@ -23,9 +23,9 @@ import android.annotation.SuppressLint;
 import java.util.Optional;
 
 /**
- * 本类为 prop 工具，可以获取或者写入系统 prop 条目
+ * Prop 工具，可以获取或者写入系统 prop 条目
  * <p>
- * This class is a prop tool, which can be obtained or written to the system prop entry
+ * Prop tool, which can be obtained or written to the system prop entry
  *
  * @author 焕晨HChen
  */
@@ -44,17 +44,17 @@ public class PropTool {
 
     public static int getProp(String key, int def) {
         return (int) Optional.ofNullable(invokeMethod("getInt", new Class[]{String.class, int.class}, key, def))
-                .orElse(-1);
+                .orElse(def);
     }
 
     public static long getProp(String key, long def) {
         return (long) Optional.ofNullable(invokeMethod("getLong", new Class[]{String.class, long.class}, key, def))
-                .orElse(-1L);
+                .orElse(def);
     }
 
     public static String getProp(String key, String def) {
         return (String) Optional.ofNullable(invokeMethod("get", new Class[]{String.class, String.class}, key, def))
-                .orElse("");
+                .orElse(def);
     }
 
     public static String getProp(String key) {
@@ -74,13 +74,11 @@ public class PropTool {
     }
 
     private static String classLoaderMethod(ClassLoader classLoader, String name) {
-        return (String) Optional.ofNullable(InvokeTool.callStaticMethod(InvokeTool.findClass("android.os.SystemProperties", classLoader),
+        return (String) Optional.ofNullable(InvokeTool.callStaticMethod(
+                InvokeTool.findClass("android.os.SystemProperties", classLoader),
                 "get", new Class[]{String.class}, name)).orElse("");
     }
 
-    /**
-     * @noinspection unchecked
-     */
     private static <T> T invokeMethod(String str, Class<?>[] clsArr, Object... objArr) {
         return InvokeTool.callStaticMethod(clazz, str, clsArr, objArr);
     }

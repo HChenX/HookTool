@@ -42,9 +42,6 @@ public class ConvertHelper {
      * 泛型转换为数组。
      * <p>
      * Generics are converted to arrays.
-     *
-     * @param ts 泛型
-     * @return 数组
      */
     public static <T> Object[] genericToArray(T ts) {
         if (ts instanceof Object[] objects) return objects;
@@ -62,33 +59,30 @@ public class ConvertHelper {
      */
     public static Class<?>[] arrayToClass(ClassLoader classLoader, Object... objs) {
         ArrayList<Class<?>> classes = new ArrayList<>();
-        if (objs.length == 0) {
-            return new Class<?>[]{};
-        }
+        if (objs.length == 0) return new Class<?>[]{};
         if (classLoader == null && isZygoteState()) return new Class[]{};
         for (Object o : objs) {
             if (o instanceof Class<?> c) {
                 classes.add(c);
             } else if (o instanceof String s) {
                 Class<?> ct = findClass(s, classLoader);
-                if (ct == null) {
-                    return new Class[]{};
-                }
+                if (ct == null) return new Class[]{};
                 classes.add(ct);
             } else if (o instanceof IAction) {
-                break;
+                break; // IAction 必定为最后一个参数（如果有
             } else {
-                logW(tag(), "ConvertHelper: unknown type: " + o + getStackTrace());
+                logW(tag(), "Unknown type: " + o + getStackTrace());
                 return new Class[]{};
             }
         }
         return classes.toArray(new Class<?>[0]);
     }
 
+    // 将数组转成类并保留 IAction 参数
     public static Object[] toClassAsIAction(ClassLoader classLoader, Object... objs) {
         if (objs.length == 0 || !(objs[objs.length - 1] instanceof IAction iAction))
             return new Object[]{};
-        
+
         Class<?>[] classes = arrayToClass(classLoader, objs);
         ArrayList<Object> arrayList = new ArrayList<>(Arrays.asList(classes));
         arrayList.add(iAction);
@@ -97,7 +91,7 @@ public class ConvertHelper {
 
     private static boolean isZygoteState() {
         if (isZygote) {
-            logW(tag(), "in zygote state, call method please set classloader!" + getStackTrace());
+            logW(tag(), "In zygote state, call method please set classloader!" + getStackTrace());
             return true;
         }
         return false;

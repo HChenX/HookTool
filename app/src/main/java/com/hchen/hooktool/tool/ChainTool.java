@@ -56,7 +56,7 @@ import de.robv.android.xposed.XposedBridge;
 public class ChainTool {
     private final ChainHook chainHook;
     private ChainData chainData;
-    private static ClassLoader classLoader = null;
+    private ClassLoader classLoader = null;
     private final ArrayList<ChainData> chainDataList = new ArrayList<>();
     private final ArrayList<ChainData> cacheDataList = new ArrayList<>();
 
@@ -65,12 +65,12 @@ public class ChainTool {
     }
 
     public static void chain(String clazz, ChainTool chain) {
-        classLoader = null;
+        chain.classLoader = null;
         chain(findClass(clazz), chain);
     }
 
     public static void chain(String clazz, ClassLoader classLoader, ChainTool chain) {
-        ChainTool.classLoader = classLoader;
+        chain.classLoader = classLoader;
         chain(findClass(clazz, classLoader), chain);
     }
 
@@ -80,7 +80,7 @@ public class ChainTool {
             return;
         }
         chain.doFind(clazz);
-        chain.doChainHook(chain);
+        chain.doChainHook();
     }
 
     /**
@@ -112,13 +112,7 @@ public class ChainTool {
         chainData = new ChainData();
         return chainHook;
     }
-
-    private static String tag() {
-        String tag = LogExpand.tag();
-        if (tag == null) return "ChainTool";
-        return tag;
-    }
-
+    
     // 各种奇奇怪怪的添加 >.<
     private void doFind(Class<?> clazz) {
         ArrayList<ChainData> memberWithState = new ArrayList<>();
@@ -171,9 +165,56 @@ public class ChainTool {
         cacheDataList.clear();
     }
 
+    private static String tag() {
+        String tag = LogExpand.tag();
+        if (tag == null) return "ChainTool";
+        return tag;
+    }
+
+    public static class ChainHook {
+        private final ChainTool chain;
+
+        public ChainHook(ChainTool chain) {
+            this.chain = chain;
+        }
+
+        /**
+         * Hook 动作。
+         * <p>
+         * Hook action.
+         */
+        public ChainTool hook(IAction iAction) {
+            chain.chainData.iAction = iAction;
+            chain.cacheDataList.add(chain.chainData);
+            return chain;
+        }
+
+        /**
+         * 直接返回指定值。
+         * <p>
+         * Returns the specified value directly.
+         */
+        public ChainTool returnResult(final Object result) {
+            chain.chainData.iAction = CoreTool.returnResult(result);
+            chain.cacheDataList.add(chain.chainData);
+            return chain;
+        }
+
+        /**
+         * 拦截方法执行。
+         * <p>
+         * Intercept method execution.
+         */
+        public ChainTool doNothing() {
+            chain.chainData.iAction = CoreTool.doNothing();
+            chain.cacheDataList.add(chain.chainData);
+            return chain;
+        }
+    }
+
     // 太复杂啦，我也迷糊了 >.<
-    public void doChainHook(ChainTool chain) {
-        ArrayList<ChainData> chainDataList = chain.chainDataList;
+    public void doChainHook() {
+        ArrayList<ChainData> chainDataList = this.chainDataList;
 
         ListIterator<ChainData> iterator = chainDataList.listIterator();
         while (iterator.hasNext()) {
@@ -218,47 +259,6 @@ public class ChainTool {
                 }
             }
             iterator.set(chainData);
-        }
-    }
-
-    public static class ChainHook {
-        private final ChainTool chain;
-
-        public ChainHook(ChainTool chain) {
-            this.chain = chain;
-        }
-
-        /**
-         * Hook 动作。
-         * <p>
-         * Hook action.
-         */
-        public ChainTool hook(IAction iAction) {
-            chain.chainData.iAction = iAction;
-            chain.cacheDataList.add(chain.chainData);
-            return chain;
-        }
-
-        /**
-         * 直接返回指定值。
-         * <p>
-         * Returns the specified value directly.
-         */
-        public ChainTool returnResult(final Object result) {
-            chain.chainData.iAction = CoreTool.returnResult(result);
-            chain.cacheDataList.add(chain.chainData);
-            return chain;
-        }
-
-        /**
-         * 拦截方法执行。
-         * <p>
-         * Intercept method execution.
-         */
-        public ChainTool doNothing() {
-            chain.chainData.iAction = CoreTool.doNothing();
-            chain.cacheDataList.add(chain.chainData);
-            return chain;
         }
     }
 }

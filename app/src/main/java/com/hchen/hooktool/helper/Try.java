@@ -20,6 +20,8 @@ package com.hchen.hooktool.helper;
 
 /**
  * 方法执行与异常处理类
+ * <p>
+ * Run code and try
  *
  * @author 焕晨HChen
  */
@@ -53,21 +55,25 @@ public class Try {
             }
         }
 
+        // 获取执行结果
         public T get() {
             return result;
         }
 
+        // 失败返回 or 值
         public T or(T or) {
             if (isSuccess) return result;
             return or;
         }
 
+        // 如果失败返回指定 or 值，并执行异常回调
         public T orErr(T or, Err err) {
             if (isSuccess) return result;
             err.err(throwable);
             return or;
         }
 
+        // 返回代码执行结束状态
         public boolean isOk() {
             return isSuccess;
         }

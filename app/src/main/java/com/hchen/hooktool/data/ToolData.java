@@ -24,18 +24,19 @@ import de.robv.android.xposed.IXposedHookZygoteInit;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 /**
- * 这是本工具的读写数据类，请不要继承或重写。
+ * 核心数据
  * <p>
- * This is the read and write data class of this tool, please do not extends or override.
+ * Core data
  *
  * @author 焕晨HChen
  */
 public class ToolData {
-    // HCInit
     public static String mInitTag = "[Unknown]";
     public static String spareTag = "Unknown";
     public static int mInitLogLevel = HCInit.LOG_I;
     public static String modulePackageName = null;
+    public static boolean useLogExpand = false;
+    public static String[] logExpandPath = null;
     public static boolean autoReload = true;
     public static boolean isZygote = false;
     public static boolean isXposed = false;

@@ -114,6 +114,22 @@ public abstract class BaseHC extends CoreTool {
         ChainTool.chain(clazz, chain);
     }
 
+    public ChainTool.ChainHook method(String name, Object... params) {
+        return chainTool.method(name, params);
+    }
+
+    public ChainTool.ChainHook anyMethod(String name) {
+        return chainTool.anyMethod(name);
+    }
+
+    public ChainTool.ChainHook constructor(Object... params) {
+        return chainTool.constructor(params);
+    }
+
+    public ChainTool.ChainHook anyConstructor() {
+        return chainTool.anyConstructor();
+    }
+
     public static IPrefs prefs(Context context) {
         return PrefsTool.prefs(context);
     }
@@ -132,21 +148,5 @@ public abstract class BaseHC extends CoreTool {
 
     public static void asyncPrefs(PrefsTool.IAsyncPrefs asyncPrefs) {
         PrefsTool.asyncPrefs(asyncPrefs);
-    }
-    
-    public ChainTool.ChainHook method(String name, Object... params) {
-        return chainTool.method(name, params);
-    }
-    
-    public ChainTool.ChainHook anyMethod(String name) {
-        return chainTool.anyMethod(name);
-    }
-    
-    public ChainTool.ChainHook constructor(Object... params) {
-        return chainTool.constructor(params);
-    }
-    
-    public ChainTool.ChainHook anyConstructor() {
-        return chainTool.anyConstructor();
     }
 }

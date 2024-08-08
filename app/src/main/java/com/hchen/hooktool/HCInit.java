@@ -25,6 +25,8 @@ import androidx.annotation.IntDef;
 
 import com.hchen.hooktool.data.ToolData;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
@@ -124,6 +126,22 @@ public class HCInit {
      */
     public static void xPrefsAutoReload(boolean auto) {
         ToolData.autoReload = auto;
+    }
+
+    /**
+     * 是否使用日志增强功能，path 填写模块的 hook 文件所在目录，否则默认按照包名搜索。
+     * <p>
+     * 示例: path: com.hchen.demo.hook
+     * <p>
+     * 同时加入混淆规则:
+     * <p>
+     * -keep class com.hchen.demo.hook.**
+     * <p>
+     * -keep class com.hchen.demo.hook.**$*
+     */
+    public static void useLogExpand(boolean use, @NotNull String[] path) {
+        ToolData.useLogExpand = use;
+        ToolData.logExpandPath = path;
     }
     // ---------- END！----------
 

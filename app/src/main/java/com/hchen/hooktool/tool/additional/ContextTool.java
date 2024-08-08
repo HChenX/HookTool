@@ -32,9 +32,9 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 /**
- * 本类为 context 上下文获取工具
+ * 上下文获取工具
  * <p>
- * This class is a context getter
+ * Context getter
  *
  * @author 焕晨HChen
  */
@@ -69,7 +69,7 @@ public class ContextTool {
     public static Context getContextNoLog(@Duration int flag) {
         try {
             return invokeMethod(flag);
-        } catch (Throwable e) {
+        } catch (Throwable ignore) {
             return null;
         }
     }
@@ -138,10 +138,10 @@ public class ContextTool {
                 context = android(clz);
             }
             default -> {
-                throw new Throwable("unexpected flag!" + getStackTrace());
+                throw new Throwable("Unexpected flag!" + getStackTrace());
             }
         }
-        if (context == null) throw new Throwable("context is null!" + getStackTrace());
+        if (context == null) throw new Throwable("Context is null!" + getStackTrace());
         return context;
     }
 

@@ -80,7 +80,7 @@ public class CoreTool {
 
     public static Class<?> findClass(String name, ClassLoader classLoader) {
         return run(() -> XposedHelpers.findClass(name, classLoader))
-                .orErr(null, e -> logE(tag(), "Class not found!", e));
+                .orErr(null, e -> logE(tag(), e));
     }
 
     //------------ 检查指定方法是否存在 --------------
@@ -127,7 +127,7 @@ public class CoreTool {
 
     public static Method findMethod(Class<?> clazz, String name, Class<?>... objects) {
         return run(() -> clazz.getDeclaredMethod(name, objects))
-                .orErr(null, e -> logE(tag(), "Find method failed!", e));
+                .orErr(null, e -> logE(tag(), "Failed to find method!", e));
     }
 
     public static ArrayList<Method> findAnyMethod(String clazz, String name) {
@@ -145,7 +145,7 @@ public class CoreTool {
                 if (m.getName().equals(name)) methods.add(m);
             }
             return methods;
-        }).orErr(new ArrayList<>(), e -> logE(tag(), "Find any method failed!", e));
+        }).orErr(new ArrayList<>(), e -> logE(tag(), "Failed to find any method!", e));
     }
 
     // --------- 查找构造函数 -----------
@@ -163,7 +163,7 @@ public class CoreTool {
 
     public static Constructor<?> findConstructor(Class<?> clazz, Class<?>... objects) {
         return run(() -> clazz.getDeclaredConstructor(objects))
-                .orErr(null, e -> logE(tag(), "Find constructor failed!", e));
+                .orErr(null, e -> logE(tag(), "Failed to find constructor!", e));
     }
 
     public static ArrayList<Constructor<?>> findAnyConstructor(String clazz) {
@@ -176,7 +176,7 @@ public class CoreTool {
 
     public static ArrayList<Constructor<?>> findAnyConstructor(Class<?> clazz) {
         return run(() -> new ArrayList<>(Arrays.asList(clazz.getDeclaredConstructors())))
-                .orErr(new ArrayList<>(), e -> logE(tag(), "Find any constructor failed!", e));
+                .orErr(new ArrayList<>(), e -> logE(tag(), "Failed to find any constructor!", e));
     }
 
     //------------ 检查指定字段是否存在 --------------
@@ -201,7 +201,7 @@ public class CoreTool {
 
     public static Field findField(Class<?> clazz, String name) {
         return run(() -> XposedHelpers.findField(clazz, name))
-                .orErr(null, e -> logE(tag(), e));
+                .orErr(null, e -> logE(tag(), "Failed to find field!", e));
     }
 
     // --------- 执行 hook -----------
@@ -222,7 +222,7 @@ public class CoreTool {
     public static UnHook hook(Class<?> clazz, String method, Object... params) {
         if (params == null) return null;
         if (params.length == 0 || !(params[params.length - 1] instanceof IAction)) {
-            logW(tag(), "Params length == 0 or last param not is IAction! can't hook!!" + getStackTrace());
+            logW(tag(), "Params length == 0 or last param not is IAction! can't hook: " + method + getStackTrace());
             return null;
         }
 
@@ -231,7 +231,7 @@ public class CoreTool {
                     .limit(params.length - 1)
                     .map(param -> (Class<?>) param).toArray(Class<?>[]::new);
             return hook(findMethod(clazz, method, classes), (IAction) params[params.length - 1]);
-        }).orErr(new UnHook(null), e -> logE(tag(), e));
+        }).orErr(new UnHook(null), e -> logE(tag(), "Failed to hook: " + method, e));
     }
 
     public static UnHookList hookAll(String clazz, String method, IAction iAction) {
@@ -262,7 +262,7 @@ public class CoreTool {
     public static UnHook hook(Class<?> clazz, Object... params) {
         if (params == null) return null;
         if (params.length == 0 || !(params[params.length - 1] instanceof IAction)) {
-            logE(tag(), "Params length == 0 or last param not is IAction! can't hook!!" + getStackTrace());
+            logE(tag(), "Params length == 0 or last param not is IAction! can't hook: " + clazz.getName() + getStackTrace());
             return null;
         }
 
@@ -271,7 +271,7 @@ public class CoreTool {
                     .limit(params.length - 1)
                     .map(param -> (Class<?>) param).toArray(Class<?>[]::new);
             return hook(findConstructor(clazz, classes), (IAction) params[params.length - 1]);
-        }).orErr(new UnHook(null), e -> logE(tag(), e));
+        }).orErr(new UnHook(null), e -> logE(tag(), "Failed to hook!", e));
     }
 
     public static UnHookList hookAll(String clazz, IAction iAction) {
@@ -288,23 +288,25 @@ public class CoreTool {
 
     // ----------- 核心实现 ---------------
     public static UnHook hook(Member member, IAction iAction) {
+        String tag = tag();
         return run(() -> {
             UnHook unhook = new UnHook(
-                    XposedBridge.hookMethod(member, createHook(tag(), iAction)));
-            logD(tag(), "Success hook: " + member);
+                    XposedBridge.hookMethod(member, createHook(tag, iAction)));
+            logD(tag, "Success to hook: " + member);
             return unhook;
-        }).orErr(new UnHook(null), e -> logE(tag(), "Hook: [" + member + "], failed!", e));
+        }).orErr(new UnHook(null), e -> logE(tag, "Failed to hook: " + member, e));
     }
 
     public static UnHookList hookAll(ArrayList<?> members, IAction iAction) {
+        String tag = tag();
         UnHookList unhooks = new UnHookList();
         for (Object o : members) {
             if (o instanceof Method || o instanceof Constructor<?>) {
                 run(() -> {
-                    unhooks.add(XposedBridge.hookMethod((Member) o, createHook(tag(), iAction)));
-                    logD(tag(), "Success hook: " + o);
+                    unhooks.add(XposedBridge.hookMethod((Member) o, createHook(tag, iAction)));
+                    logD(tag, "Success to hook: " + o);
                     return null;
-                }).orErr(new UnHookList(), e -> logE(tag(), "Hook: [" + o + "], failed!", e));
+                }).orErr(new UnHookList(), e -> logE(tag, "Failed to hook: " + o, e));
             }
         }
         return unhooks;
@@ -384,7 +386,7 @@ public class CoreTool {
                 }
             }
             return methods;
-        }).orErr(new ArrayList<>(), e -> logE(tag(), "Filter method failed!", e));
+        }).orErr(new ArrayList<>(), e -> logE(tag(), "Failed to filter method!", e));
     }
 
     public static ArrayList<Constructor<?>> filterConstructor(String clazz, IFilter iFilter) {
@@ -404,7 +406,7 @@ public class CoreTool {
                 }
             }
             return constructors;
-        }).orErr(new ArrayList<>(), e -> logE(tag(), "Filter constructor failed!", e));
+        }).orErr(new ArrayList<>(), e -> logE(tag(), "Failed to filter constructor!", e));
     }
 
     // --------- 打印堆栈 ----------
@@ -426,7 +428,7 @@ public class CoreTool {
             Instant end = Instant.now();
             return Duration.between(start, end).toMillis();
         } catch (Throwable e) {
-            logE(tag(), "Code time consumption check failed!", e);
+            logE(tag(), "Failed to check code time consumption!", e);
             return -1L;
         }
     }
@@ -434,26 +436,26 @@ public class CoreTool {
     // ---------- 非静态 -----------
     public static <T> T callMethod(Object instance, String name, Object... objs) {
         return run(() -> (T) XposedHelpers.callMethod(instance, name, objs))
-                .orErr(null, e -> logE(tag(), "Call method failed!", e));
+                .orErr(null, e -> logE(tag(), "Failed to call method!", e));
     }
 
     public static <T> T getField(Object instance, String name) {
         return run(() -> (T) XposedHelpers.getObjectField(instance, name))
-                .orErr(null, e -> logE(tag(), "Get field failed!", e));
+                .orErr(null, e -> logE(tag(), "Failed to get field!", e));
     }
 
     public static <T> T getField(Object instance, Field field) {
         return run(() -> {
             field.setAccessible(true);
             return (T) field.get(instance);
-        }).orErr(null, e -> logE(tag(), "Get field failed!", e));
+        }).orErr(null, e -> logE(tag(), "Failed to get field!", e));
     }
 
     public static boolean setField(Object instance, String name, Object value) {
         return run(() -> {
             XposedHelpers.setObjectField(instance, name, value);
             return true;
-        }).orErr(false, e -> logE(tag(), "Set field failed!", e));
+        }).orErr(false, e -> logE(tag(), "Failed to set field!", e));
     }
 
     public static boolean setField(Object instance, Field field, Object value) {
@@ -461,32 +463,32 @@ public class CoreTool {
             field.setAccessible(true);
             field.set(instance, value);
             return true;
-        }).orErr(false, e -> logE(tag(), "Set field failed!", e));
+        }).orErr(false, e -> logE(tag(), "Failed to set field!", e));
     }
 
     public static boolean setAdditionalInstanceField(Object instance, String key, Object value) {
         return run(() -> {
             XposedHelpers.setAdditionalInstanceField(instance, key, value);
             return true;
-        }).orErr(false, e -> logE(tag(), "Set additional failed!", e));
+        }).orErr(false, e -> logE(tag(), "Failed to set additional instance!", e));
     }
 
     public static <T> T getAdditionalInstanceField(Object instance, String key) {
         return run(() -> (T) XposedHelpers.getAdditionalInstanceField(instance, key))
-                .orErr(null, e -> logE(tag(), "Get additional failed!", e));
+                .orErr(null, e -> logE(tag(), "Failed to get additional instance!", e));
     }
 
     public static boolean removeAdditionalInstanceField(Object instance, String key) {
         return run(() -> {
             XposedHelpers.removeAdditionalInstanceField(instance, key);
             return true;
-        }).orErr(false, e -> logE(tag(), "Remove additional failed!", e));
+        }).orErr(false, e -> logE(tag(), "Failed to remove additional instance!", e));
     }
 
     // ---------- 静态 ------------
     public static <T> T newInstance(Class<?> clz, Object... objects) {
         return run(() -> (T) XposedHelpers.newInstance(clz, objects))
-                .orErr(null, e -> logE(tag(), "New instance failed!", e));
+                .orErr(null, e -> logE(tag(), "Failed to create new instance!", e));
     }
 
     public static <T> T newInstance(String clz, Object... objects) {
@@ -499,7 +501,7 @@ public class CoreTool {
 
     public static <T> T callStaticMethod(Class<?> clz, String name, Object... objs) {
         return run(() -> (T) XposedHelpers.callStaticMethod(clz, name, objs))
-                .orErr(null, e -> logE(tag(), "Call static method failed!", e));
+                .orErr(null, e -> logE(tag(), "Failed to call static method!", e));
     }
 
     public static <T> T callStaticMethod(String clz, String name, Object... objs) {
@@ -514,12 +516,12 @@ public class CoreTool {
         return run(() -> {
             method.setAccessible(true);
             return (T) method.invoke(null, objs);
-        }).orErr(null, e -> logE(tag(), "Call static method failed!", e));
+        }).orErr(null, e -> logE(tag(), "Failed to call static method!", e));
     }
 
     public static <T> T getStaticField(Class<?> clz, String name) {
         return run(() -> (T) XposedHelpers.getStaticObjectField(clz, name))
-                .orErr(null, e -> logE(tag(), "Get static field failed!", e));
+                .orErr(null, e -> logE(tag(), "Failed to get static field!", e));
     }
 
     public static <T> T getStaticField(String clz, String name) {
@@ -534,14 +536,14 @@ public class CoreTool {
         return run(() -> {
             field.setAccessible(true);
             return (T) field.get(null);
-        }).orErr(null, e -> logE(tag(), "Get static field failed!", e));
+        }).orErr(null, e -> logE(tag(), "Failed to get static field!", e));
     }
 
     public static boolean setStaticField(Class<?> clz, String name, Object value) {
         return run(() -> {
             XposedHelpers.setStaticObjectField(clz, name, value);
             return true;
-        }).orErr(false, e -> logE(tag(), "Set static field failed!", e));
+        }).orErr(false, e -> logE(tag(), "Failed to set static field!", e));
     }
 
     public static boolean setStaticField(Field field, Object value) {
@@ -549,7 +551,7 @@ public class CoreTool {
             field.setAccessible(true);
             field.set(null, value);
             return true;
-        }).orErr(false, e -> logE(tag(), "Set static field failed!", e));
+        }).orErr(false, e -> logE(tag(), "Failed to set static field!", e));
     }
 
     public static boolean setStaticField(String clz, String name, Object value) {
@@ -564,19 +566,19 @@ public class CoreTool {
         return run(() -> {
             XposedHelpers.setAdditionalStaticField(clz, key, value);
             return true;
-        }).orErr(false, e -> logE(tag(), "Set additional static field failed!", e));
+        }).orErr(false, e -> logE(tag(), "Failed to set static additional instance!", e));
     }
 
     public static <T> T getAdditionalStaticField(Class<?> clz, String key) {
         return run(() -> (T) XposedHelpers.getAdditionalStaticField(clz, key))
-                .orErr(null, e -> logE(tag(), "Get additional static field failed!", e));
+                .orErr(null, e -> logE(tag(), "Failed to get static additional instance!", e));
     }
 
     public static boolean removeAdditionalStaticField(Class<?> clz, String key) {
         return run(() -> {
             XposedHelpers.removeAdditionalStaticField(clz, key);
             return true;
-        }).orErr(false, e -> logE(tag(), "Remove additional static field failed!", e));
+        }).orErr(false, e -> logE(tag(), "Failed to remove static additional instance!", e));
     }
 
     public static boolean setAdditionalStaticField(String clz, String key, Object value) {
@@ -605,7 +607,7 @@ public class CoreTool {
 
     private static boolean isZygoteState() {
         if (isZygote) {
-            logW(tag(), "in zygote state, call method please set classloader!" + getStackTrace());
+            logW(tag(), "In zygote state, call method please set classloader!" + getStackTrace());
             return true;
         }
         return false;

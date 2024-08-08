@@ -62,7 +62,7 @@ public class PackagesTool {
      */
     public static boolean isUninstall(Context context, String pkg) {
         if (context == null) {
-            logW(TAG, "context is null, can't check if the app is uninstalled!" + getStackTrace());
+            logW(TAG, "Context is null, can't check if the app is uninstalled!" + getStackTrace());
             return false;
         }
         PackageManager packageManager = context.getPackageManager();
@@ -86,7 +86,7 @@ public class PackagesTool {
      */
     public static boolean isDisable(Context context, String pkg) {
         if (context == null) {
-            logW(TAG, "context is null, can't check if an app is disabled!" + getStackTrace());
+            logW(TAG, "Context is null, can't check if an app is disabled!" + getStackTrace());
             return false;
         }
         PackageManager packageManager = context.getPackageManager();
@@ -113,7 +113,7 @@ public class PackagesTool {
     public static boolean isHidden(Context context, String pkg) {
         try {
             if (context == null) {
-                logW(TAG, "context is null, can't check if an app is hidden!" + getStackTrace());
+                logW(TAG, "Context is null, can't check if an app is hidden!" + getStackTrace());
                 return false;
             }
             PackageManager packageManager = context.getPackageManager();
@@ -143,7 +143,7 @@ public class PackagesTool {
      */
     public static boolean isSystem(ApplicationInfo app) {
         if (Objects.isNull(app)) {
-            AndroidLog.logE(TAG, "app is null, can't check if it's a system app!" + getStackTrace());
+            AndroidLog.logE(TAG, "ApplicationInfo is null, can't check if it's a system app!" + getStackTrace());
             return false;
         }
         if (app.uid < 10000) {
@@ -156,7 +156,7 @@ public class PackagesTool {
     public static List<AppData> getInstalledPackages(Context context, int flag) {
         List<AppData> appDataList = new ArrayList<>();
         if (context == null) {
-            logW(TAG, "context is null, can't get install packages!" + getStackTrace());
+            logW(TAG, "Context is null, can't get install packages!" + getStackTrace());
             return appDataList;
         }
         try {
@@ -190,7 +190,7 @@ public class PackagesTool {
     public static List<AppData> getPackagesByCode(Context context, ICode iCode) {
         List<AppData> appDataList = new ArrayList<>();
         if (context == null) {
-            logW(TAG, "context is null, can't get packages by code!" + getStackTrace());
+            logW(TAG, "Context is null, can't get packages by code!" + getStackTrace());
             return appDataList;
         }
         PackageManager packageManager = context.getPackageManager();

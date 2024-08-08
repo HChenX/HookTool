@@ -22,10 +22,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * 此类为线程池类
+ * 线程池
  * <p>
- * This class is a thread pool class
- * 
+ * Thread pool
+ *
  * @author 焕晨HChen
  */
 public class ThreadPool {
