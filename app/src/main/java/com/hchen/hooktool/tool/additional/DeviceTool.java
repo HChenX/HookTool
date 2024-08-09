@@ -18,6 +18,10 @@
  */
 package com.hchen.hooktool.tool.additional;
 
+import static com.hchen.hooktool.tool.additional.InvokeTool.findClass;
+import static com.hchen.hooktool.tool.additional.InvokeTool.getStaticField;
+import static com.hchen.hooktool.tool.additional.PropTool.getProp;
+
 import android.annotation.SuppressLint;
 import android.content.res.Configuration;
 import android.content.res.Resources;
@@ -31,34 +35,8 @@ import java.util.Locale;
  * 此类用于获取设备基本信息
  * <p>
  * This class is used to obtain basic information about the device
- * 
- * @author 焕晨HChen
  */
 public class DeviceTool {
-    public static String getSystemVersionIncremental() {
-        return PropTool.getProp("ro.system.build.version.incremental");
-    }
-
-    public static String getBuildDate() {
-        return PropTool.getProp("ro.system.build.date");
-    }
-
-    public static String getHost() {
-        return Build.HOST;
-    }
-
-    public static String getBuilder() {
-        return PropTool.getProp("ro.build.user");
-    }
-
-    public static String getBaseOs() {
-        return PropTool.getProp("ro.build.version.base_os");
-    }
-
-    public static String getRomAuthor() {
-        return PropTool.getProp("ro.rom.author") + PropTool.getProp("ro.romid");
-    }
-
     /**
      * 获取安卓设备版本。
      * <p>
@@ -75,7 +53,7 @@ public class DeviceTool {
      * Get the MIUI version of the Xiaomi device converts the acquired string to a floating point to provide a judgment.
      */
     public static float getMiuiVersion() {
-        switch (PropTool.getProp("ro.miui.ui.version.name")) {
+        switch (getProp("ro.miui.ui.version.name")) {
             case "V150" -> {
                 return 15f;
             }
@@ -110,7 +88,7 @@ public class DeviceTool {
      * Get Xiaomi Device HyperOS Version Convert the acquired string to floating-point to provide judgment.
      */
     public static float getHyperOSVersion() {
-        switch (PropTool.getProp("ro.mi.os.version.name")) {
+        switch (getProp("ro.mi.os.version.name")) {
             case "OS2.0" -> {
                 return 2f;
             }
@@ -178,21 +156,40 @@ public class DeviceTool {
     }
 
     // --------- 其他 --------
+    public static String getSystemVersionIncremental() {
+        return getProp("ro.system.build.version.incremental");
+    }
+
+    public static String getBuildDate() {
+        return getProp("ro.system.build.date");
+    }
+
+    public static String getHost() {
+        return Build.HOST;
+    }
+
+    public static String getBuilder() {
+        return getProp("ro.build.user");
+    }
+
+    public static String getBaseOs() {
+        return getProp("ro.build.version.base_os");
+    }
+
+    public static String getRomAuthor() {
+        return getProp("ro.rom.author") + getProp("ro.romid");
+    }
+    
     public static boolean IS_TABLET() {
-        return Boolean.TRUE.equals(InvokeTool.getStaticField(
-                InvokeTool.findClass("miui.os.Build", null), "IS_TABLET"));
+        return Boolean.TRUE.equals(getStaticField(
+                findClass("miui.os.Build", null), "IS_TABLET"));
     }
 
     public static boolean IS_INTERNATIONAL_BUILD() {
-        return Boolean.TRUE.equals(InvokeTool.getStaticField(
-                InvokeTool.findClass("miui.os.Build", null), "IS_INTERNATIONAL_BUILD"));
+        return Boolean.TRUE.equals(getStaticField(
+                findClass("miui.os.Build", null), "IS_INTERNATIONAL_BUILD"));
     }
-
-    /**
-     * 判断是否是平板。
-     * <p>
-     * Determine whether it is a pad.
-     */
+    
     public static boolean isPad() {
         if (IS_TABLET()) return true;
         return isPadDevice();
@@ -212,7 +209,7 @@ public class DeviceTool {
     }
 
     public static String getLocale() {
-        return PropTool.getProp("ro.product.locale");
+        return getProp("ro.product.locale");
     }
 
     public static String getLanguage() {
@@ -224,7 +221,7 @@ public class DeviceTool {
     }
 
     public static String getSoc() {
-        return PropTool.getProp("ro.soc.model");
+        return getProp("ro.soc.model");
     }
 
     public static String getDeviceName() {
@@ -232,7 +229,7 @@ public class DeviceTool {
     }
 
     public static String getMarketName() {
-        return PropTool.getProp("ro.product.marketname");
+        return getProp("ro.product.marketname");
     }
 
     public static String getModelName() {
@@ -248,27 +245,27 @@ public class DeviceTool {
     }
 
     public static String getModDevice() {
-        return PropTool.getProp("ro.product.mod_device");
+        return getProp("ro.product.mod_device");
     }
 
     public static String getCharacteristics() {
-        return PropTool.getProp("ro.build.characteristics");
+        return getProp("ro.build.characteristics");
     }
 
     public static String getSerial() {
-        return PropTool.getProp("ro.serialno").replace("\n", "");
+        return getProp("ro.serialno").replace("\n", "");
     }
 
-    public static int getDensityDpi() {
-        return (int) (ContextTool.getContext(ContextTool.FLAG_ALL).getResources().getDisplayMetrics().widthPixels /
-                ContextTool.getContext(ContextTool.FLAG_ALL).getResources().getDisplayMetrics().density);
+    public static int getDensityDpi(Resources resources) {
+        return (int) (resources.getDisplayMetrics().widthPixels /
+                resources.getDisplayMetrics().density);
     }
 
     @SuppressLint("DiscouragedApi")
-    public static int getCornerRadiusTop() {
-        int resourceId = ContextTool.getContext(ContextTool.FLAG_ALL).getResources().getIdentifier(
+    public static int getCornerRadiusTop(Resources resources) {
+        int resourceId = resources.getIdentifier(
                 "rounded_corner_radius_top", "dimen", "android");
-        return resourceId > 0 ? ContextTool.getContext(ContextTool.FLAG_ALL).getResources().getDimensionPixelSize(resourceId) : 100;
+        return resourceId > 0 ? resources.getDimensionPixelSize(resourceId) : 100;
     }
 
     public static boolean isTablet() {
@@ -276,11 +273,11 @@ public class DeviceTool {
     }
 
     public static boolean isPadDevice() {
-        return isTablet() || PropTool.getProp("persist.sys.muiltdisplay_type", 0) == 2;
+        return isTablet() || getProp("persist.sys.muiltdisplay_type", 0) == 2;
     }
 
-    public static boolean isDarkMode() {
-        return (ContextTool.getContext(ContextTool.FLAG_ALL).getResources().getConfiguration().uiMode &
+    public static boolean isDarkMode(Resources resources) {
+        return (resources.getConfiguration().uiMode &
                 Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
     }
 

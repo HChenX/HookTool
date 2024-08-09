@@ -22,7 +22,6 @@ import static com.hchen.hooktool.data.ToolData.isZygote;
 import static com.hchen.hooktool.log.XposedLog.logE;
 
 import android.content.Context;
-import android.content.pm.ApplicationInfo;
 
 import com.hchen.hooktool.data.ToolData;
 import com.hchen.hooktool.tool.ChainTool;
@@ -42,14 +41,9 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
  */
 public abstract class BaseHC extends CoreTool {
     public String TAG = getClass().getSimpleName();
-
-    // onZygote 阶段以下均为 null 或 false
-    public XC_LoadPackage.LoadPackageParam lpparam;
-    public ClassLoader classLoader;
-    public ApplicationInfo appInfo;
-    public String packageName;
-    public boolean isFirstApplication;
-    public String processName;
+    // onZygote 阶段以下均为 null
+    public static XC_LoadPackage.LoadPackageParam lpparam;
+    public static ClassLoader classLoader;
     // END
 
     private final ChainTool chainTool = new ChainTool();
@@ -73,9 +67,9 @@ public abstract class BaseHC extends CoreTool {
     public void initZygote(IXposedHookZygoteInit.StartupParam startupParam) {
     }
 
-    final public void onCreate() {
-        initTool();
+    final public void onLoadPackage() {
         try {
+            initTool();
             init();
         } catch (Throwable e) {
             logE(TAG, e);
@@ -83,8 +77,8 @@ public abstract class BaseHC extends CoreTool {
     }
 
     final public void onZygote() {
-        initTool();
         try {
+            initTool();
             initZygote(ToolData.startupParam);
         } catch (Throwable e) {
             logE(TAG, e);
@@ -95,10 +89,6 @@ public abstract class BaseHC extends CoreTool {
         if (!isZygote) {
             lpparam = ToolData.lpparam;
             classLoader = lpparam.classLoader;
-            appInfo = lpparam.appInfo;
-            packageName = lpparam.packageName;
-            isFirstApplication = lpparam.isFirstApplication;
-            processName = lpparam.processName;
         }
     }
 
@@ -114,19 +104,19 @@ public abstract class BaseHC extends CoreTool {
         ChainTool.chain(clazz, chain);
     }
 
-    public ChainTool.ChainHook method(String name, Object... params) {
+    final public ChainTool.ChainHook method(String name, Object... params) {
         return chainTool.method(name, params);
     }
 
-    public ChainTool.ChainHook anyMethod(String name) {
+    final public ChainTool.ChainHook anyMethod(String name) {
         return chainTool.anyMethod(name);
     }
 
-    public ChainTool.ChainHook constructor(Object... params) {
+    final public ChainTool.ChainHook constructor(Object... params) {
         return chainTool.constructor(params);
     }
 
-    public ChainTool.ChainHook anyConstructor() {
+    final public ChainTool.ChainHook anyConstructor() {
         return chainTool.anyConstructor();
     }
 

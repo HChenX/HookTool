@@ -56,10 +56,7 @@ import de.robv.android.xposed.XposedHelpers;
  * @noinspection unused
  */
 public class CoreTool {
-
-    public static ClassLoader classLoader() {
-        return ToolData.classLoader;
-    }
+    public static ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
 
     //------------ 检查指定类是否存在 --------------
     public static boolean existsClass(String clazz) {

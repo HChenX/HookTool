@@ -41,6 +41,8 @@ import com.hchen.hooktool.log.LogExpand;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.ListIterator;
 import java.util.stream.Collectors;
 
@@ -112,7 +114,13 @@ public class ChainTool {
         chainData = new ChainData();
         return chainHook;
     }
-    
+
+    private static String tag() {
+        String tag = LogExpand.tag();
+        if (tag == null) return "ChainTool";
+        return tag;
+    }
+
     // 各种奇奇怪怪的添加 >.<
     private void doFind(Class<?> clazz) {
         ArrayList<ChainData> memberWithState = new ArrayList<>();
@@ -156,19 +164,85 @@ public class ChainTool {
             ArrayList<ChainData> cache = new ArrayList<>(memberWithState);
             String finalUUID = UUID;
             if (chainDataList.stream().noneMatch(c -> c.UUID.equals(finalUUID))) {
-                chainDataList.add(new ChainData(clazz.getSimpleName(),
-                        chainData.mName, cache, chainData.iAction, UUID));
+                if (chainDataList.stream().noneMatch(chainData1 -> {
+                    // 使用HashSet来存储已有的成员，避免嵌套遍历
+                    HashSet<Object> existingMembers = new HashSet<>();
+                    chainData1.memberWithState.forEach(memberData -> {
+                        if (memberData.member != null) {
+                            existingMembers.add(memberData.member);
+                        }
+                    });
+
+                    // 检查cache中是否有重复的成员
+                    int size = cache.size();
+                    boolean repeat = false;
+                    for (Iterator<ChainData> it = cache.iterator(); it.hasNext(); ) {
+                        ChainData c = it.next();
+                        if (c.member != null && existingMembers.contains(c.member)) {
+                            it.remove(); // 从cache中移除重复成员
+                            logW(tag(), "This member maybe repeated, will remove it! debug: " + finalUUID);
+                            repeat = true;
+                        }
+                    }
+                    return size == 1 && repeat; // cache 列表仅包含一个元素且重复就不用添加进 chainDataList 了，如果有多个，则删除重复的，添加其他。
+                }))
+                    chainDataList.add(new ChainData(clazz.getSimpleName(),
+                            chainData.mName, cache, chainData.iAction, UUID));
             } else
-                logW(tag(), "This member maybe repeated! debug: [uuid: " + UUID + " ]");
+                logW(tag(), "This member maybe repeated, will skip add it! debug: " + UUID);
             memberWithState.clear();
         }
         cacheDataList.clear();
     }
 
-    private static String tag() {
-        String tag = LogExpand.tag();
-        if (tag == null) return "ChainTool";
-        return tag;
+    // 太复杂啦，我也迷糊了 >.<
+    public void doChainHook() {
+        ArrayList<ChainData> chainDataList = this.chainDataList;
+
+        ListIterator<ChainData> iterator = chainDataList.listIterator();
+        while (iterator.hasNext()) {
+            ChainData chainData = iterator.next();
+            String UUID = chainData.UUID;
+            if (chainData.iAction == null) {
+                logW(tag(), "Action is null, can't hook! will remove this! debug: " + UUID);
+                iterator.remove();
+                continue;
+            }
+            if (chainData.memberWithState.isEmpty()) {
+                logW(tag(), "Members is empty! debug: " + UUID);
+                continue;
+            }
+            ListIterator<ChainData> iteratorMember = chainData.memberWithState.listIterator();
+            while (iteratorMember.hasNext()) {
+                ChainData memberData = iteratorMember.next();
+                switch (memberData.hookState) {
+                    case NONE -> {
+                        if (memberData.member == null) {
+                            logW(tag(), "Member is null, can't hook! will remove this! debug: " + UUID);
+                            memberData.hookState = HookState.FAILED;
+                            iteratorMember.remove();
+                        } else {
+                            try {
+                                XposedBridge.hookMethod(memberData.member, createHook(tag(), chainData.iAction));
+                                memberData.hookState = HookState.HOOKED;
+                                logD(tag(), "Success hook: " + memberData.member);
+                            } catch (Throwable e) {
+                                memberData.hookState = HookState.FAILED;
+                                logE(tag(), e);
+                            }
+                            iteratorMember.set(memberData);
+                        }
+                    }
+                    case FAILED -> {
+                        logD(tag(), "Members hooked: " + memberData.member);
+                    }
+                    case HOOKED -> {
+                        logD(tag(), "Members hook failed: " + memberData.member);
+                    }
+                }
+            }
+            iterator.set(chainData);
+        }
     }
 
     public static class ChainHook {
@@ -209,56 +283,6 @@ public class ChainTool {
             chain.chainData.iAction = CoreTool.doNothing();
             chain.cacheDataList.add(chain.chainData);
             return chain;
-        }
-    }
-
-    // 太复杂啦，我也迷糊了 >.<
-    public void doChainHook() {
-        ArrayList<ChainData> chainDataList = this.chainDataList;
-
-        ListIterator<ChainData> iterator = chainDataList.listIterator();
-        while (iterator.hasNext()) {
-            ChainData chainData = iterator.next();
-            String UUID = chainData.UUID;
-            if (chainData.iAction == null) {
-                logW(tag(), "Action is null, can't hook! will remove this! debug: [uuid: " + UUID + " ]");
-                iterator.remove();
-                continue;
-            }
-            if (chainData.memberWithState.isEmpty()) {
-                logW(tag(), "Members is empty! debug: [uuid: " + UUID + " ]");
-                continue;
-            }
-            ListIterator<ChainData> iteratorMember = chainData.memberWithState.listIterator();
-            while (iteratorMember.hasNext()) {
-                ChainData memberData = iteratorMember.next();
-                switch (memberData.hookState) {
-                    case NONE -> {
-                        if (memberData.member == null) {
-                            logW(tag(), "Member is null, can't hook! will remove this! debug: [uuid: " + UUID + " ]");
-                            memberData.hookState = HookState.FAILED;
-                            iteratorMember.remove();
-                        } else {
-                            try {
-                                XposedBridge.hookMethod(memberData.member, createHook(tag(), chainData.iAction));
-                                memberData.hookState = HookState.HOOKED;
-                                logD(tag(), "Success hook: " + memberData.member);
-                            } catch (Throwable e) {
-                                memberData.hookState = HookState.FAILED;
-                                logE(tag(), e);
-                            }
-                            iteratorMember.set(memberData);
-                        }
-                    }
-                    case FAILED -> {
-                        logD(tag(), "Members hooked: " + memberData.member);
-                    }
-                    case HOOKED -> {
-                        logD(tag(), "Members hook failed: " + memberData.member);
-                    }
-                }
-            }
-            iterator.set(chainData);
         }
     }
 }

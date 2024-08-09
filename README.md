@@ -9,7 +9,7 @@
 ![language](https://img.shields.io/badge/language-java-purple)
 
 <p><b><a href="README-en.md">English</a> | <a href="README.md">简体中文</a></b></p>
-<p>基于 Xposed 而来的 Hook 工具！</p>
+<p>基于 Xposed 而来的 Java 版 Hook 工具！</p>
 </div>
 
 # ✨ 工具亮点
@@ -18,9 +18,9 @@
 
 ### 2. **泛型转换**
 
-### 3. **安全调用**
+### 3. **全面丰富**
 
-### 4. **简洁干练**
+#### Tip: 重构声明: v.1.0.0 版本和之前版本有较大不同，新版本工具完成静态化，更符合工具特征，拥有更好的使用体验和性能。
 
 # 🔧 使用方法
 
@@ -41,9 +41,9 @@ dependencyResolutionManagement {
 ```groovy
 dependencies {
     // jitpack
-    implementation 'com.github.HChenX:HookTool:v.0.9.9.8'
+    implementation 'com.github.HChenX:HookTool:v.1.0.0'
     // maven
-    implementation 'io.github.hchenx:hooktool:0.9.9.8'
+    implementation 'io.github.hchenx:hooktool:v.1.0.0'
     // 二选一即可
 }
 ```
@@ -52,23 +52,34 @@ dependencies {
 
 #### 4. 使用工具。
 
+- HCInit 介绍。
+
+```java
+public void init() {
+    HCinit.initBasicData(/* 包名，tag，日志等级 */); // 初始化模块基本信息
+    HCinit.initStartupParam(); // 在 zygote 阶段初始化工具
+    HCinit.initLoadPackageParam(); // 在 loadPackage 阶段初始化工具
+    HCinit.useLogExpand(); // 是否使用日志增强功能，具体参见方法注解
+}
+```
+
 - 在 Xposed 入口处初始化本工具。
 
 ```java
 
 @Override
 public void initZygote(IXposedHookZygoteInit.StartupParam startupParam) {
-    HCInit.initBasicData(/* 你模块的包名 */, /* tag */, /* 日志等级 */); // 必须，tip：建议放在第一位
-    HCInit.initStartupParam(startupParam); // 初始化
+    HCInit.initBasicData(/* 你模块的包名 */, /* tag */, /* 日志等级 */); // 必须。tip：建议放在第一位
+    HCInit.initStartupParam(startupParam); // 在 zygote 阶段初始化工具
 }
 
 @Override
 public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) {
-    HCInit.initLoadPackageParam(lpparam); // 必须
+    HCInit.initLoadPackageParam(lpparam); // 在 loadPackage 阶段初始化工具
 }
 ```
 
-- 如果需要使用 prefs 工具或者使用模块的 log 类，那么你还需要在模块主界面初始化。
+- 如果需要使用 prefs 工具或者在模块内使用本工具的 log 类，那么你还需要在模块主界面初始化。
 
 ```java
 public static class MainActivity {
@@ -84,13 +95,23 @@ public static class MainActivity {
 ```java
 public class MainTest {
     public void test() {
-        HCHook hcHook = new HCHook(); // 实例工具
-        hcHook.setThisTag(TAG); // 设置具体 TAG，比如本类名 "MainTest"。
+        CoreTool.hook(/* 内容 */); // 即可 hook
+        CoreTool.findClass(); // 查找类
+        CoreTool.callMethod(); // 调用方法
+        ChainTool.chain("com.hchen.demo", new ChainTool()
+                .method("method")
+                .hook()
+
+                .method("method")
+                .hook()
+        ); // 即可链式调用
+        PrefsTool.prefs().getString(); // 即可读取共享首选项
+        // ......
     }
 }
 ```
 
-- 当然你也可以直接继承本工具打包好的类
+- 当然你也可以直接继承本工具打包好的类。
 - // 强烈建议继承 BaseHC 使用！
 
 ```java
@@ -98,7 +119,7 @@ public class MainTest {
 public class MainTest extends BaseHC {
     @Override
     public void init() {
-        // BaseHC 包含已经初始化的工具，直接调用即可。
+        // BaseHC 继承了 CoreTool 工具，直接调用即可。
     }
 
     // 可选项。
@@ -106,7 +127,7 @@ public class MainTest extends BaseHC {
     // 使用 initZygote 必须在 hook 入口处初始化 HCInit.initStartupParam(startupParam);
     @Override
     public void initZygote(IXposedHookZygoteInit.StartupParam startupParam) {
-        super.initZygote(startupParam);
+        findClass("com.hchen.demo.Main", classLoader); // 此阶段均需要传递 classLoader 否则报错。
     }
 }
 
@@ -114,7 +135,7 @@ public class MainTest extends BaseHC {
 public class RunHook implements IXposedHookLoadPackage, IXposedHookZygoteInit {
     @Override
     public void handleLoadPackage(XC_LoadPackage.LoadPackageParam loadPackageParam) {
-        new MainTest().onCreate(); // 即可执行 Hook。
+        new MainTest().onLoadPackage(); // 即可在 loadPackage 阶段执行 Hook。
     }
 
     @Override
@@ -123,6 +144,21 @@ public class RunHook implements IXposedHookLoadPackage, IXposedHookZygoteInit {
     }
 }
 
+```
+
+- 混淆配置:
+
+```text
+// 如果你不需要使用日志增强功能，也可以只加入（对于继承 BaseHC 使用的情况）:
+-keep class * extends com.hchen.hooktool.BaseHC
+ 
+// 假如你存放 hook 文件的目录为 com.hchen.demo.hook
+// 如果需要使用日志增强功能，那么建议加入混淆规则:
+// 如果有多个存放的目录，建议都分别加入。
+-keep class com.hchen.demo.hook.**
+-keep class com.hchen.demo.hook.**$*
+
+// 如果既不继承 BaseHC 使用，也不使用日志增强功能则不需要配置混淆规则。
 ```
 
 - 到此完成全部工作，可以愉快的使用了！
@@ -135,14 +171,13 @@ public class RunHook implements IXposedHookLoadPackage, IXposedHookZygoteInit {
 
 ```java
 // 链式调用
-public class MainTest {
+public class MainTest extends BaseHC {
     public void test() {
         // 看！是不是很简洁易懂？
-        // 链式调用时任何抛错将不会引起进程中断，请放心使用！
         chain("com.hchen.demo", method("test")
                 .hook(new IAction() {
                     @Override
-                    public void before() throws Throwable {
+                    public void before() {
                         super.before();
                     }
                 })
@@ -150,7 +185,7 @@ public class MainTest {
                 .anyMethod("test")
                 .hook(new IAction() {
                     @Override
-                    public void after() throws Throwable {
+                    public void after() {
                         super.after();
                     }
                 })
@@ -158,24 +193,6 @@ public class MainTest {
                 .constructor()
                 .returnResult(false)
         );
-    }
-}
-```
-
-```java
-// 核心工具，更建议直接继承 BaseHC 类获取更好体验！
-public class MainTest {
-    public void test() {
-        Object object = null;
-        Class<?> clazz = null;
-        HCHook hcHook = new HCHook();
-        CoreTool coreTool = new HCHook().core();
-        coreTool.callMethod(object, "call");
-        coreTool.setField(object, "field", null);
-        coreTool.getField(object, "field");
-        coreTool.callStaticMethod(clazz, "callStatic");
-        coreTool.setStaticField(clazz, "fieldStatic", null);
-        coreTool.getStaticField(clazz, "fieldStatic");
     }
 }
 ```
@@ -206,35 +223,25 @@ public class MainTest extends BaseHC {
 
         new IAction() {
             @Override
-            public void before() throws Throwable {
-                // hook 方法所属的类
-                Class<?> c = mClass;
-                Context context = thisObject();
-                String string = first();
-                second(1);
-
+            public void before() {
+                Context context = thisObject(); // 无需显式转换
+                String string = first(); // 更符合直觉的参数获取 :)
+                second(1); // 更符合直觉的参数设置 :)
                 // 非静态本类内
                 setThisField("demo", 1);
-                callThisMethod("method");
-                getThisField("test");
-                String result = callThisMethod("call", thisObject(), first());
+                callThisMethod("method",...);
                 // 非静态本类外
-                Object o = null;
-                setField(o, "demo", 1);
-                callMethod(o, "method");
-                getField(o, "test");
+                setField(obj, "demo", 1);
+                callMethod(obj, "method");
 
                 // 静态需要 class
                 callStaticMethod("com.demo.Main", "callStatic", thisObject(), second());
                 int i = getStaticField("com.demo.Main", "field");
                 setStaticField("com.demo.Main", "test", true);
 
-                // 你可调用此方法，使得挂钩自己失效
-                removeSelf();
-                // 观察调用
-                observeCall();
-                // 获取堆栈
-                getStackTrace();
+                removeSelf(); // 你可调用此方法，使得挂钩自己失效
+                observeCall();  // 观察调用
+                getStackTrace(); // 获取堆栈
             }
         };
     }
@@ -242,72 +249,35 @@ public class MainTest extends BaseHC {
 
 ```
 
-# ⚡安全调用
+# 📌全面丰富
 
-- **本工具致力于安全调用，即:**
-- 尽量不触发崩溃、
-- 尽量执行全部逻辑、
-- 拥有较好的容错率等。
-- 适合于需要非中断执行的情况。
+- 工具提供了全面丰富的方法供你调用。
+- 包括:
 
-# 📌简洁干练
+----
 
-- 工具追求提供简洁干练的方法，比如：
-
-```java
-public class MainTest extends BaseHC {
-    @Override
-    public void init() {
-        new XC_MethodHook() {
-            @Override
-            protected void beforeHookedMethod(MethodHookParam param) {
-                // 需要使用 param 来调出 param.thisObject, param.args,等内容。
-                // 需要使用 XposedHelpers.callMethod(), XposedHelpers.callStaticMethod(),等来调用动作。
-                // 十分麻烦，繁杂。
-            }
-        };
-
-        new IAction() {
-            @Override
-            public void before() throws Throwable {
-                // 本工具将其封装，可直接使用！
-                // thisObject(), first(), callThisMethod(), callStaticMethod(),等，所见即所用。
-                // 注：部分方法调用需要继承 BaseHC 才能简洁调用！
-            }
-        };
-    }
-}
-```
-
-- 不知道客官是否喜欢呢？
-
-- ### **⚠️重要提醒**
-- 本工具十分建议您继承 BaseHC 类使用，以获得更佳的体验！
-
-# 🔥工具附加提供
-
-- ContextUtils 类:
+- ContextTool 类:
 - 更方便的获取 context 。
 
 ```java
 public class MainTest {
     public void test() {
         // 即可最简单的获取 context
-        Context context = ContextUtils.getContext(ContextUtils.FLAG_ALL);
+        Context context = ContextTool.getContext(ContextUtils.FLAG_ALL);
     }
 }
 ```
 
 ----
 
-- InvokeUtils 类:
+- InvokeTool 类:
 - 更方便稳健的反射类。
 
 ```java
 public class MainTest {
     public void test() {
         // 即可反射调用方法，其他反射操作同理。
-        InvokeUtils.callMethod(InvokeUtils.findClass("com.hchen.hooktool.MainTest",
+        InvokeTool.callMethod(InvokeTool.findClass("com.hchen.demo.Main",
                 getClass().getClassLoader()), "test", new Class[]{});
     }
 }
@@ -315,16 +285,16 @@ public class MainTest {
 
 ----
 
-- PropUtils 类:
+- PropTool 类:
 - 更方便的 prop 读取修改工具。
 
 ```java
 public class MainTest {
     public void test() {
-        // 只能在系统核心中调用才能设置 prop
-        PropUtils.setProp("ro.test.prop", "1");
+        // 只能在系统框架中调用才能设置 prop
+        PropTool.setProp("ro.test.prop", "1");
         // 获取可以随意
-        String result = PropUtils.getProp("ro.test.prop");
+        String result = PropTool.getProp("ro.test.prop");
     }
 }
 ```
@@ -345,14 +315,13 @@ public class MainTest extends BaseHC {
         s = prefs("myPrefs").getString("test", "1");  // 可指定读取文件名
 
         // sprefs模式：
-        Context context = null;
-        // 如果继承了 BaseHC 可直接使用 prefs(Context)，配置会保存到寄生应用的私有目录，读取也会从寄生应用私有目录读取。
+        // 配置会保存到寄生应用的私有目录，读取也会从寄生应用私有目录读取。
         prefs(context).editor().putString("test", "1").commit();
         // 如果没有继承 BaseHC 可以这样调用。
         PrefsTool.prefs(context).editor().putString("test", "2").commit();
         // 注意 sprefs模式 是和 xprefs 模式相互独立的，可共同存在。
 
-        // 如果不方便获取 context 可用使用此方法，异步获取寄生应用 context，再设置。
+        // 如果不方便获取 context 可用使用此方法，异步获取寄生应用上下文后再设置。
         asyncPrefs(new PrefsTool.IAsyncPrefs() {
             @Override
             public void async(Context context) {
@@ -366,7 +335,7 @@ public class MainTest extends BaseHC {
 public static class MainActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
-        // ！！！如果使用 xprefs 模式，请在模块主界面调用 PrefsTool.prefs(context); 初始化一下，否则可能不可用！！！！！
+        // ！！！如果使用 xprefs 模式，请在模块主界面调用 PrefsTool.prefs(context); 初始化一下，否则可能不可用！！！
         PrefsTool.prefs(this); // 或
         PrefsTool.prefs(this,/* 你自己的 prefs 名称 */);
 
@@ -380,29 +349,29 @@ public static class MainActivity {
 ---
 
 - CoreTool 类:
-- 提供超完善的 Hook 方法！
+- 提供完善的 Hook 方法！
 - 绝对满足需求！
 
 ----
 
-- SystemSDK 类:
+- DeviceTool 类:
 - 方便的获取系统基本信息。
 - 具体参见源代码和注释。
 
 ----
 
-- ResHelper 类:
+- ResTool 类:
 - 将模块资源注入目标作用域。
-- 具体参加源代码与注释。
+- 具体参见源代码与注释。
 
 ----
 
-- PackagesUtils 类:
+- PackagesTool 类:
 - 快速获取软件包信息！
 
 ----
 
-- BitmapUtils 类:
+- BitmapTool 类:
 - Drawable 转 Bitmap。
 
 ----

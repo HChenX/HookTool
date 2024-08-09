@@ -52,39 +52,35 @@ public class PrefsTool {
     private final static HashMap<String, XSharedPreferences> xPrefs = new HashMap<>();
     private final static HashMap<String, SharedPreferences> sPrefs = new HashMap<>();
 
-    // ------------ 模块使用 ----------------
-    // ---------- 寄生应用使用则存自身私有路径内 -----------
-
     /**
-     * 模块使用。
+     * 共享首选项储存至应用私有目录内/从私有目录读取，模块如果设置 xposedsharedprefs 为 true 则由 xposed 统一管理。
      * <p>
-     * 寄生应用使用则存其私有目录内，读取也从其私有目录读取。
-     * <p>
-     * Module use. <p>
-     * If parasitic applications are stored in their private directory and reads are read from their private directory.
+     * Shared preferences are stored in/read from the application's private directory.
+     * If the module is set to 'xposedsharedprefs' to' true ', it will be managed by xposed.
      */
     public static IPrefs prefs(Context context) {
         return prefs(context, null);
     }
 
     /**
-     * 模块使用。
+     * 共享首选项储存至应用私有目录内/从私有目录读取，并使用指定的 prefsName 命名文件，模块如果设置 xposedsharedprefs 为 true 则由 xposed 统一管理。
      * <p>
-     * 寄生应用使用则存其私有目录内，读取也从其私有目录读取。
-     * <p>
-     * Module use. <p>
-     * If parasitic applications are stored in their private directory and reads are read from their private directory.
+     * Shared preferences are stored in/read from the private directory of the application, and the file is named using the specified prefsName.
+     * If the module is set to 'xposedsharedprefs' to' true ', it will be managed uniformly by' xposed '.
      */
     public static IPrefs prefs(Context context, String prefsName) {
         return new Sprefs(currentSp(context, prefsName));
     }
 
-    // ---------------- 寄生应用使用，模块内使用会崩溃 -----------------
-
     /**
-     * 寄生应用读取配置一般使用。
+     * 模块内不可使用，否则触发崩溃！
      * <p>
-     * Parasitic application read prefs is generally used.
+     * 将读取模块的共享首选项并供寄生应用使用。此状态下仅可读取，不可修改。
+     * <p>
+     * Cannot be used within the module, otherwise it will trigger a crash!
+     * <p>
+     * Read the shared preferences of the module and make them available for parasitic applications to use.
+     * In this state, it can only be read and cannot be modified.
      */
     public static IPrefs prefs() {
         if (!ToolData.isXposed)
@@ -93,9 +89,14 @@ public class PrefsTool {
     }
 
     /**
-     * 寄生应用读取配置一般使用。
+     * 模块内不可使用，否则触发崩溃！
      * <p>
-     * Parasitic application read prefs is generally used.
+     * 将读取指定 prefsName 名的模块共享首选项文件并供寄生应用使用。此状态下仅可读取，不可修改。
+     * <p>
+     * Cannot be used within the module, otherwise it will trigger a crash!
+     * <p>
+     * Read the module sharing preference file with the specified prefsName name and make it available for parasitic applications to use.
+     * In this state, it can only be read and cannot be modified.
      */
     public static IPrefs prefs(String prefsName) {
         if (!ToolData.isXposed)
@@ -113,7 +114,7 @@ public class PrefsTool {
      * Parasitic in-app calls only, for situations where it's inconvenient to get context.
      */
     public static void asyncPrefs(IAsyncPrefs asyncPrefs) {
-        if (ToolData.isXposed)
+        if (!ToolData.isXposed)
             throw new RuntimeException(ToolData.mInitTag + "[PrefsTool][E]: Not xposed environment!" + getStackTrace());
         ContextTool.getAsyncContext(new ContextTool.IContext() {
             @Override
@@ -136,7 +137,7 @@ public class PrefsTool {
         if (xPrefs.get(prefsName) == null) {
             if (ToolData.modulePackageName == null) {
                 throw new RuntimeException(ToolData.mInitTag +
-                        "[" + tag() + "][E]: Module package name is null!" + getStackTrace());
+                        "[" + tag() + "][E]: Module package name is null, Please set module package name!" + getStackTrace());
             }
             XSharedPreferences x = new XSharedPreferences(ToolData.modulePackageName, prefsName);
             x.makeWorldReadable();
