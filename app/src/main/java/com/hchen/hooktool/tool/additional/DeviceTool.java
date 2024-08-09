@@ -16,9 +16,11 @@
 
  * Copyright (C) 2023-2024 HookTool Contributions
  */
-package com.hchen.hooktool.additional;
+package com.hchen.hooktool.tool.additional;
 
-import static com.hchen.hooktool.additional.PropUtils.getProp;
+import static com.hchen.hooktool.tool.additional.InvokeTool.findClass;
+import static com.hchen.hooktool.tool.additional.InvokeTool.getStaticField;
+import static com.hchen.hooktool.tool.additional.PropTool.getProp;
 
 import android.annotation.SuppressLint;
 import android.content.res.Configuration;
@@ -33,34 +35,8 @@ import java.util.Locale;
  * 此类用于获取设备基本信息
  * <p>
  * This class is used to obtain basic information about the device
- * 
- * @author 焕晨HChen
  */
-public class SystemSDK {
-    public static String getSystemVersionIncremental() {
-        return getProp("ro.system.build.version.incremental");
-    }
-
-    public static String getBuildDate() {
-        return getProp("ro.system.build.date");
-    }
-
-    public static String getHost() {
-        return Build.HOST;
-    }
-
-    public static String getBuilder() {
-        return getProp("ro.build.user");
-    }
-
-    public static String getBaseOs() {
-        return getProp("ro.build.version.base_os");
-    }
-
-    public static String getRomAuthor() {
-        return getProp("ro.rom.author") + getProp("ro.romid");
-    }
-
+public class DeviceTool {
     /**
      * 获取安卓设备版本。
      * <p>
@@ -180,21 +156,40 @@ public class SystemSDK {
     }
 
     // --------- 其他 --------
+    public static String getSystemVersionIncremental() {
+        return getProp("ro.system.build.version.incremental");
+    }
+
+    public static String getBuildDate() {
+        return getProp("ro.system.build.date");
+    }
+
+    public static String getHost() {
+        return Build.HOST;
+    }
+
+    public static String getBuilder() {
+        return getProp("ro.build.user");
+    }
+
+    public static String getBaseOs() {
+        return getProp("ro.build.version.base_os");
+    }
+
+    public static String getRomAuthor() {
+        return getProp("ro.rom.author") + getProp("ro.romid");
+    }
+    
     public static boolean IS_TABLET() {
-        return Boolean.TRUE.equals(InvokeUtils.getStaticField(
-                InvokeUtils.findClass("miui.os.Build", null), "IS_TABLET"));
+        return Boolean.TRUE.equals(getStaticField(
+                findClass("miui.os.Build", null), "IS_TABLET"));
     }
 
     public static boolean IS_INTERNATIONAL_BUILD() {
-        return Boolean.TRUE.equals(InvokeUtils.getStaticField(
-                InvokeUtils.findClass("miui.os.Build", null), "IS_INTERNATIONAL_BUILD"));
+        return Boolean.TRUE.equals(getStaticField(
+                findClass("miui.os.Build", null), "IS_INTERNATIONAL_BUILD"));
     }
-
-    /**
-     * 判断是否是平板。
-     * <p>
-     * Determine whether it is a pad.
-     */
+    
     public static boolean isPad() {
         if (IS_TABLET()) return true;
         return isPadDevice();
@@ -261,16 +256,16 @@ public class SystemSDK {
         return getProp("ro.serialno").replace("\n", "");
     }
 
-    public static int getDensityDpi() {
-        return (int) (ContextUtils.getContext(ContextUtils.FLAG_ALL).getResources().getDisplayMetrics().widthPixels /
-                ContextUtils.getContext(ContextUtils.FLAG_ALL).getResources().getDisplayMetrics().density);
+    public static int getDensityDpi(Resources resources) {
+        return (int) (resources.getDisplayMetrics().widthPixels /
+                resources.getDisplayMetrics().density);
     }
 
     @SuppressLint("DiscouragedApi")
-    public static int getCornerRadiusTop() {
-        int resourceId = ContextUtils.getContext(ContextUtils.FLAG_ALL).getResources().getIdentifier(
+    public static int getCornerRadiusTop(Resources resources) {
+        int resourceId = resources.getIdentifier(
                 "rounded_corner_radius_top", "dimen", "android");
-        return resourceId > 0 ? ContextUtils.getContext(ContextUtils.FLAG_ALL).getResources().getDimensionPixelSize(resourceId) : 100;
+        return resourceId > 0 ? resources.getDimensionPixelSize(resourceId) : 100;
     }
 
     public static boolean isTablet() {
@@ -278,11 +273,11 @@ public class SystemSDK {
     }
 
     public static boolean isPadDevice() {
-        return isTablet() || PropUtils.getProp("persist.sys.muiltdisplay_type", 0) == 2;
+        return isTablet() || getProp("persist.sys.muiltdisplay_type", 0) == 2;
     }
 
-    public static boolean isDarkMode() {
-        return (ContextUtils.getContext(ContextUtils.FLAG_ALL).getResources().getConfiguration().uiMode &
+    public static boolean isDarkMode(Resources resources) {
+        return (resources.getConfiguration().uiMode &
                 Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
     }
 

@@ -3,8 +3,8 @@ plugins {
     id 'maven-publish'
 }
 
-def defVersion = 'v.0.9.9.8'
-int defVersionCode = 2024080200
+def defVersion = 'v.1.0.0'
+int defVersionCode = 2024080900
 
 group = 'com.github.HChenX'
 version = defVersion
@@ -60,7 +60,6 @@ tasks.register('androidSourcesJar', Jar) {
 }
 
 dependencies {
-    compileOnly project(':stub')
     compileOnly libs.xposed
     implementation libs.annotation
 }

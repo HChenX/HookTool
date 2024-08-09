@@ -16,10 +16,16 @@
 
  * Copyright (C) 2023-2024 HookTool Contributions
  */
-package com.hchen.hooktool.helper.param;
+package com.hchen.hooktool.tool.param;
+
+import static com.hchen.hooktool.tool.CoreTool.callMethod;
+import static com.hchen.hooktool.tool.CoreTool.getAdditionalInstanceField;
+import static com.hchen.hooktool.tool.CoreTool.getField;
+import static com.hchen.hooktool.tool.CoreTool.removeAdditionalInstanceField;
+import static com.hchen.hooktool.tool.CoreTool.setAdditionalInstanceField;
+import static com.hchen.hooktool.tool.CoreTool.setField;
 
 import com.hchen.hooktool.log.LogExpand;
-import com.hchen.hooktool.tool.itool.IDynamic;
 
 import de.robv.android.xposed.XC_MethodHook;
 
@@ -33,7 +39,6 @@ import de.robv.android.xposed.XC_MethodHook;
 public class ActAchieve {
     public XC_MethodHook.MethodHookParam MethodHookParam;
     public String mTag;
-    public IDynamic Dynamic;
     private LogExpand logExpand;
 
     /**
@@ -137,28 +142,28 @@ public class ActAchieve {
 
     // --------- 调用方法 --------------
     final public <T> T callThisMethod(String name, Object... objs) {
-        return Dynamic.callMethod(MethodHookParam.thisObject, name, objs);
+        return callMethod(MethodHookParam.thisObject, name, objs);
     }
 
     // ----------- 获取/修改 字段 -------------
     final public <T> T getThisField(String name) {
-        return Dynamic.getField(MethodHookParam.thisObject, name);
+        return getField(MethodHookParam.thisObject, name);
     }
 
     final public boolean setThisField(String name, Object value) {
-        return Dynamic.setField(MethodHookParam.thisObject, name, value);
+        return setField(MethodHookParam.thisObject, name, value);
     }
 
     // ---------- 设置自定义字段 --------------
     final public boolean setThisAdditionalInstanceField(String key, Object value) {
-        return Dynamic.setAdditionalInstanceField(MethodHookParam.thisObject, key, value);
+        return setAdditionalInstanceField(MethodHookParam.thisObject, key, value);
     }
 
     final public <T> T getThisAdditionalInstanceField(String key) {
-        return Dynamic.getAdditionalInstanceField(MethodHookParam.thisObject, key);
+        return getAdditionalInstanceField(MethodHookParam.thisObject, key);
     }
 
     final public boolean removeThisAdditionalInstanceField(String key) {
-        return Dynamic.removeAdditionalInstanceField(MethodHookParam.thisObject, key);
+        return removeAdditionalInstanceField(MethodHookParam.thisObject, key);
     }
 }

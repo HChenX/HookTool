@@ -18,12 +18,13 @@
  */
 package com.hchen.hooktool;
 
-import static com.hchen.hooktool.log.LogExpand.getStackTrace;
 import static com.hchen.hooktool.log.XposedLog.logI;
 
 import androidx.annotation.IntDef;
 
 import com.hchen.hooktool.data.ToolData;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -48,9 +49,6 @@ public class HCInit {
     public static final int LOG_D = 4;
     // ------- END --------------
 
-    private static ClassLoader classLoader = null;
-    private static boolean canUseSystemClassLoader = false;
-
     @IntDef(value = {
             LOG_NONE,
             LOG_I,
@@ -71,14 +69,15 @@ public class HCInit {
      */
     public static void initLoadPackageParam(XC_LoadPackage.LoadPackageParam loadPackageParam) {
         if (loadPackageParam == null) {
-            throw new RuntimeException(ToolData.mInitTag + "[E]: load package param is null!!");
+            throw new RuntimeException(ToolData.mInitTag + "[E]: LoadPackageParam is null!!");
         }
         ToolData.isZygote = false;
+        ToolData.isXposed = true;
         ToolData.lpparam = loadPackageParam;
-        classLoader = loadPackageParam.classLoader;
+        ClassLoader classLoader = loadPackageParam.classLoader;
+        ToolData.classLoader = classLoader;
         String packageName = loadPackageParam.packageName;
-        putClassLoader();
-        logI("HCInit: init classLoader: [" + classLoader + "], pkg name: " + packageName);
+        logI("Init classloader: [" + classLoader + "], pkg: " + packageName);
     }
 
     /**
@@ -88,6 +87,7 @@ public class HCInit {
      */
     public static void initStartupParam(IXposedHookZygoteInit.StartupParam startupParam) {
         ToolData.isZygote = true;
+        ToolData.isXposed = true;
         ToolData.startupParam = startupParam;
     }
 
@@ -103,15 +103,6 @@ public class HCInit {
     }
 
     /**
-     * 是否允许使用系统的 classloader，一般不需要开启。
-     * <p>
-     * Whether to allow the use of the system's classloader, generally does not need to be enabled.
-     */
-    public static void canUseSystemClassLoader(boolean use) {
-        canUseSystemClassLoader = use; /* 允许使用系统 classloader */
-    }
-
-    /**
      * 是否自动更新 xprefs 数据。
      * <p>
      * 工具默认开启，但可能会增加耗时。
@@ -123,23 +114,33 @@ public class HCInit {
     public static void xPrefsAutoReload(boolean auto) {
         ToolData.autoReload = auto;
     }
+
+    /**
+     * 是否使用日志增强功能，path 填写模块的 hook 文件所在目录，否则默认按照包名搜索。
+     * <p>
+     * Do you want to use the log augmentation feature?
+     * Fill in the directory where the module's hook file is located in the path.
+     * Otherwise, search by package name by default.
+     * <p>
+     * 示例/Example: path: com.hchen.demo.hook
+     * <p>
+     * 同时加入混淆规则:
+     * <p>
+     * Simultaneously adding confusion rules:
+     * <p>
+     * -keep class com.hchen.demo.hook.**
+     * <p>
+     * -keep class com.hchen.demo.hook.**$*
+     */
+    public static void useLogExpand(boolean use, @NotNull String[] path) {
+        ToolData.useLogExpand = use;
+        ToolData.logExpandPath = path;
+    }
     // ---------- END！----------
 
     private static void setTag(String tag) {
         ToolData.mInitTag = "[" + tag + "]";
         ToolData.spareTag = tag;
-    }
-
-    private static void putClassLoader() {
-        if (classLoader != null) {
-            ToolData.classLoader = classLoader;
-            return;
-        }
-        if (canUseSystemClassLoader) {
-            ToolData.classLoader = ClassLoader.getSystemClassLoader();
-            return;
-        }
-        throw new RuntimeException(ToolData.mInitTag + "[E]: HCInit: failed to obtain ClassLoader! it is null!" + getStackTrace());
     }
 
     /**

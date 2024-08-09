@@ -16,7 +16,7 @@
 
  * Copyright (C) 2023-2024 HookTool Contributions
  */
-package com.hchen.hooktool.additional;
+package com.hchen.hooktool.tool.additional;
 
 import static com.hchen.hooktool.log.LogExpand.getStackTrace;
 import static com.hchen.hooktool.log.XposedLog.logE;
@@ -48,9 +48,9 @@ import java.lang.reflect.Method;
  *
  * @author 焕晨HChen
  */
-public class ResHelper {
+public class ResTool {
     private static ResourcesLoader resourcesLoader = null;
-    private static final String TAG = "ResHelper";
+    private static final String TAG = "ResTool";
     private static String mModulePath = null;
     private static Handler mHandler = null;
 
@@ -87,13 +87,13 @@ public class ResHelper {
     public static Resources loadModuleRes(Resources resources, boolean doOnMainLooper) {
         boolean load = false;
         if (resources == null) {
-            logW(TAG, "context can't is null!" + getStackTrace());
+            logW(TAG, "Context can't is null!" + getStackTrace());
             return null;
         }
         if (mModulePath == null) {
             mModulePath = ToolData.startupParam.modulePath;
             if (mModulePath == null) {
-                logW(TAG, "module path is null, can't load module res!" + getStackTrace());
+                logW(TAG, "Module path is null, can't load module res!" + getStackTrace());
                 return null;
             }
         }
@@ -139,7 +139,7 @@ public class ResHelper {
                 loader.addProvider(provider);
                 resourcesLoader = loader;
             } catch (IOException e) {
-                logE(TAG, "failed to add resource! debug: above api 30.", e);
+                logE(TAG, "Failed to add resource! debug: above api 30.", e);
                 return false;
             }
         }
@@ -169,7 +169,7 @@ public class ResHelper {
                 // fallback to below API 30
                 return loadResBelowApi30(resources);
             } else {
-                logE(TAG, "failed to add loaders!", e);
+                logE(TAG, "Failed to add loaders!", e);
                 return false;
             }
         }
@@ -185,11 +185,11 @@ public class ResHelper {
             addAssetPath.setAccessible(true);
             Integer cookie = (Integer) addAssetPath.invoke(assets, mModulePath);
             if (cookie == null || cookie == 0) {
-                logW(TAG, "addAssetPath result 0, maybe load res failed!" + getStackTrace());
+                logW(TAG, "Method 'addAssetPath' result 0, maybe load res failed!" + getStackTrace());
                 return false;
             }
         } catch (Throwable e) {
-            logE(TAG, "failed to add resource! debug: below api 30.", e);
+            logE(TAG, "Failed to add resource! debug: below api 30.", e);
             return false;
         }
         return true;

@@ -18,10 +18,7 @@
  */
 package com.hchen.hooktool.tool;
 
-import static com.hchen.hooktool.log.LogExpand.getStackTrace;
-
-import com.hchen.hooktool.data.ToolData;
-import com.hchen.hooktool.helper.param.Arguments;
+import com.hchen.hooktool.tool.param.Arguments;
 
 import java.lang.reflect.Member;
 
@@ -32,7 +29,7 @@ import de.robv.android.xposed.XposedBridge;
  * 参数工具
  * <p>
  * Parameter tool
- * 
+ *
  * @author 焕晨HChen
  */
 public class ParamTool extends Arguments {
@@ -44,7 +41,7 @@ public class ParamTool extends Arguments {
     public Object[] mArgs;
 
     private XC_MethodHook xcMethodHook;
-    
+
     /**
      * 被 hook 类的实例。
      * <p>
@@ -68,14 +65,11 @@ public class ParamTool extends Arguments {
      * <p>
      * Returns the classloader of the hooked instance.
      */
-    final public ClassLoader classLoader() {
+    final public ClassLoader thisClassLoader() {
         return MethodHookParam.thisObject.getClass().getClassLoader();
     }
 
     final public void MethodHookParam(XC_MethodHook.MethodHookParam param) {
-        if (param == null)
-            throw new RuntimeException(ToolData.mInitTag +
-                    "[" + mTag + "][E]: ParamTool: param is null!" + getStackTrace());
         this.MethodHookParam = param;
         mClass = param.method.getDeclaringClass();
         mMember = param.method;
@@ -84,10 +78,5 @@ public class ParamTool extends Arguments {
 
     final public void XCMethodHook(XC_MethodHook xcMethodHook) {
         this.xcMethodHook = xcMethodHook;
-    }
-
-    final public void ToolData(ToolData data) {
-        mTag = data.tag();
-        Dynamic = data.core;
     }
 }

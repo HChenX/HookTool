@@ -23,9 +23,9 @@ import com.hchen.hooktool.data.ToolData;
 import de.robv.android.xposed.XposedBridge;
 
 /**
- * LSP 框架日志类
+ * LSP 框架日志
  * <p>
- * LSP framework log class
+ * LSP logs
  * 
  * @author 焕晨HChen
  */

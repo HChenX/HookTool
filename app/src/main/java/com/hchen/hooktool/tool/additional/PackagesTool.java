@@ -16,7 +16,7 @@
 
  * Copyright (C) 2023-2024 HookTool Contributions
  */
-package com.hchen.hooktool.additional;
+package com.hchen.hooktool.tool.additional;
 
 import static com.hchen.hooktool.log.AndroidLog.logW;
 import static com.hchen.hooktool.log.LogExpand.getStackTrace;
@@ -48,8 +48,8 @@ import java.util.Optional;
  *
  * @author 焕晨HChen
  */
-public class PackagesUtils {
-    private static final String TAG = "PackagesUtils";
+public class PackagesTool {
+    private static final String TAG = "PackagesTool";
 
     public static boolean isUninstall(String pkg) {
         return isUninstall(context(), pkg);
@@ -62,7 +62,7 @@ public class PackagesUtils {
      */
     public static boolean isUninstall(Context context, String pkg) {
         if (context == null) {
-            logW(TAG, "context is null, can't check if the app is uninstalled!" + getStackTrace());
+            logW(TAG, "Context is null, can't check if the app is uninstalled!" + getStackTrace());
             return false;
         }
         PackageManager packageManager = context.getPackageManager();
@@ -86,7 +86,7 @@ public class PackagesUtils {
      */
     public static boolean isDisable(Context context, String pkg) {
         if (context == null) {
-            logW(TAG, "context is null, can't check if an app is disabled!" + getStackTrace());
+            logW(TAG, "Context is null, can't check if an app is disabled!" + getStackTrace());
             return false;
         }
         PackageManager packageManager = context.getPackageManager();
@@ -113,7 +113,7 @@ public class PackagesUtils {
     public static boolean isHidden(Context context, String pkg) {
         try {
             if (context == null) {
-                logW(TAG, "context is null, can't check if an app is hidden!" + getStackTrace());
+                logW(TAG, "Context is null, can't check if an app is hidden!" + getStackTrace());
                 return false;
             }
             PackageManager packageManager = context.getPackageManager();
@@ -131,7 +131,7 @@ public class PackagesUtils {
      */
     public static int getUserId(int uid) {
         return (int) Optional.ofNullable(
-                        InvokeUtils.callStaticMethod(UserHandle.class, "getUserId", new Class[]{int.class}, uid))
+                        InvokeTool.callStaticMethod(UserHandle.class, "getUserId", new Class[]{int.class}, uid))
                 .orElse(-1);
     }
 
@@ -143,13 +143,37 @@ public class PackagesUtils {
      */
     public static boolean isSystem(ApplicationInfo app) {
         if (Objects.isNull(app)) {
-            AndroidLog.logE(TAG, "app is null, can't check if it's a system app!" + getStackTrace());
+            AndroidLog.logE(TAG, "ApplicationInfo is null, can't check if it's a system app!" + getStackTrace());
             return false;
         }
         if (app.uid < 10000) {
             return true;
         }
         return (app.flags & (ApplicationInfo.FLAG_SYSTEM | ApplicationInfo.FLAG_UPDATED_SYSTEM_APP)) != 0;
+    }
+    
+    @SuppressLint("QueryPermissionsNeeded")
+    public static List<AppData> getInstalledPackages(Context context, int flag) {
+        List<AppData> appDataList = new ArrayList<>();
+        if (context == null) {
+            logW(TAG, "Context is null, can't get install packages!" + getStackTrace());
+            return appDataList;
+        }
+        try {
+            PackageManager packageManager = context.getPackageManager();
+            List<PackageInfo> packageInfos = packageManager.getInstalledPackages(flag);
+            for (PackageInfo packageInfo : packageInfos) {
+                appDataList.add(addAppData(packageInfo, packageManager));
+            }
+            return appDataList;
+        } catch (Throwable e) {
+            AndroidLog.logE(TAG, e);
+        }
+        return appDataList;
+    }
+    
+    public static List<AppData> getInstalledPackages(int flag) {
+        return getInstalledPackages(context(), flag);
     }
 
     /**
@@ -166,7 +190,7 @@ public class PackagesUtils {
     public static List<AppData> getPackagesByCode(Context context, ICode iCode) {
         List<AppData> appDataList = new ArrayList<>();
         if (context == null) {
-            logW(TAG, "context is null, can't get packages by code!" + getStackTrace());
+            logW(TAG, "Context is null, can't get packages by code!" + getStackTrace());
             return appDataList;
         }
         PackageManager packageManager = context.getPackageManager();
@@ -187,37 +211,12 @@ public class PackagesUtils {
         return getPackagesByCode(context(), iCode);
     }
 
-    @SuppressLint("QueryPermissionsNeeded")
-    public static List<AppData> getInstalledPackages(Context context, int flag) {
-        List<AppData> appDataList = new ArrayList<>();
-        if (context == null) {
-            logW(TAG, "context is null, can't get install packages!" + getStackTrace());
-            return appDataList;
-        }
-        try {
-            PackageManager packageManager = context.getPackageManager();
-            List<PackageInfo> packageInfos = packageManager.getInstalledPackages(flag);
-            for (PackageInfo packageInfo : packageInfos) {
-                appDataList.add(addAppData(packageInfo, packageManager));
-            }
-            return appDataList;
-        } catch (Throwable e) {
-            AndroidLog.logE(TAG, e);
-        }
-        return appDataList;
-    }
-
-
-    public static List<AppData> getInstalledPackages(int flag) {
-        return getInstalledPackages(context(), flag);
-    }
-
     private static AppData addAppData(Parcelable parcelable, PackageManager pm) throws
             Throwable {
         AppData appData = new AppData();
         try {
             if (parcelable instanceof PackageInfo) {
-                appData.icon = BitmapUtils.drawableToBitmap(((PackageInfo) parcelable).applicationInfo.loadIcon(pm));
+                appData.icon = BitmapTool.drawableToBitmap(((PackageInfo) parcelable).applicationInfo.loadIcon(pm));
                 appData.label = ((PackageInfo) parcelable).applicationInfo.loadLabel(pm).toString();
                 appData.packageName = ((PackageInfo) parcelable).applicationInfo.packageName;
                 appData.versionName = ((PackageInfo) parcelable).versionName;
@@ -227,7 +226,7 @@ public class PackagesUtils {
                 appData.user = getUserId(((PackageInfo) parcelable).applicationInfo.uid);
                 appData.uid = ((PackageInfo) parcelable).applicationInfo.uid;
             } else if (parcelable instanceof ResolveInfo) {
-                appData.icon = BitmapUtils.drawableToBitmap(aboutResolveInfo((ResolveInfo) parcelable).applicationInfo.loadIcon(pm));
+                appData.icon = BitmapTool.drawableToBitmap(aboutResolveInfo((ResolveInfo) parcelable).applicationInfo.loadIcon(pm));
                 appData.label = aboutResolveInfo((ResolveInfo) parcelable).applicationInfo.loadLabel(pm).toString();
                 appData.packageName = aboutResolveInfo((ResolveInfo) parcelable).applicationInfo.packageName;
                 appData.isSystemApp = isSystem(aboutResolveInfo((ResolveInfo) parcelable).applicationInfo);
@@ -235,7 +234,7 @@ public class PackagesUtils {
                 appData.user = getUserId(aboutResolveInfo((ResolveInfo) parcelable).applicationInfo.uid);
                 appData.uid = aboutResolveInfo((ResolveInfo) parcelable).applicationInfo.uid;
             } else if (parcelable instanceof ActivityInfo) {
-                appData.icon = BitmapUtils.drawableToBitmap(((ActivityInfo) parcelable).applicationInfo.loadIcon(pm));
+                appData.icon = BitmapTool.drawableToBitmap(((ActivityInfo) parcelable).applicationInfo.loadIcon(pm));
                 appData.label = ((ActivityInfo) parcelable).applicationInfo.loadLabel(pm).toString();
                 appData.packageName = ((ActivityInfo) parcelable).applicationInfo.packageName;
                 appData.isSystemApp = isSystem(((ActivityInfo) parcelable).applicationInfo);
@@ -244,7 +243,7 @@ public class PackagesUtils {
                 appData.user = getUserId(((ActivityInfo) parcelable).applicationInfo.uid);
                 appData.uid = ((ActivityInfo) parcelable).applicationInfo.uid;
             } else if (parcelable instanceof ApplicationInfo) {
-                appData.icon = BitmapUtils.drawableToBitmap(((ApplicationInfo) parcelable).loadIcon(pm));
+                appData.icon = BitmapTool.drawableToBitmap(((ApplicationInfo) parcelable).loadIcon(pm));
                 appData.label = ((ApplicationInfo) parcelable).loadLabel(pm).toString();
                 appData.packageName = ((ApplicationInfo) parcelable).packageName;
                 appData.isSystemApp = isSystem(((ApplicationInfo) parcelable));
@@ -252,7 +251,7 @@ public class PackagesUtils {
                 appData.user = getUserId(((ApplicationInfo) parcelable).uid);
                 appData.uid = ((ApplicationInfo) parcelable).uid;
             } else if (parcelable instanceof ProviderInfo) {
-                appData.icon = BitmapUtils.drawableToBitmap(((ProviderInfo) parcelable).applicationInfo.loadIcon(pm));
+                appData.icon = BitmapTool.drawableToBitmap(((ProviderInfo) parcelable).applicationInfo.loadIcon(pm));
                 appData.label = ((ProviderInfo) parcelable).applicationInfo.loadLabel(pm).toString();
                 appData.packageName = ((ProviderInfo) parcelable).applicationInfo.packageName;
                 appData.isSystemApp = isSystem(((ProviderInfo) parcelable).applicationInfo);
@@ -274,7 +273,7 @@ public class PackagesUtils {
     }
 
     private static Context context() {
-        return ContextUtils.getContextNoLog(ContextUtils.FLAG_ALL);
+        return ContextTool.getContextNoLog(ContextTool.FLAG_ALL);
     }
 
     public interface ICode {
