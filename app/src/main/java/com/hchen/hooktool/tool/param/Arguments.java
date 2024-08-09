@@ -16,7 +16,7 @@
 
  * Copyright (C) 2023-2024 HookTool Contributions
  */
-package com.hchen.hooktool.helper.param;
+package com.hchen.hooktool.tool.param;
 
 import static com.hchen.hooktool.log.LogExpand.getStackTrace;
 import static com.hchen.hooktool.log.XposedLog.logE;
@@ -130,7 +130,7 @@ public class Arguments extends ActAchieve {
      */
     final public <T> T getParam(int index) {
         if (size() < index + 1) {
-            logE(mTag, "Arguments: exceeding the index!" + getStackTrace());
+            logE(mTag, "Exceeding the index!" + getStackTrace());
             return null;
         }
         return (T) MethodHookParam.args[index];
@@ -143,7 +143,7 @@ public class Arguments extends ActAchieve {
      */
     final public void setParam(int index, Object value) {
         if (size() < index + 1) {
-            logE(mTag, "Arguments: exceeding the index!" + getStackTrace());
+            logE(mTag, "Exceeding the index!" + getStackTrace());
             return;
         }
         MethodHookParam.args[index] = value;

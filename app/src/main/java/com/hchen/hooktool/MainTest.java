@@ -20,7 +20,7 @@ package com.hchen.hooktool;
 
 import android.content.Context;
 
-import com.hchen.hooktool.callback.IAction;
+import com.hchen.hooktool.hook.IAction;
 
 import de.robv.android.xposed.IXposedHookZygoteInit;
 import de.robv.android.xposed.XC_MethodHook;
@@ -76,7 +76,7 @@ public class MainTest extends BaseHC {
                 .constructor()
                 .returnResult(false)
         );
-
+        
         hook(findMethod("com.hchen.demo", "test"), new IAction() {
             @Override
             public void before() {

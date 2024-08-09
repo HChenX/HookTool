@@ -26,9 +26,10 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 
-import com.hchen.hooktool.additional.ContextUtils;
 import com.hchen.hooktool.data.ToolData;
 import com.hchen.hooktool.log.AndroidLog;
+import com.hchen.hooktool.log.LogExpand;
+import com.hchen.hooktool.tool.additional.ContextTool;
 import com.hchen.hooktool.tool.itool.IPrefs;
 
 import org.jetbrains.annotations.Nullable;
@@ -43,91 +44,64 @@ import de.robv.android.xposed.XSharedPreferences;
  * prefs 工具
  * <p>
  * prefs tool
- * 
+ *
  * @author 焕晨HChen
  */
 public class PrefsTool {
-    private ToolData data;
     private final static String TAG = "PrefsTool";
-    private static String prefsName;
-    private static PrefsTool xposedPrefs = null;
-    private static PrefsTool modulePrefs = null;
     private final static HashMap<String, XSharedPreferences> xPrefs = new HashMap<>();
     private final static HashMap<String, SharedPreferences> sPrefs = new HashMap<>();
 
-    // ------------ 模块使用 ----------------
-    // ---------- 寄生应用使用则存自身私有路径内 -----------
-    private PrefsTool() {
-        // 默认值，即设置的 tag 值后加 _prefs
-        prefsName = ToolData.spareTag.replace(" ", "").toLowerCase() + "_prefs";
-    }
-
     /**
-     * 寄生实例入口，无需手动实例。
+     * 共享首选项储存至应用私有目录内/从私有目录读取，模块如果设置 xposedsharedprefs 为 true 则由 xposed 统一管理。
      * <p>
-     * Parasitic instance entry, no manual instance is required.
-     */
-    public PrefsTool(ToolData data) {
-        // 默认值，即设置的 tag 值后加 _prefs
-        prefsName = ToolData.spareTag.replace(" ", "").toLowerCase() + "_prefs";
-        this.data = data;
-        xposedPrefs = this;
-    }
-
-    /**
-     * 模块使用。
-     * <p>
-     * 寄生应用使用则存其私有目录内，读取也从其私有目录读取。
-     * <p>
-     * Module use. <p>
-     * If parasitic applications are stored in their private directory and reads are read from their private directory.
+     * Shared preferences are stored in/read from the application's private directory.
+     * If the module is set to 'xposedsharedprefs' to' true ', it will be managed by xposed.
      */
     public static IPrefs prefs(Context context) {
-        return prefs(context, prefsName);
+        return prefs(context, null);
     }
 
     /**
-     * 模块使用。
+     * 共享首选项储存至应用私有目录内/从私有目录读取，并使用指定的 prefsName 命名文件，模块如果设置 xposedsharedprefs 为 true 则由 xposed 统一管理。
      * <p>
-     * 寄生应用使用则存其私有目录内，读取也从其私有目录读取。
-     * <p>
-     * Module use. <p>
-     * If parasitic applications are stored in their private directory and reads are read from their private directory.
+     * Shared preferences are stored in/read from the private directory of the application, and the file is named using the specified prefsName.
+     * If the module is set to 'xposedsharedprefs' to' true ', it will be managed uniformly by' xposed '.
      */
     public static IPrefs prefs(Context context, String prefsName) {
-        initModulePrefs();
-        return new Sprefs(modulePrefs.currentSp(context, prefsName));
-    }
-
-    // ---------------- 寄生应用使用 -----------------
-
-    private static void initModulePrefs() {
-        if (modulePrefs == null) {
-            modulePrefs = new PrefsTool();
-        }
-    }
-
-    public static PrefsTool xposedPrefs() {
-        return xposedPrefs;
+        return new Sprefs(currentSp(context, prefsName));
     }
 
     /**
-     * 寄生应用读取配置一般使用。
+     * 模块内不可使用，否则触发崩溃！
      * <p>
-     * Parasitic application read prefs is generally used.
+     * 将读取模块的共享首选项并供寄生应用使用。此状态下仅可读取，不可修改。
+     * <p>
+     * Cannot be used within the module, otherwise it will trigger a crash!
+     * <p>
+     * Read the shared preferences of the module and make them available for parasitic applications to use.
+     * In this state, it can only be read and cannot be modified.
      */
-    public IPrefs prefs() {
-        return prefs(prefsName);
+    public static IPrefs prefs() {
+        if (!ToolData.isXposed)
+            throw new RuntimeException(ToolData.mInitTag + "[PrefsTool][E]: Not xposed environment!" + getStackTrace());
+        return prefs((String) null);
     }
 
     /**
-     * 寄生应用读取配置一般使用。
+     * 模块内不可使用，否则触发崩溃！
      * <p>
-     * Parasitic application read prefs is generally used.
+     * 将读取指定 prefsName 名的模块共享首选项文件并供寄生应用使用。此状态下仅可读取，不可修改。
+     * <p>
+     * Cannot be used within the module, otherwise it will trigger a crash!
+     * <p>
+     * Read the module sharing preference file with the specified prefsName name and make it available for parasitic applications to use.
+     * In this state, it can only be read and cannot be modified.
      */
-    public IPrefs prefs(String prefsName) {
-        prefsName = prefsName.replace(" ", "").toLowerCase();
-        return new Xprefs(currentXsp(prefsName), data);
+    public static IPrefs prefs(String prefsName) {
+        if (!ToolData.isXposed)
+            throw new RuntimeException(ToolData.mInitTag + "[PrefsTool][E]: Not xposed environment!" + getStackTrace());
+        return new Xprefs(currentXsp(prefsName));
     }
 
     /**
@@ -139,13 +113,15 @@ public class PrefsTool {
      * <p>
      * Parasitic in-app calls only, for situations where it's inconvenient to get context.
      */
-    public void asyncPrefs(IAsyncPrefs asyncPrefs) {
-        ContextUtils.getAsyncContext(new ContextUtils.IContext() {
+    public static void asyncPrefs(IAsyncPrefs asyncPrefs) {
+        if (!ToolData.isXposed)
+            throw new RuntimeException(ToolData.mInitTag + "[PrefsTool][E]: Not xposed environment!" + getStackTrace());
+        ContextTool.getAsyncContext(new ContextTool.IContext() {
             @Override
             public void find(Context context) {
                 if (context == null) {
                     throw new RuntimeException(ToolData.mInitTag +
-                            "[" + data.tag() + "][E]: PrefsTool: async prefs context is null!!" + getStackTrace());
+                            "[" + tag() + "][E]: Async prefs context is null!" + getStackTrace());
                 }
                 asyncPrefs.async(context);
             }
@@ -156,11 +132,12 @@ public class PrefsTool {
         void async(Context context);
     }
 
-    private XSharedPreferences currentXsp(String prefsName) {
+    private static XSharedPreferences currentXsp(String prefsName) {
+        prefsName = initPrefsName(prefsName);
         if (xPrefs.get(prefsName) == null) {
             if (ToolData.modulePackageName == null) {
                 throw new RuntimeException(ToolData.mInitTag +
-                        "[" + data.tag() + "][E]: PrefsTool: module package name is null!!" + getStackTrace());
+                        "[" + tag() + "][E]: Module package name is null, Please set module package name!" + getStackTrace());
             }
             XSharedPreferences x = new XSharedPreferences(ToolData.modulePackageName, prefsName);
             x.makeWorldReadable();
@@ -174,9 +151,10 @@ public class PrefsTool {
 
     /** @noinspection deprecation */
     @SuppressLint("WorldReadableFiles")
-    private SharedPreferences currentSp(Context context, String prefsName) {
+    private static SharedPreferences currentSp(Context context, String prefsName) {
+        prefsName = initPrefsName(prefsName);
         if (context == null) {
-            throw new RuntimeException(ToolData.mInitTag + "[E]: PrefsTool: context is null!! can't create sprefs!" + getStackTrace());
+            throw new RuntimeException(ToolData.mInitTag + "[PrefsTool][E]: Context is null, can't create sprefs!" + getStackTrace());
         }
         if (sPrefs.get(context + prefsName) == null) {
             SharedPreferences s;
@@ -184,7 +162,7 @@ public class PrefsTool {
                 s = context.getSharedPreferences(prefsName, Context.MODE_WORLD_READABLE);
             } catch (Throwable ignored) {
                 s = context.getSharedPreferences(prefsName, Context.MODE_PRIVATE);
-                AndroidLog.logW(TAG, "PrefsTool: maybe can't use xSharedPreferences!" + getStackTrace());
+                AndroidLog.logW(TAG, "Maybe can't use xSharedPreferences!" + getStackTrace());
             }
             sPrefs.put(context + prefsName, s);
             return s;
@@ -193,12 +171,22 @@ public class PrefsTool {
         }
     }
 
+    private static String initPrefsName(String name) {
+        if (name == null)
+            return ToolData.spareTag.replace(" ", "").toLowerCase() + "_prefs";
+        else return name.replace(" ", "").toLowerCase() + "_prefs";
+    }
+
+    private static String tag() {
+        String tag = LogExpand.tag();
+        if (tag == null) return "PrefsTool";
+        return tag;
+    }
+
     public static class Xprefs implements IPrefs {
-        private final ToolData data;
         private final XSharedPreferences xSharedPreferences;
 
-        private Xprefs(XSharedPreferences xSharedPreferences, ToolData data) {
-            this.data = data;
+        private Xprefs(XSharedPreferences xSharedPreferences) {
             this.xSharedPreferences = xSharedPreferences;
         }
 
@@ -256,7 +244,7 @@ public class PrefsTool {
                     return getLong(key, l);
                 }
             } catch (Throwable e) {
-                logE(data.tag(), "PrefsTool: unknown error!", e);
+                logE(tag(), "Unknown error!", e);
             }
             return null;
         }
@@ -281,7 +269,7 @@ public class PrefsTool {
         @Override
         @Nullable
         public Editor editor() {
-            logW(data.tag(), "PrefsTool: xposed can't edit prefs!" + getStackTrace());
+            logW(tag(), "Xposed can't edit prefs!" + getStackTrace());
             return null;
         }
 
@@ -348,7 +336,7 @@ public class PrefsTool {
                     return getLong(key, l);
                 }
             } catch (Throwable e) {
-                AndroidLog.logE(TAG, "PrefsTool: unknown error!", e);
+                AndroidLog.logE(TAG, "Unknown error!", e);
             }
             return null;
         }
@@ -422,7 +410,7 @@ public class PrefsTool {
                     return putLong(key, l);
                 }
             } catch (Throwable e) {
-                AndroidLog.logE(TAG, "PrefsTool: unknown error!", e);
+                AndroidLog.logE(TAG, "Unknown error!", e);
             }
             return this;
         }

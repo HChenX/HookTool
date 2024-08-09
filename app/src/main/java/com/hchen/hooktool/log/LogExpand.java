@@ -21,6 +21,8 @@ package com.hchen.hooktool.log;
 import static com.hchen.hooktool.log.AndroidLog.logE;
 import static com.hchen.hooktool.log.AndroidLog.logI;
 
+import com.hchen.hooktool.data.ToolData;
+
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Constructor;
@@ -35,7 +37,7 @@ import de.robv.android.xposed.XC_MethodHook;
  * 日志增强
  * <p>
  * Logging enhancements
- * 
+ *
  * @author 焕晨HChen
  */
 public class LogExpand {
@@ -82,15 +84,42 @@ public class LogExpand {
         return stringBuilder.toString();
     }
 
+    private static String tag = null;
+
+    public static String tag() {
+        if (!ToolData.useLogExpand) return null;
+        if (ToolData.logExpandPath == null) {
+            if (ToolData.modulePackageName == null) return null;
+            ToolData.logExpandPath = new String[]{ToolData.modulePackageName};
+        }
+        tag = null;
+        StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
+        Arrays.stream(stackTraceElements).forEach(stackTraceElement -> {
+            if (tag != null) return;
+            String className = stackTraceElement.getClassName();
+            if (Arrays.stream(ToolData.logExpandPath).anyMatch(className::contains)) {
+                int index = className.lastIndexOf(".");
+                int index2 = className.lastIndexOf("$");
+                if (index == -1) return;
+                if (index2 == -1) {
+                    tag = className.substring(index + 1);
+                    return;
+                }
+                tag = className.substring(index + 1, index2);
+            }
+        });
+        return tag;
+    }
+
     private void getName(Member member) {
         if (member instanceof Method method) {
             methodName = method.getName();
-            className = method.getDeclaringClass().getSimpleName();
+            className = method.getDeclaringClass().getName();
         } else if (member instanceof Constructor<?> constructor) {
-            className = constructor.getDeclaringClass().getSimpleName();
-            methodName = "Constructor";
+            className = constructor.getDeclaringClass().getName();
+            methodName = "<init>";
         } else {
-            logE(TAG, "LogExpand: unknown type! member: " + member + getStackTrace());
+            logE(TAG, "Unknown type! member: " + member + getStackTrace());
         }
     }
 
@@ -100,7 +129,7 @@ public class LogExpand {
 
     public void detailedLogs() {
         if (param.args == null || param.args.length == 0) {
-            logI(TAG, "class: [" + className + "], method: [" + methodName + "], param: { }");
+            logI(TAG, "Class: [" + className + "]\n Method: [" + methodName + "]\n Param: { }");
             return;
         }
 
@@ -112,6 +141,6 @@ public class LogExpand {
                 log.append(", ");
             }
         }
-        logI(TAG, "class: [" + className + "], method: [" + methodName + "], param: {" + log + "}");
+        logI(TAG, "Class: [" + className + "]\n Method: [" + methodName + "]\n Param: {" + log + "}");
     }
 }

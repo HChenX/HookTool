@@ -16,7 +16,7 @@
 
  * Copyright (C) 2023-2024 HookTool Contributions
  */
-package com.hchen.hooktool.additional;
+package com.hchen.hooktool.tool.additional;
 
 import static com.hchen.hooktool.log.LogExpand.getStackTrace;
 import static com.hchen.hooktool.log.XposedLog.logE;
@@ -26,18 +26,20 @@ import android.content.Context;
 
 import androidx.annotation.IntDef;
 
+import com.hchen.hooktool.helper.ThreadPool;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 /**
- * 本类为 context 上下文获取工具
+ * 上下文获取工具
  * <p>
- * This class is a context getter
+ * Context getter
  *
  * @author 焕晨HChen
  */
 @SuppressLint({"PrivateApi", "SoonBlockedPrivateApi", "DiscouragedPrivateApi"})
-public class ContextUtils {
+public class ContextTool {
     @IntDef(value = {
             FLAG_ALL,
             FLAG_CURRENT_APP,
@@ -47,7 +49,7 @@ public class ContextUtils {
     private @interface Duration {
     }
 
-    private static final String TAG = "ContextUtils";
+    private static final String TAG = "ContextTool";
     // 尝试全部
     public static final int FLAG_ALL = 0;
     // 仅获取当前应用
@@ -67,7 +69,7 @@ public class ContextUtils {
     public static Context getContextNoLog(@Duration int flag) {
         try {
             return invokeMethod(flag);
-        } catch (Throwable e) {
+        } catch (Throwable ignore) {
             return null;
         }
     }
@@ -117,7 +119,7 @@ public class ContextUtils {
 
     private static Context currentApp(Class<?> clz) {
         // 获取当前界面应用 Context
-        return InvokeUtils.callStaticMethod(clz, "currentApplication", new Class[]{});
+        return InvokeTool.callStaticMethod(clz, "currentApplication", new Class[]{});
     }
 
     private static Context invokeMethod(int flag) throws Throwable {
@@ -136,18 +138,18 @@ public class ContextUtils {
                 context = android(clz);
             }
             default -> {
-                throw new Throwable("unexpected flag!" + getStackTrace());
+                throw new Throwable("Unexpected flag!" + getStackTrace());
             }
         }
-        if (context == null) throw new Throwable("context is null!" + getStackTrace());
+        if (context == null) throw new Throwable("Context is null!" + getStackTrace());
         return context;
     }
 
     private static Context android(Class<?> clz) {
         // 获取 Android
         Context context;
-        Object o = InvokeUtils.callStaticMethod(clz, "currentActivityThread", new Class[]{});
-        context = InvokeUtils.callMethod(o, "getSystemContext", new Class[]{});
+        Object o = InvokeTool.callStaticMethod(clz, "currentActivityThread", new Class[]{});
+        context = InvokeTool.callMethod(o, "getSystemContext", new Class[]{});
         if (context == null) {
             // 这里获取的 context 可能存在问题。
             // 所以暂时注释。

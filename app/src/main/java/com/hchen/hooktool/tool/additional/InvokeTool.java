@@ -16,7 +16,7 @@
 
  * Copyright (C) 2023-2024 HookTool Contributions
  */
-package com.hchen.hooktool.additional;
+package com.hchen.hooktool.tool.additional;
 
 import static com.hchen.hooktool.log.LogExpand.getStackTrace;
 
@@ -29,17 +29,17 @@ import java.util.Arrays;
 import java.util.HashMap;
 
 /**
- * 本类为反射工具，提供简易的反射功能
+ * 反射工具，提供简易的反射功能
  * <p>
- * This class is a reflection tool that provides a simple reflection function
+ * Reflection tool, provides a simple reflection function
  *
  * @author 焕晨HChen
  */
-public class InvokeUtils {
+public class InvokeTool {
     private static final HashMap<String, Method> methodCache = new HashMap<>();
     private static final HashMap<String, Field> fieldCache = new HashMap<>();
 
-    private final static String TAG = "invokeUtils";
+    private final static String TAG = "InvokeTool";
 
     // ----------------------------反射调用方法--------------------------------
     public static <T> T callMethod(Object instance, String method, Class<?>[] param, Object... value) {
@@ -74,7 +74,7 @@ public class InvokeUtils {
                                           Class<?>[] param /* 方法参数 */, Object... value /* 值 */) {
         Method declaredMethod;
         if (clz == null && instance == null) {
-            AndroidLog.logW(TAG, "class and instance is null, can't invoke method: [" + method + "]" + getStackTrace());
+            AndroidLog.logW(TAG, "Class and instance is null, can't invoke method: " + method + getStackTrace());
             return null;
         } else if (clz == null) {
             clz = instance.getClass();
@@ -101,7 +101,7 @@ public class InvokeUtils {
                                          boolean set /* 是否为 set 模式 */, Object value /* 指定值 */) {
         Field declaredField = null;
         if (clz == null && instance == null) {
-            AndroidLog.logW(TAG, "class and instance is null, can't invoke field: [" + field + "]" + getStackTrace());
+            AndroidLog.logW(TAG, "Class and instance is null, can't invoke field: " + field + getStackTrace());
             return null;
         } else if (clz == null) {
             clz = instance.getClass();
