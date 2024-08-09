@@ -54,7 +54,7 @@
         <dependency>
             <groupId>androidx.annotation</groupId>
             <artifactId>annotation-jvm</artifactId>
-            <version>1.8.0</version>
+            <version>1.8.2</version>
         </dependency>
         <dependency>
             <groupId>android</groupId>
