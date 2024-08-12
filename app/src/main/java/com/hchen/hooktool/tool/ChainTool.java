@@ -115,12 +115,6 @@ public class ChainTool {
         return chainHook;
     }
 
-    private static String tag() {
-        String tag = LogExpand.tag();
-        if (tag == null) return "ChainTool";
-        return tag;
-    }
-
     // 各种奇奇怪怪的添加 >.<
     private void doFind(Class<?> clazz) {
         ArrayList<ChainData> memberWithState = new ArrayList<>();
@@ -174,7 +168,6 @@ public class ChainTool {
                     });
 
                     // 检查cache中是否有重复的成员
-                    int size = cache.size();
                     boolean repeat = false;
                     for (Iterator<ChainData> it = cache.iterator(); it.hasNext(); ) {
                         ChainData c = it.next();
@@ -184,7 +177,7 @@ public class ChainTool {
                             repeat = true;
                         }
                     }
-                    return size == 1 && repeat; // cache 列表仅包含一个元素且重复就不用添加进 chainDataList 了，如果有多个，则删除重复的，添加其他。
+                    return cache.isEmpty() && repeat; // cache 列表处理后为空则排除，如果不为空则执行 hook。
                 }))
                     chainDataList.add(new ChainData(clazz.getSimpleName(),
                             chainData.mName, cache, chainData.iAction, UUID));
@@ -209,7 +202,8 @@ public class ChainTool {
                 continue;
             }
             if (chainData.memberWithState.isEmpty()) {
-                logW(tag(), "Members is empty! debug: " + UUID);
+                logW(tag(), "Members is empty, will remove this! debug: " + UUID);
+                iterator.remove();
                 continue;
             }
             ListIterator<ChainData> iteratorMember = chainData.memberWithState.listIterator();
@@ -285,4 +279,11 @@ public class ChainTool {
             return chain;
         }
     }
+
+    private static String tag() {
+        String tag = LogExpand.tag();
+        if (tag == null) return "ChainTool";
+        return tag;
+    }
+
 }

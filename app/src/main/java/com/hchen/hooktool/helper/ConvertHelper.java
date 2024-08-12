@@ -58,9 +58,9 @@ public class ConvertHelper {
      * Array parameters are converted to classes.
      */
     public static Class<?>[] arrayToClass(ClassLoader classLoader, Object... objs) {
-        ArrayList<Class<?>> classes = new ArrayList<>();
         if (objs.length == 0) return new Class<?>[]{};
         if (classLoader == null && isZygoteState()) return new Class[]{};
+        ArrayList<Class<?>> classes = new ArrayList<>();
         for (Object o : objs) {
             if (o instanceof Class<?> c) {
                 classes.add(c);

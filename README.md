@@ -59,6 +59,7 @@ public void init() {
     HCinit.initBasicData(/* 包名，tag，日志等级 */); // 初始化模块基本信息
     HCinit.initStartupParam(); // 在 zygote 阶段初始化工具
     HCinit.initLoadPackageParam(); // 在 loadPackage 阶段初始化工具
+    HCinit.xPrefsAutoReload(); // 是否自动更新共享首选项，默认开启
     HCinit.useLogExpand(); // 是否使用日志增强功能，具体参见方法注解
 }
 ```

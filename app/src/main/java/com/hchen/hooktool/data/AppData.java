@@ -21,9 +21,9 @@ package com.hchen.hooktool.data;
 import android.graphics.Bitmap;
 
 /**
- * App 数据类
+ * App 数据
  * <p>
- * App data class
+ * App data
  * 
  * @author 焕晨HChen
  */

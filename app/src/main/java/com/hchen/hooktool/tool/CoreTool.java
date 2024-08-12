@@ -77,7 +77,7 @@ public class CoreTool {
 
     public static Class<?> findClass(String name, ClassLoader classLoader) {
         return run(() -> XposedHelpers.findClass(name, classLoader))
-                .orErr(null, e -> logE(tag(), e));
+                .orErr(null, e -> logE(tag(), "Failed to find class!", e));
     }
 
     //------------ 检查指定方法是否存在 --------------
@@ -217,18 +217,7 @@ public class CoreTool {
     }
 
     public static UnHook hook(Class<?> clazz, String method, Object... params) {
-        if (params == null) return null;
-        if (params.length == 0 || !(params[params.length - 1] instanceof IAction)) {
-            logW(tag(), "Params length == 0 or last param not is IAction! can't hook: " + method + getStackTrace());
-            return null;
-        }
-
-        return run(() -> {
-            Class<?>[] classes = Arrays.stream(params)
-                    .limit(params.length - 1)
-                    .map(param -> (Class<?>) param).toArray(Class<?>[]::new);
-            return hook(findMethod(clazz, method, classes), (IAction) params[params.length - 1]);
-        }).orErr(new UnHook(null), e -> logE(tag(), "Failed to hook: " + method, e));
+        return hook(clazz, method, HookType.METHOD, params);
     }
 
     public static UnHookList hookAll(String clazz, String method, IAction iAction) {
@@ -257,18 +246,7 @@ public class CoreTool {
     }
 
     public static UnHook hook(Class<?> clazz, Object... params) {
-        if (params == null) return null;
-        if (params.length == 0 || !(params[params.length - 1] instanceof IAction)) {
-            logE(tag(), "Params length == 0 or last param not is IAction! can't hook: " + clazz.getName() + getStackTrace());
-            return null;
-        }
-
-        return run(() -> {
-            Class<?>[] classes = Arrays.stream(params)
-                    .limit(params.length - 1)
-                    .map(param -> (Class<?>) param).toArray(Class<?>[]::new);
-            return hook(findConstructor(clazz, classes), (IAction) params[params.length - 1]);
-        }).orErr(new UnHook(null), e -> logE(tag(), "Failed to hook!", e));
+        return hook(clazz, null, HookType.CONSTRUCTOR, params);
     }
 
     public static UnHookList hookAll(String clazz, IAction iAction) {
@@ -284,6 +262,36 @@ public class CoreTool {
     }
 
     // ----------- 核心实现 ---------------
+    private enum HookType {
+        METHOD,
+        CONSTRUCTOR
+    }
+
+    private static UnHook hook(Class<?> clazz, String method, HookType hookType, Object... params) {
+        if (params == null) return null;
+        String debug = hookType.toString() + "#" + clazz.getName() + "#" + method + "#" + Arrays.toString(params);
+        if (params.length == 0 || !(params[params.length - 1] instanceof IAction)) {
+            logW(tag(), "Params length == 0 or last param not is IAction! debug: " + debug + getStackTrace());
+            return null;
+        }
+
+        return run(() -> {
+            Class<?>[] classes = Arrays.stream(params)
+                    .limit(params.length - 1)
+                    .map(o -> {
+                        if (o instanceof String s) return findClass(s);
+                        else if (o instanceof Class<?> c) return c;
+                        else throw new RuntimeException("Unknown type: " + o);
+                    }).toArray(Class<?>[]::new);
+            Member member = null;
+            switch (hookType) {
+                case METHOD -> member = findMethod(clazz, method, classes);
+                case CONSTRUCTOR -> member = findConstructor(clazz, classes);
+            }
+            return hook(member, (IAction) params[params.length - 1]);
+        }).orErr(new UnHook(null), e -> logE(tag(), "Failed to hook! debug: " + debug, e));
+    }
+
     public static UnHook hook(Member member, IAction iAction) {
         String tag = tag();
         return run(() -> {
@@ -303,7 +311,7 @@ public class CoreTool {
                     unhooks.add(XposedBridge.hookMethod((Member) o, createHook(tag, iAction)));
                     logD(tag, "Success to hook: " + o);
                     return null;
-                }).orErr(new UnHookList(), e -> logE(tag, "Failed to hook: " + o, e));
+                }).orErr(null, e -> logE(tag, "Failed to hook: " + o, e));
             }
         }
         return unhooks;

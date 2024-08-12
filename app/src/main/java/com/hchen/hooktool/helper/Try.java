@@ -33,6 +33,8 @@ public class Try {
 
     /**
      * 简单的执行代码并获取返回值，与此同时主动抛出可能的异常。
+     * <p>
+     * Simply execute the code and retrieve the return value, while actively throwing possible exceptions.
      *
      * @author 焕晨HChen
      */

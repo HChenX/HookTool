@@ -79,13 +79,13 @@ public class ContextTool {
      * 使用方法:
      * <pre> {@code
      * handler = new Handler();
-     * ContextUtils.getAsyncContext(new ContextUtils.IContext() {
+     * ContextTool.getAsyncContext(new ContextTool.IContext() {
      *   @Override
-     *   public void findContext(Context context) {
+     *   public void find(Context context) {
      *      handler.post(new Runnable() {
      *        @Override
      *        public void run() {
-     *          ToastHelper.makeText(context, "getContext");
+     *          Toast.makeText(context, "getContext", Toast.LENGTH_SHORT).show();
      *        }
      *      });
      *   }
@@ -94,6 +94,8 @@ public class ContextTool {
      * 当然 Handler 是可选项, 适用于 Toast 显示等场景。
      * <p>
      * Asynchronously obtain the context of the current application to prevent null caused by premature acquisition.
+     * <p>
+     * Of course, Handler is optional and suitable for scenarios such as Toast display.
      * @param iContext 回调获取 Context
      * @author 焕晨HChen
      */
@@ -117,11 +119,6 @@ public class ContextTool {
         ThreadPool.getInstance().shutdown();
     }
 
-    private static Context currentApp(Class<?> clz) {
-        // 获取当前界面应用 Context
-        return InvokeTool.callStaticMethod(clz, "currentApplication", new Class[]{});
-    }
-
     private static Context invokeMethod(int flag) throws Throwable {
         Context context;
         Class<?> clz = Class.forName("android.app.ActivityThread");
@@ -143,6 +140,11 @@ public class ContextTool {
         }
         if (context == null) throw new Throwable("Context is null!" + getStackTrace());
         return context;
+    }
+
+    private static Context currentApp(Class<?> clz) {
+        // 获取当前界面应用 Context
+        return InvokeTool.callStaticMethod(clz, "currentApplication", new Class[]{});
     }
 
     private static Context android(Class<?> clz) {

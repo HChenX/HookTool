@@ -53,32 +53,16 @@ public class DeviceTool {
      * Get the MIUI version of the Xiaomi device converts the acquired string to a floating point to provide a judgment.
      */
     public static float getMiuiVersion() {
-        switch (getProp("ro.miui.ui.version.name")) {
-            case "V150" -> {
-                return 15f;
-            }
-            case "V140" -> {
-                return 14f;
-            }
-            case "V130" -> {
-                return 13f;
-            }
-            case "V125" -> {
-                return 12.5f;
-            }
-            case "V12" -> {
-                return 12f;
-            }
-            case "V11" -> {
-                return 11f;
-            }
-            case "V10" -> {
-                return 10f;
-            }
-            default -> {
-                return 0f;
-            }
-        }
+        return switch (getProp("ro.miui.ui.version.name").trim()) {
+            case "V150" -> 15f;
+            case "V140" -> 14f;
+            case "V130" -> 13f;
+            case "V125" -> 12.5f;
+            case "V12" -> 12f;
+            case "V11" -> 11f;
+            case "V10" -> 10f;
+            default -> 0f;
+        };
     }
 
     /**
@@ -88,17 +72,11 @@ public class DeviceTool {
      * Get Xiaomi Device HyperOS Version Convert the acquired string to floating-point to provide judgment.
      */
     public static float getHyperOSVersion() {
-        switch (getProp("ro.mi.os.version.name")) {
-            case "OS2.0" -> {
-                return 2f;
-            }
-            case "OS1.0" -> {
-                return 1f;
-            }
-            default -> {
-                return 0f;
-            }
-        }
+        return switch (getProp("ro.mi.os.version.name").trim()) {
+            case "OS2.0" -> 2f;
+            case "OS1.0" -> 1f;
+            default -> 0f;
+        };
     }
 
     /**
@@ -179,17 +157,27 @@ public class DeviceTool {
     public static String getRomAuthor() {
         return getProp("ro.rom.author") + getProp("ro.romid");
     }
-    
+
+    /**
+     * 仅小米可用。
+     * <p>
+     * Only XiaoMi.
+     */
     public static boolean IS_TABLET() {
         return Boolean.TRUE.equals(getStaticField(
                 findClass("miui.os.Build", null), "IS_TABLET"));
     }
 
+    /**
+     * 仅小米可用。
+     * <p>
+     * Only XiaoMi.
+     */
     public static boolean IS_INTERNATIONAL_BUILD() {
         return Boolean.TRUE.equals(getStaticField(
                 findClass("miui.os.Build", null), "IS_INTERNATIONAL_BUILD"));
     }
-    
+
     public static boolean isPad() {
         if (IS_TABLET()) return true;
         return isPadDevice();
