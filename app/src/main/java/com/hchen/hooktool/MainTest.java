@@ -65,7 +65,7 @@ public class MainTest extends BaseHC {
                     }
                 })
 
-                .method("test_1", String.class)
+                .method("test1", String.class)
                 .hook(new IAction() {
                     @Override
                     public void after() {

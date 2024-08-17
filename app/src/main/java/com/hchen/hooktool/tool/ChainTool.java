@@ -219,7 +219,7 @@ public class ChainTool {
                             try {
                                 XposedBridge.hookMethod(memberData.member, createHook(tag(), chainData.iAction));
                                 memberData.hookState = HookState.HOOKED;
-                                logD(tag(), "Success hook: " + memberData.member);
+                                logD(tag(), "Success to hook: " + memberData.member);
                             } catch (Throwable e) {
                                 memberData.hookState = HookState.FAILED;
                                 logE(tag(), e);
@@ -228,10 +228,10 @@ public class ChainTool {
                         }
                     }
                     case FAILED -> {
-                        logD(tag(), "Members hooked: " + memberData.member);
+                        logD(tag(), "Hooked members: " + memberData.member);
                     }
                     case HOOKED -> {
-                        logD(tag(), "Members hook failed: " + memberData.member);
+                        logD(tag(), "Failed to hook members: " + memberData.member);
                     }
                 }
             }

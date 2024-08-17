@@ -41,9 +41,9 @@ dependencyResolutionManagement {
 ```groovy
 dependencies {
     // jitpack
-    implementation 'com.github.HChenX:HookTool:v.1.0.0'
+    implementation 'com.github.HChenX:HookTool:v.1.0.1'
     // maven
-    implementation 'io.github.hchenx:hooktool:v.1.0.0'
+    implementation 'io.github.hchenx:hooktool:v.1.0.1'
     // 二选一即可
 }
 ```
@@ -164,7 +164,7 @@ public class RunHook implements IXposedHookLoadPackage, IXposedHookZygoteInit {
 
 - 到此完成全部工作，可以愉快的使用了！
 
-# 💡链式调用
+# 💡 链式调用
 
 - 本工具支持链式调用，使用 chain() 方法创建链式。
 - 这是本工具重构提供的全新链式方案，是否更简洁高效了呢？
@@ -198,7 +198,7 @@ public class MainTest extends BaseHC {
 }
 ```
 
-# 🔥泛型转换
+# 🔥 泛型转换
 
 - 传统 Xposed MethodHookParam 的各种方法返回都是 Object。 这就使得我们必须显性的进行类型转换才能使用。
 - 本工具则充分使用泛型，就不需要显性的进行类型转换啦！
@@ -250,7 +250,7 @@ public class MainTest extends BaseHC {
 
 ```
 
-# 📌全面丰富
+# 📌 全面丰富
 
 - 工具提供了全面丰富的方法供你调用。
 - 包括:
@@ -315,12 +315,12 @@ public class MainTest extends BaseHC {
         String s = prefs().getString("test", "1");  // 即可读取
         s = prefs("myPrefs").getString("test", "1");  // 可指定读取文件名
 
-        // sprefs模式：
+        // sprefs 模式：
         // 配置会保存到寄生应用的私有目录，读取也会从寄生应用私有目录读取。
         prefs(context).editor().putString("test", "1").commit();
         // 如果没有继承 BaseHC 可以这样调用。
         PrefsTool.prefs(context).editor().putString("test", "2").commit();
-        // 注意 sprefs模式 是和 xprefs 模式相互独立的，可共同存在。
+        // 注意 sprefs 模式 是和 xprefs 模式相互独立的，可共同存在。
 
         // 如果不方便获取 context 可用使用此方法，异步获取寄生应用上下文后再设置。
         asyncPrefs(new PrefsTool.IAsyncPrefs() {
@@ -379,7 +379,7 @@ public static class MainActivity {
 
 - 其他更多精彩正在加载···
 
-# 💕工具使用者
+# 💕 工具使用者
 
 - 以下项目使用了本工具！
 
@@ -391,13 +391,13 @@ public static class MainActivity {
 - 如果你的项目使用了本工具，可以告诉我，我将会把其加入表格。
 - 想要详细了解本工具也可以参考上述项目，希望给你带来帮助！
 
-# 📢项目声明
+# 📢 项目声明
 
 - **本工具基于：**
 - [LSPosed](https://github.com/LSPosed/LSPosed)
 
 - 使用本工具请注明。
 
-# 🎉结尾
+# 🎉 结尾
 
 - 感谢您愿意使用本工具！Enjoy your day! ♥️

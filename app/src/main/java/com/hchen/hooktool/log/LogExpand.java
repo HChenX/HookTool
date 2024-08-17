@@ -88,30 +88,28 @@ public class LogExpand {
         return stringBuilder.toString();
     }
 
-    private static String tag = null;
-
     public static String tag() {
         if (!ToolData.useLogExpand) return null;
         if (ToolData.logExpandPath == null) {
             if (ToolData.modulePackageName == null) return null;
             ToolData.logExpandPath = new String[]{ToolData.modulePackageName};
         }
-        tag = null;
+        String tag = null;
         StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
-        Arrays.stream(stackTraceElements).forEach(stackTraceElement -> {
-            if (tag != null) return;
+        for (StackTraceElement stackTraceElement : stackTraceElements) {
+            if (tag != null) break;
             String className = stackTraceElement.getClassName();
             if (Arrays.stream(ToolData.logExpandPath).anyMatch(className::contains)) {
                 int index = className.lastIndexOf(".");
                 int index2 = className.lastIndexOf("$");
-                if (index == -1) return;
+                if (index == -1) break;
                 if (index2 == -1) {
                     tag = className.substring(index + 1);
-                    return;
+                    break;
                 }
                 tag = className.substring(index + 1, index2);
             }
-        });
+        }
         return tag;
     }
 
@@ -133,7 +131,7 @@ public class LogExpand {
 
     public void detailedLogs() {
         if (param.args == null || param.args.length == 0) {
-            logI(TAG, "Class: [" + className + "]\n Method: [" + methodName + "]\n Param: { }");
+            logI(TAG, "Method called!\n Class: [" + className + "]\n Method: [" + methodName + "]\n Param: { }");
             return;
         }
 
@@ -145,6 +143,6 @@ public class LogExpand {
                 log.append(", ");
             }
         }
-        logI(TAG, "Class: [" + className + "]\n Method: [" + methodName + "]\n Param: {" + log + "}");
+        logI(TAG, "Method called!\n Class: [" + className + "]\n Method: [" + methodName + "]\n Param: {" + log + "}");
     }
 }

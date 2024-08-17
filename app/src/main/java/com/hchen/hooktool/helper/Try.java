@@ -76,8 +76,12 @@ public class Try {
         }
 
         // 返回代码执行结束状态
-        public boolean isOk() {
+        public boolean isSuccess() {
             return isSuccess;
+        }
+
+        public boolean isFailed() {
+            return !isSuccess;
         }
 
         public interface Err {

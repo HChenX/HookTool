@@ -69,7 +69,7 @@ public class ConvertHelper {
                 if (ct == null) return new Class[]{};
                 classes.add(ct);
             } else if (o instanceof IAction) {
-                break; // IAction 必定为最后一个参数（如果有
+                break; // IAction 必定为最后一个参数 (如果有)
             } else {
                 logW(tag(), "Unknown type: " + o + getStackTrace());
                 return new Class[]{};

@@ -90,7 +90,7 @@ public class CoreTool {
                                        String name, Object... objs) {
         Class<?> cl = XposedHelpers.findClassIfExists(clazz, classLoader);
         if (cl == null) return false;
-        return run(() -> cl.getDeclaredMethod(name, arrayToClass(classLoader, objs))).isOk();
+        return run(() -> cl.getDeclaredMethod(name, arrayToClass(classLoader, objs))).isSuccess();
     }
 
     public static boolean existsAnyMethod(String clazz, String name) {
@@ -111,6 +111,7 @@ public class CoreTool {
 
     // ------------ 查找方法 --------------
     public static Method findMethod(String clazz, String name, Object... objects) {
+        if (isZygoteState()) return null;
         return findMethod(findClass(clazz), name, arrayToClass(objects));
     }
 
@@ -128,6 +129,7 @@ public class CoreTool {
     }
 
     public static ArrayList<Method> findAnyMethod(String clazz, String name) {
+        if (isZygoteState()) return new ArrayList<>();
         return findAnyMethod(findClass(clazz), name);
     }
 
@@ -147,6 +149,7 @@ public class CoreTool {
 
     // --------- 查找构造函数 -----------
     public static Constructor<?> findConstructor(String clazz, Object... objects) {
+        if (isZygoteState()) return null;
         return findConstructor(findClass(clazz), arrayToClass(objects));
     }
 
@@ -164,6 +167,7 @@ public class CoreTool {
     }
 
     public static ArrayList<Constructor<?>> findAnyConstructor(String clazz) {
+        if (isZygoteState()) return new ArrayList<>();
         return findAnyConstructor(findClass(clazz));
     }
 
@@ -189,6 +193,7 @@ public class CoreTool {
 
     // --------- 查找字段 -----------
     public static Field findField(String clazz, String name) {
+        if (isZygoteState()) return null;
         return findField(findClass(clazz), name);
     }
 
@@ -204,7 +209,7 @@ public class CoreTool {
     // --------- 执行 hook -----------
     // --------- 普通方法 -------------
     public static UnHook hook(String clazz, String method, Object... params) {
-        if (isZygoteState()) return null;
+        if (isZygoteState()) return new UnHook(null);
         return hook(clazz, ToolData.classLoader, method, params);
     }
 
@@ -221,6 +226,7 @@ public class CoreTool {
     }
 
     public static UnHookList hookAll(String clazz, String method, IAction iAction) {
+        if (isZygoteState()) return new UnHookList();
         return hookAll(findClass(clazz), method, iAction);
     }
 
@@ -234,6 +240,7 @@ public class CoreTool {
 
     // --------- 构造函数 ------------
     public static UnHook hook(String clazz, Object... params) {
+        if (isZygoteState()) return new UnHook(null);
         return hook(findClass(clazz), params);
     }
 
@@ -250,6 +257,7 @@ public class CoreTool {
     }
 
     public static UnHookList hookAll(String clazz, IAction iAction) {
+        if (isZygoteState()) return new UnHookList();
         return hookAll(findAnyConstructor(clazz), iAction);
     }
 
@@ -375,6 +383,7 @@ public class CoreTool {
 
     // --------- 过滤方法 -----------
     public static ArrayList<Method> filterMethod(String clazz, IFilter iFilter) {
+        if (isZygoteState()) return new ArrayList<>();
         return filterMethod(findClass(clazz), iFilter);
     }
 
@@ -395,6 +404,7 @@ public class CoreTool {
     }
 
     public static ArrayList<Constructor<?>> filterConstructor(String clazz, IFilter iFilter) {
+        if (isZygoteState()) return new ArrayList<>();
         return filterConstructor(findClass(clazz), iFilter);
     }
 
@@ -497,6 +507,7 @@ public class CoreTool {
     }
 
     public static <T> T newInstance(String clz, Object... objects) {
+        if (isZygoteState()) return null;
         return newInstance(findClass(clz), objects);
     }
 
@@ -510,6 +521,7 @@ public class CoreTool {
     }
 
     public static <T> T callStaticMethod(String clz, String name, Object... objs) {
+        if (isZygoteState()) return null;
         return callStaticMethod(findClass(clz), name, objs);
     }
 
@@ -530,6 +542,7 @@ public class CoreTool {
     }
 
     public static <T> T getStaticField(String clz, String name) {
+        if (isZygoteState()) return null;
         return getStaticField(findClass(clz), name);
     }
 
@@ -560,6 +573,7 @@ public class CoreTool {
     }
 
     public static boolean setStaticField(String clz, String name, Object value) {
+        if (isZygoteState()) return false;
         return setStaticField(findClass(clz), name, value);
     }
 
@@ -587,6 +601,7 @@ public class CoreTool {
     }
 
     public static boolean setAdditionalStaticField(String clz, String key, Object value) {
+        if (isZygoteState()) return false;
         return setAdditionalStaticField(findClass(clz), key, value);
     }
 
@@ -595,6 +610,7 @@ public class CoreTool {
     }
 
     public static <T> T getAdditionalStaticField(String clz, String key) {
+        if (isZygoteState()) return null;
         return getAdditionalStaticField(findClass(clz), key);
     }
 
@@ -603,6 +619,7 @@ public class CoreTool {
     }
 
     public static boolean removeAdditionalStaticField(String clz, String key) {
+        if (isZygoteState()) return false;
         return removeAdditionalStaticField(findClass(clz), key);
     }
 
