@@ -23,8 +23,6 @@ import com.hchen.hooktool.tool.ParamTool;
 
 /**
  * Hook 动作接口
- * <p>
- * Hook action interface
  * 
  * @author 焕晨HChen
  */
@@ -41,16 +39,12 @@ public abstract class IAction extends ParamTool {
 
     /**
      * 在目标方法调用前回调。
-     * <p>
-     * Callback before the target method is called.
      */
     public void before() {
     }
 
     /**
      * 在目标方法调用后回调。
-     * <p>
-     * Callbacks after the target method is called.
      */
     public void after() {
     }

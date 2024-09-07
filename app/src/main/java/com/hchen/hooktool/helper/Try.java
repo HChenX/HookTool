@@ -18,10 +18,10 @@
  */
 package com.hchen.hooktool.helper;
 
+import static com.hchen.hooktool.log.XposedLog.logE;
+
 /**
  * 方法执行与异常处理类
- * <p>
- * Run code and try
  *
  * @author 焕晨HChen
  */
@@ -33,8 +33,6 @@ public class Try {
 
     /**
      * 简单的执行代码并获取返回值，与此同时主动抛出可能的异常。
-     * <p>
-     * Simply execute the code and retrieve the return value, while actively throwing possible exceptions.
      *
      * @author 焕晨HChen
      */
@@ -72,6 +70,12 @@ public class Try {
         public T orErr(T or, Err err) {
             if (isSuccess) return result;
             err.err(throwable);
+            return or;
+        }
+
+        public T orErrMag(T or, String tag, String msg) {
+            if (isSuccess) return result;
+            logE(tag, msg, throwable);
             return or;
         }
 

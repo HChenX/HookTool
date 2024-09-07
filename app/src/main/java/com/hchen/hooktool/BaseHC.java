@@ -18,7 +18,6 @@
  */
 package com.hchen.hooktool;
 
-import static com.hchen.hooktool.data.ToolData.isZygote;
 import static com.hchen.hooktool.log.XposedLog.logE;
 
 import android.content.Context;
@@ -34,24 +33,17 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 /**
  * 对需要使用工具的类继承本类，可快速使用工具
- * <p>
- * This class inherits from the class that requires the use of the tool, so that you can quickly use the tool
  *
  * @author 焕晨HChen
  */
 public abstract class BaseHC extends CoreTool {
     public String TAG = getClass().getSimpleName();
-    // onZygote 阶段以下均为 null
-    public static XC_LoadPackage.LoadPackageParam lpparam;
-    public static ClassLoader classLoader;
-    // END
-
     private final ChainTool chainTool = new ChainTool();
+    public static XC_LoadPackage.LoadPackageParam lpparam;  // onZygote 阶段为 null
+    public static ClassLoader classLoader;
 
     /**
      * 正常阶段。
-     * <p>
-     * Normal stage.
      */
     public abstract void init();
 
@@ -59,17 +51,13 @@ public abstract class BaseHC extends CoreTool {
      * zygote 阶段。
      * <p>
      * 如果 startupParam 为 null，请检查是否为工具初始化。
-     * <p>
-     * Zygote stages.
-     * <p>
-     * If startupParam is null, check if it is initialized for the tool.
      */
     public void initZygote(IXposedHookZygoteInit.StartupParam startupParam) {
     }
 
     final public void onLoadPackage() {
         try {
-            initTool();
+            initBaseHC();
             init();
         } catch (Throwable e) {
             logE(TAG, e);
@@ -78,18 +66,16 @@ public abstract class BaseHC extends CoreTool {
 
     final public void onZygote() {
         try {
-            initTool();
+            initBaseHC();
             initZygote(ToolData.startupParam);
         } catch (Throwable e) {
             logE(TAG, e);
         }
     }
 
-    private void initTool() {
-        if (!isZygote) {
-            lpparam = ToolData.lpparam;
-            classLoader = lpparam.classLoader;
-        }
+    private void initBaseHC() {
+        lpparam = ToolData.lpparam;
+        classLoader = ToolData.classLoader;
     }
 
     public static void chain(String clazz, ChainTool chain) {
@@ -119,6 +105,8 @@ public abstract class BaseHC extends CoreTool {
     final public ChainTool.ChainHook anyConstructor() {
         return chainTool.anyConstructor();
     }
+
+    // --------------- prefs -----------------
 
     public static IPrefs prefs(Context context) {
         return PrefsTool.prefs(context);

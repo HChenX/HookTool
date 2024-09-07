@@ -20,8 +20,6 @@ package com.hchen.hooktool.data;
 
 /**
  * 状态枚举
- * <p>
- * State enumeration
  * 
  * @author 焕晨HChen
  */

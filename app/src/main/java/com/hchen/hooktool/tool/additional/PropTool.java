@@ -24,8 +24,6 @@ import java.util.Optional;
 
 /**
  * Prop 工具，可以获取或者写入系统 prop 条目
- * <p>
- * Prop tool, which can be obtained or written to the system prop entry
  *
  * @author 焕晨HChen
  */
@@ -65,8 +63,6 @@ public class PropTool {
     /**
      * 只有系统核心可以调用。
      * 返回 true 表示成功。
-     * <p>
-     * Only the system core can be called. Returning true indicates success.
      */
     public static boolean setProp(String key, String vale) {
         invokeMethod("set", new Class[]{String.class, String.class}, key, vale);

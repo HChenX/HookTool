@@ -33,8 +33,6 @@ import java.lang.annotation.RetentionPolicy;
 
 /**
  * 上下文获取工具
- * <p>
- * Context getter
  *
  * @author 焕晨HChen
  */
@@ -92,10 +90,6 @@ public class ContextTool {
      * }, true/false);
      * }
      * 当然 Handler 是可选项, 适用于 Toast 显示等场景。
-     * <p>
-     * Asynchronously obtain the context of the current application to prevent null caused by premature acquisition.
-     * <p>
-     * Of course, Handler is optional and suitable for scenarios such as Toast display.
      * @param iContext 回调获取 Context
      * @author 焕晨HChen
      */

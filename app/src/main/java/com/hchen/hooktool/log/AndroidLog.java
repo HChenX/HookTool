@@ -24,8 +24,6 @@ import com.hchen.hooktool.data.ToolData;
 
 /**
  * 安卓日志
- * <p>
- * Android logs
  * 
  * @author 焕晨HChen
  */

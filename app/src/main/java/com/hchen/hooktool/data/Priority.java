@@ -20,8 +20,6 @@ package com.hchen.hooktool.data;
 
 /**
  * 优先级枚举
- * <p>
- * Priority enumeration
  *
  * @author 焕晨HChen
  */

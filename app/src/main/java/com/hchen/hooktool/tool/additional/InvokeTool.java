@@ -30,8 +30,6 @@ import java.util.HashMap;
 
 /**
  * 反射工具，提供简易的反射功能
- * <p>
- * Reflection tool, provides a simple reflection function
  *
  * @author 焕晨HChen
  */

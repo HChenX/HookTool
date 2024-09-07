@@ -23,8 +23,6 @@ import java.util.concurrent.Executors;
 
 /**
  * 线程池
- * <p>
- * Thread pool
  *
  * @author 焕晨HChen
  */

@@ -50,8 +50,6 @@ import de.robv.android.xposed.XposedBridge;
 
 /**
  * 创建链式调用
- * <p>
- * Create a chain call
  *
  * @author 焕晨HChen
  */
@@ -87,8 +85,6 @@ public class ChainTool {
 
     /**
      * 查找方法。
-     * <p>
-     * Find method.
      */
     public ChainHook method(String name, Object... params) {
         chainData = new ChainData(name, params);
@@ -102,8 +98,6 @@ public class ChainTool {
 
     /**
      * 查找构造函数。
-     * <p>
-     * Find constructor.
      */
     public ChainHook constructor(Object... params) {
         chainData = new ChainData(params);
@@ -173,7 +167,7 @@ public class ChainTool {
                         ChainData c = it.next();
                         if (c.member != null && existingMembers.contains(c.member)) {
                             it.remove(); // 从cache中移除重复成员
-                            logW(tag(), "This member maybe repeated, will remove it! debug: " + finalUUID);
+                            logW(tag(), "This member maybe repeated, will remove it! \ndebug: " + finalUUID);
                             repeat = true;
                         }
                     }
@@ -182,7 +176,7 @@ public class ChainTool {
                     chainDataList.add(new ChainData(clazz.getSimpleName(),
                             chainData.mName, cache, chainData.iAction, UUID));
             } else
-                logW(tag(), "This member maybe repeated, will skip add it! debug: " + UUID);
+                logW(tag(), "This member maybe repeated, will skip add it! \ndebug: " + UUID);
             memberWithState.clear();
         }
         cacheDataList.clear();
@@ -197,12 +191,12 @@ public class ChainTool {
             ChainData chainData = iterator.next();
             String UUID = chainData.UUID;
             if (chainData.iAction == null) {
-                logW(tag(), "Action is null, can't hook! will remove this! debug: " + UUID);
+                logW(tag(), "Action is null, can't hook! will remove this! \ndebug: " + UUID);
                 iterator.remove();
                 continue;
             }
             if (chainData.memberWithState.isEmpty()) {
-                logW(tag(), "Members is empty, will remove this! debug: " + UUID);
+                logW(tag(), "Members is empty, will remove this! \ndebug: " + UUID);
                 iterator.remove();
                 continue;
             }
@@ -212,7 +206,7 @@ public class ChainTool {
                 switch (memberData.hookState) {
                     case NONE -> {
                         if (memberData.member == null) {
-                            logW(tag(), "Member is null, can't hook! will remove this! debug: " + UUID);
+                            logW(tag(), "Member is null, can't hook! will remove this! \ndebug: " + UUID);
                             memberData.hookState = HookState.FAILED;
                             iteratorMember.remove();
                         } else {
@@ -222,7 +216,7 @@ public class ChainTool {
                                 logD(tag(), "Success to hook: " + memberData.member);
                             } catch (Throwable e) {
                                 memberData.hookState = HookState.FAILED;
-                                logE(tag(), e);
+                                logE(tag(), "Failed to hook: " + memberData.member, e);
                             }
                             iteratorMember.set(memberData);
                         }
@@ -248,8 +242,6 @@ public class ChainTool {
 
         /**
          * Hook 动作。
-         * <p>
-         * Hook action.
          */
         public ChainTool hook(IAction iAction) {
             chain.chainData.iAction = iAction;
@@ -259,8 +251,6 @@ public class ChainTool {
 
         /**
          * 直接返回指定值。
-         * <p>
-         * Returns the specified value directly.
          */
         public ChainTool returnResult(final Object result) {
             chain.chainData.iAction = CoreTool.returnResult(result);
@@ -270,8 +260,6 @@ public class ChainTool {
 
         /**
          * 拦截方法执行。
-         * <p>
-         * Intercept method execution.
          */
         public ChainTool doNothing() {
             chain.chainData.iAction = CoreTool.doNothing();
@@ -285,5 +273,4 @@ public class ChainTool {
         if (tag == null) return "ChainTool";
         return tag;
     }
-
 }

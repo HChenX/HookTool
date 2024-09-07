@@ -24,8 +24,6 @@ import de.robv.android.xposed.XposedBridge;
 
 /**
  * LSP 框架日志
- * <p>
- * LSP logs
  * 
  * @author 焕晨HChen
  */

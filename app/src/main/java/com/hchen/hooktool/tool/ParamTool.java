@@ -27,25 +27,18 @@ import de.robv.android.xposed.XposedBridge;
 
 /**
  * 参数工具
- * <p>
- * Parameter tool
  *
  * @author 焕晨HChen
  */
 public class ParamTool extends Arguments {
-    // hook 的方法的所在类
     public Class<?> mClass;
-    // hook 的方法
     public Member mMember;
-    // hook 的方法的参数
     public Object[] mArgs;
 
     private XC_MethodHook xcMethodHook;
 
     /**
      * 被 hook 类的实例。
-     * <p>
-     * An instance of the hook class.
      */
     final public <T> T thisObject() {
         return (T) MethodHookParam.thisObject;
@@ -53,8 +46,6 @@ public class ParamTool extends Arguments {
 
     /**
      * 移除 hook 自身。
-     * <p>
-     * Remove the hook itself.
      */
     final public void removeSelf() {
         XposedBridge.unhookMethod(mMember, xcMethodHook);
@@ -62,8 +53,6 @@ public class ParamTool extends Arguments {
 
     /**
      * 返回被 hook 实例的类加载器。
-     * <p>
-     * Returns the classloader of the hooked instance.
      */
     final public ClassLoader thisClassLoader() {
         return MethodHookParam.thisObject.getClass().getClassLoader();

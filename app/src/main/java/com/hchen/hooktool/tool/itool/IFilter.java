@@ -23,8 +23,6 @@ import java.lang.reflect.Method;
 
 /**
  * 过滤接口
- * <p>
- * Filter interface
  * 
  * @author 焕晨HChen
  */

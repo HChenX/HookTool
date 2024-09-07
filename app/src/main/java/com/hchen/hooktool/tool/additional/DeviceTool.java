@@ -33,14 +33,10 @@ import java.util.Locale;
 
 /**
  * 此类用于获取设备基本信息
- * <p>
- * This class is used to obtain basic information about the device
  */
 public class DeviceTool {
     /**
      * 获取安卓设备版本。
-     * <p>
-     * Get the Android version.
      */
     public static int getAndroidVersion() {
         return Build.VERSION.SDK_INT;
@@ -49,8 +45,6 @@ public class DeviceTool {
     /**
      * 获取小米设备 MIUI 版本
      * 将获取到的字符串转换为浮点，以提供判断。
-     * <p>
-     * Get the MIUI version of the Xiaomi device converts the acquired string to a floating point to provide a judgment.
      */
     public static float getMiuiVersion() {
         return switch (getProp("ro.miui.ui.version.name").trim()) {
@@ -68,8 +62,6 @@ public class DeviceTool {
     /**
      * 获取小米设备 HyperOS 版本
      * 将获取到的字符串转换为浮点，以提供判断。
-     * <p>
-     * Get Xiaomi Device HyperOS Version Convert the acquired string to floating-point to provide judgment.
      */
     public static float getHyperOSVersion() {
         return switch (getProp("ro.mi.os.version.name").trim()) {
@@ -81,8 +73,6 @@ public class DeviceTool {
 
     /**
      * 判断是否为指定某个 Android 版本。
-     * <p>
-     * Determines whether a specific Android version is specified.
      */
     public static boolean isAndroidVersion(int version) {
         return getAndroidVersion() == version;
@@ -90,8 +80,6 @@ public class DeviceTool {
 
     /**
      * 判断是否大于等于某个 Android 版本。
-     * <p>
-     * Determine whether an Android version is greater than or greater.
      */
     public static boolean isMoreAndroidVersion(int version) {
         return getAndroidVersion() >= version;
@@ -99,8 +87,6 @@ public class DeviceTool {
 
     /**
      * 判断是否为指定某个 MIUI 版本。
-     * <p>
-     * Determines whether a MIUI version is specified.
      */
     public static boolean isMiuiVersion(float version) {
         return getMiuiVersion() == version;
@@ -108,8 +94,6 @@ public class DeviceTool {
 
     /**
      * 判断是否大于等于某个 MIUI 版本。
-     * <p>
-     * Determine whether a MIUI version is greater than or equal to.
      */
     public static boolean isMoreMiuiVersion(float version) {
         return getMiuiVersion() >= version;
@@ -117,8 +101,6 @@ public class DeviceTool {
 
     /**
      * 判断是否为指定某个 HyperOS 版本。
-     * <p>
-     * Determines whether a HyperOS version is specified.
      */
     public static boolean isHyperOSVersion(float version) {
         return getHyperOSVersion() == version;
@@ -126,8 +108,6 @@ public class DeviceTool {
 
     /**
      * 判断是否大于等于某个 HyperOS 版本。
-     * <p>
-     * Determine whether the HyperOS version is greater than or equal to.
      */
     public static boolean isMoreHyperOSVersion(float version) {
         return getHyperOSVersion() >= version;
@@ -160,8 +140,6 @@ public class DeviceTool {
 
     /**
      * 仅小米可用。
-     * <p>
-     * Only XiaoMi.
      */
     public static boolean IS_TABLET() {
         return Boolean.TRUE.equals(getStaticField(
@@ -170,8 +148,6 @@ public class DeviceTool {
 
     /**
      * 仅小米可用。
-     * <p>
-     * Only XiaoMi.
      */
     public static boolean IS_INTERNATIONAL_BUILD() {
         return Boolean.TRUE.equals(getStaticField(
@@ -185,8 +161,6 @@ public class DeviceTool {
 
     /**
      * 判断小米设备是否是国际版。
-     * <p>
-     * Determine if the Xiaomi device is an international version.
      */
     public static boolean isInternational() {
         return IS_INTERNATIONAL_BUILD();

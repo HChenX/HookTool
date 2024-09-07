@@ -43,8 +43,6 @@ import java.lang.reflect.Method;
 
 /**
  * 资源注入工具
- * <p>
- * Resource injection tools
  *
  * @author 焕晨HChen
  */
@@ -56,8 +54,6 @@ public class ResTool {
 
     /**
      * 请在 initZygote 中初始化。
-     * <p>
-     * Please initialize in initZygote.
      *
      * @param modulePath startupParam.modulePath 即可
      */
@@ -68,9 +64,6 @@ public class ResTool {
     /**
      * 把本项目资源注入目标作用域上下文。一般调用本方法即可。<br/>
      * 请在 build.gradle 添加如下代码。
-     * <p>
-     * Inject this project resource into the target scope context. Generally, this method can be called. <br>
-     * Please add the following code to build.gradle.
      * <pre> {@code
      * Kotlin Gradle DSL:
      *
@@ -115,7 +108,7 @@ public class ResTool {
     public static Resources loadModuleRes(Resources resources) {
         return loadModuleRes(resources, false);
     }
-    
+
     public static Resources loadModuleRes(Context context, boolean doOnMainLooper) {
         return loadModuleRes(context.getResources(), doOnMainLooper);
     }
@@ -126,8 +119,6 @@ public class ResTool {
 
     /**
      * 来自 QA 的方法
-     * <p>
-     * from QA
      */
     @RequiresApi(api = Build.VERSION_CODES.R)
     private static boolean loadResAboveApi30(Resources resources, boolean doOnMainLooper) {

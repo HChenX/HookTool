@@ -28,8 +28,6 @@ import de.robv.android.xposed.XposedHelpers;
 
 /**
  * 测试和示例类
- * <p>
- * Test and sample classes
  * 
  * @author 焕晨HChen
  */

@@ -23,8 +23,6 @@ import static com.hchen.hooktool.log.XposedLog.logE;
 
 /**
  * 参数操作
- * <p>
- * Parameter operations
  * 
  * @author 焕晨HChen
  */
@@ -116,8 +114,6 @@ public class Arguments extends ActAchieve {
 
     /**
      * 当前方法参数的数量。
-     * <p>
-     * The number of current method parameters.
      */
     final public int size() {
         return MethodHookParam.args.length;
@@ -125,8 +121,6 @@ public class Arguments extends ActAchieve {
 
     /**
      * 获取指定参数。
-     * <p>
-     * Obtain the specified parameters.
      */
     final public <T> T getParam(int index) {
         if (size() < index + 1) {
@@ -138,8 +132,6 @@ public class Arguments extends ActAchieve {
 
     /**
      * 设置指定参数。
-     * <p>
-     * Set the specified parameters.
      */
     final public void setParam(int index, Object value) {
         if (size() < index + 1) {
@@ -148,5 +140,4 @@ public class Arguments extends ActAchieve {
         }
         MethodHookParam.args[index] = value;
     }
-
 }

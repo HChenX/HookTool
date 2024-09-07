@@ -26,18 +26,16 @@ import de.robv.android.xposed.XC_MethodHook;
 
 /**
  * Hook 创建工厂
- * <p>
- * Hook to create a factory
  *
  * @author 焕晨HChen
  */
 public class HookFactory {
     public static XposedCallBack createHook(String tag, IAction iAction) {
-        int priority = 50;
+        int priority;
         switch (iAction.priority) {
-            case Priority.DEFAULT -> priority = 50;
             case Priority.LOWEST -> priority = -10000;
             case Priority.HIGHEST -> priority = 10000;
+            default -> priority = 50;
         }
         iAction.mTag = tag;
         return new XposedCallBack(tag, priority) {

@@ -22,8 +22,6 @@ import android.graphics.Bitmap;
 
 /**
  * App 数据
- * <p>
- * App data
  * 
  * @author 焕晨HChen
  */
@@ -33,7 +31,6 @@ public class AppData {
     public Bitmap icon; /* 图标 */
     public String label; /* 应用名 */
     public String packageName; /* 包名 */
-    public String activityName; /* 活动名 */
     public String versionName; /* 版本名 */
     public String versionCode; /* 版本号 */
     public boolean isSystemApp; /* 是否为系统应用 */

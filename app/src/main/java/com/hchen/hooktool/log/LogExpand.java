@@ -35,8 +35,6 @@ import de.robv.android.xposed.XC_MethodHook;
 
 /**
  * 日志增强
- * <p>
- * Logging enhancements
  *
  * @author 焕晨HChen
  */
@@ -54,8 +52,6 @@ public class LogExpand {
 
     /**
      * 打印抛错信息的堆栈。
-     * <p>
-     * Print the stack of error messages.
      */
     public static String printStackTrace(Throwable t) {
         StringWriter stringWriter = new StringWriter();
@@ -66,8 +62,6 @@ public class LogExpand {
 
     /**
      * 打印方法调用的堆栈。
-     * <p>
-     * The stack of print method calls.
      */
     public static String getStackTrace() {
         StringBuilder stringBuilder = new StringBuilder();

@@ -25,8 +25,6 @@ import java.util.ArrayList;
 
 /**
  * 链式调用数据
- * <p>
- * Chain data
  *
  * @author 焕晨HChen
  */

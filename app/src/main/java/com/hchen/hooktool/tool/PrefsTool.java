@@ -42,8 +42,6 @@ import de.robv.android.xposed.XSharedPreferences;
 
 /**
  * prefs 工具
- * <p>
- * prefs tool
  *
  * @author 焕晨HChen
  */
@@ -54,9 +52,6 @@ public class PrefsTool {
 
     /**
      * 共享首选项储存至应用私有目录内/从私有目录读取，模块如果设置 xposedsharedprefs 为 true 则由 xposed 统一管理。
-     * <p>
-     * Shared preferences are stored in/read from the application's private directory.
-     * If the module is set to 'xposedsharedprefs' to' true ', it will be managed by xposed.
      */
     public static IPrefs prefs(Context context) {
         return prefs(context, null);
@@ -64,9 +59,6 @@ public class PrefsTool {
 
     /**
      * 共享首选项储存至应用私有目录内/从私有目录读取，并使用指定的 prefsName 命名文件，模块如果设置 xposedsharedprefs 为 true 则由 xposed 统一管理。
-     * <p>
-     * Shared preferences are stored in/read from the private directory of the application, and the file is named using the specified prefsName.
-     * If the module is set to 'xposedsharedprefs' to' true ', it will be managed uniformly by' xposed '.
      */
     public static IPrefs prefs(Context context, String prefsName) {
         return new Sprefs(currentSp(context, prefsName));
@@ -76,11 +68,6 @@ public class PrefsTool {
      * 模块内不可使用，否则触发崩溃！
      * <p>
      * 将读取模块的共享首选项并供寄生应用使用。此状态下仅可读取，不可修改。
-     * <p>
-     * Cannot be used within the module, otherwise it will trigger a crash!
-     * <p>
-     * Read the shared preferences of the module and make them available for parasitic applications to use.
-     * In this state, it can only be read and cannot be modified.
      */
     public static IPrefs prefs() {
         if (!ToolData.isXposed)
@@ -92,11 +79,6 @@ public class PrefsTool {
      * 模块内不可使用，否则触发崩溃！
      * <p>
      * 将读取指定 prefsName 名的模块共享首选项文件并供寄生应用使用。此状态下仅可读取，不可修改。
-     * <p>
-     * Cannot be used within the module, otherwise it will trigger a crash!
-     * <p>
-     * Read the module sharing preference file with the specified prefsName name and make it available for parasitic applications to use.
-     * In this state, it can only be read and cannot be modified.
      */
     public static IPrefs prefs(String prefsName) {
         if (!ToolData.isXposed)
@@ -108,10 +90,6 @@ public class PrefsTool {
      * 异步设置配置。
      * <p>
      * 仅限寄生应用内调用，适用于不方便获取 context 的情况。
-     * <p>
-     * Asynchronous setup prefs.
-     * <p>
-     * Parasitic in-app calls only, for situations where it's inconvenient to get context.
      */
     public static void asyncPrefs(IAsyncPrefs asyncPrefs) {
         if (!ToolData.isXposed)
@@ -263,8 +241,6 @@ public class PrefsTool {
 
         /**
          * Xprefs 不支持修改！
-         * <p>
-         * Xprefs doesn't support editor!
          */
         @Override
         @Nullable

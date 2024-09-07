@@ -31,8 +31,6 @@ import de.robv.android.xposed.XC_MethodHook;
 
 /**
  * 动作
- * <p>
- * Action
  * 
  * @author 焕晨HChen
  */
@@ -43,8 +41,6 @@ public class ActAchieve {
 
     /**
      * 获取方法执行完毕后的返回值。
-     * <p>
-     * Obtain the return value after the method is executed.
      */
     final public <T> T getResult() {
         return (T) MethodHookParam.getResult();
@@ -53,10 +49,6 @@ public class ActAchieve {
     /**
      * before 中使用拦截方法执行并直接返回设定值。<br/>
      * after 中使用修改返回结果。
-     * <p>
-     * before, interception method and returns the setpoint directly.
-     * <p>
-     * after, to modify the returned result.
      */
     final public void setResult(Object value) {
         MethodHookParam.setResult(value);
@@ -65,8 +57,6 @@ public class ActAchieve {
     /**
      * before 中使用使方法失效。<br/>
      * after 中使用修改返回结果。
-     * <p>
-     * before, to invalidate the method. after, to modify the returned result.
      */
     final public void returnNull() {
         MethodHookParam.setResult(null);
@@ -74,8 +64,6 @@ public class ActAchieve {
 
     /**
      * 使方法返回指定的布尔值 true。
-     * <p>
-     * Causes the method to return the specified boolean value of true.
      */
     final public void returnTure() {
         MethodHookParam.setResult(true);
@@ -83,8 +71,6 @@ public class ActAchieve {
 
     /**
      * 使方法返回指定布尔值 false。
-     * <p>
-     * Causes the method to return the specified boolean value of false.
      */
     final public void returnFalse() {
         MethodHookParam.setResult(false);
@@ -92,8 +78,6 @@ public class ActAchieve {
 
     /**
      * 如果方法引发了异常，则返回 true。
-     * <p>
-     * If the method throws an exception, it returns true.
      */
     final public boolean hasCrash() {
         return MethodHookParam.hasThrowable();
@@ -101,8 +85,6 @@ public class ActAchieve {
 
     /**
      * 返回该方法抛出的异常或者返回 null。
-     * <p>
-     * Returns an exception thrown by the method or returns null.
      */
     final public Throwable getCrash() {
         return MethodHookParam.getThrowable();
@@ -110,8 +92,6 @@ public class ActAchieve {
 
     /**
      * 引发异常，在 before 中使用可阻止方法执行。
-     * <p>
-     * An exception is thrown. if used in before to prevent the method from executing.
      */
     final public void makeCrash(Throwable t) {
         MethodHookParam.setThrowable(t);
@@ -119,8 +99,6 @@ public class ActAchieve {
 
     /**
      * 返回方法调用的结果，或获取该方法的异常。
-     * <p>
-     * Returns the result of a method call, or gets an exception for that method.
      */
     final public <T> T getResultOrThrowable() throws Throwable {
         return (T) MethodHookParam.getResultOrThrowable();
@@ -129,8 +107,6 @@ public class ActAchieve {
     // --------- 观察调用 --------------
     /**
      * 观察方法是否被调用，如果被调用则打印一些日志。
-     * <p>
-     * Observe if the method is called, and if it is called, print some logs.
      */
     final public void observeCall() {
         if (logExpand == null) {

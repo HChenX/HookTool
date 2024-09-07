@@ -25,8 +25,6 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 /**
  * 核心数据
- * <p>
- * Core data
  *
  * @author 焕晨HChen
  */
@@ -38,10 +36,8 @@ public class ToolData {
     public static boolean useLogExpand = false;
     public static String[] logExpandPath = null;
     public static boolean autoReload = true;
-    public static boolean isZygote = false;
     public static boolean isXposed = false;
-    public static XC_LoadPackage.LoadPackageParam lpparam = null;
     public static ClassLoader classLoader = null;
+    public static XC_LoadPackage.LoadPackageParam lpparam = null;
     public static IXposedHookZygoteInit.StartupParam startupParam = null;
-
 }

@@ -18,7 +18,6 @@
  */
 package com.hchen.hooktool.tool;
 
-import static com.hchen.hooktool.data.ToolData.isZygote;
 import static com.hchen.hooktool.helper.ConvertHelper.arrayToClass;
 import static com.hchen.hooktool.helper.ConvertHelper.toClassAsIAction;
 import static com.hchen.hooktool.helper.Try.run;
@@ -49,8 +48,6 @@ import de.robv.android.xposed.XposedHelpers;
 
 /**
  * 核心工具
- * <p>
- * Core tool
  *
  * @author 焕晨HChen
  * @noinspection unused
@@ -60,29 +57,25 @@ public class CoreTool {
 
     //------------ 检查指定类是否存在 --------------
     public static boolean existsClass(String clazz) {
-        if (isZygoteState()) return false;
         return existsClass(clazz, ToolData.classLoader);
     }
 
     public static boolean existsClass(String clazz, ClassLoader classLoader) {
-        if (classLoader == null) return false;
         return XposedHelpers.findClassIfExists(clazz, classLoader) != null;
     }
 
     // --------- 查找类 -----------
     public static Class<?> findClass(String name) {
-        if (isZygoteState()) return null;
         return findClass(name, ToolData.classLoader);
     }
 
     public static Class<?> findClass(String name, ClassLoader classLoader) {
         return run(() -> XposedHelpers.findClass(name, classLoader))
-                .orErr(null, e -> logE(tag(), "Failed to find class!", e));
+                .orErrMag(null, tag(), "Failed to find class!");
     }
 
     //------------ 检查指定方法是否存在 --------------
     public static boolean existsMethod(String clazz, String name, Object... objs) {
-        if (isZygoteState()) return false;
         return existsMethod(clazz, ToolData.classLoader, name, objs);
     }
 
@@ -94,7 +87,6 @@ public class CoreTool {
     }
 
     public static boolean existsAnyMethod(String clazz, String name) {
-        if (isZygoteState()) return false;
         return existsAnyMethod(clazz, ToolData.classLoader, name);
     }
 
@@ -111,7 +103,6 @@ public class CoreTool {
 
     // ------------ 查找方法 --------------
     public static Method findMethod(String clazz, String name, Object... objects) {
-        if (isZygoteState()) return null;
         return findMethod(findClass(clazz), name, arrayToClass(objects));
     }
 
@@ -125,11 +116,10 @@ public class CoreTool {
 
     public static Method findMethod(Class<?> clazz, String name, Class<?>... objects) {
         return run(() -> clazz.getDeclaredMethod(name, objects))
-                .orErr(null, e -> logE(tag(), "Failed to find method!", e));
+                .orErrMag(null, tag(), "Failed to find method!");
     }
 
     public static ArrayList<Method> findAnyMethod(String clazz, String name) {
-        if (isZygoteState()) return new ArrayList<>();
         return findAnyMethod(findClass(clazz), name);
     }
 
@@ -138,18 +128,16 @@ public class CoreTool {
     }
 
     public static ArrayList<Method> findAnyMethod(Class<?> clazz, String name) {
-        return run(() -> {
-            ArrayList<Method> methods = new ArrayList<>();
-            for (Method m : clazz.getDeclaredMethods()) {
-                if (m.getName().equals(name)) methods.add(m);
-            }
-            return methods;
-        }).orErr(new ArrayList<>(), e -> logE(tag(), "Failed to find any method!", e));
+        if (clazz == null) return new ArrayList<>();
+        ArrayList<Method> methods = new ArrayList<>();
+        for (Method m : clazz.getDeclaredMethods()) {
+            if (m.getName().equals(name)) methods.add(m);
+        }
+        return methods;
     }
 
     // --------- 查找构造函数 -----------
     public static Constructor<?> findConstructor(String clazz, Object... objects) {
-        if (isZygoteState()) return null;
         return findConstructor(findClass(clazz), arrayToClass(objects));
     }
 
@@ -163,11 +151,10 @@ public class CoreTool {
 
     public static Constructor<?> findConstructor(Class<?> clazz, Class<?>... objects) {
         return run(() -> clazz.getDeclaredConstructor(objects))
-                .orErr(null, e -> logE(tag(), "Failed to find constructor!", e));
+                .orErrMag(null, tag(), "Failed to find constructor!");
     }
 
     public static ArrayList<Constructor<?>> findAnyConstructor(String clazz) {
-        if (isZygoteState()) return new ArrayList<>();
         return findAnyConstructor(findClass(clazz));
     }
 
@@ -176,24 +163,20 @@ public class CoreTool {
     }
 
     public static ArrayList<Constructor<?>> findAnyConstructor(Class<?> clazz) {
-        return run(() -> new ArrayList<>(Arrays.asList(clazz.getDeclaredConstructors())))
-                .orErr(new ArrayList<>(), e -> logE(tag(), "Failed to find any constructor!", e));
+        return new ArrayList<>(Arrays.asList(clazz.getDeclaredConstructors()));
     }
 
     //------------ 检查指定字段是否存在 --------------
     public static boolean existsField(String clazz, String name) {
-        if (isZygoteState()) return false;
         return existsField(clazz, ToolData.classLoader, name);
     }
 
     public static boolean existsField(String clazz, ClassLoader classLoader, String name) {
-        Class<?> cl = findClass(clazz, classLoader);
-        return XposedHelpers.findFieldIfExists(cl, name) != null;
+        return XposedHelpers.findFieldIfExists(findClass(clazz, classLoader), name) != null;
     }
 
     // --------- 查找字段 -----------
     public static Field findField(String clazz, String name) {
-        if (isZygoteState()) return null;
         return findField(findClass(clazz), name);
     }
 
@@ -203,13 +186,12 @@ public class CoreTool {
 
     public static Field findField(Class<?> clazz, String name) {
         return run(() -> XposedHelpers.findField(clazz, name))
-                .orErr(null, e -> logE(tag(), "Failed to find field!", e));
+                .orErrMag(null, tag(), "Failed to find field!");
     }
 
     // --------- 执行 hook -----------
     // --------- 普通方法 -------------
     public static UnHook hook(String clazz, String method, Object... params) {
-        if (isZygoteState()) return new UnHook(null);
         return hook(clazz, ToolData.classLoader, method, params);
     }
 
@@ -226,7 +208,6 @@ public class CoreTool {
     }
 
     public static UnHookList hookAll(String clazz, String method, IAction iAction) {
-        if (isZygoteState()) return new UnHookList();
         return hookAll(findClass(clazz), method, iAction);
     }
 
@@ -240,7 +221,6 @@ public class CoreTool {
 
     // --------- 构造函数 ------------
     public static UnHook hook(String clazz, Object... params) {
-        if (isZygoteState()) return new UnHook(null);
         return hook(findClass(clazz), params);
     }
 
@@ -257,7 +237,6 @@ public class CoreTool {
     }
 
     public static UnHookList hookAll(String clazz, IAction iAction) {
-        if (isZygoteState()) return new UnHookList();
         return hookAll(findAnyConstructor(clazz), iAction);
     }
 
@@ -279,7 +258,7 @@ public class CoreTool {
         if (params == null) return null;
         String debug = hookType.toString() + "#" + clazz.getName() + "#" + method + "#" + Arrays.toString(params);
         if (params.length == 0 || !(params[params.length - 1] instanceof IAction)) {
-            logW(tag(), "Params length == 0 or last param not is IAction! debug: " + debug + getStackTrace());
+            logW(tag(), "Params length == 0 or last param not is IAction! \ndebug: " + debug + getStackTrace());
             return null;
         }
 
@@ -287,8 +266,12 @@ public class CoreTool {
             Class<?>[] classes = Arrays.stream(params)
                     .limit(params.length - 1)
                     .map(o -> {
-                        if (o instanceof String s) return findClass(s);
-                        else if (o instanceof Class<?> c) return c;
+                        if (o instanceof String s) {
+                            Class<?> c = findClass(s);
+                            if (c == null)
+                                throw new RuntimeException("Find class is null, stop to hook!");
+                            return c;
+                        } else if (o instanceof Class<?> c) return c;
                         else throw new RuntimeException("Unknown type: " + o);
                     }).toArray(Class<?>[]::new);
             Member member = null;
@@ -297,7 +280,7 @@ public class CoreTool {
                 case CONSTRUCTOR -> member = findConstructor(clazz, classes);
             }
             return hook(member, (IAction) params[params.length - 1]);
-        }).orErr(new UnHook(null), e -> logE(tag(), "Failed to hook! debug: " + debug, e));
+        }).orErrMag(new UnHook(null), tag(), "Failed to hook! \ndebug: " + debug);
     }
 
     public static UnHook hook(Member member, IAction iAction) {
@@ -307,7 +290,7 @@ public class CoreTool {
                     XposedBridge.hookMethod(member, createHook(tag, iAction)));
             logD(tag, "Success to hook: " + member);
             return unhook;
-        }).orErr(new UnHook(null), e -> logE(tag, "Failed to hook: " + member, e));
+        }).orErrMag(new UnHook(null), tag, "Failed to hook: " + member);
     }
 
     public static UnHookList hookAll(ArrayList<?> members, IAction iAction) {
@@ -319,7 +302,7 @@ public class CoreTool {
                     unhooks.add(XposedBridge.hookMethod((Member) o, createHook(tag, iAction)));
                     logD(tag, "Success to hook: " + o);
                     return null;
-                }).orErr(null, e -> logE(tag, "Failed to hook: " + o, e));
+                }).orErrMag(null, tag, "Failed to hook: " + o);
             }
         }
         return unhooks;
@@ -383,7 +366,6 @@ public class CoreTool {
 
     // --------- 过滤方法 -----------
     public static ArrayList<Method> filterMethod(String clazz, IFilter iFilter) {
-        if (isZygoteState()) return new ArrayList<>();
         return filterMethod(findClass(clazz), iFilter);
     }
 
@@ -400,11 +382,10 @@ public class CoreTool {
                 }
             }
             return methods;
-        }).orErr(new ArrayList<>(), e -> logE(tag(), "Failed to filter method!", e));
+        }).orErrMag(new ArrayList<>(), tag(), "Failed to filter method!");
     }
 
     public static ArrayList<Constructor<?>> filterConstructor(String clazz, IFilter iFilter) {
-        if (isZygoteState()) return new ArrayList<>();
         return filterConstructor(findClass(clazz), iFilter);
     }
 
@@ -421,7 +402,7 @@ public class CoreTool {
                 }
             }
             return constructors;
-        }).orErr(new ArrayList<>(), e -> logE(tag(), "Failed to filter constructor!", e));
+        }).orErrMag(new ArrayList<>(), tag(), "Failed to filter constructor!");
     }
 
     // --------- 打印堆栈 ----------
@@ -451,26 +432,26 @@ public class CoreTool {
     // ---------- 非静态 -----------
     public static <T> T callMethod(Object instance, String name, Object... objs) {
         return run(() -> (T) XposedHelpers.callMethod(instance, name, objs))
-                .orErr(null, e -> logE(tag(), "Failed to call method!", e));
+                .orErrMag(null, tag(), "Failed to call method!");
     }
 
     public static <T> T getField(Object instance, String name) {
         return run(() -> (T) XposedHelpers.getObjectField(instance, name))
-                .orErr(null, e -> logE(tag(), "Failed to get field!", e));
+                .orErrMag(null, tag(), "Failed to get field!");
     }
 
     public static <T> T getField(Object instance, Field field) {
         return run(() -> {
             field.setAccessible(true);
             return (T) field.get(instance);
-        }).orErr(null, e -> logE(tag(), "Failed to get field!", e));
+        }).orErrMag(null, tag(), "Failed to get field!");
     }
 
     public static boolean setField(Object instance, String name, Object value) {
         return run(() -> {
             XposedHelpers.setObjectField(instance, name, value);
             return true;
-        }).orErr(false, e -> logE(tag(), "Failed to set field!", e));
+        }).orErrMag(false, tag(), "Failed to set field!");
     }
 
     public static boolean setField(Object instance, Field field, Object value) {
@@ -478,36 +459,35 @@ public class CoreTool {
             field.setAccessible(true);
             field.set(instance, value);
             return true;
-        }).orErr(false, e -> logE(tag(), "Failed to set field!", e));
+        }).orErrMag(false, tag(), "Failed to set field!");
     }
 
     public static boolean setAdditionalInstanceField(Object instance, String key, Object value) {
         return run(() -> {
             XposedHelpers.setAdditionalInstanceField(instance, key, value);
             return true;
-        }).orErr(false, e -> logE(tag(), "Failed to set additional instance!", e));
+        }).orErrMag(false, tag(), "Failed to set additional instance!");
     }
 
     public static <T> T getAdditionalInstanceField(Object instance, String key) {
         return run(() -> (T) XposedHelpers.getAdditionalInstanceField(instance, key))
-                .orErr(null, e -> logE(tag(), "Failed to get additional instance!", e));
+                .orErrMag(null, tag(), "Failed to get additional instance!");
     }
 
     public static boolean removeAdditionalInstanceField(Object instance, String key) {
         return run(() -> {
             XposedHelpers.removeAdditionalInstanceField(instance, key);
             return true;
-        }).orErr(false, e -> logE(tag(), "Failed to remove additional instance!", e));
+        }).orErrMag(false, tag(), "Failed to remove additional instance!");
     }
 
     // ---------- 静态 ------------
     public static <T> T newInstance(Class<?> clz, Object... objects) {
         return run(() -> (T) XposedHelpers.newInstance(clz, objects))
-                .orErr(null, e -> logE(tag(), "Failed to create new instance!", e));
+                .orErrMag(null, tag(), "Failed to create new instance!");
     }
 
     public static <T> T newInstance(String clz, Object... objects) {
-        if (isZygoteState()) return null;
         return newInstance(findClass(clz), objects);
     }
 
@@ -517,11 +497,10 @@ public class CoreTool {
 
     public static <T> T callStaticMethod(Class<?> clz, String name, Object... objs) {
         return run(() -> (T) XposedHelpers.callStaticMethod(clz, name, objs))
-                .orErr(null, e -> logE(tag(), "Failed to call static method!", e));
+                .orErrMag(null, tag(), "Failed to call static method!");
     }
 
     public static <T> T callStaticMethod(String clz, String name, Object... objs) {
-        if (isZygoteState()) return null;
         return callStaticMethod(findClass(clz), name, objs);
     }
 
@@ -533,16 +512,15 @@ public class CoreTool {
         return run(() -> {
             method.setAccessible(true);
             return (T) method.invoke(null, objs);
-        }).orErr(null, e -> logE(tag(), "Failed to call static method!", e));
+        }).orErrMag(null, tag(), "Failed to call static method!");
     }
 
     public static <T> T getStaticField(Class<?> clz, String name) {
         return run(() -> (T) XposedHelpers.getStaticObjectField(clz, name))
-                .orErr(null, e -> logE(tag(), "Failed to get static field!", e));
+                .orErrMag(null, tag(), "Failed to get static field!");
     }
 
     public static <T> T getStaticField(String clz, String name) {
-        if (isZygoteState()) return null;
         return getStaticField(findClass(clz), name);
     }
 
@@ -554,14 +532,14 @@ public class CoreTool {
         return run(() -> {
             field.setAccessible(true);
             return (T) field.get(null);
-        }).orErr(null, e -> logE(tag(), "Failed to get static field!", e));
+        }).orErrMag(null, tag(), "Failed to get static field!");
     }
 
     public static boolean setStaticField(Class<?> clz, String name, Object value) {
         return run(() -> {
             XposedHelpers.setStaticObjectField(clz, name, value);
             return true;
-        }).orErr(false, e -> logE(tag(), "Failed to set static field!", e));
+        }).orErrMag(false, tag(), "Failed to set static field!");
     }
 
     public static boolean setStaticField(Field field, Object value) {
@@ -569,11 +547,10 @@ public class CoreTool {
             field.setAccessible(true);
             field.set(null, value);
             return true;
-        }).orErr(false, e -> logE(tag(), "Failed to set static field!", e));
+        }).orErrMag(false, tag(), "Failed to set static field!");
     }
 
     public static boolean setStaticField(String clz, String name, Object value) {
-        if (isZygoteState()) return false;
         return setStaticField(findClass(clz), name, value);
     }
 
@@ -585,23 +562,22 @@ public class CoreTool {
         return run(() -> {
             XposedHelpers.setAdditionalStaticField(clz, key, value);
             return true;
-        }).orErr(false, e -> logE(tag(), "Failed to set static additional instance!", e));
+        }).orErrMag(false, tag(), "Failed to set static additional instance!");
     }
 
     public static <T> T getAdditionalStaticField(Class<?> clz, String key) {
         return run(() -> (T) XposedHelpers.getAdditionalStaticField(clz, key))
-                .orErr(null, e -> logE(tag(), "Failed to get static additional instance!", e));
+                .orErrMag(null, tag(), "Failed to get static additional instance!");
     }
 
     public static boolean removeAdditionalStaticField(Class<?> clz, String key) {
         return run(() -> {
             XposedHelpers.removeAdditionalStaticField(clz, key);
             return true;
-        }).orErr(false, e -> logE(tag(), "Failed to remove static additional instance!", e));
+        }).orErrMag(false, tag(), "Failed to remove static additional instance!");
     }
 
     public static boolean setAdditionalStaticField(String clz, String key, Object value) {
-        if (isZygoteState()) return false;
         return setAdditionalStaticField(findClass(clz), key, value);
     }
 
@@ -610,7 +586,6 @@ public class CoreTool {
     }
 
     public static <T> T getAdditionalStaticField(String clz, String key) {
-        if (isZygoteState()) return null;
         return getAdditionalStaticField(findClass(clz), key);
     }
 
@@ -619,20 +594,11 @@ public class CoreTool {
     }
 
     public static boolean removeAdditionalStaticField(String clz, String key) {
-        if (isZygoteState()) return false;
         return removeAdditionalStaticField(findClass(clz), key);
     }
 
     public static boolean removeAdditionalStaticField(String clz, ClassLoader classLoader, String key) {
         return removeAdditionalStaticField(findClass(clz, classLoader), key);
-    }
-
-    private static boolean isZygoteState() {
-        if (isZygote) {
-            logW(tag(), "In zygote state, call method please set classloader!" + getStackTrace());
-            return true;
-        }
-        return false;
     }
 
     private static String tag() {

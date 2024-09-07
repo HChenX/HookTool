@@ -35,8 +35,6 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 /**
  * 请在 Hook 入口处初始化本类
- * <p>
- * Initialize this class at the hook entry
  *
  * @author 焕晨HChen
  */
@@ -64,14 +62,11 @@ public class HCInit {
 
     /**
      * 务必设置！
-     * <p>
-     * Be sure to set it up!
      */
     public static void initLoadPackageParam(XC_LoadPackage.LoadPackageParam loadPackageParam) {
         if (loadPackageParam == null) {
             throw new RuntimeException(ToolData.mInitTag + "[E]: LoadPackageParam is null!!");
         }
-        ToolData.isZygote = false;
         ToolData.isXposed = true;
         ToolData.lpparam = loadPackageParam;
         ClassLoader classLoader = loadPackageParam.classLoader;
@@ -82,19 +77,15 @@ public class HCInit {
 
     /**
      * 务必设置！
-     * <p>
-     * Be sure to set it up!
      */
     public static void initStartupParam(IXposedHookZygoteInit.StartupParam startupParam) {
-        ToolData.isZygote = true;
         ToolData.isXposed = true;
         ToolData.startupParam = startupParam;
+        ToolData.classLoader = startupParam.getClass().getClassLoader();
     }
 
     /**
      * 务必设置！
-     * <p>
-     * Be sure to set it up!
      */
     public static void initBasicData(String modulePackageName, String tag, @Duration int level) {
         setTag(tag); /* 设置 TAG */
@@ -106,10 +97,6 @@ public class HCInit {
      * 是否自动更新 xprefs 数据。
      * <p>
      * 工具默认开启，但可能会增加耗时。
-     * <p>
-     * Whether xPrefs data is automatically updated.
-     * <p>
-     * The tool is enabled by default, but it can take more time.
      */
     public static void xPrefsAutoReload(boolean auto) {
         ToolData.autoReload = auto;
@@ -118,15 +105,9 @@ public class HCInit {
     /**
      * 是否使用日志增强功能，path 填写模块的 hook 文件所在目录，否则默认按照包名搜索。
      * <p>
-     * Do you want to use the log augmentation feature?
-     * Fill in the directory where the module's hook file is located in the path.
-     * Otherwise, search by package name by default.
-     * <p>
-     * 示例/Example: path: com.hchen.demo.hook
+     * 示例: path: com.hchen.demo.hook
      * <p>
      * 同时加入混淆规则:
-     * <p>
-     * Simultaneously adding confusion rules:
      * <p>
      * -keep class com.hchen.demo.hook.**
      * <p>
@@ -151,13 +132,6 @@ public class HCInit {
      * fieldName 传入字段名。<br/>
      * value 输入值。<br/>
      * 随后模块本身检查这个字段是否被更改即可。
-     * <p>
-     * Whether the module is activated or not. How to use:
-     * <br> lpparam is passed into the module itself.
-     * <br> path to the specified class.
-     * <br> fieldName is passed in the field name.
-     * <br> value to enter a value.
-     * <br> The module itself then checks to see if this field has been changed.
      */
     public static boolean isXposedModuleActive(XC_LoadPackage.LoadPackageParam lpparam,
                                                String path, String fieldName, Object value) {
