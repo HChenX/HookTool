@@ -157,7 +157,7 @@ public class PackagesTool {
         } catch (Throwable e) {
             AndroidLog.logE(TAG, e);
         }
-        return appDataList;
+        return new ArrayList<>();
     }
 
     public static List<AppData> getInstalledPackages(int flag) {
@@ -187,10 +187,11 @@ public class PackagesTool {
                     appDataList.add(addAppData(get, packageManager));
                 }
             }
+            return appDataList;
         } catch (Throwable e) {
             AndroidLog.logE(TAG, e);
         }
-        return appDataList;
+        return new ArrayList<>();
     }
 
     public static List<AppData> getPackagesByCode(ICode iCode) {
