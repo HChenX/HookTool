@@ -206,7 +206,6 @@ public class PrefsTool {
 
         @Override
         public Object get(String key, Object def) {
-            reload();
             try {
                 if (def instanceof String s) {
                     return getString(key, s);

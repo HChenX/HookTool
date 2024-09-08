@@ -62,11 +62,9 @@ public class PropTool {
 
     /**
      * 只有系统核心可以调用。
-     * 返回 true 表示成功。
      */
-    public static boolean setProp(String key, String vale) {
+    public static void setProp(String key, String vale) {
         invokeMethod("set", new Class[]{String.class, String.class}, key, vale);
-        return true;
     }
 
     private static String classLoaderMethod(ClassLoader classLoader, String name) {

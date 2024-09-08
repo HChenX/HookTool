@@ -33,23 +33,19 @@ public class ChainData {
     public Member member; /* 查找到的成员 */
     public IAction iAction; /* hook 动作 */
     public HookState hookState; /* 状态 */
-    public String clazz; /* 类名 */
     public String UUID = "UNKNOWN"; /* 唯一标识符 */
 
-    // 核心方法
-    public ChainData(String clazz, String name,
-                     ArrayList<ChainData> memberWithState, IAction iAction, String uuid) {
-        this.clazz = clazz;
-        this.mName = name;
+    // 数据存储
+    public ChainData(ArrayList<ChainData> memberWithState, IAction iAction, String uuid) {
         this.memberWithState = memberWithState;
         this.iAction = iAction;
         this.UUID = uuid;
     }
 
     // memberWithState 内数据
-    public ChainData(Member member, HookState hookState) {
+    public ChainData(Member member) {
         this.member = member;
-        this.hookState = hookState;
+        this.hookState = HookState.NONE;
     }
 
     //################################

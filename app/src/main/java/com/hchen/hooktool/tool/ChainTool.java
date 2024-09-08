@@ -36,6 +36,7 @@ import static com.hchen.hooktool.tool.CoreTool.findMethod;
 
 import com.hchen.hooktool.data.ChainData;
 import com.hchen.hooktool.data.HookState;
+import com.hchen.hooktool.data.ToolData;
 import com.hchen.hooktool.hook.IAction;
 import com.hchen.hooktool.log.LogExpand;
 
@@ -117,35 +118,27 @@ public class ChainTool {
             switch (chainData.mType) {
                 case TYPE_METHOD -> {
                     UUID = chainData.mType + "#" + clazz.getName() + "#" + chainData.mName + "#" + Arrays.toString(chainData.mParams);
-                    if (classLoader == null)
-                        memberWithState.add(new ChainData(
-                                findMethod(clazz, chainData.mName, arrayToClass(chainData.mParams)),
-                                HookState.NONE));
-                    else
-                        memberWithState.add(new ChainData(
-                                findMethod(clazz, chainData.mName, arrayToClass(classLoader, chainData.mParams)),
-                                HookState.NONE));
+                    memberWithState.add(new ChainData(
+                            findMethod(clazz, chainData.mName, arrayToClass(
+                                    classLoader == null ? ToolData.classLoader : classLoader,
+                                    chainData.mParams))));
                 }
                 case TYPE_CONSTRUCTOR -> {
                     UUID = chainData.mType + "#" + clazz.getName() + "#" + Arrays.toString(chainData.mParams);
-                    if (classLoader == null)
-                        memberWithState.add(new ChainData(
-                                findConstructor(clazz, arrayToClass(chainData.mParams)),
-                                HookState.NONE));
-                    else
-                        memberWithState.add(new ChainData(
-                                findConstructor(clazz, arrayToClass(classLoader, chainData.mParams)),
-                                HookState.NONE));
+                    memberWithState.add(new ChainData(
+                            findConstructor(clazz, arrayToClass(
+                                    classLoader == null ? ToolData.classLoader : classLoader,
+                                    chainData.mParams))));
                 }
                 case TYPE_ANY_METHOD -> {
                     UUID = chainData.mType + "#" + clazz.getName() + "#" + chainData.mName;
                     memberWithState.addAll(findAnyMethod(clazz, chainData.mName).stream().map(
-                            method -> new ChainData(method, HookState.NONE)).collect(Collectors.toCollection(ArrayList::new)));
+                            ChainData::new).collect(Collectors.toCollection(ArrayList::new)));
                 }
                 case TYPE_ANY_CONSTRUCTOR -> {
                     UUID = chainData.mType + "#" + clazz.getName();
                     memberWithState.addAll(findAnyConstructor(clazz).stream().map(
-                            constructor -> new ChainData(constructor, HookState.NONE)).collect(Collectors.toCollection(ArrayList::new)));
+                            ChainData::new).collect(Collectors.toCollection(ArrayList::new)));
                 }
                 default -> memberWithState = new ArrayList<>();
             }
@@ -173,8 +166,7 @@ public class ChainTool {
                     }
                     return cache.isEmpty() && repeat; // cache 列表处理后为空则排除，如果不为空则执行 hook。
                 }))
-                    chainDataList.add(new ChainData(clazz.getSimpleName(),
-                            chainData.mName, cache, chainData.iAction, UUID));
+                    chainDataList.add(new ChainData(cache, chainData.iAction, UUID));
             } else
                 logW(tag(), "This member maybe repeated, will skip add it! \ndebug: " + UUID);
             memberWithState.clear();

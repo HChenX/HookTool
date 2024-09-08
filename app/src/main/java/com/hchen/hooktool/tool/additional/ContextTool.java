@@ -147,6 +147,8 @@ public class ContextTool {
         Object o = InvokeTool.callStaticMethod(clz, "currentActivityThread", new Class[]{});
         context = InvokeTool.callMethod(o, "getSystemContext", new Class[]{});
         if (context == null) {
+            o = InvokeTool.callStaticMethod(clz, "systemMain", new Class[]{});
+            context = InvokeTool.callMethod(o, "getSystemContext", new Class[]{});
             // 这里获取的 context 可能存在问题。
             // 所以暂时注释。
             // Method getSystemUiContext = clz.getDeclaredMethod("getSystemUiContext");

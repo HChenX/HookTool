@@ -269,7 +269,7 @@ public class CoreTool {
                         if (o instanceof String s) {
                             Class<?> c = findClass(s);
                             if (c == null)
-                                throw new RuntimeException("Find class is null, stop to hook!");
+                                throw new RuntimeException("Found class is null, stop to hook!");
                             return c;
                         } else if (o instanceof Class<?> c) return c;
                         else throw new RuntimeException("Unknown type: " + o);

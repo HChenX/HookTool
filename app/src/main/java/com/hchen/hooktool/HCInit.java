@@ -23,6 +23,7 @@ import static com.hchen.hooktool.log.XposedLog.logI;
 import androidx.annotation.IntDef;
 
 import com.hchen.hooktool.data.ToolData;
+import com.hchen.hooktool.tool.CoreTool;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -30,7 +31,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 import de.robv.android.xposed.IXposedHookZygoteInit;
-import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 /**
@@ -135,11 +135,6 @@ public class HCInit {
      */
     public static boolean isXposedModuleActive(XC_LoadPackage.LoadPackageParam lpparam,
                                                String path, String fieldName, Object value) {
-        try {
-            XposedHelpers.setStaticObjectField(XposedHelpers.findClass(path, lpparam.classLoader), fieldName, value);
-            return true;
-        } catch (Throwable e) {
-            return false;
-        }
+        return CoreTool.setStaticField(path, lpparam.classLoader, fieldName, value);
     }
 }
