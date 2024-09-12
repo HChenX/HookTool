@@ -21,11 +21,13 @@ package com.hchen.hooktool;
 import static com.hchen.hooktool.log.XposedLog.logE;
 
 import android.content.Context;
+import android.content.res.Resources;
 
 import com.hchen.hooktool.data.ToolData;
 import com.hchen.hooktool.tool.ChainTool;
 import com.hchen.hooktool.tool.CoreTool;
 import com.hchen.hooktool.tool.PrefsTool;
+import com.hchen.hooktool.tool.additional.ResTool;
 import com.hchen.hooktool.tool.itool.IPrefs;
 
 import de.robv.android.xposed.IXposedHookZygoteInit;
@@ -126,5 +128,26 @@ public abstract class BaseHC extends CoreTool {
 
     public static void asyncPrefs(PrefsTool.IAsyncPrefs asyncPrefs) {
         PrefsTool.asyncPrefs(asyncPrefs);
+    }
+
+    // ------------ ResTool ----------------
+    public static int getFakeResId(String resName) {
+        return ResTool.getFakeResId(resName);
+    }
+
+    public static int getFakeResId(Resources res, int id) {
+        return ResTool.getFakeResId(res, id);
+    }
+
+    public static void setResReplacement(String pkg, String type, String name, int replacementResId) {
+        ResTool.setResReplacement(pkg, type, name, replacementResId);
+    }
+
+    public static void setDensityReplacement(String pkg, String type, String name, float replacementResValue) {
+        ResTool.setDensityReplacement(pkg, type, name, replacementResValue);
+    }
+
+    public static void setObjectReplacement(String pkg, String type, String name, Object replacementResValue) {
+        ResTool.setObjectReplacement(pkg, type, name, replacementResValue);
     }
 }

@@ -21,25 +21,36 @@ package com.hchen.hooktool.tool.additional;
 import static com.hchen.hooktool.log.LogExpand.getStackTrace;
 import static com.hchen.hooktool.log.XposedLog.logE;
 import static com.hchen.hooktool.log.XposedLog.logW;
+import static com.hchen.hooktool.tool.additional.ContextTool.FLAG_ALL;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
+import android.content.res.TypedArray;
 import android.content.res.loader.ResourcesLoader;
 import android.content.res.loader.ResourcesProvider;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.ParcelFileDescriptor;
+import android.util.Pair;
+import android.util.TypedValue;
 
 import androidx.annotation.RequiresApi;
 
 import com.hchen.hooktool.data.ToolData;
+import com.hchen.hooktool.hook.IAction;
+import com.hchen.hooktool.tool.CoreTool;
 
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
+
+import de.robv.android.xposed.XposedHelpers;
 
 /**
  * 资源注入工具
@@ -84,7 +95,7 @@ public class ResTool {
             return null;
         }
         if (mModulePath == null) {
-            mModulePath = ToolData.startupParam.modulePath;
+            mModulePath = ToolData.startupParam != null ? ToolData.startupParam.modulePath : null;
             if (mModulePath == null) {
                 logW(TAG, "Module path is null, can't load module res!" + getStackTrace());
                 return null;
@@ -102,6 +113,8 @@ public class ResTool {
                 logE(TAG, "failed to load resource! critical error!! scope may crash!!", e);
             }*/
         }
+        if (!resourcesArrayList.contains(resources))
+            resourcesArrayList.add(resources);
         return resources;
     }
 
@@ -184,6 +197,277 @@ public class ResTool {
             return false;
         }
         return true;
+    }
+
+    private static final ArrayList<Resources> resourcesArrayList = new ArrayList<>();
+    private static final ConcurrentHashMap<Integer, Boolean> resMap = new ConcurrentHashMap<>();
+    private static final ArrayList<CoreTool.UnHook> unhooks = new ArrayList<>();
+    private static final ConcurrentHashMap<String, Pair<ReplacementType, Object>> replacements = new ConcurrentHashMap<>();
+
+    private static boolean hooked;
+
+    private ResTool() {
+        hooked = false;
+        resourcesArrayList.clear();
+        resMap.clear();
+        unhooks.clear();
+        replacements.clear();
+    }
+
+    private enum ReplacementType {
+        ID,
+        DENSITY,
+        OBJECT
+    }
+
+    public static int getFakeResId(String resName) {
+        return 0x7e000000 | (resName.hashCode() & 0x00ffffff);
+    }
+
+    public static int getFakeResId(Resources res, int id) {
+        return getFakeResId(res.getResourceName(id));
+    }
+
+    /**
+     * 设置资源 ID 类型的替换
+     */
+    public static void setResReplacement(String pkg, String type, String name, int replacementResId) {
+        try {
+            applyHooks();
+            replacements.put(pkg + ":" + type + "/" + name, new Pair<>(ReplacementType.ID, replacementResId));
+        } catch (Throwable t) {
+            logE(TAG, "Failed to set res replacement!", t);
+        }
+    }
+
+    /**
+     * 设置密度类型的资源
+     */
+    public static void setDensityReplacement(String pkg, String type, String name, float replacementResValue) {
+        try {
+            applyHooks();
+            replacements.put(pkg + ":" + type + "/" + name, new Pair<>(ReplacementType.DENSITY, replacementResValue));
+        } catch (Throwable t) {
+            logE(TAG, "Failed to set density res replacement!", t);
+        }
+    }
+
+    /**
+     * 设置 Object 类型的资源
+     */
+    public static void setObjectReplacement(String pkg, String type, String name, Object replacementResValue) {
+        try {
+            applyHooks();
+            replacements.put(pkg + ":" + type + "/" + name, new Pair<>(ReplacementType.OBJECT, replacementResValue));
+        } catch (Throwable t) {
+            logE(TAG, "Failed to set object res replacement!", t);
+        }
+    }
+
+    private static void applyHooks() {
+        if (hooked) return;
+        if (mModulePath == null) {
+            mModulePath = ToolData.startupParam != null ? ToolData.startupParam.modulePath : null;
+            if (mModulePath == null) {
+                unHookRes();
+                throw new RuntimeException(ToolData.mInitTag +
+                        "[" + TAG + "][E]:module path is null, Please init this in zygote!" + getStackTrace());
+            }
+        }
+        Method[] resMethods = Resources.class.getDeclaredMethods();
+        for (Method method : resMethods) {
+            String name = method.getName();
+            switch (name) {
+                case "getInteger", "getLayout", "getBoolean", "getDimension",
+                     "getDimensionPixelOffset", "getDimensionPixelSize", "getText", "getFloat",
+                     "getIntArray", "getStringArray", "getTextArray", "getAnimation" -> {
+                    if (method.getParameterTypes().length == 1
+                            && method.getParameterTypes()[0].equals(int.class)) {
+                        hookResMethod(method.getName(), int.class, hookResBefore);
+                    }
+                }
+                case "getColor" -> {
+                    if (method.getParameterTypes().length == 2) {
+                        hookResMethod(method.getName(), int.class, Resources.Theme.class, hookResBefore);
+                    }
+                }
+                case "getFraction" -> {
+                    if (method.getParameterTypes().length == 3) {
+                        hookResMethod(method.getName(), int.class, int.class, int.class, hookResBefore);
+                    }
+                }
+                case "getDrawableForDensity" -> {
+                    if (method.getParameterTypes().length == 3) {
+                        hookResMethod(method.getName(), int.class, int.class, Resources.Theme.class, hookResBefore);
+                    }
+                }
+            }
+        }
+
+        Method[] typedMethod = TypedArray.class.getDeclaredMethods();
+        for (Method method : typedMethod) {
+            if (method.getName().equals("getColor")) {
+                hookTypedMethod(method.getName(), int.class, int.class, hookTypedBefore);
+            }
+        }
+        hooked = true;
+    }
+
+    private static void hookResMethod(String name, Object... args) {
+        unhooks.add(CoreTool.hook(Resources.class, name, args));
+    }
+
+    private static void hookTypedMethod(String name, Object... args) {
+        unhooks.add(CoreTool.hook(TypedArray.class, name, args));
+    }
+
+    public static void unHookRes() {
+        if (unhooks.isEmpty()) {
+            hooked = false;
+            return;
+        }
+        for (CoreTool.UnHook unhook : unhooks) {
+            unhook.unHook();
+        }
+        unhooks.clear();
+        hooked = false;
+    }
+
+    private static final IAction hookTypedBefore = new IAction() {
+        @Override
+        public void before() {
+            int index = first();
+            int[] mData = (int[]) XposedHelpers.getObjectField(thisObject(), "mData");
+            int type = mData[index];
+            int id = mData[index + 3];
+
+            if (id != 0 && (type != TypedValue.TYPE_NULL)) {
+                Resources mResources = (Resources) XposedHelpers.getObjectField(thisObject(), "mResources");
+                Object value = getTypedArrayReplacement(mResources, id);
+                if (value != null) {
+                    setResult(value);
+                }
+            }
+        }
+    };
+
+    private static final IAction hookResBefore = new IAction() {
+        @Override
+        public void before() {
+            if (resourcesArrayList.isEmpty()) {
+                Resources resources = loadModuleRes(ContextTool.getContext(FLAG_ALL));
+                resourcesArrayList.add(resources); // 重新加载 res
+            }
+            if (Boolean.TRUE.equals(resMap.get((int) first()))) {
+                return;
+            }
+            for (Resources resources : resourcesArrayList) {
+                if (resources == null) return;
+                String method = mMember.getName();
+                Object value;
+                try {
+                    value = getResourceReplacement(resources, thisObject(), method, mArgs);
+                } catch (Resources.NotFoundException e) {
+                    continue;
+                }
+                if (value != null) {
+                    if ("getDimensionPixelOffset".equals(method) || "getDimensionPixelSize".equals(method)) {
+                        if (value instanceof Float) value = ((Float) value).intValue();
+                    }
+                    setResult(value);
+                    break;
+                }
+            }
+        }
+    };
+
+    private static Object getResourceReplacement(Resources resources, Resources res, String method, Object[] args) throws Resources.NotFoundException {
+        if (resources == null) return null;
+        String pkgName = null;
+        String resType = null;
+        String resName = null;
+        try {
+            pkgName = res.getResourcePackageName((int) args[0]);
+            resType = res.getResourceTypeName((int) args[0]);
+            resName = res.getResourceEntryName((int) args[0]);
+        } catch (Throwable ignore) {
+        }
+        if (pkgName == null || resType == null || resName == null) return null;
+
+        String resFullName = pkgName + ":" + resType + "/" + resName;
+        String resAnyPkgName = "*:" + resType + "/" + resName;
+
+        Object value;
+        Integer modResId;
+        Pair<ReplacementType, Object> replacement = null;
+        if (replacements.containsKey(resFullName)) {
+            replacement = replacements.get(resFullName);
+        } else if (replacements.containsKey(resAnyPkgName)) {
+            replacement = replacements.get(resAnyPkgName);
+        }
+        if (replacement != null) {
+            switch (replacement.first) {
+                case OBJECT -> {
+                    return replacement.second;
+                }
+                case DENSITY -> {
+                    return (Float) replacement.second * res.getDisplayMetrics().density;
+                }
+                case ID -> {
+                    modResId = (Integer) replacement.second;
+                    if (modResId == 0) return null;
+                    try {
+                        resources.getResourceName(modResId);
+                    } catch (Resources.NotFoundException n) {
+                        throw n;
+                    }
+                    if (method == null) return null;
+                    resMap.put(modResId, true);
+                    if ("getDrawable".equals(method))
+                        value = XposedHelpers.callMethod(resources, method, modResId, args[1]);
+                    else if ("getDrawableForDensity".equals(method) || "getFraction".equals(method))
+                        value = XposedHelpers.callMethod(resources, method, modResId, args[1], args[2]);
+                    else
+                        value = XposedHelpers.callMethod(resources, method, modResId);
+                    resMap.remove(modResId);
+                    return value;
+                }
+            }
+        }
+        return null;
+    }
+
+    private static Object getTypedArrayReplacement(Resources resources, int id) {
+        if (id != 0) {
+            String pkgName = null;
+            String resType = null;
+            String resName = null;
+            try {
+                pkgName = resources.getResourcePackageName(id);
+                resType = resources.getResourceTypeName(id);
+                resName = resources.getResourceEntryName(id);
+            } catch (Throwable ignore) {
+            }
+            if (pkgName == null || resType == null || resName == null) return null;
+
+            try {
+                String resFullName = pkgName + ":" + resType + "/" + resName;
+                String resAnyPkgName = "*:" + resType + "/" + resName;
+
+                Pair<ReplacementType, Object> replacement = null;
+                if (replacements.containsKey(resFullName)) {
+                    replacement = replacements.get(resFullName);
+                } else if (replacements.containsKey(resAnyPkgName)) {
+                    replacement = replacements.get(resAnyPkgName);
+                }
+                if (replacement != null && (Objects.requireNonNull(replacement.first) == ReplacementType.OBJECT)) {
+                    return replacement.second;
+                }
+            } catch (Throwable e) {
+                logE(TAG, e);
+            }
+        }
+        return null;
     }
 
     // 下面注入方法存在风险，可能导致资源混乱，抛弃。
