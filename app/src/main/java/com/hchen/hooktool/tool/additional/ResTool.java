@@ -50,7 +50,7 @@ import java.util.ArrayList;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
-import de.robv.android.xposed.XposedHelpers;
+import de.robv.android.xposed.IXposedHookZygoteInit;
 
 /**
  * 资源注入工具
@@ -64,7 +64,7 @@ public class ResTool {
     private static Handler mHandler = null;
 
     /**
-     * 请在 initZygote 中初始化。
+     * 请设置 {@link  com.hchen.hooktool.HCInit#initStartupParam(IXposedHookZygoteInit.StartupParam)}
      *
      * @param modulePath startupParam.modulePath 即可
      */
@@ -74,7 +74,7 @@ public class ResTool {
 
     /**
      * 把本项目资源注入目标作用域上下文。一般调用本方法即可。<br/>
-     * 请在 build.gradle 添加如下代码。
+     * 请在项目 app 下的 build.gradle 中添加如下代码：
      * <pre> {@code
      * Kotlin Gradle DSL:
      *
@@ -86,7 +86,6 @@ public class ResTool {
      *
      * }<br/>
      * Tip: `0x64` is the resource id, you can change it to any value you want.(recommended [0x30 to 0x6F])
-     * @noinspection UnusedReturnValue
      */
     public static Resources loadModuleRes(Resources resources, boolean doOnMainLooper) {
         boolean load = false;
@@ -271,7 +270,7 @@ public class ResTool {
             if (mModulePath == null) {
                 unHookRes();
                 throw new RuntimeException(ToolData.mInitTag +
-                        "[" + TAG + "][E]:module path is null, Please init this in zygote!" + getStackTrace());
+                        "[" + TAG + "][E]:module path is null, Please init this in initStartupParam()!" + getStackTrace());
             }
         }
         Method[] resMethods = Resources.class.getDeclaredMethods();
@@ -337,12 +336,12 @@ public class ResTool {
         @Override
         public void before() {
             int index = first();
-            int[] mData = (int[]) XposedHelpers.getObjectField(thisObject(), "mData");
+            int[] mData = CoreTool.getField(thisObject(), "mData");
             int type = mData[index];
             int id = mData[index + 3];
 
             if (id != 0 && (type != TypedValue.TYPE_NULL)) {
-                Resources mResources = (Resources) XposedHelpers.getObjectField(thisObject(), "mResources");
+                Resources mResources = CoreTool.getField(thisObject(), "mResources");
                 Object value = getTypedArrayReplacement(mResources, id);
                 if (value != null) {
                     setResult(value);
@@ -355,8 +354,7 @@ public class ResTool {
         @Override
         public void before() {
             if (resourcesArrayList.isEmpty()) {
-                Resources resources = loadModuleRes(ContextTool.getContext(FLAG_ALL));
-                resourcesArrayList.add(resources); // 重新加载 res
+                resourcesArrayList.add(loadModuleRes(ContextTool.getContext(FLAG_ALL)));
             }
             if (Boolean.TRUE.equals(resMap.get((int) first()))) {
                 return;
@@ -424,11 +422,11 @@ public class ResTool {
                     if (method == null) return null;
                     resMap.put(modResId, true);
                     if ("getDrawable".equals(method))
-                        value = XposedHelpers.callMethod(resources, method, modResId, args[1]);
+                        value = CoreTool.callMethod(resources, method, modResId, args[1]);
                     else if ("getDrawableForDensity".equals(method) || "getFraction".equals(method))
-                        value = XposedHelpers.callMethod(resources, method, modResId, args[1], args[2]);
+                        value = CoreTool.callMethod(resources, method, modResId, args[1], args[2]);
                     else
-                        value = XposedHelpers.callMethod(resources, method, modResId);
+                        value = CoreTool.callMethod(resources, method, modResId);
                     resMap.remove(modResId);
                     return value;
                 }

@@ -62,6 +62,13 @@ public class HCInit {
 
     /**
      * 务必设置！
+     *
+     * <pre>{@code
+     *  @Override
+     *  public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) throws Throwable {
+     *      HCInit.initLoadPackageParam(lpparam);
+     *  }
+     * }<br/>
      */
     public static void initLoadPackageParam(XC_LoadPackage.LoadPackageParam loadPackageParam) {
         if (loadPackageParam == null) {
@@ -77,6 +84,13 @@ public class HCInit {
 
     /**
      * 务必设置！
+     *
+     * <pre>{@code
+     *  @Override
+     *  public void initZygote(IXposedHookZygoteInit.StartupParam startupParam) throws Throwable {
+     *      HCInit.initStartupParam(startupParam);
+     *  }
+     * }<br/>
      */
     public static void initStartupParam(IXposedHookZygoteInit.StartupParam startupParam) {
         ToolData.isXposed = true;
@@ -85,7 +99,14 @@ public class HCInit {
     }
 
     /**
-     * 务必设置！
+     * 务必设置！建议在 initZygote 中第一位设置，因为时机很早。
+     *
+     * <pre>{@code
+     *  @Override
+     *  public void initZygote(IXposedHookZygoteInit.StartupParam startupParam) throws Throwable {
+     *      HCInit.initBasicData("com.hchen.demo", "Demo", LOG_D);
+     *  }
+     * }<br/>
      */
     public static void initBasicData(String modulePackageName, String tag, @Duration int level) {
         setTag(tag); /* 设置 TAG */
