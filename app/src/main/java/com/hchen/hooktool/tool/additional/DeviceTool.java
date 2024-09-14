@@ -28,14 +28,14 @@ import android.content.res.Resources;
 import android.os.Build;
 import android.text.TextUtils;
 
+import com.hchen.hooktool.log.LogExpand;
+
 import java.util.Locale;
 
 /**
  * 此类用于获取设备基本信息
  */
 public class DeviceTool {
-    private static final String TAG = "DeviceTool";
-
     /**
      * 获取安卓设备版本。
      */
@@ -198,7 +198,7 @@ public class DeviceTool {
                     "getOsBrand", new Class[]{});
             return "Harmony".equalsIgnoreCase(String.valueOf(osBrand));
         } catch (Throwable throwable) {
-            logE(TAG, throwable);
+            logE(tag(), throwable);
             return false;
         }
     }
@@ -333,5 +333,11 @@ public class DeviceTool {
     public static boolean isDarkMode(Resources resources) {
         return (resources.getConfiguration().uiMode &
                 Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
+    }
+
+    private static String tag() {
+        String tag = LogExpand.tag();
+        if (tag == null) return "DeviceTool";
+        return tag;
     }
 }

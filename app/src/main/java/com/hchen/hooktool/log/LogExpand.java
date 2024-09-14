@@ -83,8 +83,8 @@ public class LogExpand {
     }
 
     public static String tag() {
-        if (!ToolData.useLogExpand) return null;
-        if (ToolData.logExpandPath == null) {
+        if (ToolData.logExpandPath == null) return null;
+        if (ToolData.logExpandPath.length == 0) {
             if (ToolData.modulePackageName == null) return null;
             ToolData.logExpandPath = new String[]{ToolData.modulePackageName};
         }

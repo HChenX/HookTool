@@ -140,7 +140,11 @@ public class ChainTool {
                     memberWithState.addAll(findAnyConstructor(clazz).stream().map(
                             ChainData::new).collect(Collectors.toCollection(ArrayList::new)));
                 }
-                default -> memberWithState = new ArrayList<>();
+                default -> {
+                    logW(tag(), "Unknown type: " + chainData.mType + getStackTrace());
+                    memberWithState.clear();
+                    continue;
+                }
             }
             ArrayList<ChainData> cache = new ArrayList<>(memberWithState);
             String finalUUID = UUID;

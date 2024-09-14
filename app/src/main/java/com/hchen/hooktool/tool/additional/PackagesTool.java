@@ -35,6 +35,7 @@ import android.os.UserHandle;
 
 import com.hchen.hooktool.data.AppData;
 import com.hchen.hooktool.log.AndroidLog;
+import com.hchen.hooktool.log.LogExpand;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,7 +48,6 @@ import java.util.Optional;
  * @author 焕晨HChen
  */
 public class PackagesTool {
-    private static final String TAG = "PackagesTool";
 
     public static boolean isUninstall(String pkg) {
         return isUninstall(context(), pkg);
@@ -58,7 +58,7 @@ public class PackagesTool {
      */
     public static boolean isUninstall(Context context, String pkg) {
         if (context == null) {
-            logW(TAG, "Context is null, can't check if the app is uninstalled!" + getStackTrace());
+            logW(tag(), "Context is null, can't check if the app is uninstalled!" + getStackTrace());
             return false;
         }
         PackageManager packageManager = context.getPackageManager();
@@ -66,7 +66,7 @@ public class PackagesTool {
             packageManager.getPackageInfo(pkg, PackageManager.MATCH_ALL);
             return false;
         } catch (PackageManager.NameNotFoundException e) {
-            AndroidLog.logE(TAG, e);
+            AndroidLog.logE(tag(), e);
             return true;
         }
     }
@@ -80,7 +80,7 @@ public class PackagesTool {
      */
     public static boolean isDisable(Context context, String pkg) {
         if (context == null) {
-            logW(TAG, "Context is null, can't check if an app is disabled!" + getStackTrace());
+            logW(tag(), "Context is null, can't check if an app is disabled!" + getStackTrace());
             return false;
         }
         PackageManager packageManager = context.getPackageManager();
@@ -105,7 +105,7 @@ public class PackagesTool {
     public static boolean isHidden(Context context, String pkg) {
         try {
             if (context == null) {
-                logW(TAG, "Context is null, can't check if an app is hidden!" + getStackTrace());
+                logW(tag(), "Context is null, can't check if an app is hidden!" + getStackTrace());
                 return false;
             }
             PackageManager packageManager = context.getPackageManager();
@@ -131,7 +131,7 @@ public class PackagesTool {
      */
     public static boolean isSystem(ApplicationInfo app) {
         if (Objects.isNull(app)) {
-            AndroidLog.logE(TAG, "ApplicationInfo is null, can't check if it's a system app!" + getStackTrace());
+            AndroidLog.logE(tag(), "ApplicationInfo is null, can't check if it's a system app!" + getStackTrace());
             return false;
         }
         if (app.uid < 10000) {
@@ -144,7 +144,7 @@ public class PackagesTool {
     public static List<AppData> getInstalledPackages(Context context, int flag) {
         List<AppData> appDataList = new ArrayList<>();
         if (context == null) {
-            logW(TAG, "Context is null, can't get install packages!" + getStackTrace());
+            logW(tag(), "Context is null, can't get install packages!" + getStackTrace());
             return appDataList;
         }
         try {
@@ -155,7 +155,7 @@ public class PackagesTool {
             }
             return appDataList;
         } catch (Throwable e) {
-            AndroidLog.logE(TAG, e);
+            AndroidLog.logE(tag(), e);
         }
         return new ArrayList<>();
     }
@@ -176,7 +176,7 @@ public class PackagesTool {
     public static List<AppData> getPackagesByCode(Context context, ICode iCode) {
         List<AppData> appDataList = new ArrayList<>();
         if (context == null) {
-            logW(TAG, "Context is null, can't get packages by code!" + getStackTrace());
+            logW(tag(), "Context is null, can't get packages by code!" + getStackTrace());
             return appDataList;
         }
         PackageManager packageManager = context.getPackageManager();
@@ -189,7 +189,7 @@ public class PackagesTool {
             }
             return appDataList;
         } catch (Throwable e) {
-            AndroidLog.logE(TAG, e);
+            AndroidLog.logE(tag(), e);
         }
         return new ArrayList<>();
     }
@@ -264,5 +264,11 @@ public class PackagesTool {
 
     public interface ICode {
         List<Parcelable> action(PackageManager pm);
+    }
+
+    private static String tag() {
+        String tag = LogExpand.tag();
+        if (tag == null) return "PackagesTool";
+        return tag;
     }
 }

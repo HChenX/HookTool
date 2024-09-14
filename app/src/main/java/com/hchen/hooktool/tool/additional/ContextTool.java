@@ -26,10 +26,12 @@ import android.content.Context;
 
 import androidx.annotation.IntDef;
 
-import com.hchen.hooktool.helper.ThreadPool;
+import com.hchen.hooktool.log.LogExpand;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * 上下文获取工具
@@ -47,7 +49,6 @@ public class ContextTool {
     private @interface Duration {
     }
 
-    private static final String TAG = "ContextTool";
     // 尝试全部
     public static final int FLAG_ALL = 0;
     // 仅获取当前应用
@@ -59,7 +60,7 @@ public class ContextTool {
         try {
             return invokeMethod(flag);
         } catch (Throwable e) {
-            logE(TAG, e);
+            logE(tag(), e);
             return null;
         }
     }
@@ -83,7 +84,7 @@ public class ContextTool {
      *      handler.post(new Runnable() {
      *        @Override
      *        public void run() {
-     *          Toast.makeText(context, "getContext", Toast.LENGTH_SHORT).show();
+     *          Toast.makeText(context, "found context!", Toast.LENGTH_SHORT).show();
      *        }
      *      });
      *   }
@@ -162,4 +163,32 @@ public class ContextTool {
         void find(Context context);
     }
 
+    /**
+     * 线程池
+     *
+     * @author 焕晨HChen
+     */
+    private static class ThreadPool {
+        private static final int NUM_THREADS = 5; // 定义线程池中线程的数量
+        private static volatile ExecutorService executor;
+
+        // 获取线程池实例
+        public static ExecutorService getInstance() {
+            if (executor == null || executor.isShutdown()) {
+                synchronized (ThreadPool.class) {
+                    if (executor == null || executor.isShutdown()) {
+                        // 创建一个具有固定数量线程的线程池, 如果已经关机则重新创建
+                        executor = Executors.newFixedThreadPool(NUM_THREADS);
+                    }
+                }
+            }
+            return executor;
+        }
+    }
+
+    private static String tag() {
+        String tag = LogExpand.tag();
+        if (tag == null) return "ContextTool";
+        return tag;
+    }
 }

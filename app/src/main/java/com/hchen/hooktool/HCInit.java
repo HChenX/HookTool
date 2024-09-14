@@ -55,7 +55,7 @@ public class HCInit {
             LOG_D
     })
     @Retention(RetentionPolicy.SOURCE)
-    private @interface Duration {
+    private @interface LogLevel {
     }
 
     // ---------- 初始化工具 ----------
@@ -104,14 +104,51 @@ public class HCInit {
      * <pre>{@code
      *  @Override
      *  public void initZygote(IXposedHookZygoteInit.StartupParam startupParam) throws Throwable {
-     *      HCInit.initBasicData("com.hchen.demo", "Demo", LOG_D);
+     *      HCInit.initBasicData(
+     *          new BasicData()
+     *              .setModulePackageName("com.hchen.demo")
+     *              .setTag("HChenDemo")
+     *              .setLogLevel(LOG_D)
+     *              .setPrefsName("hchen_prefs")
+     *      );
      *  }
      * }<br/>
      */
-    public static void initBasicData(String modulePackageName, String tag, @Duration int level) {
-        setTag(tag); /* 设置 TAG */
-        ToolData.mInitLogLevel = level; /* 设置日志等级 */
-        ToolData.modulePackageName = modulePackageName; /* 设置模块包名 */
+    public static void initBasicData(BasicData basicData) {
+        setTag(basicData.tag);
+        ToolData.mInitLogLevel = basicData.logLevel;
+        ToolData.modulePackageName = basicData.packageName;
+        ToolData.mPrefsName = basicData.prefsName;
+    }
+
+    public static class BasicData {
+        String packageName = null;
+        String tag = null;
+        int logLevel = LOG_I;
+        String prefsName = null;
+
+        public BasicData() {
+        }
+
+        public BasicData setModulePackageName(String modulePackageName) {
+            packageName = modulePackageName;
+            return this;
+        }
+
+        public BasicData setTag(String tag) {
+            this.tag = tag;
+            return this;
+        }
+
+        public BasicData setLogLevel(@LogLevel int level) {
+            logLevel = level;
+            return this;
+        }
+
+        public BasicData setPrefsName(String prefsName) {
+            this.prefsName = prefsName;
+            return this;
+        }
     }
 
     /**
@@ -134,8 +171,7 @@ public class HCInit {
      * <p>
      * -keep class com.hchen.demo.hook.**$*
      */
-    public static void useLogExpand(boolean use, @NotNull String[] path) {
-        ToolData.useLogExpand = use;
+    public static void useLogExpand(@NotNull String[] path) {
         ToolData.logExpandPath = path;
     }
     // ---------- END！----------

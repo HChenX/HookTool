@@ -59,14 +59,14 @@ public class ChainData {
     public String mType; /* 类型 */
     public Object[] mParams; /* 参数 */
 
-    // 类信息
+    // 方法信息
     public ChainData(String name, Object... params) {
         mName = name;
         mType = TYPE_METHOD;
         mParams = params;
     }
 
-    // 类信息
+    // 方法信息
     public ChainData(String name) {
         mName = name;
         mType = TYPE_ANY_METHOD;

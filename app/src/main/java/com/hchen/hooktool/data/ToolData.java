@@ -33,7 +33,7 @@ public class ToolData {
     public static String spareTag = "Unknown";
     public static int mInitLogLevel = HCInit.LOG_I;
     public static String modulePackageName = null;
-    public static boolean useLogExpand = false;
+    public static String mPrefsName = null;
     public static String[] logExpandPath = null;
     public static boolean autoReload = true;
     public static boolean isXposed = false;

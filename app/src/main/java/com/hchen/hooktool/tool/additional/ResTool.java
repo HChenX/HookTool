@@ -41,6 +41,7 @@ import androidx.annotation.RequiresApi;
 
 import com.hchen.hooktool.data.ToolData;
 import com.hchen.hooktool.hook.IAction;
+import com.hchen.hooktool.log.LogExpand;
 import com.hchen.hooktool.tool.CoreTool;
 
 import java.io.File;
@@ -59,12 +60,11 @@ import de.robv.android.xposed.IXposedHookZygoteInit;
  */
 public class ResTool {
     private static ResourcesLoader resourcesLoader = null;
-    private static final String TAG = "ResTool";
     private static String mModulePath = null;
     private static Handler mHandler = null;
 
     /**
-     * 请设置 {@link  com.hchen.hooktool.HCInit#initStartupParam(IXposedHookZygoteInit.StartupParam)}
+     * 请在 {@link  com.hchen.hooktool.HCInit#initStartupParam(IXposedHookZygoteInit.StartupParam)} 处调用。
      *
      * @param modulePath startupParam.modulePath 即可
      */
@@ -90,13 +90,13 @@ public class ResTool {
     public static Resources loadModuleRes(Resources resources, boolean doOnMainLooper) {
         boolean load = false;
         if (resources == null) {
-            logW(TAG, "Context can't is null!" + getStackTrace());
+            logW(tag(), "Context can't is null!" + getStackTrace());
             return null;
         }
         if (mModulePath == null) {
             mModulePath = ToolData.startupParam != null ? ToolData.startupParam.modulePath : null;
             if (mModulePath == null) {
-                logW(TAG, "Module path is null, can't load module res!" + getStackTrace());
+                logW(tag(), "Module path is null, can't load module res!" + getStackTrace());
                 return null;
             }
         }
@@ -109,7 +109,7 @@ public class ResTool {
             /*try {
                 return getModuleRes(context);
             } catch (PackageManager.NameNotFoundException e) {
-                logE(TAG, "failed to load resource! critical error!! scope may crash!!", e);
+                logE(tag(), "failed to load resource! critical error!! scope may crash!!", e);
             }*/
         }
         if (!resourcesArrayList.contains(resources))
@@ -142,7 +142,7 @@ public class ResTool {
                 loader.addProvider(provider);
                 resourcesLoader = loader;
             } catch (IOException e) {
-                logE(TAG, "Failed to add resource! debug: above api 30.", e);
+                logE(tag(), "Failed to add resource! debug: above api 30.", e);
                 return false;
             }
         }
@@ -172,7 +172,7 @@ public class ResTool {
                 // fallback to below API 30
                 return loadResBelowApi30(resources);
             } else {
-                logE(TAG, "Failed to add loaders!", e);
+                logE(tag(), "Failed to add loaders!", e);
                 return false;
             }
         }
@@ -188,11 +188,11 @@ public class ResTool {
             addAssetPath.setAccessible(true);
             Integer cookie = (Integer) addAssetPath.invoke(assets, mModulePath);
             if (cookie == null || cookie == 0) {
-                logW(TAG, "Method 'addAssetPath' result 0, maybe load res failed!" + getStackTrace());
+                logW(tag(), "Method 'addAssetPath' result 0, maybe load res failed!" + getStackTrace());
                 return false;
             }
         } catch (Throwable e) {
-            logE(TAG, "Failed to add resource! debug: below api 30.", e);
+            logE(tag(), "Failed to add resource! debug: below api 30.", e);
             return false;
         }
         return true;
@@ -235,7 +235,7 @@ public class ResTool {
             applyHooks();
             replacements.put(pkg + ":" + type + "/" + name, new Pair<>(ReplacementType.ID, replacementResId));
         } catch (Throwable t) {
-            logE(TAG, "Failed to set res replacement!", t);
+            logE(tag(), "Failed to set res replacement!", t);
         }
     }
 
@@ -247,7 +247,7 @@ public class ResTool {
             applyHooks();
             replacements.put(pkg + ":" + type + "/" + name, new Pair<>(ReplacementType.DENSITY, replacementResValue));
         } catch (Throwable t) {
-            logE(TAG, "Failed to set density res replacement!", t);
+            logE(tag(), "Failed to set density res replacement!", t);
         }
     }
 
@@ -259,7 +259,7 @@ public class ResTool {
             applyHooks();
             replacements.put(pkg + ":" + type + "/" + name, new Pair<>(ReplacementType.OBJECT, replacementResValue));
         } catch (Throwable t) {
-            logE(TAG, "Failed to set object res replacement!", t);
+            logE(tag(), "Failed to set object res replacement!", t);
         }
     }
 
@@ -270,7 +270,7 @@ public class ResTool {
             if (mModulePath == null) {
                 unHookRes();
                 throw new RuntimeException(ToolData.mInitTag +
-                        "[" + TAG + "][E]:module path is null, Please init this in initStartupParam()!" + getStackTrace());
+                        "[" + tag() + "][E]:module path is null, Please init this in initStartupParam()!" + getStackTrace());
             }
         }
         Method[] resMethods = Resources.class.getDeclaredMethods();
@@ -462,10 +462,16 @@ public class ResTool {
                     return replacement.second;
                 }
             } catch (Throwable e) {
-                logE(TAG, e);
+                logE(tag(), e);
             }
         }
         return null;
+    }
+
+    private static String tag() {
+        String tag = LogExpand.tag();
+        if (tag == null) return "ResTool";
+        return tag;
     }
 
     // 下面注入方法存在风险，可能导致资源混乱，抛弃。

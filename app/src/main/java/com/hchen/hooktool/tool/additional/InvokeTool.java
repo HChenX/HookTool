@@ -21,6 +21,7 @@ package com.hchen.hooktool.tool.additional;
 import static com.hchen.hooktool.log.LogExpand.getStackTrace;
 
 import com.hchen.hooktool.log.AndroidLog;
+import com.hchen.hooktool.log.LogExpand;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -36,8 +37,6 @@ import java.util.HashMap;
 public class InvokeTool {
     private static final HashMap<String, Method> methodCache = new HashMap<>();
     private static final HashMap<String, Field> fieldCache = new HashMap<>();
-
-    private final static String TAG = "InvokeTool";
 
     // ----------------------------反射调用方法--------------------------------
     public static <T> T callMethod(Object instance, String method, Class<?>[] param, Object... value) {
@@ -72,7 +71,7 @@ public class InvokeTool {
                                           Class<?>[] param /* 方法参数 */, Object... value /* 值 */) {
         Method declaredMethod;
         if (clz == null && instance == null) {
-            AndroidLog.logW(TAG, "Class and instance is null, can't invoke method: " + method + getStackTrace());
+            AndroidLog.logW(tag(), "Class and instance is null, can't invoke method: " + method + getStackTrace());
             return null;
         } else if (clz == null) {
             clz = instance.getClass();
@@ -87,7 +86,7 @@ public class InvokeTool {
             declaredMethod.setAccessible(true);
             return (T) declaredMethod.invoke(instance, value);
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-            AndroidLog.logE(TAG, e);
+            AndroidLog.logE(tag(), e);
             return null;
         }
     }
@@ -99,7 +98,7 @@ public class InvokeTool {
                                          boolean set /* 是否为 set 模式 */, Object value /* 指定值 */) {
         Field declaredField = null;
         if (clz == null && instance == null) {
-            AndroidLog.logW(TAG, "Class and instance is null, can't invoke field: " + field + getStackTrace());
+            AndroidLog.logW(tag(), "Class and instance is null, can't invoke field: " + field + getStackTrace());
             return null;
         } else if (clz == null) {
             clz = instance.getClass();
@@ -133,7 +132,7 @@ public class InvokeTool {
             } else
                 return (T) declaredField.get(instance);
         } catch (NoSuchFieldException | IllegalAccessException e) {
-            AndroidLog.logE(TAG, e);
+            AndroidLog.logE(tag(), e);
             return null;
         }
     }
@@ -149,8 +148,14 @@ public class InvokeTool {
             }
             return classLoader.loadClass(className);
         } catch (ClassNotFoundException e) {
-            AndroidLog.logE(TAG, e);
+            AndroidLog.logE(tag(), e);
         }
         return null;
+    }
+
+    private static String tag() {
+        String tag = LogExpand.tag();
+        if (tag == null) return "InvokeTool";
+        return tag;
     }
 }

@@ -79,21 +79,21 @@ public class ActAchieve {
     /**
      * 如果方法引发了异常，则返回 true。
      */
-    final public boolean hasCrash() {
+    final public boolean hasThrowable() {
         return MethodHookParam.hasThrowable();
     }
 
     /**
      * 返回该方法抛出的异常或者返回 null。
      */
-    final public Throwable getCrash() {
+    final public Throwable getThrowable() {
         return MethodHookParam.getThrowable();
     }
 
     /**
      * 引发异常，在 before 中使用可阻止方法执行。
      */
-    final public void makeCrash(Throwable t) {
+    final public void setThrowable(Throwable t) {
         MethodHookParam.setThrowable(t);
     }
 

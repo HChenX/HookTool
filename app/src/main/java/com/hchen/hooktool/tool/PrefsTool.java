@@ -46,7 +46,6 @@ import de.robv.android.xposed.XSharedPreferences;
  * @author 焕晨HChen
  */
 public class PrefsTool {
-    private final static String TAG = "PrefsTool";
     private final static HashMap<String, XSharedPreferences> xPrefs = new HashMap<>();
     private final static HashMap<String, SharedPreferences> sPrefs = new HashMap<>();
 
@@ -71,7 +70,8 @@ public class PrefsTool {
      */
     public static IPrefs prefs() {
         if (!ToolData.isXposed)
-            throw new RuntimeException(ToolData.mInitTag + "[PrefsTool][E]: Not xposed environment!" + getStackTrace());
+            throw new RuntimeException(ToolData.mInitTag +
+                    "[" + tag() + "][E]: Not xposed environment!" + getStackTrace());
         return prefs((String) null);
     }
 
@@ -82,7 +82,8 @@ public class PrefsTool {
      */
     public static IPrefs prefs(String prefsName) {
         if (!ToolData.isXposed)
-            throw new RuntimeException(ToolData.mInitTag + "[PrefsTool][E]: Not xposed environment!" + getStackTrace());
+            throw new RuntimeException(ToolData.mInitTag +
+                    "[" + tag() + "][E]: Not xposed environment!" + getStackTrace());
         return new Xprefs(currentXsp(prefsName));
     }
 
@@ -93,7 +94,8 @@ public class PrefsTool {
      */
     public static void asyncPrefs(IAsyncPrefs asyncPrefs) {
         if (!ToolData.isXposed)
-            throw new RuntimeException(ToolData.mInitTag + "[PrefsTool][E]: Not xposed environment!" + getStackTrace());
+            throw new RuntimeException(ToolData.mInitTag +
+                    "[" + tag() + "][E]: Not xposed environment!" + getStackTrace());
         ContextTool.getAsyncContext(new ContextTool.IContext() {
             @Override
             public void find(Context context) {
@@ -132,7 +134,8 @@ public class PrefsTool {
     private static SharedPreferences currentSp(Context context, String prefsName) {
         prefsName = initPrefsName(prefsName);
         if (context == null) {
-            throw new RuntimeException(ToolData.mInitTag + "[PrefsTool][E]: Context is null, can't create sprefs!" + getStackTrace());
+            throw new RuntimeException(ToolData.mInitTag +
+                    "[" + tag() + "][E]: Context is null, can't create sprefs!" + getStackTrace());
         }
         if (sPrefs.get(context + prefsName) == null) {
             SharedPreferences s;
@@ -140,7 +143,7 @@ public class PrefsTool {
                 s = context.getSharedPreferences(prefsName, Context.MODE_WORLD_READABLE);
             } catch (Throwable ignored) {
                 s = context.getSharedPreferences(prefsName, Context.MODE_PRIVATE);
-                AndroidLog.logW(TAG, "Maybe can't use xSharedPreferences!" + getStackTrace());
+                AndroidLog.logW(tag(), "Maybe can't use xSharedPreferences!" + getStackTrace());
             }
             sPrefs.put(context + prefsName, s);
             return s;
@@ -150,9 +153,16 @@ public class PrefsTool {
     }
 
     private static String initPrefsName(String name) {
-        if (name == null)
-            return ToolData.spareTag.replace(" ", "").toLowerCase() + "_prefs";
-        else return name.replace(" ", "").toLowerCase() + "_prefs";
+        if (name == null) {
+            if (ToolData.mPrefsName == null) {
+                if (ToolData.modulePackageName == null) {
+                    throw new RuntimeException(ToolData.mInitTag +
+                            "[" + tag() + "][E]: What prefs name you want use??" + getStackTrace());
+                }
+                return ToolData.modulePackageName + "_preferences";
+            }
+            return ToolData.mPrefsName;
+        } else return name;
     }
 
     private static String tag() {
@@ -311,7 +321,7 @@ public class PrefsTool {
                     return getLong(key, l);
                 }
             } catch (Throwable e) {
-                AndroidLog.logE(TAG, "Unknown error!", e);
+                AndroidLog.logE(tag(), "Unknown error!", e);
             }
             return null;
         }
@@ -385,7 +395,7 @@ public class PrefsTool {
                     return putLong(key, l);
                 }
             } catch (Throwable e) {
-                AndroidLog.logE(TAG, "Unknown error!", e);
+                AndroidLog.logE(tag(), "Unknown error!", e);
             }
             return this;
         }
