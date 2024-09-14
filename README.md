@@ -41,9 +41,9 @@ dependencyResolutionManagement {
 ```groovy
 dependencies {
     // jitpack
-    implementation 'com.github.HChenX:HookTool:v.1.0.1'
+    implementation 'com.github.HChenX:HookTool:v.1.0.3'
     // maven
-    implementation 'io.github.hchenx:hooktool:v.1.0.1'
+    implementation 'io.github.hchenx:hooktool:v.1.0.3'
     // 二选一即可
 }
 ```
@@ -56,7 +56,7 @@ dependencies {
 
 ```java
 public void init() {
-    HCinit.initBasicData(/* 包名，tag，日志等级 */); // 初始化模块基本信息
+    HCinit.initBasicData(); // 初始化模块基本信息
     HCinit.initStartupParam(); // 在 zygote 阶段初始化工具
     HCinit.initLoadPackageParam(); // 在 loadPackage 阶段初始化工具
     HCinit.xPrefsAutoReload(); // 是否自动更新共享首选项，默认开启
@@ -70,7 +70,12 @@ public void init() {
 
 @Override
 public void initZygote(IXposedHookZygoteInit.StartupParam startupParam) {
-    HCInit.initBasicData(/* 你模块的包名 */, /* tag */, /* 日志等级 */); // 必须。tip：建议放在第一位
+    HCInit.initBasicData(new BasicData()
+            .setModulePackageName("com.hchen.demo") // 模块包名
+            .setTag("HChenDemo") // 日志 tag
+            .setLogLevel(LOG_D) // 日志等级
+            .setPrefsName("hchen_prefs") // prefs 存储文件名
+    ); // 若有 initZygote 建议配置在这里，因为时机很早。
     HCInit.initStartupParam(startupParam); // 在 zygote 阶段初始化工具
 }
 
@@ -86,7 +91,12 @@ public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) {
 public static class MainActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
-        HCInit.initBasicData(/* 你模块的包名 */, /* tag */, /* 日志等级 */); // 必须
+        HCInit.initBasicData(new BasicData()
+                .setModulePackageName("com.hchen.demo") // 模块包名
+                .setTag("HChenDemo") // 日志 tag
+                .setLogLevel(LOG_D) // 日志等级
+                .setPrefsName("hchen_prefs") // prefs 存储文件名。Tip: 请保持文件名一致。
+        );
     }
 }
 ```

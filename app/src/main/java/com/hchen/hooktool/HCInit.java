@@ -162,9 +162,10 @@ public class HCInit {
 
     /**
      * 是否使用日志增强功能，path 填写模块的 hook 文件所在目录，否则默认按照包名搜索。
-     * <p>
-     * 示例: path: com.hchen.demo.hook
-     * <p>
+     * <pre>{@code
+     *      HCInit.useLogExpand(new String[]{"com.hchen.demo.hook"});
+     *      // 填写 new String[]{} 则默认使用包名查找。
+     * }<br/>
      * 同时加入混淆规则:
      * <p>
      * -keep class com.hchen.demo.hook.**

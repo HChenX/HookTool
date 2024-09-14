@@ -41,9 +41,9 @@ dependencyResolutionManagement {
 ```groovy
 dependencies {
     // jitpack
-    implementation 'com.github.HChenX:HookTool:v.1.0.1'
+    implementation 'com.github.HChenX:HookTool:v.1.0.3'
     // maven
-    implementation 'io.github.hchenx:hooktool:v.1.0.1'
+    implementation 'io.github.hchenx:hooktool:v.1.0.3'
     // Choose one of the two
 }
 ```
@@ -56,7 +56,7 @@ dependencies {
 
 ```java
 public void init() {
-    HCinit.initBasicData(/* Package name, tag, Log level */); // Initialize the basic information of the module
+    HCinit.initBasicData(); // Initialize the basic information of the module
     HCinit.initStartupParam(); // Initialize the tool in the zygote phase
     HCinit.initLoadPackageParam(); // Initialize the tool in the loadPackage phase
     HCinit.xPrefsAutoReload(); // Whether to automatically update sharing preferences is enabled by default
@@ -70,13 +70,23 @@ public void init() {
 
 @Override
 public void initZygote(IXposedHookZygoteInit.StartupParam startupParam) {
-    HCInit.initBasicData(/* The package name of your module */, /* tag */, /* Log level */); // Have to. Tip: Recommendations come first
+  HCInit.initBasicData(new BasicData()
+          .setModulePackageName("com.hchen.demo") // Module package name
+          .setTag("HChenDemo") // Log tag
+          .setLogLevel(LOG_D) // Log level
+          .setPrefsName("hchen_prefs") // Prefs storage file name
+  ); // If there is initZygote, it is recommended to configure it here because the timing is very early.
     HCInit.initStartupParam(startupParam); // Initialize the tool in the zygote phase
 }
 
 @Override
 public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) {
-    HCInit.initLoadPackageParam(lpparam); // Initialize the tool in the loadPackage phase
+  HCInit.initBasicData(new BasicData()
+          .setModulePackageName("com.hchen.demo") // Module package name
+          .setTag("HChenDemo") // Log tag
+          .setLogLevel(LOG_D) // Log level
+          .setPrefsName("hchen_prefs") // Prefs stores the file name. Tip: Please keep the file name consistent.
+  );
 }
 ```
 
