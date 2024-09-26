@@ -36,6 +36,7 @@ import android.os.UserHandle;
 import com.hchen.hooktool.data.AppData;
 import com.hchen.hooktool.log.AndroidLog;
 import com.hchen.hooktool.log.LogExpand;
+import com.hchen.hooktool.tool.itool.IPkg;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -173,7 +174,7 @@ public class PackagesTool {
      * @return ListAppData 包含各种应用详细信息
      * @see #addAppData(Parcelable, PackageManager)
      */
-    public static List<AppData> getPackagesByCode(Context context, ICode iCode) {
+    public static List<AppData> getPackagesByCode(Context context, IPkg iCode) {
         List<AppData> appDataList = new ArrayList<>();
         if (context == null) {
             logW(tag(), "Context is null, can't get packages by code!" + getStackTrace());
@@ -194,7 +195,7 @@ public class PackagesTool {
         return new ArrayList<>();
     }
 
-    public static List<AppData> getPackagesByCode(ICode iCode) {
+    public static List<AppData> getPackagesByCode(IPkg iCode) {
         return getPackagesByCode(context(), iCode);
     }
 
@@ -260,10 +261,6 @@ public class PackagesTool {
 
     private static Context context() {
         return ContextTool.getContextNoLog(ContextTool.FLAG_ALL);
-    }
-
-    public interface ICode {
-        List<Parcelable> action(PackageManager pm);
     }
 
     private static String tag() {

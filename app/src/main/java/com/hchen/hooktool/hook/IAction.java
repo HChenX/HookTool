@@ -27,14 +27,14 @@ import com.hchen.hooktool.tool.ParamTool;
  * @author 焕晨HChen
  */
 public abstract class IAction extends ParamTool {
-    public final Priority priority;
+    public final Priority PRIORITY;
 
     public IAction() {
-        this.priority = Priority.DEFAULT;
+        this.PRIORITY = Priority.DEFAULT;
     }
 
     public IAction(Priority priority) {
-        this.priority = priority;
+        this.PRIORITY = priority;
     }
 
     /**

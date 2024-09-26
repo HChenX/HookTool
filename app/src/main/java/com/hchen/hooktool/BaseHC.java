@@ -34,26 +34,31 @@ import de.robv.android.xposed.IXposedHookZygoteInit;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 /**
- * 对需要使用工具的类继承本类，可快速使用工具
+ * 对需要使用 Hook 的类继承本类，可快速使用本工具
  *
  * @author 焕晨HChen
  */
 public abstract class BaseHC extends CoreTool {
+    // 快捷获取类的简单名称作为 TAG, 为了效果建议配置相应的混淆规则。
     public String TAG = getClass().getSimpleName();
-    private final ChainTool chainTool = new ChainTool();
+    private final ChainTool chainTool = new ChainTool(); // 初始化链式
     public static XC_LoadPackage.LoadPackageParam lpparam;  // onZygote 阶段为 null
     public static ClassLoader classLoader;
 
     /**
-     * 正常阶段。
+     * 一般阶段。
      */
+    // 作为覆写使用，请勿直接调用！
     public abstract void init();
 
     /**
      * zygote 阶段。
      * <p>
-     * 如果 startupParam 为 null，请检查是否为工具初始化。
+     * 如果 startupParam 为 null，请检查是否在正确的地方初始化。
+     * <p>
+     * 详见: {@link HCInit#initStartupParam(IXposedHookZygoteInit.StartupParam)}
      */
+    // 作为覆写使用，请勿直接调用！
     public void initZygote(IXposedHookZygoteInit.StartupParam startupParam) {
     }
 

@@ -29,23 +29,23 @@ import java.util.ArrayList;
  * @author 焕晨HChen
  */
 public class ChainData {
-    public ArrayList<ChainData> memberWithState = new ArrayList<>(); /* 目标成员组 */
+    public ArrayList<ChainData> members = new ArrayList<>(); /* 目标成员组 */
     public Member member; /* 查找到的成员 */
     public IAction iAction; /* hook 动作 */
     public HookState hookState; /* 状态 */
     public String UUID = "UNKNOWN"; /* 唯一标识符 */
 
     // 数据存储
-    public ChainData(ArrayList<ChainData> memberWithState, IAction iAction, String uuid) {
-        this.memberWithState = memberWithState;
+    public ChainData(ArrayList<ChainData> members, IAction iAction, HookState hookState, String uuid) {
+        this.members = members;
         this.iAction = iAction;
+        this.hookState = hookState;
         this.UUID = uuid;
     }
 
-    // memberWithState 内数据
+    // members 内数据
     public ChainData(Member member) {
         this.member = member;
-        this.hookState = HookState.NONE;
     }
 
     //################################
@@ -70,6 +70,7 @@ public class ChainData {
     public ChainData(String name) {
         mName = name;
         mType = TYPE_ANY_METHOD;
+        mParams = new Object[]{};
     }
 
     // 构造函数信息
@@ -83,5 +84,6 @@ public class ChainData {
     public ChainData() {
         mName = "";
         mType = TYPE_ANY_CONSTRUCTOR;
+        mParams = new Object[]{};
     }
 }

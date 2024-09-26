@@ -28,11 +28,11 @@ import de.robv.android.xposed.XposedHelpers;
 
 /**
  * 测试和示例类
- * 
+ *
  * @author 焕晨HChen
  */
-public class MainTest extends BaseHC {
-    
+public class ToolTest extends BaseHC {
+
     @Override
     public void initZygote(IXposedHookZygoteInit.StartupParam startupParam) {
         super.initZygote(startupParam);
@@ -40,6 +40,8 @@ public class MainTest extends BaseHC {
 
     @Override
     public void init() {
+        
+        // 原用法
         new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) {
@@ -55,6 +57,7 @@ public class MainTest extends BaseHC {
             }
         };
 
+        // 链式
         chain("com.hchen.demo", method("test")
                 .hook(new IAction() {
                     @Override
@@ -74,46 +77,53 @@ public class MainTest extends BaseHC {
                 .constructor()
                 .returnResult(false)
         );
-        
-        hook(findMethod("com.hchen.demo", "test"), new IAction() {
+
+        hook("com.hchen.demo", "test", new IAction() {
             @Override
             public void before() {
                 super.before();
             }
         }).unHook();
 
+        // 本工具用法
         new IAction() {
             @Override
             public void before() {
                 // hook 方法所属的类
                 Class<?> c = mClass;
                 Context context = thisObject();
-                String string = first();
-                second(1);
-                
+                String string = first(); // 获取覅一个参数值
+                second(1); // 设置第二个参数值
+
                 // 非静态本类内
-                setThisField("demo", 1);
-                callThisMethod("method");
+                setThisField("demo", 1); // 设置本类内 demo 字段值
+                callThisMethod("method"); // 调用本类内 method 方法
                 getThisField("test");
                 String result = callThisMethod("call", thisObject(), first());
+
                 // 非静态本类外
                 Object o = null;
-                setField(o, "demo", 1);
+                setField(o, "demo", 1); // 设置实例 o 的 demo 字段
                 callMethod(o, "method");
                 getField(o, "test");
 
                 // 静态需要 class
-                callStaticMethod("com.demo.Main", "callStatic", thisObject(), second());
+                callStaticMethod("com.demo.Main", "callStatic", thisObject(), second()); // 调用静态方法 callStatic
                 int i = getStaticField("com.demo.Main", "field");
-                setStaticField("com.demo.Main", "test", true);
+                setStaticField("com.demo.Main", "test", true); // 设置静态字段 test
 
-                // 移除自身
-                removeSelf();
-                // 观察调用
-                observeCall();
-                // 获取堆栈
-                getStackTrace();
+
+                removeSelf(); // 移除自身
+                observeCall(); // 观察调用
+                getStackTrace(); // 获取堆栈
             }
         };
+
+        prefs().get("test_key", "0"); // 获取 prefs test_key 的值
+        prefs().getBoolean("test_key_bool", false); // 获取 prefs test_key_bool 的值
+
+        getFakeResId("test_res"); // 获取 test_res 的虚拟资源 id
+        // 设置 pkg 的 string 资源 test_res_str 值为 HC!
+        setObjectReplacement("com.hchen.demo", "string", "test_res_str", "HC!");
     }
 }

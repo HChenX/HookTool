@@ -270,7 +270,7 @@ public class ResTool {
             if (mModulePath == null) {
                 unHookRes();
                 throw new RuntimeException(ToolData.mInitTag +
-                        "[" + tag() + "][E]:module path is null, Please init this in initStartupParam()!" + getStackTrace());
+                        "[" + tag() + "][E]: Module path is null, Please init this in initStartupParam()!" + getStackTrace());
             }
         }
         Method[] resMethods = Resources.class.getDeclaredMethods();

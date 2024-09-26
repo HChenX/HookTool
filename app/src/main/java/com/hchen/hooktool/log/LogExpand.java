@@ -131,7 +131,7 @@ public class LogExpand {
 
         StringBuilder log = new StringBuilder();
         for (int i = 0; i < param.args.length; i++) {
-            log.append("(").append(param.args[i].getClass().getSimpleName())
+            log.append("(").append(param.args[i] == null ? "null" : param.args[i].getClass().getSimpleName())
                     .append(")->").append("[").append(param.args[i]).append("]");
             if (i < param.args.length - 1) {
                 log.append(", ");

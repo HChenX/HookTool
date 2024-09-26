@@ -16,14 +16,18 @@
 
  * Copyright (C) 2023-2024 HookTool Contributions
  */
-package com.hchen.hooktool.data;
+package com.hchen.hooktool.tool.itool;
+
+import android.content.pm.PackageManager;
+import android.os.Parcelable;
+
+import java.util.List;
 
 /**
- * 状态枚举
+ * 软件包工具接口
  *
  * @author 焕晨HChen
  */
-public enum HookState {
-    NONE, /* 未 hook */
-    HOOKED, /* 已经 hook */
+public interface IPkg {
+    List<Parcelable> action(PackageManager pm);
 }

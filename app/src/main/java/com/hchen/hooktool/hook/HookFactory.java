@@ -32,7 +32,7 @@ import de.robv.android.xposed.XC_MethodHook;
 public class HookFactory {
     public static XposedCallBack createHook(String tag, IAction iAction) {
         int priority;
-        switch (iAction.priority) {
+        switch (iAction.PRIORITY) {
             case Priority.LOWEST -> priority = -10000;
             case Priority.HIGHEST -> priority = 10000;
             default -> priority = 50;

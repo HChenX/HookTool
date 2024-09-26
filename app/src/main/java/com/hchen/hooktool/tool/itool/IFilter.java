@@ -18,20 +18,11 @@
  */
 package com.hchen.hooktool.tool.itool;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
-
 /**
  * 过滤接口
- * 
+ *
  * @author 焕晨HChen
  */
-public interface IFilter {
-    default boolean test(Method method) {
-        return false;
-    }
-
-    default boolean test(Constructor<?> constructor) {
-        return false;
-    }
+public interface IFilter<T> {
+    boolean test(T member);
 }

@@ -68,7 +68,7 @@ public class HCInit {
      *  public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) throws Throwable {
      *      HCInit.initLoadPackageParam(lpparam);
      *  }
-     * }<br/>
+     * }
      */
     public static void initLoadPackageParam(XC_LoadPackage.LoadPackageParam loadPackageParam) {
         if (loadPackageParam == null) {
@@ -90,7 +90,7 @@ public class HCInit {
      *  public void initZygote(IXposedHookZygoteInit.StartupParam startupParam) throws Throwable {
      *      HCInit.initStartupParam(startupParam);
      *  }
-     * }<br/>
+     * }
      */
     public static void initStartupParam(IXposedHookZygoteInit.StartupParam startupParam) {
         ToolData.isXposed = true;
@@ -112,7 +112,7 @@ public class HCInit {
      *              .setPrefsName("hchen_prefs")
      *      );
      *  }
-     * }<br/>
+     * }
      */
     public static void initBasicData(BasicData basicData) {
         setTag(basicData.tag);
@@ -185,10 +185,10 @@ public class HCInit {
     /**
      * 模块是否被激活。
      * 使用方法：<br/>
-     * lpparam 传入模块本身。<br/>
-     * path 传入指定类。<br/>
-     * fieldName 传入字段名。<br/>
-     * value 输入值。<br/>
+     * lpparam: 传入模块本身。<br/>
+     * path: 传入指定类。<br/>
+     * fieldName: 传入字段名。<br/>
+     * value: 输入值。<br/>
      * 随后模块本身检查这个字段是否被更改即可。
      */
     public static boolean isXposedModuleActive(XC_LoadPackage.LoadPackageParam lpparam,

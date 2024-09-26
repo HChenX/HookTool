@@ -116,20 +116,19 @@ public class DeviceTool {
 
 
     // --------- 手机品牌 -------------
-    private static final String[] ROM_HUAWEI = {"huawei"};
-    private static final String[] ROM_VIVO = {"vivo"};
-    private static final String[] ROM_XIAOMI = {"xiaomi"};
-    private static final String[] ROM_OPPO = {"oppo"};
-    private static final String[] ROM_LEECO = {"leeco", "letv"};
-    private static final String[] ROM_360 = {"360", "qiku"};
-    private static final String[] ROM_ZTE = {"zte"};
-    private static final String[] ROM_ONEPLUS = {"oneplus"};
-    private static final String[] ROM_NUBIA = {"nubia"};
-    private static final String[] ROM_SAMSUNG = {"samsung"};
-    private static final String[] ROM_HONOR = {"honor"};
+    public static final String[] ROM_HUAWEI = {"huawei"};
+    public static final String[] ROM_VIVO = {"vivo"};
+    public static final String[] ROM_XIAOMI = {"xiaomi"};
+    public static final String[] ROM_OPPO = {"oppo"};
+    public static final String[] ROM_LEECO = {"leeco", "letv"};
+    public static final String[] ROM_360 = {"360", "qiku"};
+    public static final String[] ROM_ZTE = {"zte"};
+    public static final String[] ROM_ONEPLUS = {"oneplus"};
+    public static final String[] ROM_NUBIA = {"nubia"};
+    public static final String[] ROM_SAMSUNG = {"samsung"};
+    public static final String[] ROM_HONOR = {"honor"};
 
     private static final String ROM_NAME_MIUI = "ro.miui.ui.version.name";
-
     private static final String VERSION_PROPERTY_HUAWEI = "ro.build.version.emui";
     private static final String VERSION_PROPERTY_VIVO = "ro.vivo.os.build.display.id";
     private static final String VERSION_PROPERTY_XIAOMI = "ro.build.version.incremental";
@@ -139,25 +138,24 @@ public class DeviceTool {
     private static final String VERSION_PROPERTY_ZTE = "ro.build.MiFavor_version";
     private static final String VERSION_PROPERTY_ONEPLUS = "ro.rom.version";
     private static final String VERSION_PROPERTY_NUBIA = "ro.build.rom.id";
-
     private static final String[] VERSION_PROPERTY_MAGIC = {"msc.config.magic.version", "ro.build.version.magic"};
 
     /**
-     * 判断当前厂商系统是否为 emui
+     * 判断当前厂商系统是否为 emui。
      */
     public static boolean isEmui() {
         return !TextUtils.isEmpty(getProp(VERSION_PROPERTY_HUAWEI));
     }
 
     /**
-     * 判断当前厂商系统是否为 miui
+     * 判断当前厂商系统是否为 miui。
      */
     public static boolean isMiui() {
         return !TextUtils.isEmpty(getProp(ROM_NAME_MIUI));
     }
 
     /**
-     * 判断当前厂商系统是否为 ColorOs
+     * 判断当前厂商系统是否为 ColorOs。
      */
     public static boolean isColorOs() {
         for (String property : VERSION_PROPERTY_OPPO) {
@@ -171,27 +169,26 @@ public class DeviceTool {
     }
 
     /**
-     * 判断当前厂商系统是否为 OriginOS
+     * 判断当前厂商系统是否为 OriginOS。
      */
     public static boolean isOriginOs() {
         return !TextUtils.isEmpty(getProp(VERSION_PROPERTY_VIVO));
     }
 
     /**
-     * 判断当前厂商系统是否为 OneUI
+     * 判断当前厂商系统是否为 OneUI。
      */
     public static boolean isOneUi() {
-        return isRightRom(getBrand(), getManufacturerLowerCase(), ROM_SAMSUNG);
+        return isRightRom(getBrand(), getManufacturer(), ROM_SAMSUNG);
     }
 
     /**
-     * 判断当前是否为鸿蒙系统
+     * 判断当前是否为鸿蒙系统。
      */
     public static boolean isHarmonyOs() {
         // 鸿蒙系统没有 Android 10 以下的
-        if (!isMoreAndroidVersion(Build.VERSION_CODES.Q)) {
+        if (!isMoreAndroidVersion(Build.VERSION_CODES.Q))
             return false;
-        }
         try {
             Object osBrand = InvokeTool.callStaticMethod(
                     InvokeTool.findClass("com.huawei.system.BuildEx"),
@@ -203,37 +200,103 @@ public class DeviceTool {
         }
     }
 
-    public static boolean isVivo() {
-        return isRightRom(getBrand(), getManufacturer(), ROM_VIVO);
-    }
-
     /**
-     * 判断当前是否为 MagicOs 系统（荣耀）
+     * 判断当前是否为 MagicOs 系统（荣耀）。
      */
     public static boolean isMagicOs() {
-        return isRightRom(getBrand(), getManufacturerLowerCase(), ROM_HONOR);
+        return isRightRom(getBrand(), getManufacturer(), ROM_HONOR);
     }
 
     /**
-     * 判断 miui 优化开关
+     * 判断是否是指定的 rom。
+     */
+    public static boolean isAppointRom(String[] rom) {
+        return isRightRom(getBrand(), getManufacturer(), rom);
+    }
+
+    /**
+     * 尝试获取 rom 的版本，可能不准确。
+     */
+    public static String getRomVersionName() {
+        final String brand = getBrand();
+        final String manufacturer = getManufacturer();
+        if (isRightRom(brand, manufacturer, ROM_HUAWEI)) {
+            String version = getProp(VERSION_PROPERTY_HUAWEI);
+            String[] temp = version.split("_");
+            if (temp.length > 1) {
+                return temp[1];
+            } else {
+                // 需要注意的是 华为畅享 5S Android 5.1 获取到的厂商版本号是 EmotionUI 3，而不是 3.1 或者 3.0 这种
+                if (version.contains("EmotionUI")) {
+                    return version.replaceFirst("EmotionUI\\s*", "");
+                }
+                return version;
+            }
+        }
+        if (isRightRom(brand, manufacturer, ROM_VIVO)) {
+            // 需要注意的是 vivo iQOO 9 Pro Android 12 获取到的厂商版本号是 OriginOS Ocean
+            return getProp(VERSION_PROPERTY_VIVO);
+        }
+        if (isRightRom(brand, manufacturer, ROM_XIAOMI)) {
+            return getProp(VERSION_PROPERTY_XIAOMI);
+        }
+        if (isRightRom(brand, manufacturer, ROM_OPPO)) {
+            for (String property : VERSION_PROPERTY_OPPO) {
+                String versionName = getProp(property);
+                if (TextUtils.isEmpty(property)) {
+                    continue;
+                }
+                return versionName;
+            }
+            return "";
+        }
+        if (isRightRom(brand, manufacturer, ROM_LEECO)) {
+            return getProp(VERSION_PROPERTY_LEECO);
+        }
+
+        if (isRightRom(brand, manufacturer, ROM_360)) {
+            return getProp(VERSION_PROPERTY_360);
+        }
+        if (isRightRom(brand, manufacturer, ROM_ZTE)) {
+            return getProp(VERSION_PROPERTY_ZTE);
+        }
+        if (isRightRom(brand, manufacturer, ROM_ONEPLUS)) {
+            return getProp(VERSION_PROPERTY_ONEPLUS);
+        }
+        if (isRightRom(brand, manufacturer, ROM_NUBIA)) {
+            return getProp(VERSION_PROPERTY_NUBIA);
+        }
+        if (isRightRom(brand, manufacturer, ROM_HONOR)) {
+            for (String property : VERSION_PROPERTY_MAGIC) {
+                String versionName = getProp(property);
+                if (TextUtils.isEmpty(property)) {
+                    continue;
+                }
+                return versionName;
+            }
+            return "";
+        }
+
+        return "";
+    }
+
+    /**
+     * 判断 miui 优化开关是否开启。
      */
     public static boolean isMiuiOptimization() {
         return PropTool.getProp("persist.sys.miui_optimization", false);
     }
 
-    private static boolean isRightRom(final String brand,
-                                      final String manufacturer,
-                                      final String... names) {
+    private static boolean isRightRom(String brand, String manufacturer, final String... names) {
+        brand = brand.toLowerCase();
+        manufacturer = manufacturer.toLowerCase();
+        if (names == null) return false;
         for (String name : names) {
             if (brand.contains(name) || manufacturer.contains(name)) {
                 return true;
             }
         }
         return false;
-    }
-
-    private static String getManufacturerLowerCase() {
-        return Build.MANUFACTURER.toLowerCase();
     }
 
     // ------------- 其他 -------------

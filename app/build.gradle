@@ -3,8 +3,8 @@ plugins {
     id 'maven-publish'
 }
 
-def defVersion = 'v.1.0.3'
-int defVersionCode = 2024091400
+def defVersion = 'v.1.0.4'
+int defVersionCode = 2024092600
 
 group = 'com.github.HChenX'
 version = defVersion
@@ -51,7 +51,7 @@ android {
     }
 
     buildFeatures {
-        buildConfig true
+        buildConfig false
     }
 }
 

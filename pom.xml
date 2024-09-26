@@ -7,7 +7,7 @@
 
     <groupId>io.github.hchenx</groupId>
     <artifactId>hooktool</artifactId>
-    <version>v.1.0.1</version>
+    <version>v.1.0.4</version>
 
     <name>HookTool</name>
     <description>基于 Xposed 而来的 Hook 工具！</description>

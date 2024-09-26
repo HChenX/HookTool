@@ -41,7 +41,7 @@ public class Try {
     }
 
     public static class Result<T> {
-        private T result = null;
+        private T result;
         private boolean isSuccess;
         private Throwable throwable;
 
@@ -49,9 +49,11 @@ public class Try {
             try {
                 result = supplier.run();
                 isSuccess = true;
+                throwable = null;
             } catch (Throwable throwable) {
                 this.throwable = throwable;
                 isSuccess = false;
+                result = null;
             }
         }
 
