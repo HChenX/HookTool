@@ -169,9 +169,8 @@ public class ChainTool {
         while (iterator.hasNext()) {
             ChainData chainData = iterator.next();
             if (chainData.hookState == HookState.HOOKED) continue;
-            String UUID = chainData.UUID;
             if (chainData.iAction == null) {
-                logW(tag(), "Action is null, can't hook! will remove this! \ndebug: " + UUID);
+                logW(tag(), "Action is null, can't hook! will remove this! \ndebug: " + chainData.UUID);
                 iterator.remove();
                 continue;
             }
