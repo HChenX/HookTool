@@ -9,7 +9,7 @@
 ![language](https://img.shields.io/badge/language-java-purple)
 
 <p><b><a href="README-en.md">English</a> | <a href="README.md">简体中文</a></b></p>
-<p>Java Edition Hook Tool based on Xposed!</p>
+<p>Java Edition Hook Tool!</p>
 </div>
 
 # ✨ Tool highlights
