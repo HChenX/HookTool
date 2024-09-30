@@ -121,16 +121,18 @@ public class ChainTool {
             String UUID = cacheData.mType + "#" + clazz.getName() + "#" + cacheData.mName + "#" + Arrays.toString(cacheData.mParams);
             switch (cacheData.mType) {
                 case TYPE_METHOD -> members.add(new ChainData(
-                        findMethod(clazz, cacheData.mName, arrayToClass(
-                                classLoader == null ? ToolData.classLoader : classLoader,
-                                cacheData.mParams))));
+                    findMethod(clazz, cacheData.mName, arrayToClass(
+                        classLoader == null ? ToolData.classLoader : classLoader,
+                        cacheData.mParams))));
                 case TYPE_CONSTRUCTOR -> members.add(new ChainData(
-                        findConstructor(clazz, arrayToClass(
-                                classLoader == null ? ToolData.classLoader : classLoader,
-                                cacheData.mParams))));
-                case TYPE_ANY_METHOD -> members.addAll(CoreTool.findAllMethod(clazz, cacheData.mName).stream().map(
+                    findConstructor(clazz, arrayToClass(
+                        classLoader == null ? ToolData.classLoader : classLoader,
+                        cacheData.mParams))));
+                case TYPE_ANY_METHOD ->
+                    members.addAll(CoreTool.findAllMethod(clazz, cacheData.mName).stream().map(
                         ChainData::new).collect(Collectors.toCollection(ArrayList::new)));
-                case TYPE_ANY_CONSTRUCTOR -> members.addAll(CoreTool.findAllConstructor(clazz).stream().map(
+                case TYPE_ANY_CONSTRUCTOR ->
+                    members.addAll(CoreTool.findAllConstructor(clazz).stream().map(
                         ChainData::new).collect(Collectors.toCollection(ArrayList::new)));
                 default -> {
                     logW(tag(), "Unknown type: " + cacheData.mType + getStackTrace());
@@ -146,13 +148,14 @@ public class ChainTool {
                     if (memberData.member == null || existingMembers.contains(memberData.member)) {
                         iterator.remove();
                         logW(tag(), "This member maybe repeated or maybe is null, will remove it! " +
-                                "\ndebug: " + UUID + "#member: " + memberData.member);
+                            "\ndebug: " + UUID + "#member: " + memberData.member);
                         continue;
                     }
                     existingMembers.add(memberData.member);
                 }
                 if (members.isEmpty()) continue;
-                chainDataList.add(new ChainData(members, cacheData.iAction, HookState.NONE, UUID));
+                ArrayList<ChainData> finalMembers = new ArrayList<>(members);
+                chainDataList.add(new ChainData(finalMembers, cacheData.iAction, HookState.NONE, UUID));
             } else
                 logW(tag(), "This member maybe repeated, will skip add it! \ndebug: " + UUID);
             members.clear();

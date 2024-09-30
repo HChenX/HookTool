@@ -40,7 +40,7 @@ public class ToolTest extends BaseHC {
 
     @Override
     public void init() {
-        
+
         // 原用法
         new XC_MethodHook() {
             @Override
@@ -78,7 +78,7 @@ public class ToolTest extends BaseHC {
                 .returnResult(false)
         );
 
-        hook("com.hchen.demo", "test", new IAction() {
+        hookMethod("com.hchen.demo", "test", new IAction() {
             @Override
             public void before() {
                 super.before();

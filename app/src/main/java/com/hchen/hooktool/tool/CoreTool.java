@@ -74,7 +74,7 @@ public class CoreTool {
 
     public static Class<?> findClass(String name, ClassLoader classLoader) {
         return run(() -> XposedHelpers.findClass(name, classLoader))
-                .orErrMag(null, tag(), "Failed to find class!");
+            .orErrMag(null, tag(), "Failed to find class!");
     }
 
     //------------ 检查指定方法是否存在 --------------
@@ -127,7 +127,7 @@ public class CoreTool {
 
     public static Method findMethod(Class<?> clazz, String name, Class<?>... classes) {
         return run(() -> XposedHelpers.findMethodExact(clazz, name, classes))
-                .orErrMag(null, tag(), "Failed to find method!");
+            .orErrMag(null, tag(), "Failed to find method!");
     }
 
     public static ArrayList<Method> findAllMethod(String clazz, String name) {
@@ -179,7 +179,7 @@ public class CoreTool {
 
     public static Constructor<?> findConstructor(Class<?> clazz, Class<?>... classes) {
         return run(() -> XposedHelpers.findConstructorExact(clazz, classes))
-                .orErrMag(null, tag(), "Failed to find constructor!");
+            .orErrMag(null, tag(), "Failed to find constructor!");
     }
 
     public static ArrayList<Constructor<?>> findAllConstructor(String clazz) {
@@ -218,65 +218,65 @@ public class CoreTool {
 
     public static Field findField(Class<?> clazz, String name) {
         return run(() -> XposedHelpers.findField(clazz, name))
-                .orErrMag(null, tag(), "Failed to find field!");
+            .orErrMag(null, tag(), "Failed to find field!");
     }
 
     // --------- 执行 hook -----------
     // --------- 普通方法 -------------
-    public static UnHook hook(String clazz, String method, Object... params) {
-        return hook(clazz, ToolData.classLoader, method, params);
+    public static UnHook hookMethod(String clazz, String method, Object... params) {
+        return hookMethod(clazz, ToolData.classLoader, method, params);
     }
 
-    public static UnHook hook(String clazz, ClassLoader classLoader, String method, Object... params) {
-        return hook(findClass(clazz, classLoader), method, toClassAsIAction(classLoader, params));
+    public static UnHook hookMethod(String clazz, ClassLoader classLoader, String method, Object... params) {
+        return hookMethod(findClass(clazz, classLoader), method, toClassAsIAction(classLoader, params));
     }
 
-    public static UnHook hook(Class<?> clazz, ClassLoader classLoader, String method, Object... params) {
-        return hook(clazz, method, toClassAsIAction(classLoader, params));
+    public static UnHook hookMethod(Class<?> clazz, ClassLoader classLoader, String method, Object... params) {
+        return hookMethod(clazz, method, toClassAsIAction(classLoader, params));
     }
 
-    public static UnHook hook(Class<?> clazz, String method, Object... params) {
+    public static UnHook hookMethod(Class<?> clazz, String method, Object... params) {
         return hook(clazz, method, HookType.METHOD, params);
     }
 
-    public static UnHookList hookAll(String clazz, String method, IAction iAction) {
-        return hookAll(findClass(clazz), method, iAction);
+    public static UnHookList hookAllMethod(String clazz, String method, IAction iAction) {
+        return hookAllMethod(findClass(clazz), method, iAction);
     }
 
-    public static UnHookList hookAll(String clazz, ClassLoader classLoader, String method, IAction iAction) {
-        return hookAll(findClass(clazz, classLoader), method, iAction);
+    public static UnHookList hookAllMethod(String clazz, ClassLoader classLoader, String method, IAction iAction) {
+        return hookAllMethod(findClass(clazz, classLoader), method, iAction);
     }
 
-    public static UnHookList hookAll(Class<?> clazz, String method, IAction iAction) {
+    public static UnHookList hookAllMethod(Class<?> clazz, String method, IAction iAction) {
         return hookAll(findAllMethod(clazz, method), iAction);
     }
 
     // --------- 构造函数 ------------
-    public static UnHook hook(String clazz, Object... params) {
-        return hook(findClass(clazz), params);
+    public static UnHook hookConstructor(String clazz, Object... params) {
+        return hookConstructor(findClass(clazz), params);
     }
 
-    public static UnHook hook(String clazz, ClassLoader classLoader, Object... params) {
-        return hook(findClass(clazz, classLoader), toClassAsIAction(classLoader, params));
+    public static UnHook hookConstructor(String clazz, ClassLoader classLoader, Object... params) {
+        return hookConstructor(findClass(clazz, classLoader), toClassAsIAction(classLoader, params));
     }
 
-    public static UnHook hook(Class<?> clazz, ClassLoader classLoader, Object... params) {
-        return hook(clazz, toClassAsIAction(classLoader, params));
+    public static UnHook hookConstructor(Class<?> clazz, ClassLoader classLoader, Object... params) {
+        return hookConstructor(clazz, toClassAsIAction(classLoader, params));
     }
 
-    public static UnHook hook(Class<?> clazz, Object... params) {
+    public static UnHook hookConstructor(Class<?> clazz, Object... params) {
         return hook(clazz, null, HookType.CONSTRUCTOR, params);
     }
 
-    public static UnHookList hookAll(String clazz, IAction iAction) {
+    public static UnHookList hookAllConstructor(String clazz, IAction iAction) {
         return hookAll(findAllConstructor(clazz), iAction);
     }
 
-    public static UnHookList hookAll(String clazz, ClassLoader classLoader, IAction iAction) {
+    public static UnHookList hookAllConstructor(String clazz, ClassLoader classLoader, IAction iAction) {
         return hookAll(findAllConstructor(clazz, classLoader), iAction);
     }
 
-    public static UnHookList hookAll(Class<?> clazz, IAction iAction) {
+    public static UnHookList hookAllConstructor(Class<?> clazz, IAction iAction) {
         return hookAll(findAllConstructor(clazz), iAction);
     }
 
@@ -287,7 +287,7 @@ public class CoreTool {
     }
 
     private static UnHook hook(Class<?> clazz, String method, HookType hookType, Object... params) {
-        String debug = hookType.toString() + "#" + clazz.getName() + "#" + method + "#" + Arrays.toString(params);
+        String debug = hookType.toString() + "#" + (clazz == null ? "null" : clazz.getName()) + "#" + method + "#" + Arrays.toString(params);
         if (params == null || params.length == 0 || !(params[params.length - 1] instanceof IAction iAction)) {
             logW(tag(), "Params is null or length is 0 or last param not is IAction! \ndebug: " + debug + getStackTrace());
             return null;
@@ -295,16 +295,16 @@ public class CoreTool {
 
         return run(() -> {
             Class<?>[] classes = Arrays.stream(params)
-                    .limit(params.length - 1)
-                    .map(o -> {
-                        if (o instanceof String s) {
-                            Class<?> c = findClass(s);
-                            if (c == null)
-                                throw new RuntimeException("Found class is null, stop to hook!");
-                            return c;
-                        } else if (o instanceof Class<?> c) return c;
-                        else throw new RuntimeException("Unknown type: " + o);
-                    }).toArray(Class<?>[]::new);
+                .limit(params.length - 1)
+                .map(o -> {
+                    if (o instanceof String s) {
+                        Class<?> c = findClass(s);
+                        if (c == null)
+                            throw new RuntimeException("Found class is null, stop to hook!");
+                        return c;
+                    } else if (o instanceof Class<?> c) return c;
+                    else throw new RuntimeException("Unknown type: " + o);
+                }).toArray(Class<?>[]::new);
             Member member = null;
             switch (hookType) {
                 case METHOD -> member = findMethod(clazz, method, classes);
@@ -473,12 +473,12 @@ public class CoreTool {
     // ---------- 非静态 -----------
     public static <T> T callMethod(Object instance, String name, Object... objs) {
         return run(() -> (T) XposedHelpers.callMethod(instance, name, objs))
-                .orErrMag(null, tag(), "Failed to call method!");
+            .orErrMag(null, tag(), "Failed to call method!");
     }
 
     public static <T> T getField(Object instance, String name) {
         return run(() -> (T) XposedHelpers.getObjectField(instance, name))
-                .orErrMag(null, tag(), "Failed to get field!");
+            .orErrMag(null, tag(), "Failed to get field!");
     }
 
     public static <T> T getField(Object instance, Field field) {
@@ -505,23 +505,23 @@ public class CoreTool {
 
     public static <T> T setAdditionalInstanceField(Object instance, String key, Object value) {
         return run(() -> (T) XposedHelpers.setAdditionalInstanceField(instance, key, value))
-                .orErrMag(null, tag(), "Failed to set additional instance!");
+            .orErrMag(null, tag(), "Failed to set additional instance!");
     }
 
     public static <T> T getAdditionalInstanceField(Object instance, String key) {
         return run(() -> (T) XposedHelpers.getAdditionalInstanceField(instance, key))
-                .orErrMag(null, tag(), "Failed to get additional instance!");
+            .orErrMag(null, tag(), "Failed to get additional instance!");
     }
 
     public static <T> T removeAdditionalInstanceField(Object instance, String key) {
         return run(() -> (T) XposedHelpers.removeAdditionalInstanceField(instance, key))
-                .orErrMag(null, tag(), "Failed to remove additional instance!");
+            .orErrMag(null, tag(), "Failed to remove additional instance!");
     }
 
     // ---------- 静态 ------------
     public static <T> T newInstance(Class<?> clz, Object... objects) {
         return run(() -> (T) XposedHelpers.newInstance(clz, objects))
-                .orErrMag(null, tag(), "Failed to create new instance!");
+            .orErrMag(null, tag(), "Failed to create new instance!");
     }
 
     public static <T> T newInstance(String clz, Object... objects) {
@@ -534,7 +534,7 @@ public class CoreTool {
 
     public static <T> T callStaticMethod(Class<?> clz, String name, Object... objs) {
         return run(() -> (T) XposedHelpers.callStaticMethod(clz, name, objs))
-                .orErrMag(null, tag(), "Failed to call static method!");
+            .orErrMag(null, tag(), "Failed to call static method!");
     }
 
     public static <T> T callStaticMethod(String clz, String name, Object... objs) {
@@ -554,7 +554,7 @@ public class CoreTool {
 
     public static <T> T getStaticField(Class<?> clz, String name) {
         return run(() -> (T) XposedHelpers.getStaticObjectField(clz, name))
-                .orErrMag(null, tag(), "Failed to get static field!");
+            .orErrMag(null, tag(), "Failed to get static field!");
     }
 
     public static <T> T getStaticField(String clz, String name) {
@@ -597,17 +597,17 @@ public class CoreTool {
 
     public static <T> T setAdditionalStaticField(Class<?> clz, String key, Object value) {
         return run(() -> (T) XposedHelpers.setAdditionalStaticField(clz, key, value))
-                .orErrMag(null, tag(), "Failed to set static additional instance!");
+            .orErrMag(null, tag(), "Failed to set static additional instance!");
     }
 
     public static <T> T getAdditionalStaticField(Class<?> clz, String key) {
         return run(() -> (T) XposedHelpers.getAdditionalStaticField(clz, key))
-                .orErrMag(null, tag(), "Failed to get static additional instance!");
+            .orErrMag(null, tag(), "Failed to get static additional instance!");
     }
 
     public static <T> T removeAdditionalStaticField(Class<?> clz, String key) {
         return run(() -> (T) XposedHelpers.removeAdditionalStaticField(clz, key))
-                .orErrMag(null, tag(), "Failed to remove static additional instance!");
+            .orErrMag(null, tag(), "Failed to remove static additional instance!");
     }
 
     public static <T> T setAdditionalStaticField(String clz, String key, Object value) {

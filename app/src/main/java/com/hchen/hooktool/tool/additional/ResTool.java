@@ -313,11 +313,11 @@ public class ResTool {
     }
 
     private static void hookResMethod(String name, Object... args) {
-        unhooks.add(CoreTool.hook(Resources.class, name, args));
+        unhooks.add(CoreTool.hookMethod(Resources.class, name, args));
     }
 
     private static void hookTypedMethod(String name, Object... args) {
-        unhooks.add(CoreTool.hook(TypedArray.class, name, args));
+        unhooks.add(CoreTool.hookMethod(TypedArray.class, name, args));
     }
 
     public static void unHookRes() {

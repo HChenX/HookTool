@@ -31,7 +31,7 @@ import de.robv.android.xposed.XC_MethodHook;
 
 /**
  * 动作
- * 
+ *
  * @author 焕晨HChen
  */
 public class ActAchieve {
@@ -131,7 +131,7 @@ public class ActAchieve {
     }
 
     // ---------- 设置自定义字段 --------------
-    final public boolean setThisAdditionalInstanceField(String key, Object value) {
+    final public <T> T setThisAdditionalInstanceField(String key, Object value) {
         return setAdditionalInstanceField(MethodHookParam.thisObject, key, value);
     }
 
@@ -139,7 +139,7 @@ public class ActAchieve {
         return getAdditionalInstanceField(MethodHookParam.thisObject, key);
     }
 
-    final public boolean removeThisAdditionalInstanceField(String key) {
+    final public <T> T removeThisAdditionalInstanceField(String key) {
         return removeAdditionalInstanceField(MethodHookParam.thisObject, key);
     }
 }
