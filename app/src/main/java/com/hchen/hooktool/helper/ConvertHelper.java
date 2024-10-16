@@ -22,12 +22,13 @@ import static com.hchen.hooktool.log.LogExpand.getStackTrace;
 import static com.hchen.hooktool.log.XposedLog.logW;
 import static com.hchen.hooktool.tool.CoreTool.findClass;
 
+import androidx.annotation.Nullable;
+
 import com.hchen.hooktool.data.ToolData;
 import com.hchen.hooktool.hook.IAction;
 import com.hchen.hooktool.log.LogExpand;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 /**
  * 快捷转换
@@ -50,40 +51,29 @@ public class ConvertHelper {
     /**
      * 数组参数转为类。
      */
+    @Nullable
     public static Class<?>[] arrayToClass(ClassLoader classLoader, Object... objs) {
         if (objs.length == 0) return new Class<?>[]{};
         ArrayList<Class<?>> classes = new ArrayList<>();
+        label:
         for (Object o : objs) {
-            if (o instanceof Class<?> c) {
-                classes.add(c);
-            } else if (o instanceof String s) {
-                Class<?> ct = findClass(s, classLoader);
-                if (ct == null) return new Class[]{};
-                classes.add(ct);
-            } else if (o instanceof IAction) {
-                break; // IAction 必定为最后一个参数 (如果有)
-            } else {
-                logW(tag(), "Unknown type: " + o + getStackTrace());
-                return new Class[]{};
+            switch (o) {
+                case Class<?> c:
+                    classes.add(c);
+                    break;
+                case String s:
+                    Class<?> ct = findClass(s, classLoader).get();
+                    if (ct == null) return null;
+                    classes.add(ct);
+                    break;
+                case IAction iAction:
+                    break label; // IAction 必定为最后一个参数 (如果有)
+                case null:
+                default:
+                    logW(LogExpand.tag(), "Unknown type: " + o + getStackTrace());
+                    return null;
             }
         }
         return classes.toArray(new Class<?>[0]);
-    }
-
-    // 将数组转成类并保留 IAction 参数
-    public static Object[] toClassAsIAction(ClassLoader classLoader, Object... objs) {
-        if (objs.length == 0 || !(objs[objs.length - 1] instanceof IAction iAction))
-            return new Object[]{};
-
-        Class<?>[] classes = arrayToClass(classLoader, objs);
-        ArrayList<Object> arrayList = new ArrayList<>(Arrays.asList(classes));
-        arrayList.add(iAction);
-        return arrayList.toArray(new Object[0]);
-    }
-
-    private static String tag() {
-        String tag = LogExpand.tag();
-        if (tag == null) return "ConvertHelper";
-        return tag;
     }
 }

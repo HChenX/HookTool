@@ -19,6 +19,7 @@
 package com.hchen.hooktool.tool.additional;
 
 import static com.hchen.hooktool.log.LogExpand.getStackTrace;
+import static com.hchen.hooktool.log.LogExpand.tag;
 import static com.hchen.hooktool.log.XposedLog.logE;
 import static com.hchen.hooktool.log.XposedLog.logW;
 import static com.hchen.hooktool.tool.additional.ContextTool.FLAG_ALL;
@@ -41,7 +42,6 @@ import androidx.annotation.RequiresApi;
 
 import com.hchen.hooktool.data.ToolData;
 import com.hchen.hooktool.hook.IAction;
-import com.hchen.hooktool.log.LogExpand;
 import com.hchen.hooktool.tool.CoreTool;
 
 import java.io.File;
@@ -466,12 +466,6 @@ public class ResTool {
             }
         }
         return null;
-    }
-
-    private static String tag() {
-        String tag = LogExpand.tag();
-        if (tag == null) return "ResTool";
-        return tag;
     }
 
     // 下面注入方法存在风险，可能导致资源混乱，抛弃。

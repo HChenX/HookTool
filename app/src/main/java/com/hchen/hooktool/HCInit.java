@@ -121,36 +121,6 @@ public class HCInit {
         ToolData.mPrefsName = basicData.prefsName;
     }
 
-    public static class BasicData {
-        String packageName = null;
-        String tag = null;
-        int logLevel = LOG_I;
-        String prefsName = null;
-
-        public BasicData() {
-        }
-
-        public BasicData setModulePackageName(String modulePackageName) {
-            packageName = modulePackageName;
-            return this;
-        }
-
-        public BasicData setTag(String tag) {
-            this.tag = tag;
-            return this;
-        }
-
-        public BasicData setLogLevel(@LogLevel int level) {
-            logLevel = level;
-            return this;
-        }
-
-        public BasicData setPrefsName(String prefsName) {
-            this.prefsName = prefsName;
-            return this;
-        }
-    }
-
     /**
      * 是否自动更新 xprefs 数据。
      * <p>
@@ -194,5 +164,36 @@ public class HCInit {
     public static boolean isXposedModuleActive(XC_LoadPackage.LoadPackageParam lpparam,
                                                String path, String fieldName, Object value) {
         return CoreTool.setStaticField(path, lpparam.classLoader, fieldName, value);
+    }
+
+    public static class BasicData {
+        String packageName = null;
+        String tag = null;
+        int logLevel = LOG_I;
+        String prefsName = null;
+
+        // 设置包名
+        public BasicData setModulePackageName(String modulePackageName) {
+            packageName = modulePackageName;
+            return this;
+        }
+
+        // 设置日志 TAG
+        public BasicData setTag(String tag) {
+            this.tag = tag;
+            return this;
+        }
+
+        // 设置日志输出等级
+        public BasicData setLogLevel(@LogLevel int level) {
+            logLevel = level;
+            return this;
+        }
+
+        // 设置共享首选项的储存名
+        public BasicData setPrefsName(String prefsName) {
+            this.prefsName = prefsName;
+            return this;
+        }
     }
 }

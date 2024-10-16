@@ -19,9 +19,9 @@
 package com.hchen.hooktool.tool.additional;
 
 import static com.hchen.hooktool.log.LogExpand.getStackTrace;
+import static com.hchen.hooktool.log.LogExpand.tag;
 
 import com.hchen.hooktool.log.AndroidLog;
-import com.hchen.hooktool.log.LogExpand;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -151,11 +151,5 @@ public class InvokeTool {
             AndroidLog.logE(tag(), e);
         }
         return null;
-    }
-
-    private static String tag() {
-        String tag = LogExpand.tag();
-        if (tag == null) return "InvokeTool";
-        return tag;
     }
 }

@@ -24,7 +24,7 @@ import de.robv.android.xposed.XposedBridge;
 
 /**
  * LSP 框架日志
- * 
+ *
  * @author 焕晨HChen
  */
 public class XposedLog {
@@ -32,6 +32,11 @@ public class XposedLog {
     public static void logE(String tag, String log) {
         if (ToolData.mInitLogLevel < 1) return;
         XposedBridge.log(ToolData.mInitTag + "[" + tag + "]" + "[E]: " + log);
+    }
+
+    public static void logE(String tag, String log, String msg) {
+        if (ToolData.mInitLogLevel < 1) return;
+        XposedBridge.log(ToolData.mInitTag + "[" + tag + "]" + "[E]: " + log + " \n[Error Msg]: " + msg);
     }
 
     public static void logE(String tag, Throwable e) {

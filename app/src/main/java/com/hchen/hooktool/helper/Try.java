@@ -18,7 +18,10 @@
  */
 package com.hchen.hooktool.helper;
 
+import static com.hchen.hooktool.log.LogExpand.tag;
 import static com.hchen.hooktool.log.XposedLog.logE;
+
+import com.hchen.hooktool.tool.MemberData;
 
 /**
  * 方法执行与异常处理类
@@ -27,14 +30,23 @@ import static com.hchen.hooktool.log.XposedLog.logE;
  */
 public class Try {
 
+    /*
+     * 执行并返回执行的结果或抛错。
+     * */
     public static <T> Result<T> run(Run<T> supplier) {
-        return new Result<T>(supplier);
+        return new Result<>(supplier);
     }
 
-    /**
+
+    /*
+     * 执行并储存执行的结果与抛错。
+     * */
+    public static <T> MemberData<T> runDump(Run<T> supplier) {
+        return (MemberData<T>) new Result<>(supplier, true).dump();
+    }
+
+    /*
      * 简单的执行代码并获取返回值，与此同时主动抛出可能的异常。
-     *
-     * @author 焕晨HChen
      */
     public interface Run<T> {
         T run() throws Throwable;
@@ -42,10 +54,21 @@ public class Try {
 
     public static class Result<T> {
         private T result;
+        private boolean dump;
+        private MemberData<T> memberData;
         private boolean isSuccess;
         private Throwable throwable;
 
         public Result(Run<T> supplier) {
+            doRun(supplier);
+        }
+
+        public Result(Run<T> supplier, boolean dump) {
+            this.dump = dump;
+            doRun(supplier);
+        }
+
+        private void doRun(Run<T> supplier) {
             try {
                 result = supplier.run();
                 isSuccess = true;
@@ -55,6 +78,12 @@ public class Try {
                 isSuccess = false;
                 result = null;
             }
+            if (dump)
+                memberData = new MemberData<>(result, throwable);
+        }
+
+        public MemberData<?> dump() {
+            return memberData;
         }
 
         // 获取执行结果
@@ -75,9 +104,9 @@ public class Try {
             return or;
         }
 
-        public T orErrMag(T or, String tag, String msg) {
+        public T orErrMag(T or, String msg) {
             if (isSuccess) return result;
-            logE(tag, msg, throwable);
+            logE(tag(), msg, throwable);
             return or;
         }
 

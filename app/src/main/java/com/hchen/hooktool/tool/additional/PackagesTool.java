@@ -20,6 +20,7 @@ package com.hchen.hooktool.tool.additional;
 
 import static com.hchen.hooktool.log.AndroidLog.logW;
 import static com.hchen.hooktool.log.LogExpand.getStackTrace;
+import static com.hchen.hooktool.log.LogExpand.tag;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -35,7 +36,6 @@ import android.os.UserHandle;
 
 import com.hchen.hooktool.data.AppData;
 import com.hchen.hooktool.log.AndroidLog;
-import com.hchen.hooktool.log.LogExpand;
 import com.hchen.hooktool.tool.itool.IPkg;
 
 import java.util.ArrayList;
@@ -261,11 +261,5 @@ public class PackagesTool {
 
     private static Context context() {
         return ContextTool.getContextNoLog(ContextTool.FLAG_ALL);
-    }
-
-    private static String tag() {
-        String tag = LogExpand.tag();
-        if (tag == null) return "PackagesTool";
-        return tag;
     }
 }

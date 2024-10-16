@@ -19,6 +19,7 @@
 package com.hchen.hooktool.tool.additional;
 
 import static com.hchen.hooktool.log.AndroidLog.logE;
+import static com.hchen.hooktool.log.LogExpand.tag;
 import static com.hchen.hooktool.tool.additional.InvokeTool.findClass;
 import static com.hchen.hooktool.tool.additional.InvokeTool.getStaticField;
 import static com.hchen.hooktool.tool.additional.PropTool.getProp;
@@ -27,8 +28,6 @@ import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.os.Build;
 import android.text.TextUtils;
-
-import com.hchen.hooktool.log.LogExpand;
 
 import java.util.Locale;
 
@@ -396,11 +395,5 @@ public class DeviceTool {
     public static boolean isDarkMode(Resources resources) {
         return (resources.getConfiguration().uiMode &
                 Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
-    }
-
-    private static String tag() {
-        String tag = LogExpand.tag();
-        if (tag == null) return "DeviceTool";
-        return tag;
     }
 }

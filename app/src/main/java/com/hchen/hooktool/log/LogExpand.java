@@ -81,11 +81,11 @@ public class LogExpand {
         });
         return stringBuilder.toString();
     }
-
+    
     public static String tag() {
-        if (ToolData.logExpandPath == null) return null;
+        if (ToolData.logExpandPath == null) return "HookTool";
         if (ToolData.logExpandPath.length == 0) {
-            if (ToolData.modulePackageName == null) return null;
+            if (ToolData.modulePackageName == null) return "HookTool";
             ToolData.logExpandPath = new String[]{ToolData.modulePackageName};
         }
         String tag = null;

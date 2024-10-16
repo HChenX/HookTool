@@ -19,6 +19,7 @@
 package com.hchen.hooktool.tool;
 
 import static com.hchen.hooktool.log.LogExpand.getStackTrace;
+import static com.hchen.hooktool.log.LogExpand.tag;
 import static com.hchen.hooktool.log.XposedLog.logE;
 import static com.hchen.hooktool.log.XposedLog.logW;
 
@@ -28,7 +29,6 @@ import android.content.SharedPreferences;
 
 import com.hchen.hooktool.data.ToolData;
 import com.hchen.hooktool.log.AndroidLog;
-import com.hchen.hooktool.log.LogExpand;
 import com.hchen.hooktool.tool.additional.ContextTool;
 import com.hchen.hooktool.tool.itool.IPrefs;
 
@@ -163,12 +163,6 @@ public class PrefsTool {
             }
             return ToolData.mPrefsName;
         } else return name;
-    }
-
-    private static String tag() {
-        String tag = LogExpand.tag();
-        if (tag == null) return "PrefsTool";
-        return tag;
     }
 
     public static class Xprefs implements IPrefs {

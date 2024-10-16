@@ -124,7 +124,7 @@ public class Arguments extends ActAchieve {
      */
     final public <T> T getParam(int index) {
         if (size() < index + 1) {
-            logE(mTag, "Exceeding the index!" + getStackTrace());
+            logE(PRIVATETAG, "Exceeding the index!" + getStackTrace());
             return null;
         }
         return (T) MethodHookParam.args[index];
@@ -135,7 +135,7 @@ public class Arguments extends ActAchieve {
      */
     final public void setParam(int index, Object value) {
         if (size() < index + 1) {
-            logE(mTag, "Exceeding the index!" + getStackTrace());
+            logE(PRIVATETAG, "Exceeding the index!" + getStackTrace());
             return;
         }
         MethodHookParam.args[index] = value;

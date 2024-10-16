@@ -20,8 +20,6 @@ package com.hchen.hooktool.hook;
 
 import static com.hchen.hooktool.log.XposedLog.logE;
 
-import com.hchen.hooktool.data.Priority;
-
 import de.robv.android.xposed.XC_MethodHook;
 
 /**
@@ -31,65 +29,36 @@ import de.robv.android.xposed.XC_MethodHook;
  */
 public class HookFactory {
     public static XposedCallBack createHook(String tag, IAction iAction) {
-        int priority;
-        switch (iAction.PRIORITY) {
-            case Priority.LOWEST -> priority = -10000;
-            case Priority.HIGHEST -> priority = 10000;
-            default -> priority = 50;
-        }
-        iAction.mTag = tag;
-        return new XposedCallBack(tag, priority) {
-            @Override
-            public void before(MethodHookParam param) {
-                iAction.MethodHookParam(param);
-                iAction.before();
-            }
-
-            @Override
-            public void after(MethodHookParam param) {
-                iAction.MethodHookParam(param);
-                iAction.after();
-            }
-
-            @Override
-            void XC_MethodHook(XC_MethodHook xcMethodHook) {
-                iAction.XCMethodHook(xcMethodHook);
-            }
-        };
+        iAction.PRIVATETAG = tag;
+        return new XposedCallBack(iAction);
     }
 
-    public static abstract class XposedCallBack extends XC_MethodHook {
-        private final String TAG;
+    public static class XposedCallBack extends XC_MethodHook {
+        private final IAction iAction;
 
-        public XposedCallBack(String tag, int priority) {
-            super(priority);
-            TAG = tag;
-            XC_MethodHook(this);
+        public XposedCallBack(IAction iAction) {
+            super(iAction.PRIORITY);
+            this.iAction = iAction;
+            iAction.XCMethodHook(this);
         }
-
-        public void before(MethodHookParam param) {
-        }
-
-        public void after(MethodHookParam param) {
-        }
-
-        abstract void XC_MethodHook(XC_MethodHook xcMethodHook);
 
         @Override
         protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
             try {
-                before(param);
+                iAction.MethodHookParam(param);
+                iAction.before();
             } catch (Throwable e) {
-                logE(TAG + ":before", e);
+                logE(iAction.PRIVATETAG + ":before", "Waring! will stop hook process!!", e);
             }
         }
 
         @Override
         protected void afterHookedMethod(MethodHookParam param) throws Throwable {
             try {
-                after(param);
+                iAction.MethodHookParam(param);
+                iAction.after();
             } catch (Throwable e) {
-                logE(TAG + ":after", e);
+                logE(iAction.PRIVATETAG + ":after", "Waring! will stop hook process!!", e);
             }
         }
     }

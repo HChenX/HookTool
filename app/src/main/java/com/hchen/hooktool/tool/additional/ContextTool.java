@@ -19,14 +19,13 @@
 package com.hchen.hooktool.tool.additional;
 
 import static com.hchen.hooktool.log.LogExpand.getStackTrace;
+import static com.hchen.hooktool.log.LogExpand.tag;
 import static com.hchen.hooktool.log.XposedLog.logE;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
 
 import androidx.annotation.IntDef;
-
-import com.hchen.hooktool.log.LogExpand;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -184,11 +183,5 @@ public class ContextTool {
             }
             return executor;
         }
-    }
-
-    private static String tag() {
-        String tag = LogExpand.tag();
-        if (tag == null) return "ContextTool";
-        return tag;
     }
 }

@@ -36,7 +36,7 @@ import de.robv.android.xposed.XC_MethodHook;
  */
 public class ActAchieve {
     public XC_MethodHook.MethodHookParam MethodHookParam;
-    public String mTag;
+    public String PRIVATETAG;
     private LogExpand logExpand;
 
     /**
@@ -110,7 +110,7 @@ public class ActAchieve {
      */
     final public void observeCall() {
         if (logExpand == null) {
-            logExpand = new LogExpand(MethodHookParam, mTag);
+            logExpand = new LogExpand(MethodHookParam, PRIVATETAG);
         }
         logExpand.update(MethodHookParam);
         logExpand.detailedLogs();

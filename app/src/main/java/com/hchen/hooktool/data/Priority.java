@@ -19,12 +19,14 @@
 package com.hchen.hooktool.data;
 
 /**
- * 优先级枚举
+ * 示例优先级
  *
  * @author 焕晨HChen
  */
-public enum Priority {
-    DEFAULT, /* 默认优先级 */
-    LOWEST, /* 低优先级 */
-    HIGHEST /* 高优先级 */
+public class Priority {
+    // 可以直接使用这些示例优先级，也可以自定义。
+    // 但注意范围是：LOWEST <= CUSTOM <= HIGHEST。
+    public static final int DEFAULT = 50;
+    public static final int LOWEST = -10000;/* 低优先级 */
+    public static final int HIGHEST = 10000; /* 高优先级 */
 }

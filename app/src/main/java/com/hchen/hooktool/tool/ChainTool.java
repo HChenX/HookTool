@@ -25,6 +25,7 @@ import static com.hchen.hooktool.data.ChainData.TYPE_METHOD;
 import static com.hchen.hooktool.helper.ConvertHelper.arrayToClass;
 import static com.hchen.hooktool.hook.HookFactory.createHook;
 import static com.hchen.hooktool.log.LogExpand.getStackTrace;
+import static com.hchen.hooktool.log.LogExpand.tag;
 import static com.hchen.hooktool.log.XposedLog.logD;
 import static com.hchen.hooktool.log.XposedLog.logE;
 import static com.hchen.hooktool.log.XposedLog.logW;
@@ -36,7 +37,6 @@ import com.hchen.hooktool.data.ChainData;
 import com.hchen.hooktool.data.HookState;
 import com.hchen.hooktool.data.ToolData;
 import com.hchen.hooktool.hook.IAction;
-import com.hchen.hooktool.log.LogExpand;
 
 import java.lang.reflect.Member;
 import java.util.ArrayList;
@@ -67,17 +67,17 @@ public class ChainTool {
 
     public static void chain(String clazz, ChainTool chain) {
         chain.classLoader = null;
-        chain(findClass(clazz), chain);
+        chain.doFind(findClass(clazz).get());
     }
 
     public static void chain(String clazz, ClassLoader classLoader, ChainTool chain) {
         chain.classLoader = classLoader;
-        chain(findClass(clazz, classLoader), chain);
+        chain.doFind(findClass(clazz, classLoader).get());
     }
 
     public static void chain(Class<?> clazz, ChainTool chain) {
         if (clazz == null) {
-            logW(tag(), "Class is null!" + getStackTrace());
+            logW(tag(), "Class is null, can't create chain hook!" + getStackTrace());
             return;
         }
         chain.doFind(clazz);
@@ -111,6 +111,7 @@ public class ChainTool {
 
     // 各种奇奇怪怪的添加 >.<
     private void doFind(Class<?> clazz) {
+        if (clazz == null) return;
         if (cacheDataList.isEmpty()) {
             logW(tag(), "cache data list is empty, can't find or hook anything!" + getStackTrace());
             cacheDataList.clear();
@@ -121,19 +122,19 @@ public class ChainTool {
             String UUID = cacheData.mType + "#" + clazz.getName() + "#" + cacheData.mName + "#" + Arrays.toString(cacheData.mParams);
             switch (cacheData.mType) {
                 case TYPE_METHOD -> members.add(new ChainData(
-                    findMethod(clazz, cacheData.mName, arrayToClass(
-                        classLoader == null ? ToolData.classLoader : classLoader,
-                        cacheData.mParams))));
+                        findMethod(clazz, cacheData.mName, arrayToClass(
+                                classLoader == null ? ToolData.classLoader : classLoader,
+                                cacheData.mParams)).get()));
                 case TYPE_CONSTRUCTOR -> members.add(new ChainData(
-                    findConstructor(clazz, arrayToClass(
-                        classLoader == null ? ToolData.classLoader : classLoader,
-                        cacheData.mParams))));
+                        findConstructor(clazz, arrayToClass(
+                                classLoader == null ? ToolData.classLoader : classLoader,
+                                cacheData.mParams)).get()));
                 case TYPE_ANY_METHOD ->
-                    members.addAll(CoreTool.findAllMethod(clazz, cacheData.mName).stream().map(
-                        ChainData::new).collect(Collectors.toCollection(ArrayList::new)));
+                        members.addAll(CoreTool.findAllMethod(clazz, cacheData.mName).stream().map(
+                                ChainData::new).collect(Collectors.toCollection(ArrayList::new)));
                 case TYPE_ANY_CONSTRUCTOR ->
-                    members.addAll(CoreTool.findAllConstructor(clazz).stream().map(
-                        ChainData::new).collect(Collectors.toCollection(ArrayList::new)));
+                        members.addAll(CoreTool.findAllConstructor(clazz).stream().map(
+                                ChainData::new).collect(Collectors.toCollection(ArrayList::new)));
                 default -> {
                     logW(tag(), "Unknown type: " + cacheData.mType + getStackTrace());
                     members.clear();
@@ -148,14 +149,13 @@ public class ChainTool {
                     if (memberData.member == null || existingMembers.contains(memberData.member)) {
                         iterator.remove();
                         logW(tag(), "This member maybe repeated or maybe is null, will remove it! " +
-                            "\ndebug: " + UUID + "#member: " + memberData.member);
+                                "\ndebug: " + UUID + "#member: " + memberData.member);
                         continue;
                     }
                     existingMembers.add(memberData.member);
                 }
                 if (members.isEmpty()) continue;
-                ArrayList<ChainData> finalMembers = new ArrayList<>(members);
-                chainDataList.add(new ChainData(finalMembers, cacheData.iAction, HookState.NONE, UUID));
+                chainDataList.add(new ChainData(new ArrayList<>(members), cacheData.iAction, HookState.NONE, UUID));
             } else
                 logW(tag(), "This member maybe repeated, will skip add it! \ndebug: " + UUID);
             members.clear();
@@ -223,11 +223,5 @@ public class ChainTool {
             chain.cacheDataList.add(chain.cacheData);
             return chain;
         }
-    }
-
-    private static String tag() {
-        String tag = LogExpand.tag();
-        if (tag == null) return "ChainTool";
-        return tag;
     }
 }
