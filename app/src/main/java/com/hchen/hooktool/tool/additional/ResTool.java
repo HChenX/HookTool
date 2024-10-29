@@ -19,7 +19,7 @@
 package com.hchen.hooktool.tool.additional;
 
 import static com.hchen.hooktool.log.LogExpand.getStackTrace;
-import static com.hchen.hooktool.log.LogExpand.tag;
+import static com.hchen.hooktool.log.LogExpand.getTag;
 import static com.hchen.hooktool.log.XposedLog.logE;
 import static com.hchen.hooktool.log.XposedLog.logW;
 import static com.hchen.hooktool.tool.additional.ContextTool.FLAG_ALL;
@@ -90,13 +90,13 @@ public class ResTool {
     public static Resources loadModuleRes(Resources resources, boolean doOnMainLooper) {
         boolean load = false;
         if (resources == null) {
-            logW(tag(), "Context can't is null!" + getStackTrace());
+            logW(getTag(), "Context can't is null!" + getStackTrace());
             return null;
         }
         if (mModulePath == null) {
             mModulePath = ToolData.startupParam != null ? ToolData.startupParam.modulePath : null;
             if (mModulePath == null) {
-                logW(tag(), "Module path is null, can't load module res!" + getStackTrace());
+                logW(getTag(), "Module path is null, can't load module res!" + getStackTrace());
                 return null;
             }
         }
@@ -142,7 +142,7 @@ public class ResTool {
                 loader.addProvider(provider);
                 resourcesLoader = loader;
             } catch (IOException e) {
-                logE(tag(), "Failed to add resource! debug: above api 30.", e);
+                logE(getTag(), "Failed to add resource! debug: above api 30.", e);
                 return false;
             }
         }
@@ -172,7 +172,7 @@ public class ResTool {
                 // fallback to below API 30
                 return loadResBelowApi30(resources);
             } else {
-                logE(tag(), "Failed to add loaders!", e);
+                logE(getTag(), "Failed to add loaders!", e);
                 return false;
             }
         }
@@ -188,11 +188,11 @@ public class ResTool {
             addAssetPath.setAccessible(true);
             Integer cookie = (Integer) addAssetPath.invoke(assets, mModulePath);
             if (cookie == null || cookie == 0) {
-                logW(tag(), "Method 'addAssetPath' result 0, maybe load res failed!" + getStackTrace());
+                logW(getTag(), "Method 'addAssetPath' result 0, maybe load res failed!" + getStackTrace());
                 return false;
             }
         } catch (Throwable e) {
-            logE(tag(), "Failed to add resource! debug: below api 30.", e);
+            logE(getTag(), "Failed to add resource! debug: below api 30.", e);
             return false;
         }
         return true;
@@ -235,7 +235,7 @@ public class ResTool {
             applyHooks();
             replacements.put(pkg + ":" + type + "/" + name, new Pair<>(ReplacementType.ID, replacementResId));
         } catch (Throwable t) {
-            logE(tag(), "Failed to set res replacement!", t);
+            logE(getTag(), "Failed to set res replacement!", t);
         }
     }
 
@@ -247,7 +247,7 @@ public class ResTool {
             applyHooks();
             replacements.put(pkg + ":" + type + "/" + name, new Pair<>(ReplacementType.DENSITY, replacementResValue));
         } catch (Throwable t) {
-            logE(tag(), "Failed to set density res replacement!", t);
+            logE(getTag(), "Failed to set density res replacement!", t);
         }
     }
 
@@ -259,7 +259,7 @@ public class ResTool {
             applyHooks();
             replacements.put(pkg + ":" + type + "/" + name, new Pair<>(ReplacementType.OBJECT, replacementResValue));
         } catch (Throwable t) {
-            logE(tag(), "Failed to set object res replacement!", t);
+            logE(getTag(), "Failed to set object res replacement!", t);
         }
     }
 
@@ -270,7 +270,7 @@ public class ResTool {
             if (mModulePath == null) {
                 unHookRes();
                 throw new RuntimeException(ToolData.mInitTag +
-                        "[" + tag() + "][E]: Module path is null, Please init this in initStartupParam()!" + getStackTrace());
+                        "[" + getTag() + "][E]: Module path is null, Please init this in initStartupParam()!" + getStackTrace());
             }
         }
         Method[] resMethods = Resources.class.getDeclaredMethods();
@@ -462,7 +462,7 @@ public class ResTool {
                     return replacement.second;
                 }
             } catch (Throwable e) {
-                logE(tag(), e);
+                logE(getTag(), e);
             }
         }
         return null;

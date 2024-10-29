@@ -44,6 +44,7 @@ public class ConvertHelper {
         return new Object[]{ts};
     }
 
+    @Nullable
     public static Class<?>[] arrayToClass(Object... objs) {
         return arrayToClass(ToolData.classLoader, objs);
     }
@@ -55,23 +56,18 @@ public class ConvertHelper {
     public static Class<?>[] arrayToClass(ClassLoader classLoader, Object... objs) {
         if (objs.length == 0) return new Class<?>[]{};
         ArrayList<Class<?>> classes = new ArrayList<>();
-        label:
         for (Object o : objs) {
-            switch (o) {
-                case Class<?> c:
-                    classes.add(c);
-                    break;
-                case String s:
-                    Class<?> ct = findClass(s, classLoader).get();
-                    if (ct == null) return null;
-                    classes.add(ct);
-                    break;
-                case IAction iAction:
-                    break label; // IAction 必定为最后一个参数 (如果有)
-                case null:
-                default:
-                    logW(LogExpand.tag(), "Unknown type: " + o + getStackTrace());
-                    return null;
+            if (o instanceof Class<?> c) {
+                classes.add(c);
+            } else if (o instanceof String s) {
+                Class<?> ct = findClass(s, classLoader).get();
+                if (ct == null) return null;
+                classes.add(ct);
+            } else if (o instanceof IAction) {
+                break; // 一定为最后一个参数
+            } else {
+                logW(LogExpand.getTag(), "Unknown type: " + o + getStackTrace());
+                return null;
             }
         }
         return classes.toArray(new Class<?>[0]);

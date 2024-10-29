@@ -19,7 +19,7 @@
 package com.hchen.hooktool.tool.additional;
 
 import static com.hchen.hooktool.log.LogExpand.getStackTrace;
-import static com.hchen.hooktool.log.LogExpand.tag;
+import static com.hchen.hooktool.log.LogExpand.getTag;
 import static com.hchen.hooktool.log.XposedLog.logE;
 
 import android.annotation.SuppressLint;
@@ -59,7 +59,7 @@ public class ContextTool {
         try {
             return invokeMethod(flag);
         } catch (Throwable e) {
-            logE(tag(), e);
+            logE(getTag(), e);
             return null;
         }
     }

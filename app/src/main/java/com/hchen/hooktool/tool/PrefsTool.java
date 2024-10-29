@@ -19,7 +19,7 @@
 package com.hchen.hooktool.tool;
 
 import static com.hchen.hooktool.log.LogExpand.getStackTrace;
-import static com.hchen.hooktool.log.LogExpand.tag;
+import static com.hchen.hooktool.log.LogExpand.getTag;
 import static com.hchen.hooktool.log.XposedLog.logE;
 import static com.hchen.hooktool.log.XposedLog.logW;
 
@@ -71,7 +71,7 @@ public class PrefsTool {
     public static IPrefs prefs() {
         if (!ToolData.isXposed)
             throw new RuntimeException(ToolData.mInitTag +
-                    "[" + tag() + "][E]: Not xposed environment!" + getStackTrace());
+                    "[" + getTag() + "][E]: Not xposed environment!" + getStackTrace());
         return prefs((String) null);
     }
 
@@ -83,7 +83,7 @@ public class PrefsTool {
     public static IPrefs prefs(String prefsName) {
         if (!ToolData.isXposed)
             throw new RuntimeException(ToolData.mInitTag +
-                    "[" + tag() + "][E]: Not xposed environment!" + getStackTrace());
+                    "[" + getTag() + "][E]: Not xposed environment!" + getStackTrace());
         return new Xprefs(currentXsp(prefsName));
     }
 
@@ -95,13 +95,13 @@ public class PrefsTool {
     public static void asyncPrefs(IAsyncPrefs asyncPrefs) {
         if (!ToolData.isXposed)
             throw new RuntimeException(ToolData.mInitTag +
-                    "[" + tag() + "][E]: Not xposed environment!" + getStackTrace());
+                    "[" + getTag() + "][E]: Not xposed environment!" + getStackTrace());
         ContextTool.getAsyncContext(new ContextTool.IContext() {
             @Override
             public void find(Context context) {
                 if (context == null) {
                     throw new RuntimeException(ToolData.mInitTag +
-                            "[" + tag() + "][E]: Async prefs context is null!" + getStackTrace());
+                            "[" + getTag() + "][E]: Async prefs context is null!" + getStackTrace());
                 }
                 asyncPrefs.async(context);
             }
@@ -117,7 +117,7 @@ public class PrefsTool {
         if (xPrefs.get(prefsName) == null) {
             if (ToolData.modulePackageName == null) {
                 throw new RuntimeException(ToolData.mInitTag +
-                        "[" + tag() + "][E]: Module package name is null, Please set module package name!" + getStackTrace());
+                        "[" + getTag() + "][E]: Module package name is null, Please set module package name!" + getStackTrace());
             }
             XSharedPreferences x = new XSharedPreferences(ToolData.modulePackageName, prefsName);
             x.makeWorldReadable();
@@ -135,7 +135,7 @@ public class PrefsTool {
         prefsName = initPrefsName(prefsName);
         if (context == null) {
             throw new RuntimeException(ToolData.mInitTag +
-                    "[" + tag() + "][E]: Context is null, can't create sprefs!" + getStackTrace());
+                    "[" + getTag() + "][E]: Context is null, can't create sprefs!" + getStackTrace());
         }
         if (sPrefs.get(context + prefsName) == null) {
             SharedPreferences s;
@@ -143,7 +143,7 @@ public class PrefsTool {
                 s = context.getSharedPreferences(prefsName, Context.MODE_WORLD_READABLE);
             } catch (Throwable ignored) {
                 s = context.getSharedPreferences(prefsName, Context.MODE_PRIVATE);
-                AndroidLog.logW(tag(), "Maybe can't use xSharedPreferences!" + getStackTrace());
+                AndroidLog.logW(getTag(), "Maybe can't use xSharedPreferences!" + getStackTrace());
             }
             sPrefs.put(context + prefsName, s);
             return s;
@@ -157,7 +157,7 @@ public class PrefsTool {
             if (ToolData.mPrefsName == null) {
                 if (ToolData.modulePackageName == null) {
                     throw new RuntimeException(ToolData.mInitTag +
-                            "[" + tag() + "][E]: What prefs name you want use??" + getStackTrace());
+                            "[" + getTag() + "][E]: What prefs name you want use??" + getStackTrace());
                 }
                 return ToolData.modulePackageName + "_preferences";
             }
@@ -225,7 +225,7 @@ public class PrefsTool {
                     return getLong(key, l);
                 }
             } catch (Throwable e) {
-                logE(tag(), "Unknown error!", e);
+                logE(getTag(), "Unknown error!", e);
             }
             return null;
         }
@@ -248,7 +248,7 @@ public class PrefsTool {
         @Override
         @Nullable
         public Editor editor() {
-            logW(tag(), "Xposed can't edit prefs!" + getStackTrace());
+            logW(getTag(), "Xposed can't edit prefs!" + getStackTrace());
             return null;
         }
 
@@ -315,7 +315,7 @@ public class PrefsTool {
                     return getLong(key, l);
                 }
             } catch (Throwable e) {
-                AndroidLog.logE(tag(), "Unknown error!", e);
+                AndroidLog.logE(getTag(), "Unknown error!", e);
             }
             return null;
         }
@@ -389,7 +389,7 @@ public class PrefsTool {
                     return putLong(key, l);
                 }
             } catch (Throwable e) {
-                AndroidLog.logE(tag(), "Unknown error!", e);
+                AndroidLog.logE(getTag(), "Unknown error!", e);
             }
             return this;
         }

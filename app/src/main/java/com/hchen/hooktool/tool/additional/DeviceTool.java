@@ -19,7 +19,7 @@
 package com.hchen.hooktool.tool.additional;
 
 import static com.hchen.hooktool.log.AndroidLog.logE;
-import static com.hchen.hooktool.log.LogExpand.tag;
+import static com.hchen.hooktool.log.LogExpand.getTag;
 import static com.hchen.hooktool.tool.additional.InvokeTool.findClass;
 import static com.hchen.hooktool.tool.additional.InvokeTool.getStaticField;
 import static com.hchen.hooktool.tool.additional.PropTool.getProp;
@@ -194,7 +194,7 @@ public class DeviceTool {
                     "getOsBrand", new Class[]{});
             return "Harmony".equalsIgnoreCase(String.valueOf(osBrand));
         } catch (Throwable throwable) {
-            logE(tag(), throwable);
+            logE(getTag(), throwable);
             return false;
         }
     }

@@ -18,7 +18,7 @@
  */
 package com.hchen.hooktool.helper;
 
-import static com.hchen.hooktool.log.LogExpand.tag;
+import static com.hchen.hooktool.log.LogExpand.getTag;
 import static com.hchen.hooktool.log.XposedLog.logE;
 
 import com.hchen.hooktool.tool.MemberData;
@@ -36,8 +36,7 @@ public class Try {
     public static <T> Result<T> run(Run<T> supplier) {
         return new Result<>(supplier);
     }
-
-
+    
     /*
      * 执行并储存执行的结果与抛错。
      * */
@@ -106,7 +105,7 @@ public class Try {
 
         public T orErrMag(T or, String msg) {
             if (isSuccess) return result;
-            logE(tag(), msg, throwable);
+            logE(getTag(), msg, throwable);
             return or;
         }
 

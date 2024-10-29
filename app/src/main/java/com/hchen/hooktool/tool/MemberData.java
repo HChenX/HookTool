@@ -20,10 +20,12 @@ package com.hchen.hooktool.tool;
 
 import static com.hchen.hooktool.log.XposedLog.logE;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.hchen.hooktool.log.LogExpand;
 
+import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -36,7 +38,6 @@ public class MemberData<T> {
     private final T mMember;
     private Throwable mThrowable;
     private String mMsg = "Unknown";
-    private String mThrowableMsg = null;
 
     public MemberData(T member, Throwable throwable) {
         mMember = member;
@@ -67,7 +68,7 @@ public class MemberData<T> {
     }
 
     public boolean isSuccess() {
-        return mThrowable == null || mThrowableMsg == null;
+        return mThrowable == null;
     }
 
     protected MemberData<T> setErrMsg(String msg) {
@@ -87,20 +88,32 @@ public class MemberData<T> {
         if (mThrowable == null && Arrays.stream(throwables).allMatch(Objects::isNull))
             return this;
         StringBuilder builder = new StringBuilder(mThrowable == null ?
-                "Top throwable is null, but bottom level calling have throwable, will show it!" : mThrowableMsg);
-        for (int i = 1; i < throwables.length; i++) {
-            if (throwables[i] == null) continue;
-            builder.append("\n").append(throwables[i].getMessage());
+                "Top throwable is null, but bottom level calling have throwable, will show it!" : "");
+        if (mThrowable != null)
+            builder.append("\n").append(LogExpand.printStackTrace(mThrowable));
+        for (Throwable throwable : throwables) {
+            if (throwable == null) continue;
+            builder.append("Caused by: ").append(throwable.getMessage());
         }
-        mThrowableMsg = builder.toString();
-        mThrowable = null;
+        mThrowable = new HookToolRuntimeException(builder.toString());
         return this;
     }
 
     private void report() {
         if (mThrowable != null)
-            logE(LogExpand.tag(), mMsg, mThrowable);
-        if (mThrowableMsg != null)
-            logE(LogExpand.tag(), mMsg, mThrowableMsg);
+            logE(LogExpand.getTag(), mMsg, mThrowable);
+    }
+
+    private static class HookToolRuntimeException extends RuntimeException {
+        public HookToolRuntimeException(String message) {
+            super(message);
+        }
+
+        @Override
+        public void printStackTrace(@NonNull PrintWriter s) {
+            synchronized ((Object) s) {
+                s.println(this);
+            }
+        }
     }
 }

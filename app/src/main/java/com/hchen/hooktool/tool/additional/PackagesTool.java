@@ -20,7 +20,7 @@ package com.hchen.hooktool.tool.additional;
 
 import static com.hchen.hooktool.log.AndroidLog.logW;
 import static com.hchen.hooktool.log.LogExpand.getStackTrace;
-import static com.hchen.hooktool.log.LogExpand.tag;
+import static com.hchen.hooktool.log.LogExpand.getTag;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -59,7 +59,7 @@ public class PackagesTool {
      */
     public static boolean isUninstall(Context context, String pkg) {
         if (context == null) {
-            logW(tag(), "Context is null, can't check if the app is uninstalled!" + getStackTrace());
+            logW(getTag(), "Context is null, can't check if the app is uninstalled!" + getStackTrace());
             return false;
         }
         PackageManager packageManager = context.getPackageManager();
@@ -67,7 +67,7 @@ public class PackagesTool {
             packageManager.getPackageInfo(pkg, PackageManager.MATCH_ALL);
             return false;
         } catch (PackageManager.NameNotFoundException e) {
-            AndroidLog.logE(tag(), e);
+            AndroidLog.logE(getTag(), e);
             return true;
         }
     }
@@ -81,7 +81,7 @@ public class PackagesTool {
      */
     public static boolean isDisable(Context context, String pkg) {
         if (context == null) {
-            logW(tag(), "Context is null, can't check if an app is disabled!" + getStackTrace());
+            logW(getTag(), "Context is null, can't check if an app is disabled!" + getStackTrace());
             return false;
         }
         PackageManager packageManager = context.getPackageManager();
@@ -106,7 +106,7 @@ public class PackagesTool {
     public static boolean isHidden(Context context, String pkg) {
         try {
             if (context == null) {
-                logW(tag(), "Context is null, can't check if an app is hidden!" + getStackTrace());
+                logW(getTag(), "Context is null, can't check if an app is hidden!" + getStackTrace());
                 return false;
             }
             PackageManager packageManager = context.getPackageManager();
@@ -132,7 +132,7 @@ public class PackagesTool {
      */
     public static boolean isSystem(ApplicationInfo app) {
         if (Objects.isNull(app)) {
-            AndroidLog.logE(tag(), "ApplicationInfo is null, can't check if it's a system app!" + getStackTrace());
+            AndroidLog.logE(getTag(), "ApplicationInfo is null, can't check if it's a system app!" + getStackTrace());
             return false;
         }
         if (app.uid < 10000) {
@@ -145,7 +145,7 @@ public class PackagesTool {
     public static List<AppData> getInstalledPackages(Context context, int flag) {
         List<AppData> appDataList = new ArrayList<>();
         if (context == null) {
-            logW(tag(), "Context is null, can't get install packages!" + getStackTrace());
+            logW(getTag(), "Context is null, can't get install packages!" + getStackTrace());
             return appDataList;
         }
         try {
@@ -156,7 +156,7 @@ public class PackagesTool {
             }
             return appDataList;
         } catch (Throwable e) {
-            AndroidLog.logE(tag(), e);
+            AndroidLog.logE(getTag(), e);
         }
         return new ArrayList<>();
     }
@@ -177,7 +177,7 @@ public class PackagesTool {
     public static List<AppData> getPackagesByCode(Context context, IPkg iCode) {
         List<AppData> appDataList = new ArrayList<>();
         if (context == null) {
-            logW(tag(), "Context is null, can't get packages by code!" + getStackTrace());
+            logW(getTag(), "Context is null, can't get packages by code!" + getStackTrace());
             return appDataList;
         }
         PackageManager packageManager = context.getPackageManager();
@@ -190,7 +190,7 @@ public class PackagesTool {
             }
             return appDataList;
         } catch (Throwable e) {
-            AndroidLog.logE(tag(), e);
+            AndroidLog.logE(getTag(), e);
         }
         return new ArrayList<>();
     }

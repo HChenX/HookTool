@@ -25,7 +25,7 @@ import static com.hchen.hooktool.data.ChainData.TYPE_METHOD;
 import static com.hchen.hooktool.helper.ConvertHelper.arrayToClass;
 import static com.hchen.hooktool.hook.HookFactory.createHook;
 import static com.hchen.hooktool.log.LogExpand.getStackTrace;
-import static com.hchen.hooktool.log.LogExpand.tag;
+import static com.hchen.hooktool.log.LogExpand.getTag;
 import static com.hchen.hooktool.log.XposedLog.logD;
 import static com.hchen.hooktool.log.XposedLog.logE;
 import static com.hchen.hooktool.log.XposedLog.logW;
@@ -77,7 +77,7 @@ public class ChainTool {
 
     public static void chain(Class<?> clazz, ChainTool chain) {
         if (clazz == null) {
-            logW(tag(), "Class is null, can't create chain hook!" + getStackTrace());
+            logW(getTag(), "Class is null, can't create chain hook!" + getStackTrace());
             return;
         }
         chain.doFind(clazz);
@@ -113,7 +113,7 @@ public class ChainTool {
     private void doFind(Class<?> clazz) {
         if (clazz == null) return;
         if (cacheDataList.isEmpty()) {
-            logW(tag(), "cache data list is empty, can't find or hook anything!" + getStackTrace());
+            logW(getTag(), "cache data list is empty, can't find or hook anything!" + getStackTrace());
             cacheDataList.clear();
             return;
         }
@@ -136,7 +136,7 @@ public class ChainTool {
                         members.addAll(CoreTool.findAllConstructor(clazz).stream().map(
                                 ChainData::new).collect(Collectors.toCollection(ArrayList::new)));
                 default -> {
-                    logW(tag(), "Unknown type: " + cacheData.mType + getStackTrace());
+                    logW(getTag(), "Unknown type: " + cacheData.mType + getStackTrace());
                     members.clear();
                     continue;
                 }
@@ -148,7 +148,7 @@ public class ChainTool {
                     ChainData memberData = iterator.next();
                     if (memberData.member == null || existingMembers.contains(memberData.member)) {
                         iterator.remove();
-                        logW(tag(), "This member maybe repeated or maybe is null, will remove it! " +
+                        logW(getTag(), "This member maybe repeated or maybe is null, will remove it! " +
                                 "\ndebug: " + UUID + "#member: " + memberData.member);
                         continue;
                     }
@@ -157,7 +157,7 @@ public class ChainTool {
                 if (members.isEmpty()) continue;
                 chainDataList.add(new ChainData(new ArrayList<>(members), cacheData.iAction, HookState.NONE, UUID));
             } else
-                logW(tag(), "This member maybe repeated, will skip add it! \ndebug: " + UUID);
+                logW(getTag(), "This member maybe repeated, will skip add it! \ndebug: " + UUID);
             members.clear();
         }
         cacheDataList.clear();
@@ -173,16 +173,16 @@ public class ChainTool {
             ChainData chainData = iterator.next();
             if (chainData.hookState == HookState.HOOKED) continue;
             if (chainData.iAction == null) {
-                logW(tag(), "Action is null, can't hook! will remove this! \ndebug: " + chainData.UUID);
+                logW(getTag(), "Action is null, can't hook! will remove this! \ndebug: " + chainData.UUID);
                 iterator.remove();
                 continue;
             }
             for (ChainData memberData : chainData.members) {
                 try {
-                    XposedBridge.hookMethod(memberData.member, createHook(tag(), chainData.iAction));
-                    logD(tag(), "Success to hook: " + memberData.member);
+                    XposedBridge.hookMethod(memberData.member, createHook(getTag(), chainData.iAction));
+                    logD(getTag(), "Success to hook: " + memberData.member);
                 } catch (Throwable e) {
-                    logE(tag(), "Failed to hook: " + memberData.member, e);
+                    logE(getTag(), "Failed to hook: " + memberData.member, e);
                 }
             }
             chainData.hookState = HookState.HOOKED;

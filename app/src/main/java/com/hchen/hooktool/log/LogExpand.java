@@ -82,7 +82,7 @@ public class LogExpand {
         return stringBuilder.toString();
     }
     
-    public static String tag() {
+    public static String getTag() {
         if (ToolData.logExpandPath == null) return "HookTool";
         if (ToolData.logExpandPath.length == 0) {
             if (ToolData.modulePackageName == null) return "HookTool";

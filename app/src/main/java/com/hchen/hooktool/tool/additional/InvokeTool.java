@@ -19,7 +19,7 @@
 package com.hchen.hooktool.tool.additional;
 
 import static com.hchen.hooktool.log.LogExpand.getStackTrace;
-import static com.hchen.hooktool.log.LogExpand.tag;
+import static com.hchen.hooktool.log.LogExpand.getTag;
 
 import com.hchen.hooktool.log.AndroidLog;
 
@@ -71,7 +71,7 @@ public class InvokeTool {
                                           Class<?>[] param /* 方法参数 */, Object... value /* 值 */) {
         Method declaredMethod;
         if (clz == null && instance == null) {
-            AndroidLog.logW(tag(), "Class and instance is null, can't invoke method: " + method + getStackTrace());
+            AndroidLog.logW(getTag(), "Class and instance is null, can't invoke method: " + method + getStackTrace());
             return null;
         } else if (clz == null) {
             clz = instance.getClass();
@@ -86,7 +86,7 @@ public class InvokeTool {
             declaredMethod.setAccessible(true);
             return (T) declaredMethod.invoke(instance, value);
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-            AndroidLog.logE(tag(), e);
+            AndroidLog.logE(getTag(), e);
             return null;
         }
     }
@@ -98,7 +98,7 @@ public class InvokeTool {
                                          boolean set /* 是否为 set 模式 */, Object value /* 指定值 */) {
         Field declaredField = null;
         if (clz == null && instance == null) {
-            AndroidLog.logW(tag(), "Class and instance is null, can't invoke field: " + field + getStackTrace());
+            AndroidLog.logW(getTag(), "Class and instance is null, can't invoke field: " + field + getStackTrace());
             return null;
         } else if (clz == null) {
             clz = instance.getClass();
@@ -132,7 +132,7 @@ public class InvokeTool {
             } else
                 return (T) declaredField.get(instance);
         } catch (NoSuchFieldException | IllegalAccessException e) {
-            AndroidLog.logE(tag(), e);
+            AndroidLog.logE(getTag(), e);
             return null;
         }
     }
@@ -148,7 +148,7 @@ public class InvokeTool {
             }
             return classLoader.loadClass(className);
         } catch (ClassNotFoundException e) {
-            AndroidLog.logE(tag(), e);
+            AndroidLog.logE(getTag(), e);
         }
         return null;
     }
