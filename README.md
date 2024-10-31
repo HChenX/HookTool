@@ -12,7 +12,7 @@
 <p>Java 版 Hook 工具！</p>
 </div>
 
-# ✨ 工具亮点
+# ✨ 工具特性
 
 ### 1. **链式调用**
 
@@ -41,9 +41,9 @@ dependencyResolutionManagement {
 ```groovy
 dependencies {
     // jitpack
-    implementation 'com.github.HChenX:HookTool:v.1.0.4'
+    implementation 'com.github.HChenX:HookTool:v.1.0.5'
     // maven
-    implementation 'io.github.hchenx:hooktool:v.1.0.4'
+    implementation 'io.github.hchenx:hooktool:v.1.0.5'
     // 二选一即可
 }
 ```
@@ -74,7 +74,7 @@ public void initZygote(IXposedHookZygoteInit.StartupParam startupParam) {
             .setModulePackageName("com.hchen.demo") // 模块包名
             .setTag("HChenDemo") // 日志 tag
             .setLogLevel(LOG_D) // 日志等级
-            .setPrefsName("hchen_prefs") // prefs 存储文件名
+            .setPrefsName("hchen_prefs") // prefs 存储文件名 (可选)
     ); // 若有 initZygote 建议配置在这里，因为时机很早。
     HCInit.initStartupParam(startupParam); // 在 zygote 阶段初始化工具
 }
@@ -95,7 +95,7 @@ public static class MainActivity {
                 .setModulePackageName("com.hchen.demo") // 模块包名
                 .setTag("HChenDemo") // 日志 tag
                 .setLogLevel(LOG_D) // 日志等级
-                .setPrefsName("hchen_prefs") // prefs 存储文件名。Tip: 请保持文件名一致。
+                .setPrefsName("hchen_prefs") // prefs 存储文件名。Tip: 请保持与 Xposed 内填写的文件名一致 (可选)
         );
     }
 }
@@ -107,7 +107,7 @@ public static class MainActivity {
 public class MainTest {
     public void test() {
         CoreTool.hook(/* 内容 */); // 即可 hook
-        CoreTool.findClass(); // 查找类
+        CoreTool.findClass().get(); // 查找类
         CoreTool.callMethod(); // 调用方法
         ChainTool.chain("com.hchen.demo", new ChainTool()
                 .method("method")
@@ -138,7 +138,7 @@ public class MainTest extends BaseHC {
     // 使用 initZygote 必须在 hook 入口处初始化 HCInit.initStartupParam(startupParam);
     @Override
     public void initZygote(IXposedHookZygoteInit.StartupParam startupParam) {
-        findClass("com.hchen.demo.Main", classLoader); // 此阶段均需要传递 classLoader 否则报错。
+        findClass("com.hchen.demo.Main").get();
     }
 }
 
