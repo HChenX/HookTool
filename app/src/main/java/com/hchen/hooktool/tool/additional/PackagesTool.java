@@ -164,11 +164,11 @@ public class PackagesTool {
             return appDataList;
         }
         PackageManager packageManager = context.getPackageManager();
-        List<Parcelable> packageCodeList = iCode.packageInfoGetter(packageManager);
-        if (packageCodeList != null) {
-            for (Parcelable get : packageCodeList) {
+        List<Parcelable> parcelables = iCode.packageInfoGetter(packageManager);
+        if (parcelables != null) {
+            for (Parcelable parcelable : parcelables) {
                 try {
-                    appDataList.add(addAppData(get, packageManager));
+                    appDataList.add(addAppData(parcelable, packageManager));
                 } catch (Throwable e) {
                     AndroidLog.logE(getTag(), e);
                 }

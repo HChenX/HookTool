@@ -99,7 +99,7 @@ public class CoreTool {
     }
 
     public static boolean existsMethod(Class<?> clazz, ClassLoader classLoader, String name, Object... objs) {
-        return existsMethod(clazz, name, arrayToClass(objs, classLoader));
+        return existsMethod(clazz, name, arrayToClass(classLoader, objs));
     }
 
     public static boolean existsMethod(Class<?> clazz, String name, Class<?>... classes) {

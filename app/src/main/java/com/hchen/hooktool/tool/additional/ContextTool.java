@@ -81,7 +81,7 @@ public class ContextTool {
      * handler = new Handler();
      * ContextTool.getAsyncContext(new IContextGetter() {
      *   @Override
-     *   public void tyrToFindContext(Context context) {
+     *   public void tryToFindContext(Context context) {
      *      handler.post(new Runnable() {
      *        @Override
      *        public void run() {
@@ -159,12 +159,7 @@ public class ContextTool {
         }
         return context;
     }
-
-    /**
-     * 线程池
-     *
-     * @author 焕晨HChen
-     */
+    
     private static class ThreadPool {
         private static final int NUM_THREADS = 5; // 定义线程池中线程的数量
         private static volatile ExecutorService executor;
