@@ -27,10 +27,14 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import androidx.annotation.NonNull;
+
 import com.hchen.hooktool.data.ToolData;
 import com.hchen.hooktool.log.AndroidLog;
 import com.hchen.hooktool.tool.additional.ContextTool;
-import com.hchen.hooktool.tool.itool.IPrefs;
+import com.hchen.hooktool.tool.itool.IAsyncPrefs;
+import com.hchen.hooktool.tool.itool.IContextGetter;
+import com.hchen.hooktool.tool.itool.IPrefsApply;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -52,14 +56,14 @@ public class PrefsTool {
     /**
      * 共享首选项储存至应用私有目录内/从私有目录读取，模块如果设置 xposedsharedprefs 为 true 则由 xposed 统一管理。
      */
-    public static IPrefs prefs(Context context) {
-        return prefs(context, null);
+    public static IPrefsApply prefs(Context context) {
+        return prefs(context, "");
     }
 
     /**
      * 共享首选项储存至应用私有目录内/从私有目录读取，并使用指定的 prefsName 命名文件，模块如果设置 xposedsharedprefs 为 true 则由 xposed 统一管理。
      */
-    public static IPrefs prefs(Context context, String prefsName) {
+    public static IPrefsApply prefs(Context context, String prefsName) {
         return new Sprefs(currentSp(context, prefsName));
     }
 
@@ -68,11 +72,11 @@ public class PrefsTool {
      * <p>
      * 将读取模块的共享首选项并供寄生应用使用。此状态下仅可读取，不可修改。
      */
-    public static IPrefs prefs() {
+    public static IPrefsApply prefs() {
         if (!ToolData.isXposed)
             throw new RuntimeException(ToolData.mInitTag +
                     "[" + getTag() + "][E]: Not xposed environment!" + getStackTrace());
-        return prefs((String) null);
+        return prefs("");
     }
 
     /**
@@ -80,7 +84,7 @@ public class PrefsTool {
      * <p>
      * 将读取指定 prefsName 名的模块共享首选项文件并供寄生应用使用。此状态下仅可读取，不可修改。
      */
-    public static IPrefs prefs(String prefsName) {
+    public static IPrefsApply prefs(String prefsName) {
         if (!ToolData.isXposed)
             throw new RuntimeException(ToolData.mInitTag +
                     "[" + getTag() + "][E]: Not xposed environment!" + getStackTrace());
@@ -96,9 +100,9 @@ public class PrefsTool {
         if (!ToolData.isXposed)
             throw new RuntimeException(ToolData.mInitTag +
                     "[" + getTag() + "][E]: Not xposed environment!" + getStackTrace());
-        ContextTool.getAsyncContext(new ContextTool.IContext() {
+        ContextTool.getAsyncContext(new IContextGetter() {
             @Override
-            public void find(Context context) {
+            public void tryToFindContext(Context context) {
                 if (context == null) {
                     throw new RuntimeException(ToolData.mInitTag +
                             "[" + getTag() + "][E]: Async prefs context is null!" + getStackTrace());
@@ -106,10 +110,6 @@ public class PrefsTool {
                 asyncPrefs.async(context);
             }
         }, false);
-    }
-
-    public interface IAsyncPrefs {
-        void async(Context context);
     }
 
     private static XSharedPreferences currentXsp(String prefsName) {
@@ -152,8 +152,8 @@ public class PrefsTool {
         }
     }
 
-    private static String initPrefsName(String name) {
-        if (name == null) {
+    private static String initPrefsName(@NonNull String name) {
+        if (name.isEmpty()) {
             if (ToolData.mPrefsName == null) {
                 if (ToolData.modulePackageName == null) {
                     throw new RuntimeException(ToolData.mInitTag +
@@ -165,7 +165,7 @@ public class PrefsTool {
         } else return name;
     }
 
-    public static class Xprefs implements IPrefs {
+    public static class Xprefs implements IPrefsApply {
         private final XSharedPreferences xSharedPreferences;
 
         private Xprefs(XSharedPreferences xSharedPreferences) {
@@ -261,7 +261,7 @@ public class PrefsTool {
         }
     }
 
-    public static class Sprefs implements IPrefs {
+    public static class Sprefs implements IPrefsApply {
         private final SharedPreferences preferences;
 
         private Sprefs(SharedPreferences preferences) {

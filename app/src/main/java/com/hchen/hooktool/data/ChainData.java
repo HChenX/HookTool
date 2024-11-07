@@ -18,7 +18,7 @@
  */
 package com.hchen.hooktool.data;
 
-import com.hchen.hooktool.hook.IAction;
+import com.hchen.hooktool.hook.IHook;
 
 import java.lang.reflect.Member;
 import java.util.ArrayList;
@@ -31,14 +31,14 @@ import java.util.ArrayList;
 public class ChainData {
     public ArrayList<ChainData> members = new ArrayList<>(); /* 目标成员组 */
     public Member member; /* 查找到的成员 */
-    public IAction iAction; /* hook 动作 */
+    public IHook iHook; /* hook 动作 */
     public HookState hookState; /* 状态 */
     public String UUID = "UNKNOWN"; /* 唯一标识符 */
 
     // 数据存储
-    public ChainData(ArrayList<ChainData> members, IAction iAction, HookState hookState, String uuid) {
+    public ChainData(ArrayList<ChainData> members, IHook iHook, HookState hookState, String uuid) {
         this.members = members;
-        this.iAction = iAction;
+        this.iHook = iHook;
         this.hookState = hookState;
         this.UUID = uuid;
     }

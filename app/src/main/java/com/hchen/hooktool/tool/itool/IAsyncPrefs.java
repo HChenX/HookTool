@@ -16,36 +16,15 @@
 
  * Copyright (C) 2023-2024 HookTool Contributions
  */
-package com.hchen.hooktool.hook;
+package com.hchen.hooktool.tool.itool;
 
-import com.hchen.hooktool.data.Priority;
-import com.hchen.hooktool.tool.ParamTool;
+import android.content.Context;
 
 /**
- * Hook 动作接口
- * 
+ * 异步 prefs 接口
+ *
  * @author 焕晨HChen
  */
-public abstract class IAction extends ParamTool {
-    public final int PRIORITY;
-
-    public IAction() {
-        this.PRIORITY = Priority.DEFAULT;
-    }
-
-    public IAction(int priority) {
-        this.PRIORITY = priority;
-    }
-
-    /**
-     * 在目标方法调用前回调。
-     */
-    public void before() {
-    }
-
-    /**
-     * 在目标方法调用后回调。
-     */
-    public void after() {
-    }
+public interface IAsyncPrefs {
+    void async(Context context);
 }

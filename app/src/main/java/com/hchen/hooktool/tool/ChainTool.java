@@ -36,7 +36,7 @@ import static com.hchen.hooktool.tool.CoreTool.findMethod;
 import com.hchen.hooktool.data.ChainData;
 import com.hchen.hooktool.data.HookState;
 import com.hchen.hooktool.data.ToolData;
-import com.hchen.hooktool.hook.IAction;
+import com.hchen.hooktool.hook.IHook;
 
 import java.lang.reflect.Member;
 import java.util.ArrayList;
@@ -155,7 +155,7 @@ public class ChainTool {
                     existingMembers.add(memberData.member);
                 }
                 if (members.isEmpty()) continue;
-                chainDataList.add(new ChainData(new ArrayList<>(members), cacheData.iAction, HookState.NONE, UUID));
+                chainDataList.add(new ChainData(new ArrayList<>(members), cacheData.iHook, HookState.NONE, UUID));
             } else
                 logW(getTag(), "This member maybe repeated, will skip add it! \ndebug: " + UUID);
             members.clear();
@@ -172,14 +172,14 @@ public class ChainTool {
         while (iterator.hasNext()) {
             ChainData chainData = iterator.next();
             if (chainData.hookState == HookState.HOOKED) continue;
-            if (chainData.iAction == null) {
+            if (chainData.iHook == null) {
                 logW(getTag(), "Action is null, can't hook! will remove this! \ndebug: " + chainData.UUID);
                 iterator.remove();
                 continue;
             }
             for (ChainData memberData : chainData.members) {
                 try {
-                    XposedBridge.hookMethod(memberData.member, createHook(getTag(), chainData.iAction));
+                    XposedBridge.hookMethod(memberData.member, createHook(getTag(), chainData.iHook));
                     logD(getTag(), "Success to hook: " + memberData.member);
                 } catch (Throwable e) {
                     logE(getTag(), "Failed to hook: " + memberData.member, e);
@@ -200,8 +200,8 @@ public class ChainTool {
         /**
          * Hook 动作。
          */
-        public ChainTool hook(IAction iAction) {
-            chain.cacheData.iAction = iAction;
+        public ChainTool hook(IHook iHook) {
+            chain.cacheData.iHook = iHook;
             chain.cacheDataList.add(chain.cacheData);
             return chain;
         }
@@ -210,7 +210,7 @@ public class ChainTool {
          * 直接返回指定值。
          */
         public ChainTool returnResult(final Object result) {
-            chain.cacheData.iAction = CoreTool.returnResult(result);
+            chain.cacheData.iHook = CoreTool.returnResult(result);
             chain.cacheDataList.add(chain.cacheData);
             return chain;
         }
@@ -219,7 +219,7 @@ public class ChainTool {
          * 拦截方法执行。
          */
         public ChainTool doNothing() {
-            chain.cacheData.iAction = CoreTool.doNothing();
+            chain.cacheData.iHook = CoreTool.doNothing();
             chain.cacheDataList.add(chain.cacheData);
             return chain;
         }

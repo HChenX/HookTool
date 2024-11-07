@@ -25,7 +25,7 @@ import static com.hchen.hooktool.tool.CoreTool.findClass;
 import androidx.annotation.Nullable;
 
 import com.hchen.hooktool.data.ToolData;
-import com.hchen.hooktool.hook.IAction;
+import com.hchen.hooktool.hook.IHook;
 import com.hchen.hooktool.log.LogExpand;
 
 import java.util.ArrayList;
@@ -63,7 +63,7 @@ public class ConvertHelper {
                 Class<?> ct = findClass(s, classLoader).get();
                 if (ct == null) return null;
                 classes.add(ct);
-            } else if (o instanceof IAction) {
+            } else if (o instanceof IHook) {
                 break; // 一定为最后一个参数
             } else {
                 logW(LogExpand.getTag(), "Unknown type: " + o + getStackTrace());

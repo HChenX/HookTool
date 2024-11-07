@@ -18,11 +18,16 @@
  */
 package com.hchen.hooktool.tool.itool;
 
+import android.content.pm.PackageManager;
+import android.os.Parcelable;
+
+import java.util.List;
+
 /**
- * 过滤接口
+ * 软件包工具接口
  *
  * @author 焕晨HChen
  */
-public interface IFilter<T> {
-    boolean test(T member);
+public interface IPackageInfoGetter {
+    List<Parcelable> packageInfoGetter(PackageManager pm);
 }

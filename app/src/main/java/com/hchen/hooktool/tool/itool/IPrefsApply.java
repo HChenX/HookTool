@@ -18,16 +18,35 @@
  */
 package com.hchen.hooktool.tool.itool;
 
-import android.content.pm.PackageManager;
-import android.os.Parcelable;
+import com.hchen.hooktool.tool.PrefsTool;
 
-import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
- * 软件包工具接口
- *
+ * prefs 工具接口，方法具体介绍请看实现类 >>
+ * {@link com.hchen.hooktool.tool.PrefsTool}
+ * 
  * @author 焕晨HChen
  */
-public interface IPkg {
-    List<Parcelable> action(PackageManager pm);
+public interface IPrefsApply {
+    String getString(String key, String def);
+
+    Set<String> getStringSet(String key, Set<String> def);
+
+    boolean getBoolean(String key, boolean def);
+
+    int getInt(String key, int def);
+
+    float getFloat(String key, float def);
+
+    long getLong(String key, long def);
+
+    Object get(String key, Object def);
+
+    boolean contains(String key);
+
+    Map<String, ?> getAll();
+
+    PrefsTool.Editor editor();
 }

@@ -22,7 +22,6 @@ import static com.hchen.hooktool.log.AndroidLog.logW;
 import static com.hchen.hooktool.log.LogExpand.getStackTrace;
 import static com.hchen.hooktool.log.LogExpand.getTag;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
@@ -31,13 +30,21 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ProviderInfo;
 import android.content.pm.ResolveInfo;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.PixelFormat;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.NinePatchDrawable;
 import android.os.Parcelable;
 import android.os.UserHandle;
 
 import com.hchen.hooktool.data.AppData;
 import com.hchen.hooktool.log.AndroidLog;
-import com.hchen.hooktool.tool.itool.IPkg;
+import com.hchen.hooktool.tool.itool.IPackageInfoGetter;
 
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -51,7 +58,7 @@ import java.util.Optional;
 public class PackagesTool {
 
     public static boolean isUninstall(String pkg) {
-        return isUninstall(context(), pkg);
+        return isUninstall(getContext(), pkg);
     }
 
     /**
@@ -73,7 +80,7 @@ public class PackagesTool {
     }
 
     public static boolean isDisable(String pkg) {
-        return isDisable(context(), pkg);
+        return isDisable(getContext(), pkg);
     }
 
     /**
@@ -97,7 +104,7 @@ public class PackagesTool {
     }
 
     public static boolean isHidden(String pkg) {
-        return isHidden(context(), pkg);
+        return isHidden(getContext(), pkg);
     }
 
     /**
@@ -141,30 +148,6 @@ public class PackagesTool {
         return (app.flags & (ApplicationInfo.FLAG_SYSTEM | ApplicationInfo.FLAG_UPDATED_SYSTEM_APP)) != 0;
     }
 
-    @SuppressLint("QueryPermissionsNeeded")
-    public static List<AppData> getInstalledPackages(Context context, int flag) {
-        List<AppData> appDataList = new ArrayList<>();
-        if (context == null) {
-            logW(getTag(), "Context is null, can't get install packages!" + getStackTrace());
-            return appDataList;
-        }
-        try {
-            PackageManager packageManager = context.getPackageManager();
-            List<PackageInfo> packageInfos = packageManager.getInstalledPackages(flag);
-            for (PackageInfo packageInfo : packageInfos) {
-                appDataList.add(addAppData(packageInfo, packageManager));
-            }
-            return appDataList;
-        } catch (Throwable e) {
-            AndroidLog.logE(getTag(), e);
-        }
-        return new ArrayList<>();
-    }
-
-    public static List<AppData> getInstalledPackages(int flag) {
-        return getInstalledPackages(context(), flag);
-    }
-
     /**
      * 通过自定义代码获取 Package 信息，
      * 支持: PackageInfo, ResolveInfo, ActivityInfo, ApplicationInfo, ProviderInfo. 类型的返回值.
@@ -174,80 +157,74 @@ public class PackagesTool {
      * @return ListAppData 包含各种应用详细信息
      * @see #addAppData(Parcelable, PackageManager)
      */
-    public static List<AppData> getPackagesByCode(Context context, IPkg iCode) {
+    public static List<AppData> getPackagesByCode(Context context, IPackageInfoGetter iCode) {
         List<AppData> appDataList = new ArrayList<>();
         if (context == null) {
             logW(getTag(), "Context is null, can't get packages by code!" + getStackTrace());
             return appDataList;
         }
         PackageManager packageManager = context.getPackageManager();
-        List<Parcelable> packageCodeList = iCode.action(packageManager);
-        try {
-            if (packageCodeList != null) {
-                for (Parcelable get : packageCodeList) {
+        List<Parcelable> packageCodeList = iCode.packageInfoGetter(packageManager);
+        if (packageCodeList != null) {
+            for (Parcelable get : packageCodeList) {
+                try {
                     appDataList.add(addAppData(get, packageManager));
+                } catch (Throwable e) {
+                    AndroidLog.logE(getTag(), e);
                 }
             }
-            return appDataList;
-        } catch (Throwable e) {
-            AndroidLog.logE(getTag(), e);
         }
-        return new ArrayList<>();
+        return appDataList;
     }
 
-    public static List<AppData> getPackagesByCode(IPkg iCode) {
-        return getPackagesByCode(context(), iCode);
+    public static List<AppData> getPackagesByCode(IPackageInfoGetter iCode) {
+        return getPackagesByCode(getContext(), iCode);
     }
 
-    private static AppData addAppData(Parcelable parcelable, PackageManager pm) throws
-            Throwable {
+    private static AppData addAppData(Parcelable parcelable, PackageManager pm) {
         AppData appData = new AppData();
-        try {
-            if (parcelable instanceof PackageInfo) {
-                appData.icon = BitmapTool.drawableToBitmap(((PackageInfo) parcelable).applicationInfo.loadIcon(pm));
-                appData.label = ((PackageInfo) parcelable).applicationInfo.loadLabel(pm).toString();
-                appData.packageName = ((PackageInfo) parcelable).applicationInfo.packageName;
-                appData.versionName = ((PackageInfo) parcelable).versionName;
-                appData.versionCode = Long.toString(((PackageInfo) parcelable).getLongVersionCode());
-                appData.isSystemApp = isSystem(((PackageInfo) parcelable).applicationInfo);
-                appData.enabled = ((PackageInfo) parcelable).applicationInfo.enabled;
-                appData.user = getUserId(((PackageInfo) parcelable).applicationInfo.uid);
-                appData.uid = ((PackageInfo) parcelable).applicationInfo.uid;
-            } else if (parcelable instanceof ResolveInfo) {
-                appData.icon = BitmapTool.drawableToBitmap(aboutResolveInfo((ResolveInfo) parcelable).applicationInfo.loadIcon(pm));
-                appData.label = aboutResolveInfo((ResolveInfo) parcelable).applicationInfo.loadLabel(pm).toString();
-                appData.packageName = aboutResolveInfo((ResolveInfo) parcelable).applicationInfo.packageName;
-                appData.isSystemApp = isSystem(aboutResolveInfo((ResolveInfo) parcelable).applicationInfo);
-                appData.enabled = aboutResolveInfo((ResolveInfo) parcelable).applicationInfo.enabled;
-                appData.user = getUserId(aboutResolveInfo((ResolveInfo) parcelable).applicationInfo.uid);
-                appData.uid = aboutResolveInfo((ResolveInfo) parcelable).applicationInfo.uid;
-            } else if (parcelable instanceof ActivityInfo) {
-                appData.icon = BitmapTool.drawableToBitmap(((ActivityInfo) parcelable).applicationInfo.loadIcon(pm));
-                appData.label = ((ActivityInfo) parcelable).applicationInfo.loadLabel(pm).toString();
-                appData.packageName = ((ActivityInfo) parcelable).applicationInfo.packageName;
-                appData.isSystemApp = isSystem(((ActivityInfo) parcelable).applicationInfo);
-                appData.enabled = ((ActivityInfo) parcelable).applicationInfo.enabled;
-                appData.user = getUserId(((ActivityInfo) parcelable).applicationInfo.uid);
-                appData.uid = ((ActivityInfo) parcelable).applicationInfo.uid;
-            } else if (parcelable instanceof ApplicationInfo) {
-                appData.icon = BitmapTool.drawableToBitmap(((ApplicationInfo) parcelable).loadIcon(pm));
-                appData.label = ((ApplicationInfo) parcelable).loadLabel(pm).toString();
-                appData.packageName = ((ApplicationInfo) parcelable).packageName;
-                appData.isSystemApp = isSystem(((ApplicationInfo) parcelable));
-                appData.enabled = ((ApplicationInfo) parcelable).enabled;
-                appData.user = getUserId(((ApplicationInfo) parcelable).uid);
-                appData.uid = ((ApplicationInfo) parcelable).uid;
-            } else if (parcelable instanceof ProviderInfo) {
-                appData.icon = BitmapTool.drawableToBitmap(((ProviderInfo) parcelable).applicationInfo.loadIcon(pm));
-                appData.label = ((ProviderInfo) parcelable).applicationInfo.loadLabel(pm).toString();
-                appData.packageName = ((ProviderInfo) parcelable).applicationInfo.packageName;
-                appData.isSystemApp = isSystem(((ProviderInfo) parcelable).applicationInfo);
-                appData.enabled = ((ProviderInfo) parcelable).applicationInfo.enabled;
-                appData.user = getUserId(((ProviderInfo) parcelable).applicationInfo.uid);
-                appData.uid = ((ProviderInfo) parcelable).applicationInfo.uid;
-            }
-        } catch (Throwable e) {
-            throw new Throwable(e);
+        if (parcelable instanceof PackageInfo packageInfo) {
+            appData.icon = BitmapTool.drawableToBitmap(packageInfo.applicationInfo.loadIcon(pm));
+            appData.label = packageInfo.applicationInfo.loadLabel(pm).toString();
+            appData.packageName = packageInfo.applicationInfo.packageName;
+            appData.versionName = packageInfo.versionName;
+            appData.versionCode = Long.toString(packageInfo.getLongVersionCode());
+            appData.isSystemApp = isSystem(packageInfo.applicationInfo);
+            appData.enabled = packageInfo.applicationInfo.enabled;
+            appData.user = getUserId(packageInfo.applicationInfo.uid);
+            appData.uid = packageInfo.applicationInfo.uid;
+        } else if (parcelable instanceof ResolveInfo resolveInfo) {
+            appData.icon = BitmapTool.drawableToBitmap(aboutResolveInfo(resolveInfo).applicationInfo.loadIcon(pm));
+            appData.label = aboutResolveInfo(resolveInfo).applicationInfo.loadLabel(pm).toString();
+            appData.packageName = aboutResolveInfo(resolveInfo).applicationInfo.packageName;
+            appData.isSystemApp = isSystem(aboutResolveInfo(resolveInfo).applicationInfo);
+            appData.enabled = aboutResolveInfo(resolveInfo).applicationInfo.enabled;
+            appData.user = getUserId(aboutResolveInfo(resolveInfo).applicationInfo.uid);
+            appData.uid = aboutResolveInfo(resolveInfo).applicationInfo.uid;
+        } else if (parcelable instanceof ActivityInfo activityInfo) {
+            appData.icon = BitmapTool.drawableToBitmap(activityInfo.applicationInfo.loadIcon(pm));
+            appData.label = activityInfo.applicationInfo.loadLabel(pm).toString();
+            appData.packageName = activityInfo.applicationInfo.packageName;
+            appData.isSystemApp = isSystem(activityInfo.applicationInfo);
+            appData.enabled = activityInfo.applicationInfo.enabled;
+            appData.user = getUserId(activityInfo.applicationInfo.uid);
+            appData.uid = activityInfo.applicationInfo.uid;
+        } else if (parcelable instanceof ApplicationInfo applicationInfo) {
+            appData.icon = BitmapTool.drawableToBitmap(applicationInfo.loadIcon(pm));
+            appData.label = applicationInfo.loadLabel(pm).toString();
+            appData.packageName = applicationInfo.packageName;
+            appData.isSystemApp = isSystem(applicationInfo);
+            appData.enabled = applicationInfo.enabled;
+            appData.user = getUserId(applicationInfo.uid);
+            appData.uid = applicationInfo.uid;
+        } else if (parcelable instanceof ProviderInfo providerInfo) {
+            appData.icon = BitmapTool.drawableToBitmap(providerInfo.applicationInfo.loadIcon(pm));
+            appData.label = providerInfo.applicationInfo.loadLabel(pm).toString();
+            appData.packageName = providerInfo.applicationInfo.packageName;
+            appData.isSystemApp = isSystem(providerInfo.applicationInfo);
+            appData.enabled = providerInfo.applicationInfo.enabled;
+            appData.user = getUserId(providerInfo.applicationInfo.uid);
+            appData.uid = providerInfo.applicationInfo.uid;
         }
         return appData;
     }
@@ -259,7 +236,54 @@ public class PackagesTool {
         return null;
     }
 
-    private static Context context() {
+    private static Context getContext() {
         return ContextTool.getContextNoLog(ContextTool.FLAG_ALL);
+    }
+
+    public static class BitmapTool {
+        public static Bitmap drawableToBitmap(Drawable drawable) {
+            int w = drawable.getIntrinsicWidth();
+            int h = drawable.getIntrinsicHeight();
+            Bitmap.Config config = drawable.getOpacity() != PixelFormat.OPAQUE ? Bitmap.Config.ARGB_8888 : Bitmap.Config.RGB_565;
+            Bitmap bitmap = Bitmap.createBitmap(w, h, config);
+            Canvas canvas = new Canvas(bitmap);
+            drawable.setBounds(0, 0, w, h);
+            drawable.draw(canvas);
+            return bitmap;
+        }
+
+        Bitmap drawable2Bitmap(Drawable drawable) {
+            if (drawable instanceof BitmapDrawable) {
+                return ((BitmapDrawable) drawable).getBitmap();
+            } else if (drawable instanceof NinePatchDrawable) {
+                Bitmap bitmap = Bitmap
+                        .createBitmap(
+                                drawable.getIntrinsicWidth(),
+                                drawable.getIntrinsicHeight(),
+                                drawable.getOpacity() != PixelFormat.OPAQUE ? Bitmap.Config.ARGB_8888
+                                        : Bitmap.Config.RGB_565);
+                Canvas canvas = new Canvas(bitmap);
+                drawable.setBounds(0, 0, drawable.getIntrinsicWidth(),
+                        drawable.getIntrinsicHeight());
+                drawable.draw(canvas);
+                return bitmap;
+            } else {
+                return null;
+            }
+        }
+
+        public static byte[] Bitmap2Bytes(Bitmap bm) {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            bm.compress(Bitmap.CompressFormat.PNG, 100, baos);
+            return baos.toByteArray();
+        }
+
+        public static Bitmap Bytes2Bimap(byte[] b) {
+            if (b.length != 0) {
+                return BitmapFactory.decodeByteArray(b, 0, b.length);
+            } else {
+                return null;
+            }
+        }
     }
 }

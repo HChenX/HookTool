@@ -27,8 +27,9 @@ import com.hchen.hooktool.data.ToolData;
 import com.hchen.hooktool.tool.ChainTool;
 import com.hchen.hooktool.tool.CoreTool;
 import com.hchen.hooktool.tool.PrefsTool;
-import com.hchen.hooktool.tool.additional.ResTool;
-import com.hchen.hooktool.tool.itool.IPrefs;
+import com.hchen.hooktool.tool.additional.ResInjectTool;
+import com.hchen.hooktool.tool.itool.IAsyncPrefs;
+import com.hchen.hooktool.tool.itool.IPrefsApply;
 
 import de.robv.android.xposed.IXposedHookZygoteInit;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
@@ -42,9 +43,14 @@ public abstract class BaseHC extends CoreTool {
     // 快捷获取类的简单名称作为 TAG, 为了效果建议配置相应的混淆规则。
     public String TAG = getClass().getSimpleName();
     private final ChainTool chainTool = new ChainTool(); // 初始化链式
-    public static XC_LoadPackage.LoadPackageParam lpparam;  // onZygote 阶段为 null
+    public static XC_LoadPackage.LoadPackageParam lpparam;
     public static ClassLoader classLoader;
 
+    static {
+        lpparam = ToolData.lpparam;
+        classLoader = ToolData.classLoader;
+    }
+    
     /**
      * 一般阶段。
      */
@@ -64,7 +70,6 @@ public abstract class BaseHC extends CoreTool {
 
     final public void onLoadPackage() {
         try {
-            initBaseHC();
             init();
         } catch (Throwable e) {
             logE(TAG, e);
@@ -73,18 +78,12 @@ public abstract class BaseHC extends CoreTool {
 
     final public void onZygote() {
         try {
-            initBaseHC();
             initZygote(ToolData.startupParam);
         } catch (Throwable e) {
             logE(TAG, e);
         }
     }
-
-    private void initBaseHC() {
-        lpparam = ToolData.lpparam;
-        classLoader = ToolData.classLoader;
-    }
-
+    
     public static void chain(String clazz, ChainTool chain) {
         ChainTool.chain(clazz, chain);
     }
@@ -115,44 +114,44 @@ public abstract class BaseHC extends CoreTool {
 
     // --------------- prefs -----------------
 
-    public static IPrefs prefs(Context context) {
+    public static IPrefsApply prefs(Context context) {
         return PrefsTool.prefs(context);
     }
 
-    public static IPrefs prefs(Context context, String prefsName) {
+    public static IPrefsApply prefs(Context context, String prefsName) {
         return PrefsTool.prefs(context, prefsName);
     }
 
-    public static IPrefs prefs() {
+    public static IPrefsApply prefs() {
         return PrefsTool.prefs();
     }
 
-    public static IPrefs prefs(String prefsName) {
+    public static IPrefsApply prefs(String prefsName) {
         return PrefsTool.prefs(prefsName);
     }
 
-    public static void asyncPrefs(PrefsTool.IAsyncPrefs asyncPrefs) {
+    public static void asyncPrefs(IAsyncPrefs asyncPrefs) {
         PrefsTool.asyncPrefs(asyncPrefs);
     }
 
     // ------------ ResTool ----------------
     public static int getFakeResId(String resName) {
-        return ResTool.getFakeResId(resName);
+        return ResInjectTool.getFakeResId(resName);
     }
 
     public static int getFakeResId(Resources res, int id) {
-        return ResTool.getFakeResId(res, id);
+        return ResInjectTool.getFakeResId(res, id);
     }
 
     public static void setResReplacement(String pkg, String type, String name, int replacementResId) {
-        ResTool.setResReplacement(pkg, type, name, replacementResId);
+        ResInjectTool.setResReplacement(pkg, type, name, replacementResId);
     }
 
     public static void setDensityReplacement(String pkg, String type, String name, float replacementResValue) {
-        ResTool.setDensityReplacement(pkg, type, name, replacementResValue);
+        ResInjectTool.setDensityReplacement(pkg, type, name, replacementResValue);
     }
 
     public static void setObjectReplacement(String pkg, String type, String name, Object replacementResValue) {
-        ResTool.setObjectReplacement(pkg, type, name, replacementResValue);
+        ResInjectTool.setObjectReplacement(pkg, type, name, replacementResValue);
     }
 }

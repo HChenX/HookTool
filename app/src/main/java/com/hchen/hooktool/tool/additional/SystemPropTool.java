@@ -28,8 +28,7 @@ import java.util.Optional;
  * @author 焕晨HChen
  */
 @SuppressLint("PrivateApi")
-public class PropTool {
-    private static final String TAG = "PropTool";
+public class SystemPropTool {
     private static final Class<?> clazz = InvokeTool.findClass("android.os.SystemProperties");
 
     public static String getProp(ClassLoader classLoader, String name) {

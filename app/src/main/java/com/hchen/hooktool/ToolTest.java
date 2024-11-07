@@ -20,7 +20,7 @@ package com.hchen.hooktool;
 
 import android.content.Context;
 
-import com.hchen.hooktool.hook.IAction;
+import com.hchen.hooktool.hook.IHook;
 
 import de.robv.android.xposed.IXposedHookZygoteInit;
 import de.robv.android.xposed.XC_MethodHook;
@@ -59,7 +59,7 @@ public class ToolTest extends BaseHC {
 
         // 链式
         chain("com.hchen.demo", method("test")
-                .hook(new IAction() {
+                .hook(new IHook() {
                     @Override
                     public void before() {
                         super.before();
@@ -67,7 +67,7 @@ public class ToolTest extends BaseHC {
                 })
 
                 .method("test1", String.class)
-                .hook(new IAction() {
+                .hook(new IHook() {
                     @Override
                     public void after() {
                         super.after();
@@ -78,7 +78,7 @@ public class ToolTest extends BaseHC {
                 .returnResult(false)
         );
 
-        hookMethod("com.hchen.demo", "test", new IAction() {
+        hookMethod("com.hchen.demo", "test", new IHook() {
             @Override
             public void before() {
                 super.before();
@@ -86,20 +86,20 @@ public class ToolTest extends BaseHC {
         }).unHook();
 
         // 本工具用法
-        new IAction() {
+        new IHook() {
             @Override
             public void before() {
                 // hook 方法所属的类
                 Class<?> c = mClass;
                 Context context = thisObject();
-                String string = first(); // 获取覅一个参数值
-                second(1); // 设置第二个参数值
+                String string = getArgs(0); // 获取覅一个参数值
+                setArgs(1, 1); // 设置第二个参数值
 
                 // 非静态本类内
                 setThisField("demo", 1); // 设置本类内 demo 字段值
                 callThisMethod("method"); // 调用本类内 method 方法
                 getThisField("test");
-                String result = callThisMethod("call", thisObject(), first());
+                String result = callThisMethod("call", thisObject(), getArgs(0));
 
                 // 非静态本类外
                 Object o = null;
@@ -108,7 +108,7 @@ public class ToolTest extends BaseHC {
                 getField(o, "test");
 
                 // 静态需要 class
-                callStaticMethod("com.demo.Main", "callStatic", thisObject(), second()); // 调用静态方法 callStatic
+                callStaticMethod("com.demo.Main", "callStatic", thisObject(), getArgs(1)); // 调用静态方法 callStatic
                 int i = getStaticField("com.demo.Main", "field");
                 setStaticField("com.demo.Main", "test", true); // 设置静态字段 test
 

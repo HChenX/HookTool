@@ -81,7 +81,7 @@ public class LogExpand {
         });
         return stringBuilder.toString();
     }
-    
+
     public static String getTag() {
         if (ToolData.logExpandPath == null) return "HookTool";
         if (ToolData.logExpandPath.length == 0) {
@@ -125,7 +125,7 @@ public class LogExpand {
 
     public void detailedLogs() {
         if (param.args == null || param.args.length == 0) {
-            logI(TAG, "Method called!\n Class: [" + className + "]\n Method: [" + methodName + "]\n Param: { }");
+            logI(TAG, "Method called! Class: [" + className + "] Method: [" + methodName + "] Param: { }");
             return;
         }
 
@@ -137,6 +137,6 @@ public class LogExpand {
                 log.append(", ");
             }
         }
-        logI(TAG, "Method called!\n Class: [" + className + "]\n Method: [" + methodName + "]\n Param: {" + log + "}");
+        logI(TAG, "Method called! Class: [" + className + "] Method: [" + methodName + "]\n Param: {" + log + "}");
     }
 }

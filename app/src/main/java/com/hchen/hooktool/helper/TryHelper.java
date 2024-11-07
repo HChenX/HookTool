@@ -28,7 +28,7 @@ import com.hchen.hooktool.tool.MemberData;
  *
  * @author 焕晨HChen
  */
-public class Try {
+public class TryHelper {
 
     /*
      * 执行并返回执行的结果或抛错。

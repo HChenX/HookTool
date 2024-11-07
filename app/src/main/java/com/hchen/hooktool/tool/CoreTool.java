@@ -19,8 +19,8 @@
 package com.hchen.hooktool.tool;
 
 import static com.hchen.hooktool.helper.ConvertHelper.arrayToClass;
-import static com.hchen.hooktool.helper.Try.run;
-import static com.hchen.hooktool.helper.Try.runDump;
+import static com.hchen.hooktool.helper.TryHelper.run;
+import static com.hchen.hooktool.helper.TryHelper.runDump;
 import static com.hchen.hooktool.hook.HookFactory.createHook;
 import static com.hchen.hooktool.log.LogExpand.getTag;
 import static com.hchen.hooktool.log.XposedLog.logD;
@@ -43,9 +43,9 @@ import static com.hchen.hooktool.tool.CoreBase.baseSetAdditionalStaticField;
 import static com.hchen.hooktool.tool.CoreBase.baseSetStaticField;
 
 import com.hchen.hooktool.data.ToolData;
-import com.hchen.hooktool.hook.IAction;
+import com.hchen.hooktool.hook.IHook;
 import com.hchen.hooktool.log.LogExpand;
-import com.hchen.hooktool.tool.itool.IFilter;
+import com.hchen.hooktool.tool.itool.IMemberFilter;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -85,16 +85,17 @@ public class CoreTool {
     }
 
     public static MemberData<Class<?>> findClass(String name, ClassLoader classLoader) {
-        return (MemberData<Class<?>>) (MemberData<?>) runDump(() -> XposedHelpers.findClass(name, classLoader)).setErrMsg("Failed to find class!");
+        return (MemberData<Class<?>>) (MemberData<?>) runDump(() -> XposedHelpers.findClass(name, classLoader))
+                .setErrMsg("Failed to find class!");
     }
 
     //------------ 检查指定方法是否存在 --------------
     public static boolean existsMethod(String clazz, String name, Object... objs) {
-        return existsMethod(clazz, ToolData.classLoader, name, objs);
+        return existsMethod(findClass(clazz).getIfExists(), name, arrayToClass(objs));
     }
 
     public static boolean existsMethod(String clazz, ClassLoader classLoader, String name, Object... objs) {
-        return existsMethod(findClass(clazz, classLoader).getIfExists(), classLoader, name, objs);
+        return existsMethod(findClass(clazz, classLoader).getIfExists(), name, arrayToClass(classLoader, objs));
     }
 
     public static boolean existsMethod(Class<?> clazz, ClassLoader classLoader, String name, Object... objs) {
@@ -107,7 +108,7 @@ public class CoreTool {
     }
 
     public static boolean existsAnyMethod(String clazz, String name) {
-        return existsAnyMethod(clazz, ToolData.classLoader, name);
+        return existsAnyMethod(findClass(clazz).getIfExists(), name);
     }
 
     public static boolean existsAnyMethod(String clazz, ClassLoader classLoader, String name) {
@@ -150,7 +151,7 @@ public class CoreTool {
 
     //------------ 检查指定构造函数是否存在 --------------
     public static boolean existsConstructor(String clazz, Object... objs) {
-        return existsConstructor(clazz, ToolData.classLoader, objs);
+        return existsConstructor(findClass(clazz).getIfExists(), arrayToClass(objs));
     }
 
     public static boolean existsConstructor(String clazz, ClassLoader classLoader, Object... objs) {
@@ -197,7 +198,7 @@ public class CoreTool {
 
     //------------ 检查指定字段是否存在 --------------
     public static boolean existsField(String clazz, String name) {
-        return existsField(clazz, ToolData.classLoader, name);
+        return existsField(findClass(clazz).getIfExists(), name);
     }
 
     public static boolean existsField(String clazz, ClassLoader classLoader, String name) {
@@ -240,16 +241,16 @@ public class CoreTool {
         return baseHook(new MemberData<>(clazz, null), ToolData.classLoader, method, params);
     }
 
-    public static UnHookList hookAllMethod(String clazz, String method, IAction iAction) {
-        return hookAll((ArrayList<Member>) (ArrayList<?>) findAllMethod(clazz, method), iAction);
+    public static UnHookList hookAllMethod(String clazz, String method, IHook iHook) {
+        return hookAll((ArrayList<Member>) (ArrayList<?>) findAllMethod(clazz, method), iHook);
     }
 
-    public static UnHookList hookAllMethod(String clazz, ClassLoader classLoader, String method, IAction iAction) {
-        return hookAll((ArrayList<Member>) (ArrayList<?>) findAllMethod(clazz, classLoader, method), iAction);
+    public static UnHookList hookAllMethod(String clazz, ClassLoader classLoader, String method, IHook iHook) {
+        return hookAll((ArrayList<Member>) (ArrayList<?>) findAllMethod(clazz, classLoader, method), iHook);
     }
 
-    public static UnHookList hookAllMethod(Class<?> clazz, String method, IAction iAction) {
-        return hookAll((ArrayList<Member>) (ArrayList<?>) findAllMethod(clazz, method), iAction);
+    public static UnHookList hookAllMethod(Class<?> clazz, String method, IHook iHook) {
+        return hookAll((ArrayList<Member>) (ArrayList<?>) findAllMethod(clazz, method), iHook);
     }
 
     // --------- 构造函数 ------------
@@ -265,44 +266,44 @@ public class CoreTool {
         return baseHook(new MemberData<>(clazz, null), ToolData.classLoader, null, params);
     }
 
-    public static UnHookList hookAllConstructor(String clazz, IAction iAction) {
-        return hookAll((ArrayList<Member>) (ArrayList<?>) findAllConstructor(clazz), iAction);
+    public static UnHookList hookAllConstructor(String clazz, IHook iHook) {
+        return hookAll((ArrayList<Member>) (ArrayList<?>) findAllConstructor(clazz), iHook);
     }
 
-    public static UnHookList hookAllConstructor(String clazz, ClassLoader classLoader, IAction iAction) {
-        return hookAll((ArrayList<Member>) (ArrayList<?>) findAllConstructor(clazz, classLoader), iAction);
+    public static UnHookList hookAllConstructor(String clazz, ClassLoader classLoader, IHook iHook) {
+        return hookAll((ArrayList<Member>) (ArrayList<?>) findAllConstructor(clazz, classLoader), iHook);
     }
 
-    public static UnHookList hookAllConstructor(Class<?> clazz, IAction iAction) {
-        return hookAll((ArrayList<Member>) (ArrayList<?>) findAllConstructor(clazz), iAction);
+    public static UnHookList hookAllConstructor(Class<?> clazz, IHook iHook) {
+        return hookAll((ArrayList<Member>) (ArrayList<?>) findAllConstructor(clazz), iHook);
     }
 
     // ----------- 核心实现 ---------------
-    public static UnHook hook(Member member, IAction iAction) {
+    public static UnHook hook(Member member, IHook iHook) {
         String tag = getTag();
         return run(() -> {
-            UnHook unhook = new UnHook(XposedBridge.hookMethod(member, createHook(tag, iAction)));
+            UnHook unhook = new UnHook(XposedBridge.hookMethod(member, createHook(tag, iHook)));
             logD(tag, "Success to hook: " + member);
             return unhook;
         }).orErrMag(new UnHook(null), "Failed to hook: " + member);
     }
 
-    public static UnHookList hookAll(ArrayList<Member> members, IAction iAction) {
+    public static UnHookList hookAll(ArrayList<Member> members, IHook iHook) {
         String tag = getTag();
         if (members.isEmpty()) {
             logW(tag, "Member list is empty, will hook nothing!");
             return new UnHookList();
         }
         return members.stream().map(member -> run(() -> {
-            UnHook unHook = new UnHook(XposedBridge.hookMethod(member, createHook(tag, iAction)));
+            UnHook unHook = new UnHook(XposedBridge.hookMethod(member, createHook(tag, iHook)));
             logD(tag, "Success to hook: " + member);
             return unHook;
         }).orErrMag(new UnHook(null), "Failed to hook: " + member)).collect(Collectors.toCollection(UnHookList::new));
     }
 
     // --------- 快捷方法 -----------
-    public static IAction returnResult(final Object result) {
-        return new IAction() {
+    public static IHook returnResult(final Object result) {
+        return new IHook() {
             @Override
             public void before() {
                 setResult(result);
@@ -310,8 +311,8 @@ public class CoreTool {
         };
     }
 
-    public static IAction doNothing() {
-        return new IAction() {
+    public static IHook doNothing() {
+        return new IHook() {
             @Override
             public void before() {
                 setResult(null);
@@ -345,28 +346,28 @@ public class CoreTool {
     }
 
     // --------- 过滤方法 -----------
-    public static ArrayList<Method> filterMethod(String clazz, IFilter<Method> iFilter) {
-        return baseFilterMethod(findClass(clazz), iFilter);
+    public static ArrayList<Method> filterMethod(String clazz, IMemberFilter<Method> iMemberFilter) {
+        return baseFilterMethod(findClass(clazz), iMemberFilter);
     }
 
-    public static ArrayList<Method> filterMethod(String clazz, ClassLoader classLoader, IFilter<Method> iFilter) {
-        return baseFilterMethod(findClass(clazz, classLoader), iFilter);
+    public static ArrayList<Method> filterMethod(String clazz, ClassLoader classLoader, IMemberFilter<Method> iMemberFilter) {
+        return baseFilterMethod(findClass(clazz, classLoader), iMemberFilter);
     }
 
-    public static ArrayList<Method> filterMethod(Class<?> clazz, IFilter<Method> iFilter) {
-        return baseFilterMethod(new MemberData<>(clazz, null), iFilter);
+    public static ArrayList<Method> filterMethod(Class<?> clazz, IMemberFilter<Method> iMemberFilter) {
+        return baseFilterMethod(new MemberData<>(clazz, null), iMemberFilter);
     }
 
-    public static ArrayList<Constructor<?>> filterConstructor(String clazz, IFilter<Constructor<?>> iFilter) {
-        return baseFilterConstructor(findClass(clazz), iFilter);
+    public static ArrayList<Constructor<?>> filterConstructor(String clazz, IMemberFilter<Constructor<?>> iMemberFilter) {
+        return baseFilterConstructor(findClass(clazz), iMemberFilter);
     }
 
-    public static ArrayList<Constructor<?>> filterConstructor(String clazz, ClassLoader classLoader, IFilter<Constructor<?>> iFilter) {
-        return baseFilterConstructor(findClass(clazz, classLoader), iFilter);
+    public static ArrayList<Constructor<?>> filterConstructor(String clazz, ClassLoader classLoader, IMemberFilter<Constructor<?>> iMemberFilter) {
+        return baseFilterConstructor(findClass(clazz, classLoader), iMemberFilter);
     }
 
-    public static ArrayList<Constructor<?>> filterConstructor(Class<?> clazz, IFilter<Constructor<?>> iFilter) {
-        return baseFilterConstructor(new MemberData<>(clazz, null), iFilter);
+    public static ArrayList<Constructor<?>> filterConstructor(Class<?> clazz, IMemberFilter<Constructor<?>> iMemberFilter) {
+        return baseFilterConstructor(new MemberData<>(clazz, null), iMemberFilter);
     }
 
     // --------- 打印堆栈 ----------
@@ -439,16 +440,16 @@ public class CoreTool {
     }
 
     // ---------- 静态 ------------
-    public static <T> T newInstance(Class<?> clz, Object... objects) {
-        return baseNewInstance(new MemberData<>(clz, null), objects);
+    public static <T> T newInstance(Class<?> clz, Object... objs) {
+        return baseNewInstance(new MemberData<>(clz, null), objs);
     }
 
-    public static <T> T newInstance(String clz, Object... objects) {
-        return baseNewInstance(findClass(clz), objects);
+    public static <T> T newInstance(String clz, Object... objs) {
+        return baseNewInstance(findClass(clz), objs);
     }
 
-    public static <T> T newInstance(String clz, ClassLoader classLoader, Object... objects) {
-        return baseNewInstance(findClass(clz, classLoader), objects);
+    public static <T> T newInstance(String clz, ClassLoader classLoader, Object... objs) {
+        return baseNewInstance(findClass(clz, classLoader), objs);
     }
 
     public static <T> T callStaticMethod(Class<?> clz, String name, Object... objs) {

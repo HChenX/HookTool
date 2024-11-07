@@ -9,22 +9,24 @@
 ![language](https://img.shields.io/badge/language-java-purple)
 
 <p><b><a href="README-en.md">English</a> | <a href="README.md">简体中文</a></b></p>
-<p>Java Edition Hook Tool!</p>
+<p>A Java-based Hook tool to simplify the process of writing hook code!</p>
 </div>
 
-# ✨ Tool highlights
+# ✨ Features
 
-### 1. **Chained calls**
+### 1. **Chained Calls**
 
 ### 2. **Generic conversions**
 
-### 3. **All-round enrichment**
+### 3. **Safe Usage**
 
-#### Tip: Refactoring Statement: The v.1.0.0 version is quite different from the previous version, and the new version of the tool is static, which is more in line with the characteristics of the tool, and has a better user experience and performance.
+### 4. **Comprehensive Support**
+
+#### Tip: Version Notice: Version 1.0.0 introduces significant changes, making the tool more static, better suited to its purpose, and offering improved performance and usability.
 
 # 🔧 Usage
 
-#### 1. Add the following code to the project settings. gradle file.
+#### 1. Add the following code to the project's settings.gradle file.
 
 ```groovy
 dependencyResolutionManagement {
@@ -36,158 +38,158 @@ dependencyResolutionManagement {
 }
 ```
 
-#### 2. Add the following code to the build.gradle file in the project app.
+#### 2. Add the following dependency to the build.gradle file within the app directory.
 
 ```groovy
 dependencies {
-    // jitpack
-    implementation 'com.github.HChenX:HookTool:v.1.0.4'
-    // maven
-    implementation 'io.github.hchenx:hooktool:v.1.0.4'
-    // Choose one of the two
+    // Choose one of these options; jitpack is recommended as maven might not update as frequently.
+    // Tip: Replace v.*.*.* with the latest release version.
+    implementation 'com.github.HChenX:HookTool:v.1.0.6' // jitpack
+    implementation 'io.github.hchenx:hooktool:v.1.0.6' // maven
 }
 ```
 
-#### 3. Synchronize the project, download the dependencies and call them in the code.
+#### 3. Sync the project to download dependencies, then you can call the tool in your code.
 
-#### 4. Use tools.
+#### 4. Usage
 
-- Introduction to HCInit.
+- HCInit Example.
 
 ```java
 public void init() {
-    HCinit.initBasicData(); // Initialize the basic information of the module
-    HCinit.initStartupParam(); // Initialize the tool in the zygote phase
-    HCinit.initLoadPackageParam(); // Initialize the tool in the loadPackage phase
-    HCinit.xPrefsAutoReload(); // Whether to automatically update sharing preferences is enabled by default
-    HCinit.useLogExpand(); // For details about whether to use the log enhancement feature, see Method Annotation
+    HCInit.initBasicData(); // Initialize basic module information
+    HCInit.initStartupParam(); // Initialize the tool during the zygote phase
+    HCInit.initLoadPackageParam(); // Initialize the tool during the loadPackage phase
+    HCInit.xPrefsAutoReload(); // Automatically reload shared preferences, enabled by default
+    HCInit.useLogExpand(); // Enable logging enhancement features, see method comments for details
 }
 ```
 
-- Initialize the tool at the Xposed entry.
+- Initialize the tool in the Xposed entry point.
 
 ```java
 
 @Override
 public void initZygote(IXposedHookZygoteInit.StartupParam startupParam) {
-  HCInit.initBasicData(new BasicData()
-          .setModulePackageName("com.hchen.demo") // Module package name
-          .setTag("HChenDemo") // Log tag
-          .setLogLevel(LOG_D) // Log level
-          .setPrefsName("hchen_prefs") // Prefs storage file name
-  ); // If there is initZygote, it is recommended to configure it here because the timing is very early.
-    HCInit.initStartupParam(startupParam); // Initialize the tool in the zygote phase
+    HCInit.initBasicData(new BasicData()
+            .setModulePackageName("com.hchen.demo") // Module package name
+            .setTag("HChenDemo") // Log tag
+            .setLogLevel(LOG_D) // Log level
+            .setPrefsName("hchen_prefs") // Prefs storage file name (optional)
+    ); // Tip: Recommended to configure here if using initZygote, as it is initialized early on.
+    HCInit.initStartupParam(startupParam); // Initialize the tool during the zygote phase
 }
 
 @Override
 public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) {
-  HCInit.initBasicData(new BasicData()
-          .setModulePackageName("com.hchen.demo") // Module package name
-          .setTag("HChenDemo") // Log tag
-          .setLogLevel(LOG_D) // Log level
-          .setPrefsName("hchen_prefs") // Prefs stores the file name. Tip: Please keep the file name consistent.
-  );
+    HCInit.initLoadPackageParam(lpparam); // Initialize the tool during the loadPackage phase
 }
 ```
 
-- If you need to use the prefs tool or use the log class of this tool in the module, then you also
-  need to initialize it on the main interface of the module.
+- If you need to use the prefs tool or the log class in the module, initialize them in the main
+  module screen.
 
 ```java
 public static class MainActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
-        HCInit.initBasicData(/* The package name of your module */, /* tag */, /* Log level */); // 必须
+        HCInit.initBasicData(new BasicData()
+                .setModulePackageName("com.hchen.demo") // Module package name
+                .setTag("HChenDemo") // Log tag
+                .setLogLevel(LOG_D) // Log level
+                .setPrefsName("hchen_prefs") // Prefs storage file name. (Optional) Tip: Ensure it matches the file name in Xposed.
+        );
     }
 }
 ```
 
-- Called at the code
+- Usage Examples
 
 ```java
 public class MainTest {
     public void test() {
-        CoreTool.hook(/* content */); // To hook it
-        CoreTool.findClass(); // Find the class
-        CoreTool.callMethod(); // Call the method
+        CoreTool.hookMethod(/* content */); // Hook method
+        CoreTool.findClass().get(); // Find class
+        CoreTool.callMethod(); // Call method
         ChainTool.chain("com.hchen.demo", new ChainTool()
                 .method("method")
                 .hook()
 
                 .method("method")
                 .hook()
-        ); // Can be chained
-        PrefsTool.prefs().getString(); // To read the sharing preferences
+        ); // Chain calls
+        PrefsTool.prefs().getString(); // Access shared preferences
         // ......
     }
 }
 ```
 
-- Of course, you can also directly inherit the packaged classes of this tool.
-- // extends BaseHC is highly recommended!
+- Alternatively, you can inherit classes packaged within this tool.
+- **Strongly recommended to inherit BaseHC for use!**
 
 ```java
-// Hook
+// Hook implementation
 public class MainTest extends BaseHC {
     @Override
     public void init() {
-        //BaseHC extends the CoreTool tool, which can be called directly.
+        // BaseHC inherits CoreTool tool, so you can call methods directly.
     }
 
     // Optional.
-    // The timing is zygote.
-    // The use of initZygote must be initialized at the hook entrance: HCInit.initStartupParam(startupParam);
+    // Executed in the zygote phase.
+    // Be sure to initialize HCInit.initStartupParam(startupParam) at the hook entry point.
     @Override
     public void initZygote(IXposedHookZygoteInit.StartupParam startupParam) {
-        findClass("com.hchen.demo.Main", classLoader); // In this phase, you need to pass classLoader or an error will be reported.
+        Class<?> c = findClass("com.hchen.demo.Main").get();
+        hookMethod(c, "test", new IHook() {
+            /* content */
+        });
     }
 }
 
-// Caller
+// Executor
 public class RunHook implements IXposedHookLoadPackage, IXposedHookZygoteInit {
     @Override
     public void handleLoadPackage(XC_LoadPackage.LoadPackageParam loadPackageParam) {
-        new MainTest().onLoadPackage(); // The hook can be executed in the loadPackage phase.
+        new MainTest().onLoadPackage(); // Hook at the loadPackage stage.
     }
 
     @Override
     public void initZygote(StartupParam startupParam) {
-        new MainTest().onZygote(); // initZygote Hook.
+        new MainTest().onZygote(); // Hook at the initZygote stage.
     }
 }
-
 ```
 
-- Obfuscated configuration:
+- ProGuard configuration:
 
 ```text
-// If you don't need to use the log enhancements, you can also just join (for the case of inherited BaseHC use):
+// If you do not require log enhancement, add only the following rule (for classes inheriting BaseHC):
 -keep class * extends com.hchen.hooktool.BaseHC
  
-// If the directory where you store the hook file is com. hchen. demo. hook
-// If you need to use logging enhancements, it is recommended to include obfuscation rules:
-// If there are multiple directories, it is recommended that you add them separately.
+// If using log enhancement, add the following rules:
+// Suppose hook files are in the directory com.hchen.demo.hook
+// If stored in multiple directories, add each directory accordingly.
 -keep class com.hchen.demo.hook.**
 -keep class com.hchen.demo.hook.**$*
-
-// If you don't extends BaseHC usage or use log enhancements, you don't need to configure obfuscation rules.
 ```
 
-- Now that all the work is done, you can use it happily!
+- Done! Enjoy using the tool!
 
 # 💡 Chained calls
 
-- This tool supports chaining calls and uses the chain() method to create chains.
-- This is a new chain solution provided by this tool refactoring, is it more concise and efficient?
-- Code examples:
+- The tool supports chained calls using the chain() method.
+- This is a newly structured chaining solution introduced in the refactored version, making it more
+  efficient and concise.
+- Example Code:
 
 ```java
-// Chained calls
+// Chain call example
 public class MainTest extends BaseHC {
     public void test() {
-        // See! Isn't it concise and easy to understand?
+        // Look! Isn't it clear and easy to understand?
         chain("com.hchen.demo", method("test")
-                .hook(new IAction() {
+                .hook(new IHook() {
                     @Override
                     public void before() {
                         super.before();
@@ -195,7 +197,7 @@ public class MainTest extends BaseHC {
                 })
 
                 .anyMethod("test")
-                .hook(new IAction() {
+                .hook(new IHook() {
                     @Override
                     public void after() {
                         super.after();
@@ -211,9 +213,8 @@ public class MainTest extends BaseHC {
 
 # 🔥 Generic conversions
 
-- The various methods of the traditional Xposed MethodHookParam are all Objects. This makes it
-  necessary to type explicitly in order to use it.
-- This tool makes full use of generics, so you don't need to type explicitly anymore!
+- Traditional Xposed MethodHookParam methods return Object, requiring explicit casting.
+- With this tool, you can leverage generics to avoid unnecessary conversions in most cases.
 
 ```java
 public class MainTest extends BaseHC {
@@ -225,57 +226,79 @@ public class MainTest extends BaseHC {
                 Context context = (Context) param.thisObject;
                 String string = (String) param.args[0];
                 param.args[1] = 1;
-                String result = (String) XposedHelpers.callMethod(param.thisObject, "call",
-                        param.thisObject, param.args[0]);
-                XposedHelpers.callStaticMethod(XposedHelpers.findClass("com.demo.Main", ClassLoader.getSystemClassLoader()),
-                        "callStatic", param.thisObject, param.args[1]);
-                int i = (int) XposedHelpers.getStaticObjectField(XposedHelpers.findClass("com.demo.Main", ClassLoader.getSystemClassLoader()),
-                        "field");
+                String result = (String) XposedHelpers.callMethod(param.thisObject, "call", param.thisObject, param.args[0]);
+                XposedHelpers.callStaticMethod(XposedHelpers.findClass("com.demo.Main", ClassLoader.getSystemClassLoader()), "callStatic", param.thisObject, param.args[1]);
+                int i = (int) XposedHelpers.getStaticObjectField(XposedHelpers.findClass("com.demo.Main", ClassLoader.getSystemClassLoader()), "field");
             }
         };
 
         new IAction() {
             @Override
             public void before() {
-                Context context = thisObject(); // There is no need to convert explicitly
-                String string = first(); // More intuitive parameter acquisition :)
-                second(1); // More intuitive parameterization :)
-                // non static
-                setThisField("demo", 1);
-                callThisMethod("method",...);
-                // Non-static outside of this class
-                setField(obj, "demo", 1);
-                callMethod(obj, "method");
+                Context context = thisObject(); // No explicit conversion needed
+                String string = getArgs(0); // Access first method argument
+                setArgs(1, context); // Set second method argument
 
-                // Static requires class
-                callStaticMethod("com.demo.Main", "callStatic", thisObject(), second());
+                // Non-static within current class
+                setThisField("demo", 1);
+                callThisMethod("method", objs);
+                // Non-static outside current class
+                setField(obj /* instance */, "demo", 1);
+                callMethod(obj /* instance */, "method", objs);
+
+                // Static with class reference
+                callStaticMethod("com.demo.Main", "callStatic", thisObject(), getArgs(1));
                 int i = getStaticField("com.demo.Main", "field");
                 setStaticField("com.demo.Main", "test", true);
 
-                removeSelf(); // You can call this method to invalidate the hook itself
-                observeCall();  // Observe the call
-                getStackTrace(); // Get the stack
+                removeSelf(); // Call to invalidate hook on self
+                observeCall(); // Log enhancement (optional)
+                getStackTrace(); // Get the call stack of the method
             }
         };
     }
 }
-
 ```
 
-# 📌 All-round enrichment
+# 📌 Safe Usage
 
-- Tools provide a comprehensive set of methods for you to call.
-- including:
+- This tool is designed with a comprehensive error handling logic, aiming to prevent interruptions
+  in the hook process.
+- Example:
+
+```java
+public class MainTest extends BaseHC {
+    public void init() {
+        Class<?> c = findClass("com.hchen.demo.Demo").get(); // If the class cannot be retrieved, an error log is recorded and null is returned.
+        hookMethod(c, "test", new IHook() { // If c is null, an error log is recorded and the hook is skipped, allowing the rest of the code to continue.
+            @Override
+            public void before() {
+                ((Object) null).getClass(); // Even if an error occurs, it will be logged without being passed to the host app or disrupting the hook process.
+            }
+        });
+        setStaticField("com.hchen.demo.Demo", "demo", true);
+        callStaticMethod("com.hchen.demo.Demo", "isDemo", false);
+        ((Object) null).getClass(); // If an error is thrown here, it will terminate the hook process, but a log will indicate the error. Please manually avoid such cases!
+    }
+}
+```
+
+- Ideal for scenarios with multiple hook points where process continuity is essential without being
+  disrupted!
+
+# 📌 Comprehensive and Versatile
+
+- The tool provides a rich set of methods available for use, including:
 
 ----
 
-- ContextTool class:
-- More convenient access context.
+- ContextTool Class:
+- Facilitates easier context retrieval.
 
 ```java
 public class MainTest {
     public void test() {
-        // This is the easiest way to obtain context
+        // Simple way to obtain context.
         Context context = ContextTool.getContext(ContextUtils.FLAG_ALL);
     }
 }
@@ -283,13 +306,13 @@ public class MainTest {
 
 ----
 
-- InvokeTool class:
-- More convenient and robust reflection classes.
+- InvokeTool Class:
+- Provides more convenient and robust reflection utilities.
 
 ```java
 public class MainTest {
     public void test() {
-        // The same applies to the reflection method, and the same applies to other reflection operations.
+        // Reflectively calls a method; other reflection operations are similar.
         InvokeTool.callMethod(InvokeTool.findClass("com.hchen.demo.Main",
                 getClass().getClassLoader()), "test", new Class[]{});
     }
@@ -298,43 +321,43 @@ public class MainTest {
 
 ----
 
-- PropTool class:
-- A more convenient tool for prop reading and modification.
+- SystemPropTool Class:
+- Provides an easy-to-use tool for reading and modifying properties.
 
 ```java
 public class MainTest {
     public void test() {
-        // A prop can only be set if it is called in the system framework
-        PropTool.setProp("ro.test.prop", "1");
-        // You can get it at will
-        String result = PropTool.getProp("ro.test.prop");
+        // Can set properties only in system frameworks
+        SystemPropTool.setProp("ro.test.prop", "1");
+        // Reading is unrestricted
+        String result = SystemPropTool.getProp("ro.test.prop");
     }
 }
 ```
 
 ---
 
-- PrefsTool class:
-- Provides the function of prefs read modification.
+- PrefsTool Class:
+- Enables reading and modifying preferences.
 
 ```java
-// Parasitic in-app
+// In the host app
 public class MainTest extends BaseHC {
     @Override
     public void init() {
         // xprefs mode:
-        // Note the xprefs mode, the parasitic application cannot modify the configuration and can only read.
-        String s = prefs().getString("test", "1");  // To read
-        s = prefs("myPrefs").getString("test", "1");  // You can specify the name of the read file
+        // Note: in xprefs mode, the host app can only read but not modify configurations.
+        String s = prefs().getString("test", "1"); // Read preferences
+        s = prefs("myPrefs").getString("test", "1"); // Specify file name to read
 
         // sprefs mode:
-        // The configuration is saved to the private directory of the parasitic application, and the reads are also read from the private directory of the parasitic application.
+        // Configurations are saved to the host app's private directory, and reads are from the same.
         prefs(context).editor().putString("test", "1").commit();
-        // If there is no extends BaseHC can be called like this.
+        // If not inheriting BaseHC, call this way.
         PrefsTool.prefs(context).editor().putString("test", "2").commit();
-        // Note that the sprefs pattern is separate from the xprefs pattern and can co-exist.
+        // Note: sprefs and xprefs modes operate independently and can coexist.
 
-        // If it's not convenient to get the context, you can use this method to get the parasitic app context asynchronously before setting it.
+        // If obtaining context is difficult, this method provides async host app context retrieval.
         asyncPrefs(new PrefsTool.IAsyncPrefs() {
             @Override
             public void async(Context context) {
@@ -344,13 +367,13 @@ public class MainTest extends BaseHC {
     }
 }
 
-// Module
+// In the module
 public static class MainActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
-        // ！！！If you are using the xprefs mode, call PrefsTool.prefs(context) on the main interface of the module; Initialize it, otherwise it may not be available ! !
-        PrefsTool.prefs(this); // or
-        PrefsTool.prefs(this,/* Your own prefs name */);
+        // IMPORTANT: If using xprefs mode, initialize with PrefsTool.prefs(context) on the main module screen, or it may not function!
+        PrefsTool.prefs(this); // Or
+        PrefsTool.prefs(this, /* your prefs name */);
 
         // Usage
         prefs(this).editor().putString("test", "1").commit();
@@ -362,55 +385,49 @@ public static class MainActivity {
 ---
 
 - CoreTool class:
-- A complete hook method is available!
-- Absolutely satisfying the needs!
+- Provides complete Hook methods!
+- Fully meets your needs!
 
 ----
 
 - DeviceTool class:
-- Convenient access to basic system information.
+- Facilitates access to basic system information.
+- Refer to source code and comments for more details.
+
+----
+
+- ResInjectTool Class:
+- Injects module resources into the target scope.
 - See source code and comments for details.
 
 ----
 
-- ResTool class:
-- Inject module resources into the target scope.
-- For details, see Source Code and Comments.
+- PackagesTool Class:
+- Quickly retrieves package information!
 
 ----
 
-- PackagesTool class:
-- Get package information quickly!
+- More great tools coming soon …
 
-----
+# 💕 Tool Users
 
-- BitmapTool class:
-- Convert Drawable to Bitmap
-
-----
-
-- More is on the way···
-
-# 💕 Tool users
-
-- This tool was used for the following projects!
+- The following projects use this tool:
 
 |  Project Name  |                        Project Link                        |
 |:--------------:|:----------------------------------------------------------:|
 | ForegroundPin  |  [ForegroundPin](https://github.com/HChenX/ForegroundPin)  |
 | AutoSEffSwitch | [AutoSEffSwitch](https://github.com/HChenX/AutoSEffSwitch) |
 
-- If your project uses this tool, let me know and I'll add it to the form.
-- If you want to know more about this tool, you can also refer to the above items, I hope it will
-  help you!
+- If your project uses this tool, let me know, and I’ll add it to this list.
+- For more details on using this tool, check out the projects above—hope they’re helpful!
 
-# 📢 Project Statement
+# 📢 Project Acknowledgements
 
 - **This tool is based on:**
 - [LSPosed](https://github.com/LSPosed/LSPosed)
 
-- Please specify when using this tool.
+- Please acknowledge this tool if you use it.
 
 # 🎉 Conclusion
 
-- Thank you for your willingness to use this tool! Enjoy your day! ♥️
+- Thank you for using this tool! Enjoy your day! ♥️

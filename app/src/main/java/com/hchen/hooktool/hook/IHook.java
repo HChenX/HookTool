@@ -16,38 +16,36 @@
 
  * Copyright (C) 2023-2024 HookTool Contributions
  */
-package com.hchen.hooktool.tool.itool;
+package com.hchen.hooktool.hook;
 
-import com.hchen.hooktool.tool.PrefsTool;
-
-import java.util.Map;
-import java.util.Set;
+import com.hchen.hooktool.data.Priority;
+import com.hchen.hooktool.tool.ParamTool;
 
 /**
- * prefs 工具接口，
- * 方法具体介绍请看实现类。<br/>
- * {@link com.hchen.hooktool.tool.PrefsTool}
+ * Hook 动作接口
  * 
  * @author 焕晨HChen
  */
-public interface IPrefs {
-    String getString(String key, String def);
+public abstract class IHook extends ParamTool {
+    public final int PRIORITY;
 
-    Set<String> getStringSet(String key, Set<String> def);
+    public IHook() {
+        this.PRIORITY = Priority.DEFAULT;
+    }
 
-    boolean getBoolean(String key, boolean def);
+    public IHook(int priority) {
+        this.PRIORITY = priority;
+    }
 
-    int getInt(String key, int def);
+    /**
+     * 在目标方法调用前回调。
+     */
+    public void before() {
+    }
 
-    float getFloat(String key, float def);
-
-    long getLong(String key, long def);
-
-    Object get(String key, Object def);
-
-    boolean contains(String key);
-
-    Map<String, ?> getAll();
-
-    PrefsTool.Editor editor();
+    /**
+     * 在目标方法调用后回调。
+     */
+    public void after() {
+    }
 }

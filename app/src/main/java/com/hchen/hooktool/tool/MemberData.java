@@ -83,7 +83,7 @@ public class MemberData<T> {
     /*
      * 将抛错由前至后进行拼接。
      * */
-    protected MemberData<T> spiltThrowableMsg(Throwable[] throwables) {
+    protected MemberData<T> spiltThrowableMsg(Throwable... throwables) {
         if (throwables == null || throwables.length == 0) return this;
         if (mThrowable == null && Arrays.stream(throwables).allMatch(Objects::isNull))
             return this;

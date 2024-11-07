@@ -41,7 +41,7 @@ import android.util.TypedValue;
 import androidx.annotation.RequiresApi;
 
 import com.hchen.hooktool.data.ToolData;
-import com.hchen.hooktool.hook.IAction;
+import com.hchen.hooktool.hook.IHook;
 import com.hchen.hooktool.tool.CoreTool;
 
 import java.io.File;
@@ -58,7 +58,7 @@ import de.robv.android.xposed.IXposedHookZygoteInit;
  *
  * @author 焕晨HChen
  */
-public class ResTool {
+public class ResInjectTool {
     private static ResourcesLoader resourcesLoader = null;
     private static String mModulePath = null;
     private static Handler mHandler = null;
@@ -68,7 +68,7 @@ public class ResTool {
      *
      * @param modulePath startupParam.modulePath 即可
      */
-    public static void initResHelper(String modulePath) {
+    public static void initResInjectTool(String modulePath) {
         mModulePath = modulePath;
     }
 
@@ -88,7 +88,7 @@ public class ResTool {
      * Tip: `0x64` is the resource id, you can change it to any value you want.(recommended [0x30 to 0x6F])
      */
     public static Resources loadModuleRes(Resources resources, boolean doOnMainLooper) {
-        boolean load = false;
+        boolean load;
         if (resources == null) {
             logW(getTag(), "Context can't is null!" + getStackTrace());
             return null;
@@ -153,9 +153,7 @@ public class ResTool {
                 if (mHandler == null) {
                     mHandler = new Handler(Looper.getMainLooper());
                 }
-                mHandler.post(() -> {
-                    addLoaders(resources);
-                });
+                mHandler.post(() -> addLoaders(resources));
                 return true; // 此状态下保持返回 true，请观察日志是否有报错来判断是否成功。
             }
         else
@@ -205,7 +203,7 @@ public class ResTool {
 
     private static boolean hooked;
 
-    private ResTool() {
+    private ResInjectTool() {
         hooked = false;
         resourcesArrayList.clear();
         resMap.clear();
@@ -332,10 +330,10 @@ public class ResTool {
         hooked = false;
     }
 
-    private static final IAction hookTypedBefore = new IAction() {
+    private static final IHook hookTypedBefore = new IHook() {
         @Override
         public void before() {
-            int index = first();
+            int index = getArgs(0);
             int[] mData = CoreTool.getField(thisObject(), "mData");
             int type = mData[index];
             int id = mData[index + 3];
@@ -350,13 +348,13 @@ public class ResTool {
         }
     };
 
-    private static final IAction hookResBefore = new IAction() {
+    private static final IHook hookResBefore = new IHook() {
         @Override
         public void before() {
             if (resourcesArrayList.isEmpty()) {
                 resourcesArrayList.add(loadModuleRes(ContextTool.getContext(FLAG_ALL)));
             }
-            if (Boolean.TRUE.equals(resMap.get((int) first()))) {
+            if (Boolean.TRUE.equals(resMap.get((int) getArgs(0)))) {
                 return;
             }
             for (Resources resources : resourcesArrayList) {

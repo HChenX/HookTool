@@ -28,37 +28,37 @@ import de.robv.android.xposed.XC_MethodHook;
  * @author 焕晨HChen
  */
 public class HookFactory {
-    public static XposedCallBack createHook(String tag, IAction iAction) {
-        iAction.PRIVATETAG = tag;
-        return new XposedCallBack(iAction);
+    public static XposedCallBack createHook(String tag, IHook iHook) {
+        iHook.PRIVATETAG = tag;
+        return new XposedCallBack(iHook);
     }
 
     public static class XposedCallBack extends XC_MethodHook {
-        private final IAction iAction;
+        private final IHook iHook;
 
-        public XposedCallBack(IAction iAction) {
-            super(iAction.PRIORITY);
-            this.iAction = iAction;
-            iAction.XCMethodHook(this);
+        public XposedCallBack(IHook iHook) {
+            super(iHook.PRIORITY);
+            this.iHook = iHook;
+            iHook.XCMethodHook(this);
         }
 
         @Override
         protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
             try {
-                iAction.MethodHookParam(param);
-                iAction.before();
+                iHook.MethodHookParam(param);
+                iHook.before();
             } catch (Throwable e) {
-                logE(iAction.PRIVATETAG + ":before", "Waring! will stop hook process!!", e);
+                logE(iHook.PRIVATETAG + ":before", "Waring! will stop hook process!!", e);
             }
         }
 
         @Override
         protected void afterHookedMethod(MethodHookParam param) throws Throwable {
             try {
-                iAction.MethodHookParam(param);
-                iAction.after();
+                iHook.MethodHookParam(param);
+                iHook.after();
             } catch (Throwable e) {
-                logE(iAction.PRIVATETAG + ":after", "Waring! will stop hook process!!", e);
+                logE(iHook.PRIVATETAG + ":after", "Waring! will stop hook process!!", e);
             }
         }
     }

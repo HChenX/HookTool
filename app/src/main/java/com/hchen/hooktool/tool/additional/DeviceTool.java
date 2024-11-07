@@ -22,14 +22,16 @@ import static com.hchen.hooktool.log.AndroidLog.logE;
 import static com.hchen.hooktool.log.LogExpand.getTag;
 import static com.hchen.hooktool.tool.additional.InvokeTool.findClass;
 import static com.hchen.hooktool.tool.additional.InvokeTool.getStaticField;
-import static com.hchen.hooktool.tool.additional.PropTool.getProp;
+import static com.hchen.hooktool.tool.additional.SystemPropTool.getProp;
 
+import android.content.Context;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.os.Build;
 import android.text.TextUtils;
-
-import java.util.Locale;
+import android.util.DisplayMetrics;
+import android.view.Display;
+import android.view.WindowManager;
 
 /**
  * 此类用于获取设备基本信息
@@ -113,11 +115,17 @@ public class DeviceTool {
         return getHyperOSVersion() >= version;
     }
 
+    /**
+     * 判断 miui 优化开关是否开启。
+     */
+    public static boolean isMiuiOptimization() {
+        return SystemPropTool.getProp("persist.sys.miui_optimization", false);
+    }
 
     // --------- 手机品牌 -------------
     public static final String[] ROM_HUAWEI = {"huawei"};
     public static final String[] ROM_VIVO = {"vivo"};
-    public static final String[] ROM_XIAOMI = {"xiaomi"};
+    public static final String[] ROM_XIAOMI = {"xiaomi", "redmi"};
     public static final String[] ROM_OPPO = {"oppo"};
     public static final String[] ROM_LEECO = {"leeco", "letv"};
     public static final String[] ROM_360 = {"360", "qiku"};
@@ -127,6 +135,9 @@ public class DeviceTool {
     public static final String[] ROM_SAMSUNG = {"samsung"};
     public static final String[] ROM_HONOR = {"honor"};
 
+    /*
+     * 可能可以使用的获取各系统版本号的 prop 条目。
+     * */
     private static final String ROM_NAME_MIUI = "ro.miui.ui.version.name";
     private static final String VERSION_PROPERTY_HUAWEI = "ro.build.version.emui";
     private static final String VERSION_PROPERTY_VIVO = "ro.vivo.os.build.display.id";
@@ -143,42 +154,35 @@ public class DeviceTool {
      * 判断当前厂商系统是否为 emui。
      */
     public static boolean isEmui() {
-        return !TextUtils.isEmpty(getProp(VERSION_PROPERTY_HUAWEI));
+        return !getRomVersion(VERSION_PROPERTY_HUAWEI).isEmpty();
     }
 
     /**
      * 判断当前厂商系统是否为 miui。
      */
     public static boolean isMiui() {
-        return !TextUtils.isEmpty(getProp(ROM_NAME_MIUI));
+        return !getRomVersion(ROM_NAME_MIUI).isEmpty();
     }
 
     /**
      * 判断当前厂商系统是否为 ColorOs。
      */
     public static boolean isColorOs() {
-        for (String property : VERSION_PROPERTY_OPPO) {
-            String versionName = getProp(property);
-            if (TextUtils.isEmpty(versionName)) {
-                continue;
-            }
-            return true;
-        }
-        return false;
+        return !getRomVersion(VERSION_PROPERTY_OPPO).isEmpty();
     }
 
     /**
      * 判断当前厂商系统是否为 OriginOS。
      */
     public static boolean isOriginOs() {
-        return !TextUtils.isEmpty(getProp(VERSION_PROPERTY_VIVO));
+        return !getRomVersion(VERSION_PROPERTY_VIVO).isEmpty();
     }
 
     /**
      * 判断当前厂商系统是否为 OneUI。
      */
     public static boolean isOneUi() {
-        return isRightRom(getBrand(), getManufacturer(), ROM_SAMSUNG);
+        return isRightRom(ROM_SAMSUNG);
     }
 
     /**
@@ -186,8 +190,7 @@ public class DeviceTool {
      */
     public static boolean isHarmonyOs() {
         // 鸿蒙系统没有 Android 10 以下的
-        if (!isMoreAndroidVersion(Build.VERSION_CODES.Q))
-            return false;
+        if (!isMoreAndroidVersion(Build.VERSION_CODES.Q)) return false;
         try {
             Object osBrand = InvokeTool.callStaticMethod(
                     InvokeTool.findClass("com.huawei.system.BuildEx"),
@@ -203,120 +206,33 @@ public class DeviceTool {
      * 判断当前是否为 MagicOs 系统（荣耀）。
      */
     public static boolean isMagicOs() {
-        return isRightRom(getBrand(), getManufacturer(), ROM_HONOR);
+        return isRightRom(ROM_HONOR);
     }
 
     /**
      * 判断是否是指定的 rom。
      */
-    public static boolean isAppointRom(String[] rom) {
-        return isRightRom(getBrand(), getManufacturer(), rom);
-    }
-
-    /**
-     * 尝试获取 rom 的版本，可能不准确。
-     */
-    public static String getRomVersionName() {
-        final String brand = getBrand();
-        final String manufacturer = getManufacturer();
-        if (isRightRom(brand, manufacturer, ROM_HUAWEI)) {
-            String version = getProp(VERSION_PROPERTY_HUAWEI);
-            String[] temp = version.split("_");
-            if (temp.length > 1) {
-                return temp[1];
-            } else {
-                // 需要注意的是 华为畅享 5S Android 5.1 获取到的厂商版本号是 EmotionUI 3，而不是 3.1 或者 3.0 这种
-                if (version.contains("EmotionUI")) {
-                    return version.replaceFirst("EmotionUI\\s*", "");
-                }
-                return version;
-            }
-        }
-        if (isRightRom(brand, manufacturer, ROM_VIVO)) {
-            // 需要注意的是 vivo iQOO 9 Pro Android 12 获取到的厂商版本号是 OriginOS Ocean
-            return getProp(VERSION_PROPERTY_VIVO);
-        }
-        if (isRightRom(brand, manufacturer, ROM_XIAOMI)) {
-            return getProp(VERSION_PROPERTY_XIAOMI);
-        }
-        if (isRightRom(brand, manufacturer, ROM_OPPO)) {
-            for (String property : VERSION_PROPERTY_OPPO) {
-                String versionName = getProp(property);
-                if (TextUtils.isEmpty(property)) {
-                    continue;
-                }
-                return versionName;
-            }
-            return "";
-        }
-        if (isRightRom(brand, manufacturer, ROM_LEECO)) {
-            return getProp(VERSION_PROPERTY_LEECO);
-        }
-
-        if (isRightRom(brand, manufacturer, ROM_360)) {
-            return getProp(VERSION_PROPERTY_360);
-        }
-        if (isRightRom(brand, manufacturer, ROM_ZTE)) {
-            return getProp(VERSION_PROPERTY_ZTE);
-        }
-        if (isRightRom(brand, manufacturer, ROM_ONEPLUS)) {
-            return getProp(VERSION_PROPERTY_ONEPLUS);
-        }
-        if (isRightRom(brand, manufacturer, ROM_NUBIA)) {
-            return getProp(VERSION_PROPERTY_NUBIA);
-        }
-        if (isRightRom(brand, manufacturer, ROM_HONOR)) {
-            for (String property : VERSION_PROPERTY_MAGIC) {
-                String versionName = getProp(property);
-                if (TextUtils.isEmpty(property)) {
-                    continue;
-                }
-                return versionName;
-            }
-            return "";
-        }
-
-        return "";
-    }
-
-    /**
-     * 判断 miui 优化开关是否开启。
-     */
-    public static boolean isMiuiOptimization() {
-        return PropTool.getProp("persist.sys.miui_optimization", false);
-    }
-
-    private static boolean isRightRom(String brand, String manufacturer, final String... names) {
-        brand = brand.toLowerCase();
-        manufacturer = manufacturer.toLowerCase();
+    public static boolean isRightRom(final String... names) {
         if (names == null) return false;
         for (String name : names) {
-            if (brand.contains(name) || manufacturer.contains(name)) {
+            if (Build.BRAND.toLowerCase().contains(name) || Build.MANUFACTURER.toLowerCase().contains(name)) {
                 return true;
             }
         }
         return false;
     }
 
-    // ------------- 其他 -------------
-    public static String getSystemVersionIncremental() {
-        return getProp("ro.system.build.version.incremental");
-    }
-
-    public static String getBuildDate() {
-        return getProp("ro.system.build.date");
-    }
-
-    public static String getBuilder() {
-        return getProp("ro.build.user");
-    }
-
     /**
-     * 是否为小米 pad。
+     * 通过 prop 获取系统版本号。
      */
-    public static boolean isMiuiTablet() {
-        return Boolean.TRUE.equals(getStaticField(
-                findClass("miui.os.Build", null), "IS_TABLET"));
+    public static String getRomVersion(String... props) {
+        for (String property : props) {
+            String versionName = getProp(property);
+            if (TextUtils.isEmpty(versionName))
+                continue;
+            return versionName;
+        }
+        return "";
     }
 
     /**
@@ -327,73 +243,50 @@ public class DeviceTool {
                 findClass("miui.os.Build", null), "IS_INTERNATIONAL_BUILD"));
     }
 
-    public static boolean isPad() {
-        if (isMiuiTablet()) return true;
-        return isPadDevice();
-    }
-
-    public static String getFingerPrint() {
-        return Build.FINGERPRINT;
-    }
-
-    public static String getLocale() {
-        return getProp("ro.product.locale");
-    }
-
-    public static String getLanguage() {
-        return Locale.getDefault().toString();
-    }
-
-    public static String getBoard() {
-        return Build.BOARD;
-    }
-
-    public static String getSoc() {
-        return getProp("ro.soc.model");
-    }
-
-    public static String getDeviceName() {
-        return Build.DEVICE;
-    }
-
-    public static String getMarketName() {
-        return getProp("ro.product.marketname");
-    }
-
-    public static String getModelName() {
-        return Build.MODEL;
-    }
-
-    public static String getBrand() {
-        return Build.BRAND;
-    }
-
-    public static String getManufacturer() {
-        return Build.MANUFACTURER;
-    }
-
-    public static String getModDevice() {
-        return getProp("ro.product.mod_device");
-    }
-
-    public static String getCharacteristics() {
-        return getProp("ro.build.characteristics");
-    }
-
-    public static String getSerial() {
-        return getProp("ro.serialno").replace("\n", "");
-    }
-
-    public static boolean isTablet() {
-        return Resources.getSystem().getConfiguration().smallestScreenWidthDp >= 600;
-    }
-
-    public static boolean isPadDevice() {
-        return isTablet() || getProp("persist.sys.muiltdisplay_type", 0) == 2;
-    }
-
+    /**
+     * 是否是神色模式。
+     */
     public static boolean isDarkMode(Resources resources) {
         return (resources.getConfiguration().uiMode &
                 Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
+    }
+
+    /**
+     * 是否是平板。
+     */
+    public static boolean isPad(Context context) {
+        int flag = 0;
+        if (isMiuiPad()) return true;
+        if (isPadByProp()) ++flag;
+        if (isPadBySize(context)) ++flag;
+        if (isPadByApi(context)) ++flag;
+        return flag >= 2;
+    }
+
+    /**
+     * 是否是小米平板。
+     */
+    public static boolean isMiuiPad() {
+        return Boolean.TRUE.equals(getStaticField(
+                findClass("miui.os.Build", null), "IS_TABLET"));
+    }
+
+    private static boolean isPadByProp() {
+        String mDeviceType = getProp("ro.build.characteristics", "default");
+        return (mDeviceType != null && mDeviceType.toLowerCase().contains("tablet"))
+                || getProp("persist.sys.muiltdisplay_type", 0) == 2;
+    }
+
+    private static boolean isPadBySize(Context context) {
+        Display display = ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
+        DisplayMetrics dm = new DisplayMetrics();
+        display.getMetrics(dm);
+        double x = Math.pow(dm.widthPixels / dm.xdpi, 2);
+        double y = Math.pow(dm.heightPixels / dm.ydpi, 2);
+        return Math.sqrt(x + y) >= 7.0;
+    }
+
+    private static boolean isPadByApi(Context context) {
+        return (context.getResources().getConfiguration().screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK) >= Configuration.SCREENLAYOUT_SIZE_LARGE;
     }
 }

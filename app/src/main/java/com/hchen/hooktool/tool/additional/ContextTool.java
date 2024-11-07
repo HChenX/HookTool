@@ -27,6 +27,8 @@ import android.content.Context;
 
 import androidx.annotation.IntDef;
 
+import com.hchen.hooktool.tool.itool.IContextGetter;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.concurrent.ExecutorService;
@@ -77,9 +79,9 @@ public class ContextTool {
      * 使用方法:
      * <pre> {@code
      * handler = new Handler();
-     * ContextTool.getAsyncContext(new ContextTool.IContext() {
+     * ContextTool.getAsyncContext(new IContextGetter() {
      *   @Override
-     *   public void find(Context context) {
+     *   public void tyrToFindContext(Context context) {
      *      handler.post(new Runnable() {
      *        @Override
      *        public void run() {
@@ -90,10 +92,10 @@ public class ContextTool {
      * }, true/false);
      * }
      * 当然 Handler 是可选项, 适用于 Toast 显示等场景。
-     * @param iContext 回调获取 Context
+     * @param iContextGetter 回调获取 Context
      * @author 焕晨HChen
      */
-    public static void getAsyncContext(IContext iContext, boolean isSystem) {
+    public static void getAsyncContext(IContextGetter iContextGetter, boolean isSystem) {
         ThreadPool.getInstance().submit(() -> {
             Context context = getContextNoLog(isSystem ? FlAG_ONLY_ANDROID : FLAG_CURRENT_APP);
             if (context == null) {
@@ -107,7 +109,7 @@ public class ContextTool {
                     }
                 }
                 // context 可能为 null 请注意判断
-                iContext.find(context);
+                iContextGetter.tryToFindContext(context);
             }
         });
         ThreadPool.getInstance().shutdown();
@@ -156,10 +158,6 @@ public class ContextTool {
             // context = (Context) getSystemContext.invoke(o);
         }
         return context;
-    }
-
-    public interface IContext {
-        void find(Context context);
     }
 
     /**
