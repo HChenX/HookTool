@@ -20,7 +20,6 @@ package com.hchen.hooktool.tool;
 
 import static com.hchen.hooktool.helper.ConvertHelper.arrayToClass;
 import static com.hchen.hooktool.helper.TryHelper.run;
-import static com.hchen.hooktool.helper.TryHelper.runDump;
 import static com.hchen.hooktool.hook.HookFactory.createHook;
 import static com.hchen.hooktool.log.LogExpand.getTag;
 import static com.hchen.hooktool.log.XposedLog.logD;
@@ -31,6 +30,7 @@ import static com.hchen.hooktool.tool.CoreBase.baseFilterConstructor;
 import static com.hchen.hooktool.tool.CoreBase.baseFilterMethod;
 import static com.hchen.hooktool.tool.CoreBase.baseFindAllConstructor;
 import static com.hchen.hooktool.tool.CoreBase.baseFindAllMethod;
+import static com.hchen.hooktool.tool.CoreBase.baseFindClass;
 import static com.hchen.hooktool.tool.CoreBase.baseFindConstructor;
 import static com.hchen.hooktool.tool.CoreBase.baseFindField;
 import static com.hchen.hooktool.tool.CoreBase.baseFindMethod;
@@ -85,8 +85,7 @@ public class CoreTool {
     }
 
     public static MemberData<Class<?>> findClass(String name, ClassLoader classLoader) {
-        return (MemberData<Class<?>>) (MemberData<?>) runDump(() -> XposedHelpers.findClass(name, classLoader))
-                .setErrMsg("Failed to find class!");
+        return baseFindClass(name, classLoader);
     }
 
     //------------ 检查指定方法是否存在 --------------

@@ -30,6 +30,8 @@ import static com.hchen.hooktool.tool.CoreTool.findClass;
 import static com.hchen.hooktool.tool.CoreTool.findConstructor;
 import static com.hchen.hooktool.tool.CoreTool.findMethod;
 
+import androidx.annotation.Nullable;
+
 import com.hchen.hooktool.hook.IHook;
 import com.hchen.hooktool.tool.itool.IMemberFilter;
 
@@ -39,13 +41,25 @@ import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.stream.Collectors;
 
 import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.XposedHelpers;
 
 public class CoreBase {
-    protected CoreBase() {
+    private CoreBase() {
+    }
+
+    protected static MemberData<Class<?>> baseFindClass(String name, ClassLoader classLoader) {
+        return (MemberData<Class<?>>) (MemberData<?>) runDump(() -> {
+            Class<?> c = CoreMemberCache.readClassCache(name, classLoader);
+            if (c == null) {
+                c = XposedHelpers.findClass(name, classLoader);
+                CoreMemberCache.writeClassCache(c);
+            }
+            return c;
+        }).setErrMsg("Failed to find class!");
     }
 
     protected static MemberData<Method> baseFindMethod(MemberData<Class<?>> clazz, String name, Class<?>... classes) {
@@ -198,5 +212,43 @@ public class CoreBase {
                 .setErrMsg("Failed to remove static additional instance!")
                 .spiltThrowableMsg(clz.getThrowable())
                 .or(null);
+    }
+
+    private static class CoreMemberCache {
+        private static final HashMap<String, Class<?>> mClassMap = new HashMap<>();
+
+        public static void writeClassCache(Class<?> clazz) {
+            if (clazz != null) {
+                ClassLoader classLoader = clazz.getClassLoader();
+                String clazzId = classLoader != null ? classLoader + "#" + classLoader.hashCode() + "#" + clazz.getName() : "null#null#" + clazz.getName();
+                mClassMap.put(clazzId, clazz);
+            }
+        }
+
+        @Nullable
+        public static Class<?> readClassCache(String name, ClassLoader classLoader) {
+            String clazzId = classLoader != null ? classLoader + "#" + classLoader.hashCode() + "#" + name : "null#null#" + name;
+            return mClassMap.get(clazzId);
+        }
+
+        /*
+        Xposed 有此实现，不重复实现。
+        // private static final ConcurrentHashMap<String, Method> mMethodMap = new ConcurrentHashMap<>();
+        // private static final ConcurrentHashMap<String, Field> mFieldMap = new ConcurrentHashMap<>();
+        
+        public void writeMethodCache(Method method) {
+            if (method == null) return;
+            Class<?> c = method.getDeclaringClass();
+            String paramsId = "(" + Arrays.stream(method.getParameterTypes()).map(Class::getName).collect(Collectors.joining(", ")) + ")";
+            method.setAccessible(true);
+            mMethodMap.put(c.getName() + "#" + method.getName() + paramsId, method);
+        }
+
+        public void writeFieldCache(Field field) {
+            if (field == null) return;
+            field.setAccessible(true);
+            mFieldMap.put(field.getDeclaringClass().getName() + field.getName(), field);
+        }
+        */
     }
 }
