@@ -220,15 +220,23 @@ public class CoreBase {
         public static void writeClassCache(Class<?> clazz) {
             if (clazz != null) {
                 ClassLoader classLoader = clazz.getClassLoader();
-                String clazzId = classLoader != null ? classLoader + "#" + classLoader.hashCode() + "#" + clazz.getName() : "null#null#" + clazz.getName();
+                if (classLoader == null) classLoader = CoreTool.systemClassLoader;
+                String clazzId = classLoader + "#" + classLoader.hashCode() + "#" + clazz.getName();
                 mClassMap.put(clazzId, clazz);
             }
         }
 
         @Nullable
         public static Class<?> readClassCache(String name, ClassLoader classLoader) {
-            String clazzId = classLoader != null ? classLoader + "#" + classLoader.hashCode() + "#" + name : "null#null#" + name;
-            return mClassMap.get(clazzId);
+            if (classLoader == null) classLoader = CoreTool.systemClassLoader;
+            String clazzId = classLoader + "#" + classLoader.hashCode() + "#" + name;
+            Class<?> cache = mClassMap.get(clazzId);
+            if (cache == null) {
+                classLoader = classLoader.getParent();
+                clazzId = classLoader + "#" + classLoader.hashCode() + "#" + name;
+                cache = mClassMap.get(clazzId);
+            }
+            return cache;
         }
 
         /*
