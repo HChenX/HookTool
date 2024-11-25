@@ -27,7 +27,6 @@ import static com.hchen.hooktool.log.LogExpand.getTag;
 import static com.hchen.hooktool.log.XposedLog.logD;
 import static com.hchen.hooktool.log.XposedLog.logE;
 import static com.hchen.hooktool.log.XposedLog.logW;
-import static com.hchen.hooktool.tool.CoreTool.findClass;
 import static com.hchen.hooktool.tool.CoreTool.findConstructor;
 import static com.hchen.hooktool.tool.CoreTool.findMethod;
 
@@ -116,36 +115,19 @@ public final class CoreBase {
             return new CoreTool.UnHook(null);
         }
 
-        final MemberData<?>[] member = new MemberData[]{null};
-        run(() -> {
-            Class<?>[] classes = Arrays.stream(params)
-                    .limit(params.length - 1)
-                    .map(o -> {
-                        if (o instanceof String s) {
-                            MemberData<Class<?>> classMemberData = findClass(s, clazz.getClassLoaderIfExists());
-                            if (classMemberData.getThrowable() != null)
-                                throw new RuntimeException(classMemberData.getThrowable());
-                            return classMemberData.get();
-                        } else if (o instanceof Class<?> c) return c;
-                        else throw new RuntimeException("Unknown type: " + o);
-                    }).toArray(Class<?>[]::new);
-
-            if (method != null)
-                member[0] = findMethod(clazz.getIfExists(), method, classes);
-            else
-                member[0] = findConstructor(clazz.getIfExists(), classes);
-            return null;
-        }).orErrMag(null, "Failed to hook! \ndebug: " + debug);
-
-        if (member[0] == null) return new CoreTool.UnHook(null); // 上方必抛错
-        if (member[0].getThrowable() != null) {
-            logE(tag, "Failed to hook! \ndebug: " + debug, member[0].getThrowable());
+        MemberData<?> member;
+        if (method != null)
+            member = findMethod(clazz.getIfExists(), method, params);
+        else
+            member = findConstructor(clazz.getIfExists(), params);
+        if (member.getThrowable() != null) {
+            logE(tag, "Failed to hook! \ndebug: " + debug, member.getThrowable());
             return new CoreTool.UnHook(null);
         }
 
         return run(() -> {
-            CoreTool.UnHook unHook = new CoreTool.UnHook(XposedBridge.hookMethod(((MemberData<Member>) member[0]).getIfExists(), createHook(tag, iHook)));
-            logD(tag, "Success to hook: " + member[0].getIfExists());
+            CoreTool.UnHook unHook = new CoreTool.UnHook(XposedBridge.hookMethod(((MemberData<Member>) member).getIfExists(), createHook(tag, iHook)));
+            logD(tag, "Success to hook: " + member.getIfExists());
             return unHook;
         }).orErrMag(new CoreTool.UnHook(null), "Failed to hook! \ndebug: " + debug);
     }

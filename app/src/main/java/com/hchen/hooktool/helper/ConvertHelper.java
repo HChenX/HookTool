@@ -54,7 +54,7 @@ public final class ConvertHelper {
      */
     @Nullable
     public static Class<?>[] arrayToClass(ClassLoader classLoader, Object... objs) {
-        if (classLoader == null) return new Class<?>[]{};
+        if (classLoader == null || objs == null) return null;
         if (objs.length == 0) return new Class<?>[]{};
         ArrayList<Class<?>> classes = new ArrayList<>();
         for (Object o : objs) {
