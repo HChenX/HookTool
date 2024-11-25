@@ -51,7 +51,7 @@ public final class MemberData<T> {
     }
 
     public T or(T or) {
-        T get = getIfExists();
+        T get = get();
         if (get == null)
             return or;
         return get;
