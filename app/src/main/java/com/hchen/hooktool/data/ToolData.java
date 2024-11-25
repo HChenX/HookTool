@@ -28,16 +28,17 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
  *
  * @author 焕晨HChen
  */
-public class ToolData {
+public final class ToolData {
+    public static String mHookToolVersion = "v.1.0.7";
     public static String mInitTag = "[Unknown]";
-    public static String spareTag = "Unknown";
+    public static String mSpareTag = "Unknown";
     public static int mInitLogLevel = HCInit.LOG_I;
     public static String modulePackageName = null;
     public static String mPrefsName = null;
-    public static String[] logExpandPath = null;
-    public static boolean autoReload = true;
+    public static String[] mLogExpandPath = null;
+    public static boolean isAutoReload = true;
     public static boolean isXposed = false;
-    public static ClassLoader classLoader = null;
-    public static XC_LoadPackage.LoadPackageParam lpparam = null;
-    public static IXposedHookZygoteInit.StartupParam startupParam = null;
+    public static ClassLoader mClassLoader = null;
+    public static XC_LoadPackage.LoadPackageParam mLpparam = null;
+    public static IXposedHookZygoteInit.StartupParam mStartupParam = null;
 }

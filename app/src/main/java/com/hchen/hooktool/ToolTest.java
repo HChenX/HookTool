@@ -31,7 +31,7 @@ import de.robv.android.xposed.XposedHelpers;
  *
  * @author 焕晨HChen
  */
-public class ToolTest extends BaseHC {
+public final class ToolTest extends BaseHC {
 
     @Override
     public void initZygote(IXposedHookZygoteInit.StartupParam startupParam) {
@@ -92,7 +92,7 @@ public class ToolTest extends BaseHC {
                 // hook 方法所属的类
                 Class<?> c = mClass;
                 Context context = thisObject();
-                String string = getArgs(0); // 获取覅一个参数值
+                String string = getArgs(0); // 获取第一个参数值
                 setArgs(1, 1); // 设置第二个参数值
 
                 // 非静态本类内

@@ -38,7 +38,7 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
  *
  * @author 焕晨HChen
  */
-public class HCInit {
+public final class HCInit {
     // ------- 可选日志等级 ------
     public static final int LOG_NONE = 0;
     public static final int LOG_E = 1;
@@ -75,9 +75,9 @@ public class HCInit {
             throw new RuntimeException(ToolData.mInitTag + "[E]: LoadPackageParam is null!!");
         }
         ToolData.isXposed = true;
-        ToolData.lpparam = loadPackageParam;
+        ToolData.mLpparam = loadPackageParam;
         ClassLoader classLoader = loadPackageParam.classLoader;
-        ToolData.classLoader = classLoader;
+        ToolData.mClassLoader = classLoader;
         String packageName = loadPackageParam.packageName;
         logI("Init classloader: [" + classLoader + "], pkg: " + packageName);
     }
@@ -94,8 +94,8 @@ public class HCInit {
      */
     public static void initStartupParam(IXposedHookZygoteInit.StartupParam startupParam) {
         ToolData.isXposed = true;
-        ToolData.startupParam = startupParam;
-        ToolData.classLoader = startupParam.getClass().getClassLoader();
+        ToolData.mStartupParam = startupParam;
+        ToolData.mClassLoader = startupParam.getClass().getClassLoader();
     }
 
     /**
@@ -127,7 +127,7 @@ public class HCInit {
      * 工具默认开启，但可能会增加耗时。
      */
     public static void xPrefsAutoReload(boolean auto) {
-        ToolData.autoReload = auto;
+        ToolData.isAutoReload = auto;
     }
 
     /**
@@ -143,13 +143,13 @@ public class HCInit {
      * -keep class com.hchen.demo.hook.**$*
      */
     public static void useLogExpand(@NotNull String[] path) {
-        ToolData.logExpandPath = path;
+        ToolData.mLogExpandPath = path;
     }
     // ---------- END！----------
 
     private static void setTag(String tag) {
         ToolData.mInitTag = "[" + tag + "]";
-        ToolData.spareTag = tag;
+        ToolData.mSpareTag = tag;
     }
 
     /**

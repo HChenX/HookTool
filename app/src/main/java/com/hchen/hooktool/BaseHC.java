@@ -40,17 +40,11 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
  * @author 焕晨HChen
  */
 public abstract class BaseHC extends CoreTool {
-    // 快捷获取类的简单名称作为 TAG, 为了效果建议配置相应的混淆规则。
-    public String TAG = getClass().getSimpleName();
-    private final ChainTool chainTool = new ChainTool(); // 初始化链式
-    public static XC_LoadPackage.LoadPackageParam lpparam;
-    public static ClassLoader classLoader;
+    public String TAG = getClass().getSimpleName(); // 快捷获取类的简单名称作为 TAG, 为了效果建议配置相应的混淆规则。
+    private final ChainTool mChainTool = new ChainTool();
+    public static XC_LoadPackage.LoadPackageParam lpparam = ToolData.mLpparam;
+    public static ClassLoader classLoader = ToolData.mClassLoader;
 
-    static {
-        lpparam = ToolData.lpparam;
-        classLoader = ToolData.classLoader;
-    }
-    
     /**
      * 一般阶段。
      */
@@ -72,18 +66,18 @@ public abstract class BaseHC extends CoreTool {
         try {
             init();
         } catch (Throwable e) {
-            logE(TAG, e);
+            logE(TAG, "Waring! will stop hook process!!", e);
         }
     }
 
     final public void onZygote() {
         try {
-            initZygote(ToolData.startupParam);
+            initZygote(ToolData.mStartupParam);
         } catch (Throwable e) {
-            logE(TAG, e);
+            logE(TAG, "Waring! will stop hook process!!", e);
         }
     }
-    
+
     public static void chain(String clazz, ChainTool chain) {
         ChainTool.chain(clazz, chain);
     }
@@ -97,19 +91,27 @@ public abstract class BaseHC extends CoreTool {
     }
 
     final public ChainTool.ChainHook method(String name, Object... params) {
-        return chainTool.method(name, params);
+        return mChainTool.method(name, params);
+    }
+
+    final public ChainTool.ChainHook methodIfExist(String name, Object... params) {
+        return mChainTool.methodIfExist(name, params);
     }
 
     final public ChainTool.ChainHook anyMethod(String name) {
-        return chainTool.anyMethod(name);
+        return mChainTool.anyMethod(name);
     }
 
     final public ChainTool.ChainHook constructor(Object... params) {
-        return chainTool.constructor(params);
+        return mChainTool.constructor(params);
+    }
+
+    final public ChainTool.ChainHook constructorIfExist(Object... params) {
+        return mChainTool.constructorIfExist(params);
     }
 
     final public ChainTool.ChainHook anyConstructor() {
-        return chainTool.anyConstructor();
+        return mChainTool.anyConstructor();
     }
 
     // --------------- prefs -----------------

@@ -34,7 +34,7 @@ import java.util.Objects;
  *
  * @author 焕晨HChen
  */
-public class MemberData<T> {
+public final class MemberData<T> {
     private final T mMember;
     private Throwable mThrowable;
     private String mMsg = "Unknown";
@@ -63,6 +63,12 @@ public class MemberData<T> {
     }
 
     @Nullable
+    public ClassLoader getClassLoaderIfExists() {
+        if (mMember != null) return mMember.getClass().getClassLoader();
+        return null;
+    }
+
+    @Nullable
     public Throwable getThrowable() {
         return mThrowable;
     }
@@ -71,26 +77,26 @@ public class MemberData<T> {
         return mThrowable == null;
     }
 
-    protected MemberData<T> setErrMsg(String msg) {
+    MemberData<T> setErrMsg(String msg) {
         mMsg = msg;
         return this;
     }
 
-    protected String getErrMsg() {
+    String getErrMsg() {
         return mMsg;
     }
 
     /*
      * 将抛错由前至后进行拼接。
      * */
-    protected MemberData<T> spiltThrowableMsg(Throwable... throwables) {
+    MemberData<T> spiltThrowableMsg(Throwable... throwables) {
         if (throwables == null || throwables.length == 0) return this;
         if (mThrowable == null && Arrays.stream(throwables).allMatch(Objects::isNull))
             return this;
         StringBuilder builder = new StringBuilder(mThrowable == null ?
-                "Top throwable is null, but bottom level calling have throwable, will show it!" : "");
+                "Top throwable is null, but bottom level calling have throwable, will show it!\n" : "");
         if (mThrowable != null)
-            builder.append("\n").append(LogExpand.printStackTrace(mThrowable));
+            builder.append(LogExpand.printStackTrace(mThrowable));
         for (Throwable throwable : throwables) {
             if (throwable == null) continue;
             builder.append("Caused by: ").append(throwable.getMessage());
@@ -104,7 +110,7 @@ public class MemberData<T> {
             logE(LogExpand.getTag(), mMsg, mThrowable);
     }
 
-    private static class HookToolRuntimeException extends RuntimeException {
+    private final static class HookToolRuntimeException extends RuntimeException {
         public HookToolRuntimeException(String message) {
             super(message);
         }

@@ -18,8 +18,9 @@
  */
 package com.hchen.hooktool.tool;
 
+import static com.hchen.hooktool.helper.ConvertHelper.arrayToClass;
+import static com.hchen.hooktool.helper.TryHelper.createMemberData;
 import static com.hchen.hooktool.helper.TryHelper.run;
-import static com.hchen.hooktool.helper.TryHelper.runDump;
 import static com.hchen.hooktool.hook.HookFactory.createHook;
 import static com.hchen.hooktool.log.LogExpand.getStackTrace;
 import static com.hchen.hooktool.log.LogExpand.getTag;
@@ -39,7 +40,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.stream.Collectors;
@@ -47,12 +47,17 @@ import java.util.stream.Collectors;
 import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.XposedHelpers;
 
-public class CoreBase {
+/**
+ * 核心类
+ *
+ * @author 焕晨HChen
+ */
+public final class CoreBase {
     private CoreBase() {
     }
 
-    protected static MemberData<Class<?>> baseFindClass(String name, ClassLoader classLoader) {
-        return (MemberData<Class<?>>) (MemberData<?>) runDump(() -> {
+    static MemberData<Class<?>> baseFindClass(String name, ClassLoader classLoader) {
+        return (MemberData<Class<?>>) (MemberData<?>) createMemberData(() -> {
             Class<?> c = CoreMemberCache.readClassCache(name, classLoader);
             if (c == null) {
                 c = XposedHelpers.findClass(name, classLoader);
@@ -62,44 +67,45 @@ public class CoreBase {
         }).setErrMsg("Failed to find class!");
     }
 
-    protected static MemberData<Method> baseFindMethod(MemberData<Class<?>> clazz, String name, Class<?>... classes) {
-        return runDump(() -> XposedHelpers.findMethodExact(clazz.getIfExists(), name, classes))
+    static MemberData<Method> baseFindMethod(MemberData<Class<?>> clazz, String name, Object... objs) {
+        return createMemberData(() -> XposedHelpers.findMethodExact(clazz.getIfExists(), name, arrayToClass(clazz.getClassLoaderIfExists(), objs)))
                 .setErrMsg("Failed to find method!")
                 .spiltThrowableMsg(clazz.getThrowable());
     }
 
-    protected static ArrayList<Method> baseFindAllMethod(MemberData<Class<?>> clazz, String name) {
-        return runDump(() -> Arrays.stream(clazz.getIfExists().getDeclaredMethods())
+    static MemberListData<Method> baseFindAllMethod(MemberData<Class<?>> clazz, String name) {
+        return createMemberData(() -> Arrays.stream(clazz.getIfExists().getDeclaredMethods())
                 .filter(method -> name.equals(method.getName()))
-                .collect(Collectors.toCollection(ArrayList::new)))
+                .collect(Collectors.toCollection(MemberListData::new)))
                 .setErrMsg("Failed to find all method!")
                 .spiltThrowableMsg(clazz.getThrowable())
-                .or(new ArrayList<>());
+                .or(new MemberListData<>());
     }
 
-    protected static MemberData<Constructor<?>> baseFindConstructor(MemberData<Class<?>> clazz, Class<?>... classes) {
-        return (MemberData<Constructor<?>>) (MemberData<?>) runDump(() -> XposedHelpers.findConstructorExact(clazz.getIfExists(), classes))
+    static MemberData<Constructor<?>> baseFindConstructor(MemberData<Class<?>> clazz, Object... objs) {
+        return (MemberData<Constructor<?>>) (MemberData<?>) createMemberData(() ->
+                XposedHelpers.findConstructorExact(clazz.getIfExists(), arrayToClass(clazz.getClassLoaderIfExists(), objs)))
                 .setErrMsg("Failed to find constructor!")
                 .spiltThrowableMsg(clazz.getThrowable());
     }
 
-    protected static ArrayList<Constructor<?>> baseFindAllConstructor(MemberData<Class<?>> clazz) {
-        return runDump(() -> new ArrayList<>(Arrays.asList(clazz.getIfExists().getDeclaredConstructors())))
+    static MemberListData<Constructor<?>> baseFindAllConstructor(MemberData<Class<?>> clazz) {
+        return createMemberData(() -> new MemberListData<>(Arrays.asList(clazz.getIfExists().getDeclaredConstructors())))
                 .setErrMsg("Failed to find constructor!")
                 .spiltThrowableMsg(clazz.getThrowable())
-                .or(new ArrayList<>());
+                .or(new MemberListData<>());
     }
 
-    protected static MemberData<Field> baseFindField(MemberData<Class<?>> clazz, String name) {
-        return runDump(() -> XposedHelpers.findField(clazz.getIfExists(), name))
+    static MemberData<Field> baseFindField(MemberData<Class<?>> clazz, String name) {
+        return createMemberData(() -> XposedHelpers.findField(clazz.getIfExists(), name))
                 .setErrMsg("Failed to find field!")
                 .spiltThrowableMsg(clazz.getThrowable());
     }
 
-    protected static CoreTool.UnHook baseHook(MemberData<Class<?>> clazz, ClassLoader classLoader, String method, Object... params) {
+    static CoreTool.UnHook baseHook(MemberData<Class<?>> clazz, String method, Object... params) {
+        String tag = getTag();
         String debug = (method != null ? "METHOD" : "CONSTRUCTOR") + "#" + (clazz.getIfExists() == null ? "null" : clazz.getIfExists().getName())
                 + "#" + method + "#" + Arrays.toString(params);
-        String tag = getTag();
         if (params == null || params.length == 0 || !(params[params.length - 1] instanceof IHook iHook)) {
             logW(tag, "Hook params is null or length is 0 or last param not is IAction! \ndebug: " + debug + getStackTrace());
             return new CoreTool.UnHook(null);
@@ -116,7 +122,7 @@ public class CoreBase {
                     .limit(params.length - 1)
                     .map(o -> {
                         if (o instanceof String s) {
-                            MemberData<Class<?>> classMemberData = findClass(s, classLoader);
+                            MemberData<Class<?>> classMemberData = findClass(s, clazz.getClassLoaderIfExists());
                             if (classMemberData.getThrowable() != null)
                                 throw new RuntimeException(classMemberData.getThrowable());
                             return classMemberData.get();
@@ -137,54 +143,52 @@ public class CoreBase {
             return new CoreTool.UnHook(null);
         }
 
-        return runDump(() -> {
+        return run(() -> {
             CoreTool.UnHook unHook = new CoreTool.UnHook(XposedBridge.hookMethod(((MemberData<Member>) member[0]).getIfExists(), createHook(tag, iHook)));
             logD(tag, "Success to hook: " + member[0].getIfExists());
             return unHook;
-        })
-                .setErrMsg("Failed to hook! \ndebug: " + debug)
-                .or(new CoreTool.UnHook(null));
+        }).orErrMag(new CoreTool.UnHook(null), "Failed to hook! \ndebug: " + debug);
     }
 
-    protected static ArrayList<Method> baseFilterMethod(MemberData<Class<?>> clazz, IMemberFilter<Method> iMemberFilter) {
-        return runDump(() -> Arrays.stream(clazz.getIfExists().getDeclaredMethods()).filter(iMemberFilter::test)
-                .collect(Collectors.toCollection(ArrayList::new)))
+    static MemberListData<Method> baseFilterMethod(MemberData<Class<?>> clazz, IMemberFilter<Method> iMemberFilter) {
+        return createMemberData(() -> Arrays.stream(clazz.getIfExists().getDeclaredMethods()).filter(iMemberFilter::test)
+                .collect(Collectors.toCollection(MemberListData::new)))
                 .setErrMsg("Failed to filter method!")
                 .spiltThrowableMsg(clazz.getThrowable())
-                .or(new ArrayList<>());
+                .or(new MemberListData<>());
     }
 
-    protected static ArrayList<Constructor<?>> baseFilterConstructor(MemberData<Class<?>> clazz, IMemberFilter<Constructor<?>> iMemberFilter) {
-        return runDump(() -> Arrays.stream(clazz.getIfExists().getDeclaredConstructors()).filter(iMemberFilter::test)
-                .collect(Collectors.toCollection(ArrayList::new)))
+    static MemberListData<Constructor<?>> baseFilterConstructor(MemberData<Class<?>> clazz, IMemberFilter<Constructor<?>> iMemberFilter) {
+        return createMemberData(() -> Arrays.stream(clazz.getIfExists().getDeclaredConstructors()).filter(iMemberFilter::test)
+                .collect(Collectors.toCollection(MemberListData::new)))
                 .setErrMsg("Failed to filter constructor!")
                 .spiltThrowableMsg(clazz.getThrowable())
-                .or(new ArrayList<>());
+                .or(new MemberListData<>());
     }
 
-    protected static <T> T baseNewInstance(MemberData<Class<?>> clz, Object... objects) {
-        return runDump(() -> (T) XposedHelpers.newInstance(clz.getIfExists(), objects))
+    static <T> T baseNewInstance(MemberData<Class<?>> clz, Object... objs) {
+        return createMemberData(() -> (T) XposedHelpers.newInstance(clz.getIfExists(), objs))
                 .setErrMsg("Failed to create new instance!")
                 .spiltThrowableMsg(clz.getThrowable())
                 .or(null);
     }
 
-    protected static <T> T baseCallStaticMethod(MemberData<Class<?>> clz, String name, Object... objs) {
-        return runDump(() -> (T) XposedHelpers.callStaticMethod(clz.getIfExists(), name, objs))
+    static <T> T baseCallStaticMethod(MemberData<Class<?>> clz, String name, Object... objs) {
+        return createMemberData(() -> (T) XposedHelpers.callStaticMethod(clz.getIfExists(), name, objs))
                 .setErrMsg("Failed to call static method!")
                 .spiltThrowableMsg(clz.getThrowable())
                 .or(null);
     }
 
-    protected static <T> T baseGetStaticField(MemberData<Class<?>> clz, String name) {
-        return runDump(() -> (T) XposedHelpers.getStaticObjectField(clz.getIfExists(), name))
+    static <T> T baseGetStaticField(MemberData<Class<?>> clz, String name) {
+        return createMemberData(() -> (T) XposedHelpers.getStaticObjectField(clz.getIfExists(), name))
                 .setErrMsg("Failed to get static field!")
                 .spiltThrowableMsg(clz.getThrowable())
                 .or(null);
     }
 
-    protected static boolean baseSetStaticField(MemberData<Class<?>> clz, String name, Object value) {
-        return runDump(() -> {
+    static boolean baseSetStaticField(MemberData<Class<?>> clz, String name, Object value) {
+        return createMemberData(() -> {
             XposedHelpers.setStaticObjectField(clz.getIfExists(), name, value);
             return true;
         })
@@ -193,28 +197,28 @@ public class CoreBase {
                 .or(false);
     }
 
-    protected static <T> T baseSetAdditionalStaticField(MemberData<Class<?>> clz, String key, Object value) {
-        return runDump(() -> (T) XposedHelpers.setAdditionalStaticField(clz.getIfExists(), key, value))
+    static <T> T baseSetAdditionalStaticField(MemberData<Class<?>> clz, String key, Object value) {
+        return createMemberData(() -> (T) XposedHelpers.setAdditionalStaticField(clz.getIfExists(), key, value))
                 .setErrMsg("Failed to set static additional instance!")
                 .spiltThrowableMsg(clz.getThrowable())
                 .or(null);
     }
 
-    protected static <T> T baseGetAdditionalStaticField(MemberData<Class<?>> clz, String key) {
-        return runDump(() -> (T) XposedHelpers.getAdditionalStaticField(clz.getIfExists(), key))
+    static <T> T baseGetAdditionalStaticField(MemberData<Class<?>> clz, String key) {
+        return createMemberData(() -> (T) XposedHelpers.getAdditionalStaticField(clz.getIfExists(), key))
                 .setErrMsg("Failed to get static additional instance!")
                 .spiltThrowableMsg(clz.getThrowable())
                 .or(null);
     }
 
-    protected static <T> T baseRemoveAdditionalStaticField(MemberData<Class<?>> clz, String key) {
-        return runDump(() -> (T) XposedHelpers.removeAdditionalStaticField(clz.getIfExists(), key))
+    static <T> T baseRemoveAdditionalStaticField(MemberData<Class<?>> clz, String key) {
+        return createMemberData(() -> (T) XposedHelpers.removeAdditionalStaticField(clz.getIfExists(), key))
                 .setErrMsg("Failed to remove static additional instance!")
                 .spiltThrowableMsg(clz.getThrowable())
                 .or(null);
     }
 
-    private static class CoreMemberCache {
+    private final static class CoreMemberCache {
         private static final HashMap<String, Class<?>> mClassMap = new HashMap<>();
 
         public static void writeClassCache(Class<?> clazz) {

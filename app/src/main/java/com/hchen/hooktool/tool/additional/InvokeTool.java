@@ -34,7 +34,7 @@ import java.util.HashMap;
  *
  * @author 焕晨HChen
  */
-public class InvokeTool {
+public final class InvokeTool {
     private static final HashMap<String, Method> methodCache = new HashMap<>();
     private static final HashMap<String, Field> fieldCache = new HashMap<>();
 

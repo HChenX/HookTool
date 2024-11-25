@@ -27,13 +27,13 @@ import de.robv.android.xposed.XC_MethodHook;
  *
  * @author 焕晨HChen
  */
-public class HookFactory {
+public final class HookFactory {
     public static XposedCallBack createHook(String tag, IHook iHook) {
         iHook.PRIVATETAG = tag;
         return new XposedCallBack(iHook);
     }
 
-    public static class XposedCallBack extends XC_MethodHook {
+    public final static class XposedCallBack extends XC_MethodHook {
         private final IHook iHook;
 
         public XposedCallBack(IHook iHook) {
@@ -48,7 +48,7 @@ public class HookFactory {
                 iHook.MethodHookParam(param);
                 iHook.before();
             } catch (Throwable e) {
-                logE(iHook.PRIVATETAG + ":before", "Waring! will stop hook process!!", e);
+                logE(iHook.PRIVATETAG + ":before", e);
             }
         }
 
@@ -58,7 +58,7 @@ public class HookFactory {
                 iHook.MethodHookParam(param);
                 iHook.after();
             } catch (Throwable e) {
-                logE(iHook.PRIVATETAG + ":after", "Waring! will stop hook process!!", e);
+                logE(iHook.PRIVATETAG + ":after", e);
             }
         }
     }

@@ -35,7 +35,7 @@ import java.util.ArrayList;
  *
  * @author 焕晨HChen
  */
-public class ConvertHelper {
+public final class ConvertHelper {
     /**
      * 泛型转换为数组。
      */
@@ -46,7 +46,7 @@ public class ConvertHelper {
 
     @Nullable
     public static Class<?>[] arrayToClass(Object... objs) {
-        return arrayToClass(ToolData.classLoader, objs);
+        return arrayToClass(ToolData.mClassLoader, objs);
     }
 
     /**
@@ -54,6 +54,7 @@ public class ConvertHelper {
      */
     @Nullable
     public static Class<?>[] arrayToClass(ClassLoader classLoader, Object... objs) {
+        if (classLoader == null) return new Class<?>[]{};
         if (objs.length == 0) return new Class<?>[]{};
         ArrayList<Class<?>> classes = new ArrayList<>();
         for (Object o : objs) {

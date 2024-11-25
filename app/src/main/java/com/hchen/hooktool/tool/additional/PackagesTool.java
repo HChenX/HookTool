@@ -55,7 +55,7 @@ import java.util.Optional;
  *
  * @author 焕晨HChen
  */
-public class PackagesTool {
+public final class PackagesTool {
 
     public static boolean isUninstall(String pkg) {
         return isUninstall(getContext(), pkg);

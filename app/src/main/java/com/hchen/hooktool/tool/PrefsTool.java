@@ -49,7 +49,7 @@ import de.robv.android.xposed.XSharedPreferences;
  *
  * @author 焕晨HChen
  */
-public class PrefsTool {
+public final class PrefsTool {
     private final static HashMap<String, XSharedPreferences> xPrefs = new HashMap<>();
     private final static HashMap<String, SharedPreferences> sPrefs = new HashMap<>();
 
@@ -102,14 +102,14 @@ public class PrefsTool {
                     "[" + getTag() + "][E]: Not xposed environment!" + getStackTrace());
         ContextTool.getAsyncContext(new IContextGetter() {
             @Override
-            public void tryToFindContext(Context context) {
+            public void tryToFindContext(@androidx.annotation.Nullable Context context) {
                 if (context == null) {
                     throw new RuntimeException(ToolData.mInitTag +
                             "[" + getTag() + "][E]: Async prefs context is null!" + getStackTrace());
                 }
                 asyncPrefs.async(context);
             }
-        }, false);
+        }, ContextTool.FLAG_CURRENT_APP);
     }
 
     private static XSharedPreferences currentXsp(String prefsName) {
@@ -129,7 +129,9 @@ public class PrefsTool {
         }
     }
 
-    /** @noinspection deprecation */
+    /**
+     * @noinspection deprecation
+     */
     @SuppressLint("WorldReadableFiles")
     private static SharedPreferences currentSp(Context context, String prefsName) {
         prefsName = initPrefsName(prefsName);
@@ -253,7 +255,7 @@ public class PrefsTool {
         }
 
         private void reload() {
-            if (ToolData.autoReload) {
+            if (ToolData.isAutoReload) {
                 if (xSharedPreferences.hasFileChanged()) {
                     xSharedPreferences.reload();
                 }

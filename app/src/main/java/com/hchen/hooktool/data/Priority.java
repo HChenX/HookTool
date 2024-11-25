@@ -23,7 +23,7 @@ package com.hchen.hooktool.data;
  *
  * @author 焕晨HChen
  */
-public class Priority {
+public final class Priority {
     // 可以直接使用这些示例优先级，也可以自定义。
     // 但注意范围是：LOWEST <= CUSTOM <= HIGHEST。
     public static final int DEFAULT = 50;

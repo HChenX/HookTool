@@ -22,10 +22,10 @@ import android.graphics.Bitmap;
 
 /**
  * App 数据
- * 
+ *
  * @author 焕晨HChen
  */
-public class AppData {
+public final class AppData {
     public int user = 0; /* user id */
     public int uid = -1; /* uid */
     public Bitmap icon; /* 图标 */

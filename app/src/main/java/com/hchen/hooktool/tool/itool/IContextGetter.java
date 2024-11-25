@@ -20,11 +20,13 @@ package com.hchen.hooktool.tool.itool;
 
 import android.content.Context;
 
+import androidx.annotation.Nullable;
+
 /**
  * 上下文获取工具接口
  *
  * @author 焕晨HChen
  */
 public interface IContextGetter {
-    void tryToFindContext(Context context);
+    void tryToFindContext(@Nullable Context context);
 }

@@ -38,7 +38,7 @@ import de.robv.android.xposed.XC_MethodHook;
  *
  * @author 焕晨HChen
  */
-public class LogExpand {
+public final class LogExpand {
     private XC_MethodHook.MethodHookParam param;
     private final String TAG;
     private String methodName;
@@ -83,17 +83,17 @@ public class LogExpand {
     }
 
     public static String getTag() {
-        if (ToolData.logExpandPath == null) return "HookTool";
-        if (ToolData.logExpandPath.length == 0) {
+        if (ToolData.mLogExpandPath == null) return "HookTool";
+        if (ToolData.mLogExpandPath.length == 0) {
             if (ToolData.modulePackageName == null) return "HookTool";
-            ToolData.logExpandPath = new String[]{ToolData.modulePackageName};
+            ToolData.mLogExpandPath = new String[]{ToolData.modulePackageName};
         }
         String tag = null;
         StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
         for (StackTraceElement stackTraceElement : stackTraceElements) {
             if (tag != null) break;
             String className = stackTraceElement.getClassName();
-            if (Arrays.stream(ToolData.logExpandPath).anyMatch(className::contains)) {
+            if (Arrays.stream(ToolData.mLogExpandPath).anyMatch(className::contains)) {
                 int index = className.lastIndexOf(".");
                 int index2 = className.lastIndexOf("$");
                 if (index == -1) break;

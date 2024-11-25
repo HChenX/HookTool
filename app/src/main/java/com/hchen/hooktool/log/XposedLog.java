@@ -27,7 +27,7 @@ import de.robv.android.xposed.XposedBridge;
  *
  * @author 焕晨HChen
  */
-public class XposedLog {
+public final class XposedLog {
     // -------- logE -------------
     public static void logE(String tag, String log) {
         if (ToolData.mInitLogLevel < 1) return;
@@ -46,8 +46,7 @@ public class XposedLog {
 
     public static void logE(String tag, String log, Throwable e) {
         if (ToolData.mInitLogLevel < 1) return;
-        XposedBridge.log(ToolData.mInitTag + "[" + tag + "]" + "[E]: " + log + " \n[Error Msg]: " +
-                LogExpand.printStackTrace(e));
+        XposedBridge.log(ToolData.mInitTag + "[" + tag + "]" + "[E]: " + log + " \n[Error Msg]: " + LogExpand.printStackTrace(e));
     }
 
     // ----------- logW --------------
@@ -63,8 +62,7 @@ public class XposedLog {
 
     public static void logW(String tag, String log, Throwable e) {
         if (ToolData.mInitLogLevel < 2) return;
-        XposedBridge.log(ToolData.mInitTag + "[" + tag + "]" + "[W]: " + log + " \n[Warning Msg]: " +
-                LogExpand.printStackTrace(e));
+        XposedBridge.log(ToolData.mInitTag + "[" + tag + "]" + "[W]: " + log + " \n[Warning Msg]: " + LogExpand.printStackTrace(e));
     }
 
     // ----------- logI --------------
@@ -85,8 +83,7 @@ public class XposedLog {
 
     public static void logI(String tag, String log, Throwable e) {
         if (ToolData.mInitLogLevel < 3) return;
-        XposedBridge.log(ToolData.mInitTag + "[" + tag + "]" + "[I]: " + log + " \n[Info Msg]: " +
-                LogExpand.printStackTrace(e));
+        XposedBridge.log(ToolData.mInitTag + "[" + tag + "]" + "[I]: " + log + " \n[Info Msg]: " + LogExpand.printStackTrace(e));
     }
 
     // ------------ logD --------------
@@ -102,7 +99,6 @@ public class XposedLog {
 
     public static void logD(String tag, String log, Throwable e) {
         if (ToolData.mInitLogLevel < 4) return;
-        XposedBridge.log(ToolData.mInitTag + "[" + tag + "]" + "[D]: " + log + " \n[Debug Msg]: " +
-                LogExpand.printStackTrace(e));
+        XposedBridge.log(ToolData.mInitTag + "[" + tag + "]" + "[D]: " + log + " \n[Debug Msg]: " + LogExpand.printStackTrace(e));
     }
 }

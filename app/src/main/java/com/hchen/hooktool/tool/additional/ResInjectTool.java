@@ -58,7 +58,7 @@ import de.robv.android.xposed.IXposedHookZygoteInit;
  *
  * @author 焕晨HChen
  */
-public class ResInjectTool {
+public final class ResInjectTool {
     private static ResourcesLoader resourcesLoader = null;
     private static String mModulePath = null;
     private static Handler mHandler = null;
@@ -94,7 +94,7 @@ public class ResInjectTool {
             return null;
         }
         if (mModulePath == null) {
-            mModulePath = ToolData.startupParam != null ? ToolData.startupParam.modulePath : null;
+            mModulePath = ToolData.mStartupParam != null ? ToolData.mStartupParam.modulePath : null;
             if (mModulePath == null) {
                 logW(getTag(), "Module path is null, can't load module res!" + getStackTrace());
                 return null;
@@ -264,7 +264,7 @@ public class ResInjectTool {
     private static void applyHooks() {
         if (hooked) return;
         if (mModulePath == null) {
-            mModulePath = ToolData.startupParam != null ? ToolData.startupParam.modulePath : null;
+            mModulePath = ToolData.mStartupParam != null ? ToolData.mStartupParam.modulePath : null;
             if (mModulePath == null) {
                 unHookRes();
                 throw new RuntimeException(ToolData.mInitTag +

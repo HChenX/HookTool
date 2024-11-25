@@ -122,6 +122,13 @@ public class DeviceTool {
         return SystemPropTool.getProp("persist.sys.miui_optimization", false);
     }
 
+    /**
+     * 获取系统是否已经启动完成。
+     */
+    public static boolean isBootCompleted() {
+        return SystemPropTool.getProp("sys.boot_completed", false);
+    }
+
     // --------- 手机品牌 -------------
     public static final String[] ROM_HUAWEI = {"huawei"};
     public static final String[] ROM_VIVO = {"vivo"};
