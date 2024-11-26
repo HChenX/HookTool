@@ -29,7 +29,6 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
  * @author 焕晨HChen
  */
 public final class ToolData {
-    public static String mHookToolVersion = "v.1.0.7";
     public static String mInitTag = "[Unknown]";
     public static String mSpareTag = "Unknown";
     public static int mInitLogLevel = HCInit.LOG_I;
