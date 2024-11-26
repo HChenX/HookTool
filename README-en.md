@@ -45,7 +45,8 @@ dependencies {
     // Choose one of these options; jitpack is recommended as maven might not update as frequently.
     // Tip: Replace v.*.*.* with the latest release version.
     implementation 'com.github.HChenX:HookTool:v.1.0.8' // jitpack
-    implementation 'io.github.hchenx:hooktool:v.1.0.8' // maven Tip: Almost abandoned, please do not use!
+    implementation 'io.github.hchenx:hooktool:v.1.0.8'
+    // maven Tip: Almost abandoned, please do not use!
 }
 ```
 
@@ -60,8 +61,6 @@ public void init() {
     HCInit.initBasicData(); // Initialize basic module information
     HCInit.initStartupParam(); // Initialize the tool during the zygote phase
     HCInit.initLoadPackageParam(); // Initialize the tool during the loadPackage phase
-    HCInit.xPrefsAutoReload(); // Automatically reload shared preferences, enabled by default
-    HCInit.useLogExpand(); // Enable logging enhancement features, see method comments for details
 }
 ```
 
@@ -76,6 +75,10 @@ public void initZygote(IXposedHookZygoteInit.StartupParam startupParam) {
             .setTag("HChenDemo") // Log tag
             .setLogLevel(LOG_D) // Log level
             .setPrefsName("hchen_prefs") // Prefs storage file name (optional)
+            .xPrefsAutoReload(true) // Automatically reload shared preferences, enabled by default (optional)
+            .useLogExpand(new String[]{
+                    "com.hchen.demo.hook"
+            }) // Enable logging enhancement features, see method comments for details
     ); // Tip: Recommended to configure here if using initZygote, as it is initialized early on.
     HCInit.initStartupParam(startupParam); // Initialize the tool during the zygote phase
 }

@@ -60,8 +60,6 @@ public void init() {
     HCinit.initBasicData(); // 初始化模块基本信息
     HCinit.initStartupParam(); // 在 zygote 阶段初始化工具
     HCinit.initLoadPackageParam(); // 在 loadPackage 阶段初始化工具
-    HCinit.xPrefsAutoReload(); // 是否自动更新共享首选项，默认开启
-    HCinit.useLogExpand(); // 是否使用日志增强功能，具体参见方法注释内容
 }
 ```
 
@@ -76,6 +74,10 @@ public void initZygote(IXposedHookZygoteInit.StartupParam startupParam) {
             .setTag("HChenDemo") // 日志 tag
             .setLogLevel(LOG_D) // 日志等级
             .setPrefsName("hchen_prefs") // prefs 存储文件名 (可选)
+            .xPrefsAutoReload(true) // 是否自动更新共享首选项，默认开启 (可选)
+            .useLogExpand(new String[]{
+                    "com.hchen.demo.hook"
+            }) // 是否使用日志增强功能，具体参见方法注释内容
     ); // Tip: 若有使用 initZygote 建议配置在这里，因为时机很早。
     HCInit.initStartupParam(startupParam); // 在 zygote 阶段初始化工具
 }
