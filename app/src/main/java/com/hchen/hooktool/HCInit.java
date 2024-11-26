@@ -110,47 +110,25 @@ public final class HCInit {
      *              .setTag("HChenDemo")
      *              .setLogLevel(LOG_D)
      *              .setPrefsName("hchen_prefs")
+     *              .xPrefsAutoReload(true)
+     *              .useLogExpand(new String[]{
+     *                  "com.hchen.demo.hook"
+     *              })
      *      );
      *  }
      * }
      */
     public static void initBasicData(BasicData basicData) {
-        setTag(basicData.tag);
+        ToolData.mSpareTag = basicData.tag;
+        ToolData.mInitTag = "[" + basicData.tag + "]";
         ToolData.mInitLogLevel = basicData.logLevel;
         ToolData.modulePackageName = basicData.packageName;
         ToolData.mPrefsName = basicData.prefsName;
+        ToolData.isAutoReload = basicData.isAutoReload;
+        ToolData.mLogExpandPath = basicData.logExpandPath;
     }
 
-    /**
-     * 是否自动更新 xprefs 数据。
-     * <p>
-     * 工具默认开启，但可能会增加耗时。
-     */
-    public static void xPrefsAutoReload(boolean auto) {
-        ToolData.isAutoReload = auto;
-    }
-
-    /**
-     * 是否使用日志增强功能，path 填写模块的 hook 文件所在目录，否则默认按照包名搜索。
-     * <pre>{@code
-     *      HCInit.useLogExpand(new String[]{"com.hchen.demo.hook"});
-     *      // 填写 new String[]{} 则默认使用包名查找。
-     * }<br/>
-     * 同时加入混淆规则:
-     * <p>
-     * -keep class com.hchen.demo.hook.**
-     * <p>
-     * -keep class com.hchen.demo.hook.**$*
-     */
-    public static void useLogExpand(@NotNull String[] path) {
-        ToolData.mLogExpandPath = path;
-    }
     // ---------- END！----------
-
-    private static void setTag(String tag) {
-        ToolData.mInitTag = "[" + tag + "]";
-        ToolData.mSpareTag = tag;
-    }
 
     /**
      * 模块是否被激活。
@@ -166,11 +144,13 @@ public final class HCInit {
         return CoreTool.setStaticField(path, lpparam.classLoader, fieldName, value);
     }
 
-    public static class BasicData {
-        String packageName = null;
+    public final static class BasicData {
         String tag = null;
         int logLevel = LOG_I;
+        String packageName = null;
         String prefsName = null;
+        boolean isAutoReload = true;
+        String[] logExpandPath = null;
 
         // 设置包名
         public BasicData setModulePackageName(String modulePackageName) {
@@ -193,6 +173,33 @@ public final class HCInit {
         // 设置共享首选项的储存名
         public BasicData setPrefsName(String prefsName) {
             this.prefsName = prefsName;
+            return this;
+        }
+
+        /**
+         * 是否自动更新 xprefs 数据。
+         * <p>
+         * 工具默认开启，但可能会增加耗时。
+         */
+        public BasicData xPrefsAutoReload(boolean auto) {
+            this.isAutoReload = auto;
+            return this;
+        }
+
+        /**
+         * 是否使用日志增强功能，path 填写模块的 hook 文件所在目录，否则默认按照包名搜索。
+         * <pre>{@code
+         *      HCInit.useLogExpand(new String[]{"com.hchen.demo.hook"});
+         *      // 填写 new String[]{} 则默认使用包名查找。
+         * }<br/>
+         * 同时加入混淆规则:
+         * <p>
+         * -keep class com.hchen.demo.hook.**
+         * <p>
+         * -keep class com.hchen.demo.hook.**$*
+         */
+        public BasicData useLogExpand(@NotNull String[] path) {
+            this.logExpandPath = path;
             return this;
         }
     }

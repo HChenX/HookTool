@@ -89,11 +89,11 @@ public class CoreTool {
 
     //------------ 检查指定方法是否存在 --------------
     public static boolean existsMethod(String clazz, String name, Object... objs) {
-        return existsMethod(findClass(clazz).getIfExists(), name, objs);
+        return existsMethod(findClass(clazz).getNoReport(), name, objs);
     }
 
     public static boolean existsMethod(String clazz, ClassLoader classLoader, String name, Object... objs) {
-        return existsMethod(findClass(clazz, classLoader).getIfExists(), name, objs);
+        return existsMethod(findClass(clazz, classLoader).getNoReport(), name, objs);
     }
 
     public static boolean existsMethod(Class<?> clazz, String name, Object... objs) {
@@ -102,11 +102,11 @@ public class CoreTool {
     }
 
     public static boolean existsAnyMethod(String clazz, String name) {
-        return existsAnyMethod(findClass(clazz).getIfExists(), name);
+        return existsAnyMethod(findClass(clazz).getNoReport(), name);
     }
 
     public static boolean existsAnyMethod(String clazz, ClassLoader classLoader, String name) {
-        return existsAnyMethod(findClass(clazz, classLoader).getIfExists(), name);
+        return existsAnyMethod(findClass(clazz, classLoader).getNoReport(), name);
     }
 
     public static boolean existsAnyMethod(Class<?> clazz, String name) {
@@ -141,11 +141,11 @@ public class CoreTool {
 
     //------------ 检查指定构造函数是否存在 --------------
     public static boolean existsConstructor(String clazz, Object... objs) {
-        return existsConstructor(findClass(clazz).getIfExists(), objs);
+        return existsConstructor(findClass(clazz).getNoReport(), objs);
     }
 
     public static boolean existsConstructor(String clazz, ClassLoader classLoader, Object... objs) {
-        return existsConstructor(findClass(clazz, classLoader).getIfExists(), objs);
+        return existsConstructor(findClass(clazz, classLoader).getNoReport(), objs);
     }
 
     public static boolean existsConstructor(Class<?> clazz, Object... objs) {
@@ -180,11 +180,11 @@ public class CoreTool {
 
     //------------ 检查指定字段是否存在 --------------
     public static boolean existsField(String clazz, String name) {
-        return existsField(findClass(clazz).getIfExists(), name);
+        return existsField(findClass(clazz).getNoReport(), name);
     }
 
     public static boolean existsField(String clazz, ClassLoader classLoader, String name) {
-        return existsField(findClass(clazz, classLoader).getIfExists(), name);
+        return existsField(findClass(clazz, classLoader).getNoReport(), name);
     }
 
     public static boolean existsField(Class<?> clazz, String name) {

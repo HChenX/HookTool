@@ -20,14 +20,9 @@ package com.hchen.hooktool.tool;
 
 import static com.hchen.hooktool.log.XposedLog.logE;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.hchen.hooktool.log.LogExpand;
-
-import java.io.PrintWriter;
-import java.util.Arrays;
-import java.util.Objects;
 
 /**
  * 储存成员与可能的抛错信息
@@ -36,8 +31,12 @@ import java.util.Objects;
  */
 public final class MemberData<T> {
     private final T mMember;
-    private Throwable mThrowable;
+    private final Throwable mThrowable;
     private String mMsg = "Unknown";
+
+    public MemberData(T member) {
+        this(member, null);
+    }
 
     public MemberData(T member, Throwable throwable) {
         mMember = member;
@@ -50,6 +49,7 @@ public final class MemberData<T> {
         return mMember;
     }
 
+    @Nullable
     public T or(T or) {
         T get = get();
         if (get == null)
@@ -58,14 +58,24 @@ public final class MemberData<T> {
     }
 
     @Nullable
-    public T getIfExists() {
+    public T getNoReport() {
         return mMember;
     }
 
-    @Nullable
-    public ClassLoader getClassLoaderIfExists() {
-        if (mMember != null) return mMember.getClass().getClassLoader();
-        return null;
+    <R> R reportOrRun(Run<T> run) {
+        return reportOrRun(run, null);
+    }
+
+    <R> R reportOrRun(Run<T> run, R def) {
+        if (mThrowable != null) {
+            report();
+            return def;
+        }
+        return (R) run.run(mMember);
+    }
+
+    interface Run<T> {
+        Object run(T member);
     }
 
     @Nullable
@@ -86,40 +96,8 @@ public final class MemberData<T> {
         return mMsg;
     }
 
-    /*
-     * 将抛错由前至后进行拼接。
-     * */
-    MemberData<T> spiltThrowableMsg(Throwable... throwables) {
-        if (throwables == null || throwables.length == 0) return this;
-        if (mThrowable == null && Arrays.stream(throwables).allMatch(Objects::isNull))
-            return this;
-        StringBuilder builder = new StringBuilder(mThrowable == null ?
-                "Top throwable is null, but bottom level calling have throwable, will show it!\n" : "");
-        if (mThrowable != null)
-            builder.append(LogExpand.printStackTrace(mThrowable));
-        for (Throwable throwable : throwables) {
-            if (throwable == null) continue;
-            builder.append("Caused by: ").append(throwable.getMessage());
-        }
-        mThrowable = new HookToolRuntimeException(builder.toString());
-        return this;
-    }
-
     private void report() {
         if (mThrowable != null)
             logE(LogExpand.getTag(), mMsg, mThrowable);
-    }
-
-    private final static class HookToolRuntimeException extends RuntimeException {
-        public HookToolRuntimeException(String message) {
-            super(message);
-        }
-
-        @Override
-        public void printStackTrace(@NonNull PrintWriter s) {
-            synchronized ((Object) s) {
-                s.println(this);
-            }
-        }
     }
 }

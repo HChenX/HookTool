@@ -39,8 +39,8 @@ public final class TryHelper {
     /*
      * 执行并储存执行的结果与抛错。
      * */
-    public static <T> MemberData<T> createMemberData(Run<T> supplier) {
-        return (MemberData<T>) new Result<>(supplier, true).create();
+    public static <T> MemberData<T> createData(Run<T> supplier) {
+        return new Result<>(supplier, true).create();
     }
 
     /*
@@ -52,17 +52,17 @@ public final class TryHelper {
 
     public static class Result<T> {
         private T mResult;
-        private boolean shouldCreateMemberData;
-        private MemberData<T> mMemberData;
         private boolean isSuccess;
         private Throwable mThrowable;
+        private final boolean shouldCreateData;
+        private MemberData<T> mMemberData;
 
         public Result(Run<T> supplier) {
-            doRun(supplier);
+            this(supplier, false);
         }
 
-        public Result(Run<T> supplier, boolean shouldCreateMemberData) {
-            this.shouldCreateMemberData = shouldCreateMemberData;
+        public Result(Run<T> supplier, boolean shouldCreateData) {
+            this.shouldCreateData = shouldCreateData;
             doRun(supplier);
         }
 
@@ -76,11 +76,11 @@ public final class TryHelper {
                 isSuccess = false;
                 mResult = null;
             }
-            if (shouldCreateMemberData)
+            if (shouldCreateData)
                 mMemberData = new MemberData<>(mResult, mThrowable);
         }
 
-        private MemberData<?> create() {
+        private MemberData<T> create() {
             return mMemberData;
         }
 
