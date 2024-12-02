@@ -24,8 +24,8 @@ import static com.hchen.hooktool.helper.TryHelper.run;
 import static com.hchen.hooktool.hook.HookFactory.createHook;
 import static com.hchen.hooktool.log.LogExpand.getStackTrace;
 import static com.hchen.hooktool.log.LogExpand.getTag;
-import static com.hchen.hooktool.log.XposedLog.logD;
 import static com.hchen.hooktool.log.XposedLog.logE;
+import static com.hchen.hooktool.log.XposedLog.logI;
 import static com.hchen.hooktool.log.XposedLog.logW;
 import static com.hchen.hooktool.tool.CoreTool.findConstructor;
 import static com.hchen.hooktool.tool.CoreTool.findMethod;
@@ -52,7 +52,7 @@ import de.robv.android.xposed.XposedHelpers;
  * @author 焕晨HChen
  * @noinspection unchecked
  */
-public final class CoreBase {
+final class CoreBase {
     private CoreBase() {
     }
 
@@ -136,7 +136,7 @@ public final class CoreBase {
 
         return run(() -> {
             CoreTool.UnHook unHook = new CoreTool.UnHook(XposedBridge.hookMethod(((MemberData<Member>) member).getNoReport(), createHook(tag, iHook)));
-            logD(tag, "Success to hook: " + member.getNoReport());
+            logI(tag, "Success to hook: " + member.getNoReport());
             return unHook;
         }).orErrMag(new CoreTool.UnHook(null), "Failed to hook! \ndebug: " + debug);
     }

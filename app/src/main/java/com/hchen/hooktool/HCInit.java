@@ -76,10 +76,11 @@ public final class HCInit {
         }
         ToolData.isXposed = true;
         ToolData.mLpparam = loadPackageParam;
-        ClassLoader classLoader = loadPackageParam.classLoader;
-        ToolData.mClassLoader = classLoader;
+        ToolData.mClassLoader = loadPackageParam.classLoader;
+        BaseHC.lpparam = loadPackageParam;
+        BaseHC.classLoader = loadPackageParam.classLoader;
         String packageName = loadPackageParam.packageName;
-        logI("Init classloader: [" + classLoader + "], pkg: " + packageName);
+        logI("Init classloader: [" + loadPackageParam.classLoader + "], pkg: " + packageName);
     }
 
     /**
@@ -96,6 +97,7 @@ public final class HCInit {
         ToolData.isXposed = true;
         ToolData.mStartupParam = startupParam;
         ToolData.mClassLoader = startupParam.getClass().getClassLoader();
+        BaseHC.classLoader = startupParam.getClass().getClassLoader();
     }
 
     /**

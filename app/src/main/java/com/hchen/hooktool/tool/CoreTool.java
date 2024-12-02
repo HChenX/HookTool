@@ -21,7 +21,6 @@ package com.hchen.hooktool.tool;
 import static com.hchen.hooktool.helper.TryHelper.run;
 import static com.hchen.hooktool.hook.HookFactory.createHook;
 import static com.hchen.hooktool.log.LogExpand.getTag;
-import static com.hchen.hooktool.log.XposedLog.logD;
 import static com.hchen.hooktool.log.XposedLog.logI;
 import static com.hchen.hooktool.log.XposedLog.logW;
 import static com.hchen.hooktool.tool.CoreBase.baseCallStaticMethod;
@@ -260,7 +259,7 @@ public class CoreTool {
         String tag = getTag();
         return run(() -> {
             UnHook unhook = new UnHook(XposedBridge.hookMethod(member, createHook(tag, iHook)));
-            logD(tag, "Success to hook: " + member);
+            logI(tag, "Success to hook: " + member);
             return unhook;
         }).orErrMag(new UnHook(null), "Failed to hook: " + member);
     }
@@ -273,7 +272,7 @@ public class CoreTool {
         }
         return members.stream().map(member -> run(() -> {
             UnHook unHook = new UnHook(XposedBridge.hookMethod(member, createHook(tag, iHook)));
-            logD(tag, "Success to hook: " + member);
+            logI(tag, "Success to hook: " + member);
             return unHook;
         }).orErrMag(new UnHook(null), "Failed to hook: " + member)).collect(Collectors.toCollection(UnHookList::new));
     }

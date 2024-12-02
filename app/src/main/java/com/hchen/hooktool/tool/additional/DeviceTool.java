@@ -222,7 +222,8 @@ public class DeviceTool {
     public static boolean isRightRom(final String... names) {
         if (names == null) return false;
         for (String name : names) {
-            if (Build.BRAND.toLowerCase().contains(name) || Build.MANUFACTURER.toLowerCase().contains(name)) {
+            if (Build.BRAND.toLowerCase().contains(name.toLowerCase())
+                    || Build.MANUFACTURER.toLowerCase().contains(name.toLowerCase())) {
                 return true;
             }
         }

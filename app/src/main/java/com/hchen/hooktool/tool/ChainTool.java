@@ -25,8 +25,8 @@ import static com.hchen.hooktool.data.ChainData.TYPE_METHOD;
 import static com.hchen.hooktool.hook.HookFactory.createHook;
 import static com.hchen.hooktool.log.LogExpand.getStackTrace;
 import static com.hchen.hooktool.log.LogExpand.getTag;
-import static com.hchen.hooktool.log.XposedLog.logD;
 import static com.hchen.hooktool.log.XposedLog.logE;
+import static com.hchen.hooktool.log.XposedLog.logI;
 import static com.hchen.hooktool.log.XposedLog.logW;
 import static com.hchen.hooktool.tool.CoreTool.existsConstructor;
 import static com.hchen.hooktool.tool.CoreTool.existsMethod;
@@ -191,7 +191,7 @@ public final class ChainTool {
             for (ChainData memberData : chainData.members) {
                 try {
                     XposedBridge.hookMethod(memberData.member, createHook(getTag(), chainData.iHook));
-                    logD(getTag(), "Success to hook: " + memberData.member);
+                    logI(getTag(), "Success to hook: " + memberData.member);
                 } catch (Throwable e) {
                     logE(getTag(), "Failed to hook: " + memberData.member, e);
                 }

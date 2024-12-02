@@ -42,8 +42,8 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
 public abstract class BaseHC extends CoreTool {
     public String TAG = getClass().getSimpleName(); // 快捷获取类的简单名称作为 TAG, 为了效果建议配置相应的混淆规则。
     private final ChainTool mChainTool = new ChainTool();
-    public static XC_LoadPackage.LoadPackageParam lpparam = ToolData.mLpparam;
-    public static ClassLoader classLoader = ToolData.mClassLoader;
+    public static XC_LoadPackage.LoadPackageParam lpparam; // onZygote 状态下为 null。
+    public static ClassLoader classLoader;
 
     /**
      * 一般阶段。
