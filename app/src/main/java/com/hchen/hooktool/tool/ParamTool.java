@@ -40,19 +40,19 @@ import de.robv.android.xposed.XposedBridge;
  * @author 焕晨HChen
  */
 public class ParamTool {
-    private XC_MethodHook.MethodHookParam MethodHookParam;
+    public XC_MethodHook.MethodHookParam mParam;
     private XC_MethodHook xcMethodHook;
     private LogExpand logExpand;
     public String PRIVATETAG;
     public Class<?> mClass;
     public Member mMember;
     public Object[] mArgs;
-    
+
     /**
      * 被 hook 类的实例。
      */
-    final public <T> T thisObject() {
-        return (T) MethodHookParam.thisObject;
+    final public Object thisObject() {
+        return mParam.thisObject;
     }
 
     /**
@@ -66,11 +66,11 @@ public class ParamTool {
      * 返回被 hook 实例的类加载器。
      */
     final public ClassLoader thisClassLoader() {
-        return MethodHookParam.thisObject.getClass().getClassLoader();
+        return mParam.thisObject.getClass().getClassLoader();
     }
 
     final public void MethodHookParam(XC_MethodHook.MethodHookParam param) {
-        this.MethodHookParam = param;
+        mParam = param;
         mClass = param.method.getDeclaringClass();
         mMember = param.method;
         mArgs = param.args;
@@ -85,8 +85,8 @@ public class ParamTool {
     /**
      * 获取方法的指定参数。
      */
-    final public <T> T getArgs(int index) {
-        return checkIndex(index) ? (T) MethodHookParam.args[index] : null;
+    final public Object getArgs(int index) {
+        return checkIndex(index) ? mParam.args[index] : null;
     }
 
     /**
@@ -94,14 +94,14 @@ public class ParamTool {
      */
     final public void setArgs(int index, Object value) {
         if (checkIndex(index))
-            MethodHookParam.args[index] = value;
+            mParam.args[index] = value;
     }
 
     /**
      * 获取方法参数列表长度。
      */
     final public int argsLength() {
-        return MethodHookParam.args.length;
+        return mParam.args.length;
     }
 
     private boolean checkIndex(int index) {
@@ -118,8 +118,8 @@ public class ParamTool {
     /**
      * 获取方法执行完毕后的返回值。
      */
-    final public <T> T getResult() {
-        return (T) MethodHookParam.getResult();
+    final public Object getResult() {
+        return mParam.getResult();
     }
 
     /**
@@ -127,7 +127,7 @@ public class ParamTool {
      * after 中使用修改返回结果。
      */
     final public void setResult(Object value) {
-        MethodHookParam.setResult(value);
+        mParam.setResult(value);
     }
 
     /**
@@ -135,49 +135,49 @@ public class ParamTool {
      * after 中使用修改返回结果为 null。
      */
     final public void returnNull() {
-        MethodHookParam.setResult(null);
+        mParam.setResult(null);
     }
 
     /**
      * 使方法返回指定的布尔值 true。
      */
     final public void returnTure() {
-        MethodHookParam.setResult(true);
+        mParam.setResult(true);
     }
 
     /**
      * 使方法返回指定布尔值 false。
      */
     final public void returnFalse() {
-        MethodHookParam.setResult(false);
+        mParam.setResult(false);
     }
 
     /**
      * 如果方法引发了异常，则返回 true。
      */
     final public boolean hasThrowable() {
-        return MethodHookParam.hasThrowable();
+        return mParam.hasThrowable();
     }
 
     /**
      * 返回该方法抛出的异常，若没有则返回 null。
      */
     final public Throwable getThrowable() {
-        return MethodHookParam.getThrowable();
+        return mParam.getThrowable();
     }
 
     /**
      * 引发异常，在 before 中使用可阻止方法执行。
      */
     final public void setThrowable(Throwable t) {
-        MethodHookParam.setThrowable(t);
+        mParam.setThrowable(t);
     }
 
     /**
      * 返回方法调用的结果，或获取该方法的异常。
      */
-    final public <T> T getResultOrThrowable() throws Throwable {
-        return (T) MethodHookParam.getResultOrThrowable();
+    final public Object getResultOrThrowable() throws Throwable {
+        return mParam.getResultOrThrowable();
     }
 
     // --------- 观察调用 --------------
@@ -187,35 +187,35 @@ public class ParamTool {
      */
     final public void observeCall() {
         if (logExpand == null)
-            logExpand = new LogExpand(MethodHookParam, PRIVATETAG);
-        logExpand.update(MethodHookParam);
+            logExpand = new LogExpand(mParam, PRIVATETAG);
+        logExpand.update(mParam);
         logExpand.detailedLogs();
     }
 
     // --------- 调用方法 --------------
-    final public <T> T callThisMethod(String name, Object... objs) {
-        return callMethod(MethodHookParam.thisObject, name, objs);
+    final public Object callThisMethod(String name, Object... objs) {
+        return callMethod(mParam.thisObject, name, objs);
     }
 
     // ----------- 获取/修改 字段 -------------
-    final public <T> T getThisField(String name) {
-        return getField(MethodHookParam.thisObject, name);
+    final public Object getThisField(String name) {
+        return getField(mParam.thisObject, name);
     }
 
     final public boolean setThisField(String name, Object value) {
-        return setField(MethodHookParam.thisObject, name, value);
+        return setField(mParam.thisObject, name, value);
     }
 
     // ---------- 设置自定义字段 --------------
-    final public <T> T setThisAdditionalInstanceField(String key, Object value) {
-        return setAdditionalInstanceField(MethodHookParam.thisObject, key, value);
+    final public Object setThisAdditionalInstanceField(String key, Object value) {
+        return setAdditionalInstanceField(mParam.thisObject, key, value);
     }
 
-    final public <T> T getThisAdditionalInstanceField(String key) {
-        return getAdditionalInstanceField(MethodHookParam.thisObject, key);
+    final public Object getThisAdditionalInstanceField(String key) {
+        return getAdditionalInstanceField(mParam.thisObject, key);
     }
 
-    final public <T> T removeThisAdditionalInstanceField(String key) {
-        return removeAdditionalInstanceField(MethodHookParam.thisObject, key);
+    final public Object removeThisAdditionalInstanceField(String key) {
+        return removeAdditionalInstanceField(mParam.thisObject, key);
     }
 }

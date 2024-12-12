@@ -29,16 +29,16 @@ import com.hchen.hooktool.log.LogExpand;
  *
  * @author 焕晨HChen
  */
-public final class MemberData<T> {
+public final class SingleMember<T> {
     private final T mMember;
     private final Throwable mThrowable;
     private String mMsg = "Unknown";
 
-    public MemberData(T member) {
+    public SingleMember(T member) {
         this(member, null);
     }
 
-    public MemberData(T member, Throwable throwable) {
+    public SingleMember(T member, Throwable throwable) {
         mMember = member;
         mThrowable = throwable;
     }
@@ -87,7 +87,7 @@ public final class MemberData<T> {
         return mThrowable == null;
     }
 
-    MemberData<T> setErrMsg(String msg) {
+    SingleMember<T> setErrMsg(String msg) {
         mMsg = msg;
         return this;
     }

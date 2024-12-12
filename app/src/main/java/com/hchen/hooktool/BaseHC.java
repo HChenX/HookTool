@@ -23,7 +23,6 @@ import static com.hchen.hooktool.log.XposedLog.logE;
 import android.content.Context;
 import android.content.res.Resources;
 
-import com.hchen.hooktool.data.ToolData;
 import com.hchen.hooktool.tool.ChainTool;
 import com.hchen.hooktool.tool.CoreTool;
 import com.hchen.hooktool.tool.PrefsTool;
@@ -46,22 +45,33 @@ public abstract class BaseHC extends CoreTool {
     public static ClassLoader classLoader;
 
     /**
-     * 一般阶段。
+     * handleLoadPackage 阶段。
+     * <p>
+     * Tip: 作为覆写使用，请勿直接调用！
      */
-    // 作为覆写使用，请勿直接调用！
     public abstract void init();
 
     /**
-     * zygote 阶段。
+     * 带 classLoader 的初始化。
+     * <p>
+     * Tip: 作为覆写使用，请勿直接调用！
+     */
+    public void init(ClassLoader classLoader) {
+    }
+
+    /**
+     * initZygote 阶段。
      * <p>
      * 如果 startupParam 为 null，请检查是否在正确的地方初始化。
      * <p>
      * 详见: {@link HCInit#initStartupParam(IXposedHookZygoteInit.StartupParam)}
+     * <p>
+     * Tip: 作为覆写使用，请勿直接调用！
      */
-    // 作为覆写使用，请勿直接调用！
     public void initZygote(IXposedHookZygoteInit.StartupParam startupParam) {
     }
 
+    // 请在 handleLoadPackage 阶段调用。
     final public void onLoadPackage() {
         try {
             init();
@@ -70,9 +80,19 @@ public abstract class BaseHC extends CoreTool {
         }
     }
 
+    // 请传入自定义的 classLoader。
+    final public void onClassLoader(ClassLoader classLoader) {
+        try {
+            init(classLoader);
+        } catch (Throwable e) {
+            logE(TAG, "Waring! will stop hook process!!", e);
+        }
+    }
+
+    // 请在 initZygote 阶段调用。
     final public void onZygote() {
         try {
-            initZygote(ToolData.mStartupParam);
+            initZygote(HCData.getStartupParam());
         } catch (Throwable e) {
             logE(TAG, "Waring! will stop hook process!!", e);
         }

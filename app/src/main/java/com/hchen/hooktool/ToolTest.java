@@ -23,16 +23,15 @@ import android.content.Context;
 import com.hchen.hooktool.hook.IHook;
 
 import de.robv.android.xposed.IXposedHookZygoteInit;
-import de.robv.android.xposed.XC_MethodHook;
-import de.robv.android.xposed.XposedHelpers;
+import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 /**
  * 测试和示例类
  *
  * @author 焕晨HChen
  */
-public final class ToolTest extends BaseHC {
-
+@Deprecated
+final class ToolTest extends BaseHC {
     @Override
     public void initZygote(IXposedHookZygoteInit.StartupParam startupParam) {
         super.initZygote(startupParam);
@@ -40,23 +39,6 @@ public final class ToolTest extends BaseHC {
 
     @Override
     public void init() {
-
-        // 原用法
-        new XC_MethodHook() {
-            @Override
-            protected void beforeHookedMethod(MethodHookParam param) {
-                Context context = (Context) param.thisObject;
-                String string = (String) param.args[0];
-                param.args[1] = 1;
-                String result = (String) XposedHelpers.callMethod(param.thisObject, "call",
-                        param.thisObject, param.args[0]);
-                XposedHelpers.callStaticMethod(XposedHelpers.findClass("com.demo.Main", ClassLoader.getSystemClassLoader()),
-                        "callStatic", param.thisObject, param.args[1]);
-                int i = (int) XposedHelpers.getStaticObjectField(XposedHelpers.findClass("com.demo.Main", ClassLoader.getSystemClassLoader()),
-                        "field");
-            }
-        };
-
         // 链式
         chain("com.hchen.demo", method("test")
                 .hook(new IHook() {
@@ -83,7 +65,7 @@ public final class ToolTest extends BaseHC {
             public void before() {
                 super.before();
             }
-        }).unHook();
+        }).unhook();
 
         // 本工具用法
         new IHook() {
@@ -91,15 +73,15 @@ public final class ToolTest extends BaseHC {
             public void before() {
                 // hook 方法所属的类
                 Class<?> c = mClass;
-                Context context = thisObject();
-                String string = getArgs(0); // 获取第一个参数值
+                Context context = (Context) thisObject();
+                String string = (String) getArgs(0); // 获取第一个参数值
                 setArgs(1, 1); // 设置第二个参数值
 
                 // 非静态本类内
                 setThisField("demo", 1); // 设置本类内 demo 字段值
                 callThisMethod("method"); // 调用本类内 method 方法
                 getThisField("test");
-                String result = callThisMethod("call", thisObject(), getArgs(0));
+                String result = (String) callThisMethod("call", thisObject(), getArgs(0));
 
                 // 非静态本类外
                 Object o = null;
@@ -109,7 +91,7 @@ public final class ToolTest extends BaseHC {
 
                 // 静态需要 class
                 callStaticMethod("com.demo.Main", "callStatic", thisObject(), getArgs(1)); // 调用静态方法 callStatic
-                int i = getStaticField("com.demo.Main", "field");
+                int i = (int) getStaticField("com.demo.Main", "field");
                 setStaticField("com.demo.Main", "test", true); // 设置静态字段 test
 
 
@@ -125,5 +107,24 @@ public final class ToolTest extends BaseHC {
         getFakeResId("test_res"); // 获取 test_res 的虚拟资源 id
         // 设置 pkg 的 string 资源 test_res_str 值为 HC!
         setObjectReplacement("com.hchen.demo", "string", "test_res_str", "HC!");
+    }
+
+    private static class InitHook extends HCEntrance {
+        @Override
+        public HCInit.BasicData initHC(HCInit.BasicData basicData) {
+            return basicData.setTag("HookTool")
+                    .setLogLevel(HCInit.LOG_D)
+                    .setModulePackageName("com.hchen.demo")
+                    .setPrefsName("myprefs") // 可选
+                    .xPrefsAutoReload(true) // 可选
+                    .initLogExpand(new String[]{
+                            "com.hchen.demo.hook"
+                    });
+        }
+
+        @Override
+        public void onLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) throws Throwable {
+            new ToolTest().onLoadPackage();
+        }
     }
 }

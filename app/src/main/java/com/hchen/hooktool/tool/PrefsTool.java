@@ -29,7 +29,7 @@ import android.content.SharedPreferences;
 
 import androidx.annotation.NonNull;
 
-import com.hchen.hooktool.data.ToolData;
+import com.hchen.hooktool.HCData;
 import com.hchen.hooktool.log.AndroidLog;
 import com.hchen.hooktool.tool.additional.ContextTool;
 import com.hchen.hooktool.tool.itool.IAsyncPrefs;
@@ -73,8 +73,8 @@ public final class PrefsTool {
      * 将读取模块的共享首选项并供寄生应用使用。此状态下仅可读取，不可修改。
      */
     public static IPrefsApply prefs() {
-        if (!ToolData.isXposed)
-            throw new RuntimeException(ToolData.mInitTag +
+        if (!HCData.isXposed())
+            throw new RuntimeException(HCData.getInitTag() +
                     "[" + getTag() + "][E]: Not xposed environment!" + getStackTrace());
         return prefs("");
     }
@@ -85,8 +85,8 @@ public final class PrefsTool {
      * 将读取指定 prefsName 名的模块共享首选项文件并供寄生应用使用。此状态下仅可读取，不可修改。
      */
     public static IPrefsApply prefs(String prefsName) {
-        if (!ToolData.isXposed)
-            throw new RuntimeException(ToolData.mInitTag +
+        if (!HCData.isXposed())
+            throw new RuntimeException(HCData.getInitTag() +
                     "[" + getTag() + "][E]: Not xposed environment!" + getStackTrace());
         return new Xprefs(currentXsp(prefsName));
     }
@@ -97,14 +97,14 @@ public final class PrefsTool {
      * 仅限寄生应用内调用，适用于不方便获取 context 的情况。
      */
     public static void asyncPrefs(IAsyncPrefs asyncPrefs) {
-        if (!ToolData.isXposed)
-            throw new RuntimeException(ToolData.mInitTag +
+        if (!HCData.isXposed())
+            throw new RuntimeException(HCData.getInitTag() +
                     "[" + getTag() + "][E]: Not xposed environment!" + getStackTrace());
         ContextTool.getAsyncContext(new IContextGetter() {
             @Override
             public void tryToFindContext(@androidx.annotation.Nullable Context context) {
                 if (context == null) {
-                    throw new RuntimeException(ToolData.mInitTag +
+                    throw new RuntimeException(HCData.getInitTag() +
                             "[" + getTag() + "][E]: Async prefs context is null!" + getStackTrace());
                 }
                 asyncPrefs.async(context);
@@ -115,11 +115,11 @@ public final class PrefsTool {
     private static XSharedPreferences currentXsp(String prefsName) {
         prefsName = initPrefsName(prefsName);
         if (xPrefs.get(prefsName) == null) {
-            if (ToolData.modulePackageName == null) {
-                throw new RuntimeException(ToolData.mInitTag +
+            if (HCData.getModulePackageName() == null) {
+                throw new RuntimeException(HCData.getInitTag() +
                         "[" + getTag() + "][E]: Module package name is null, Please set module package name!" + getStackTrace());
             }
-            XSharedPreferences x = new XSharedPreferences(ToolData.modulePackageName, prefsName);
+            XSharedPreferences x = new XSharedPreferences(HCData.getModulePackageName(), prefsName);
             x.makeWorldReadable();
             x.reload();
             xPrefs.put(prefsName, x);
@@ -136,7 +136,7 @@ public final class PrefsTool {
     private static SharedPreferences currentSp(Context context, String prefsName) {
         prefsName = initPrefsName(prefsName);
         if (context == null) {
-            throw new RuntimeException(ToolData.mInitTag +
+            throw new RuntimeException(HCData.getInitTag() +
                     "[" + getTag() + "][E]: Context is null, can't create sprefs!" + getStackTrace());
         }
         if (sPrefs.get(context + prefsName) == null) {
@@ -156,14 +156,14 @@ public final class PrefsTool {
 
     private static String initPrefsName(@NonNull String name) {
         if (name.isEmpty()) {
-            if (ToolData.mPrefsName == null) {
-                if (ToolData.modulePackageName == null) {
-                    throw new RuntimeException(ToolData.mInitTag +
+            if (HCData.getPrefsName() == null) {
+                if (HCData.getModulePackageName() == null) {
+                    throw new RuntimeException(HCData.getInitTag() +
                             "[" + getTag() + "][E]: What prefs name you want use??" + getStackTrace());
                 }
-                return ToolData.modulePackageName + "_preferences";
+                return HCData.getModulePackageName() + "_preferences";
             }
-            return ToolData.mPrefsName;
+            return HCData.getPrefsName();
         } else return name;
     }
 
@@ -255,7 +255,7 @@ public final class PrefsTool {
         }
 
         private void reload() {
-            if (ToolData.isAutoReload) {
+            if (HCData.isIsAutoReload()) {
                 if (xSharedPreferences.hasFileChanged()) {
                     xSharedPreferences.reload();
                 }

@@ -24,7 +24,7 @@ import static com.hchen.hooktool.tool.CoreTool.findClass;
 
 import androidx.annotation.Nullable;
 
-import com.hchen.hooktool.data.ToolData;
+import com.hchen.hooktool.HCData;
 import com.hchen.hooktool.hook.IHook;
 import com.hchen.hooktool.log.LogExpand;
 
@@ -46,7 +46,7 @@ public final class ConvertHelper {
 
     @Nullable
     public static Class<?>[] arrayToClass(Object... objs) {
-        return arrayToClass(ToolData.mClassLoader, objs);
+        return arrayToClass(HCData.getClassLoader(), objs);
     }
 
     /**

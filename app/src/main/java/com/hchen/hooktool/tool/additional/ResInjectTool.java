@@ -40,7 +40,7 @@ import android.util.TypedValue;
 
 import androidx.annotation.RequiresApi;
 
-import com.hchen.hooktool.data.ToolData;
+import com.hchen.hooktool.HCData;
 import com.hchen.hooktool.hook.IHook;
 import com.hchen.hooktool.tool.CoreTool;
 
@@ -52,6 +52,7 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 import de.robv.android.xposed.IXposedHookZygoteInit;
+import de.robv.android.xposed.XC_MethodHook;
 
 /**
  * 资源注入工具
@@ -94,7 +95,7 @@ public final class ResInjectTool {
             return null;
         }
         if (mModulePath == null) {
-            mModulePath = ToolData.mStartupParam != null ? ToolData.mStartupParam.modulePath : null;
+            mModulePath = HCData.getModulePath() != null ? HCData.getModulePath() : null;
             if (mModulePath == null) {
                 logW(getTag(), "Module path is null, can't load module res!" + getStackTrace());
                 return null;
@@ -177,7 +178,9 @@ public final class ResInjectTool {
         return true;
     }
 
-    /** @noinspection JavaReflectionMemberAccess */
+    /**
+     * @noinspection JavaReflectionMemberAccess
+     */
     @SuppressLint("DiscouragedPrivateApi")
     private static boolean loadResBelowApi30(Resources resources) {
         try {
@@ -198,7 +201,7 @@ public final class ResInjectTool {
 
     private static final ArrayList<Resources> resourcesArrayList = new ArrayList<>();
     private static final ConcurrentHashMap<Integer, Boolean> resMap = new ConcurrentHashMap<>();
-    private static final ArrayList<CoreTool.UnHook> unhooks = new ArrayList<>();
+    private static final ArrayList<XC_MethodHook.Unhook> unhooks = new ArrayList<>();
     private static final ConcurrentHashMap<String, Pair<ReplacementType, Object>> replacements = new ConcurrentHashMap<>();
 
     private static boolean hooked;
@@ -264,10 +267,10 @@ public final class ResInjectTool {
     private static void applyHooks() {
         if (hooked) return;
         if (mModulePath == null) {
-            mModulePath = ToolData.mStartupParam != null ? ToolData.mStartupParam.modulePath : null;
+            mModulePath = HCData.getModulePath() != null ? HCData.getModulePath() : null;
             if (mModulePath == null) {
                 unHookRes();
-                throw new RuntimeException(ToolData.mInitTag +
+                throw new RuntimeException(HCData.getInitTag() +
                         "[" + getTag() + "][E]: Module path is null, Please init this in initStartupParam()!" + getStackTrace());
             }
         }
@@ -323,8 +326,8 @@ public final class ResInjectTool {
             hooked = false;
             return;
         }
-        for (CoreTool.UnHook unhook : unhooks) {
-            unhook.unHook();
+        for (XC_MethodHook.Unhook unhook : unhooks) {
+            unhook.unhook();
         }
         unhooks.clear();
         hooked = false;
@@ -333,13 +336,13 @@ public final class ResInjectTool {
     private static final IHook hookTypedBefore = new IHook() {
         @Override
         public void before() {
-            int index = getArgs(0);
-            int[] mData = CoreTool.getField(thisObject(), "mData");
+            int index = (int) getArgs(0);
+            int[] mData = (int[]) CoreTool.getField(thisObject(), "mData");
             int type = mData[index];
             int id = mData[index + 3];
 
             if (id != 0 && (type != TypedValue.TYPE_NULL)) {
-                Resources mResources = CoreTool.getField(thisObject(), "mResources");
+                Resources mResources = (Resources) CoreTool.getField(thisObject(), "mResources");
                 Object value = getTypedArrayReplacement(mResources, id);
                 if (value != null) {
                     setResult(value);
@@ -362,7 +365,7 @@ public final class ResInjectTool {
                 String method = mMember.getName();
                 Object value;
                 try {
-                    value = getResourceReplacement(resources, thisObject(), method, mArgs);
+                    value = getResourceReplacement(resources, (Resources) thisObject(), method, mArgs);
                 } catch (Resources.NotFoundException e) {
                     continue;
                 }

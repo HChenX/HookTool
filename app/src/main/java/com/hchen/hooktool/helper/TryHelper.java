@@ -21,7 +21,7 @@ package com.hchen.hooktool.helper;
 import static com.hchen.hooktool.log.LogExpand.getTag;
 import static com.hchen.hooktool.log.XposedLog.logE;
 
-import com.hchen.hooktool.tool.MemberData;
+import com.hchen.hooktool.tool.SingleMember;
 
 /**
  * 方法执行与异常处理类
@@ -32,41 +32,34 @@ public final class TryHelper {
     /*
      * 执行并返回执行的结果或抛错。
      * */
-    public static <T> Result<T> run(Run<T> supplier) {
+    public static <V> Result<V> run(Run<V> supplier) {
         return new Result<>(supplier);
     }
 
     /*
      * 执行并储存执行的结果与抛错。
      * */
-    public static <T> MemberData<T> createData(Run<T> supplier) {
-        return new Result<>(supplier, true).create();
+    public static <V> SingleMember<V> createSingleMember(Run<V> supplier) {
+        return new Result<>(supplier).create();
     }
 
     /*
      * 简单的执行代码并获取返回值，与此同时主动抛出可能的异常。
      */
-    public interface Run<T> {
-        T run() throws Throwable;
+    public interface Run<V> {
+        V run() throws Throwable;
     }
 
-    public static class Result<T> {
-        private T mResult;
+    public static class Result<V> {
+        private V mResult;
         private boolean isSuccess;
         private Throwable mThrowable;
-        private final boolean shouldCreateData;
-        private MemberData<T> mMemberData;
 
-        public Result(Run<T> supplier) {
-            this(supplier, false);
-        }
-
-        public Result(Run<T> supplier, boolean shouldCreateData) {
-            this.shouldCreateData = shouldCreateData;
+        public Result(Run<V> supplier) {
             doRun(supplier);
         }
 
-        private void doRun(Run<T> supplier) {
+        private void doRun(Run<V> supplier) {
             try {
                 mResult = supplier.run();
                 isSuccess = true;
@@ -76,33 +69,31 @@ public final class TryHelper {
                 isSuccess = false;
                 mResult = null;
             }
-            if (shouldCreateData)
-                mMemberData = new MemberData<>(mResult, mThrowable);
         }
 
-        private MemberData<T> create() {
-            return mMemberData;
+        private SingleMember<V> create() {
+            return new SingleMember<V>(mResult, mThrowable);
         }
 
         // 获取执行结果
-        public T get() {
+        public V get() {
             return mResult;
         }
 
         // 失败返回 or 值
-        public T or(T or) {
+        public V or(V or) {
             if (isSuccess) return mResult;
             return or;
         }
 
         // 如果失败返回指定 or 值，并执行异常回调
-        public T orErr(T or, Err err) {
+        public V orErr(V or, Err err) {
             if (isSuccess) return mResult;
             err.err(mThrowable);
             return or;
         }
 
-        public T orErrMag(T or, String msg) {
+        public V orErrMag(V or, String msg) {
             if (isSuccess) return mResult;
             logE(getTag(), msg, mThrowable);
             return or;

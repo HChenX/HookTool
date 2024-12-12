@@ -16,11 +16,9 @@
 
 ### 1. **Chained Calls**
 
-### 2. **Generic conversions**
+### 2. **Safe Usage**
 
-### 3. **Safe Usage**
-
-### 4. **Comprehensive Support**
+### 3. **Comprehensive Support**
 
 #### Tip: Version Notice: Version 1.0.0 introduces significant changes, making the tool more static, better suited to its purpose, and offering improved performance and usability.
 
@@ -44,8 +42,8 @@ dependencyResolutionManagement {
 dependencies {
     // Choose one of these options; jitpack is recommended as maven might not update as frequently.
     // Tip: Replace v.*.*.* with the latest release version.
-    implementation 'com.github.HChenX:HookTool:v.1.0.8' // jitpack
-    implementation 'io.github.hchenx:hooktool:v.1.0.8'
+  implementation 'com.github.HChenX:HookTool:v.1.1.0' // jitpack
+  implementation 'io.github.hchenx:hooktool:v.1.1.0'
     // maven Tip: Almost abandoned, please do not use!
 }
 ```
@@ -210,55 +208,6 @@ public class MainTest extends BaseHC {
                 .constructor()
                 .returnResult(false)
         );
-    }
-}
-```
-
-# 🔥 Generic conversions
-
-- Traditional Xposed MethodHookParam methods return Object, requiring explicit casting.
-- With this tool, you can leverage generics to avoid unnecessary conversions in most cases.
-
-```java
-public class MainTest extends BaseHC {
-    @Override
-    public void init() {
-        new XC_MethodHook() {
-            @Override
-            protected void beforeHookedMethod(MethodHookParam param) {
-                Context context = (Context) param.thisObject;
-                String string = (String) param.args[0];
-                param.args[1] = 1;
-                String result = (String) XposedHelpers.callMethod(param.thisObject, "call", param.thisObject, param.args[0]);
-                XposedHelpers.callStaticMethod(XposedHelpers.findClass("com.demo.Main", ClassLoader.getSystemClassLoader()), "callStatic", param.thisObject, param.args[1]);
-                int i = (int) XposedHelpers.getStaticObjectField(XposedHelpers.findClass("com.demo.Main", ClassLoader.getSystemClassLoader()), "field");
-            }
-        };
-
-        new IAction() {
-            @Override
-            public void before() {
-                Context context = thisObject(); // No explicit conversion needed
-                String string = getArgs(0); // Access first method argument
-                setArgs(1, context); // Set second method argument
-
-                // Non-static within current class
-                setThisField("demo", 1);
-                callThisMethod("method", objs);
-                // Non-static outside current class
-                setField(obj /* instance */, "demo", 1);
-                callMethod(obj /* instance */, "method", objs);
-
-                // Static with class reference
-                callStaticMethod("com.demo.Main", "callStatic", thisObject(), getArgs(1));
-                int i = getStaticField("com.demo.Main", "field");
-                setStaticField("com.demo.Main", "test", true);
-
-                removeSelf(); // Call to invalidate hook on self
-                observeCall(); // Log enhancement (optional)
-                getStackTrace(); // Get the call stack of the method
-            }
-        };
     }
 }
 ```

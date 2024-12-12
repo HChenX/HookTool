@@ -21,7 +21,7 @@ package com.hchen.hooktool.log;
 import static com.hchen.hooktool.log.AndroidLog.logE;
 import static com.hchen.hooktool.log.AndroidLog.logI;
 
-import com.hchen.hooktool.data.ToolData;
+import com.hchen.hooktool.HCData;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -83,17 +83,18 @@ public final class LogExpand {
     }
 
     public static String getTag() {
-        if (ToolData.mLogExpandPath == null) return "HookTool";
-        if (ToolData.mLogExpandPath.length == 0) {
-            if (ToolData.modulePackageName == null) return "HookTool";
-            ToolData.mLogExpandPath = new String[]{ToolData.modulePackageName};
+        String[] logExpandPath = HCData.getLogExpandPath();
+        if (logExpandPath == null) return "HookTool";
+        if (logExpandPath.length == 0) {
+            if (HCData.getModulePackageName() == null) return "HookTool";
+            logExpandPath = new String[]{HCData.getModulePackageName()};
         }
         String tag = null;
         StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
         for (StackTraceElement stackTraceElement : stackTraceElements) {
             if (tag != null) break;
             String className = stackTraceElement.getClassName();
-            if (Arrays.stream(ToolData.mLogExpandPath).anyMatch(className::contains)) {
+            if (Arrays.stream(logExpandPath).anyMatch(className::contains)) {
                 int index = className.lastIndexOf(".");
                 int index2 = className.lastIndexOf("$");
                 if (index == -1) break;

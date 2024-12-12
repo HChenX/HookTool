@@ -21,3 +21,5 @@
 #-renamesourcefileattribute SourceFile
 
 -keep class * extends com.hchen.hooktool.BaseHC
+-keep class  com.hchen.hooktool.HCEntrance
+-keep class  com.hchen.hooktool.HCState

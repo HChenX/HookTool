@@ -16,11 +16,9 @@
 
 ### 1. **链式调用**
 
-### 2. **泛型转换**
-
 ### 2. **安全使用**
 
-### 4. **全面丰富**
+### 3. **全面丰富**
 
 #### Tip: 重构声明: v.1.0.0 版本和之前版本有较大不同，新版本工具完成静态化，更符合工具特征，拥有更好的使用体验和性能。
 
@@ -44,8 +42,8 @@ dependencyResolutionManagement {
 dependencies {
     // 二选一即可，推荐使用 jitpack，maven 可能不会同步更新！
     // Tip: v.*.*.* 填写当前最新发行版版本号即可！
-    implementation 'com.github.HChenX:HookTool:v.1.0.8' // jitpack
-    implementation 'io.github.hchenx:hooktool:v.1.0.8' // maven Tip: 几乎废弃，请不要使用！
+    implementation 'com.github.HChenX:HookTool:v.1.1.0' // jitpack
+    implementation 'io.github.hchenx:hooktool:v.1.1.0' // maven Tip: 几乎废弃，请不要使用！
 }
 ```
 
@@ -212,56 +210,6 @@ public class MainTest extends BaseHC {
         );
     }
 }
-```
-
-# 🔥 泛型转换
-
-- 传统 Xposed MethodHookParam 的各种方法返回都是 Object。 这就使得我们必须显性的进行类型转换才能使用。
-- 本工具则充分使用泛型，在非特殊场景就不需要进行显性的转换啦！
-
-```java
-public class MainTest extends BaseHC {
-    @Override
-    public void init() {
-        new XC_MethodHook() {
-            @Override
-            protected void beforeHookedMethod(MethodHookParam param) {
-                Context context = (Context) param.thisObject;
-                String string = (String) param.args[0];
-                param.args[1] = 1;
-                String result = (String) XposedHelpers.callMethod(param.thisObject, "call", param.thisObject, param.args[0]);
-                XposedHelpers.callStaticMethod(XposedHelpers.findClass("com.demo.Main", ClassLoader.getSystemClassLoader()), "callStatic", param.thisObject, param.args[1]);
-                int i = (int) XposedHelpers.getStaticObjectField(XposedHelpers.findClass("com.demo.Main", ClassLoader.getSystemClassLoader()), "field");
-            }
-        };
-
-        new IAction() {
-            @Override
-            public void before() {
-                Context context = thisObject(); // 无需显式转换
-                String string = getArgs(0); // 获取第一个方法的参数。
-                setArgs(1, context); // 设置第二个方法参数。
-
-                // 非静态本类内
-                setThisField("demo", 1);
-                callThisMethod("method", objs);
-                // 非静态本类外
-                setField(obj /* 实例 */, "demo", 1);
-                callMethod(obj /* 实例 */, "method", objs);
-
-                // 静态需要 class
-                callStaticMethod("com.demo.Main", "callStatic", thisObject(), getArgs(1));
-                int i = getStaticField("com.demo.Main", "field");
-                setStaticField("com.demo.Main", "test", true);
-
-                removeSelf(); // 你可调用此方法，使得挂钩自己失效
-                observeCall();  // 方法被调用时输出基本信息
-                getStackTrace(); // 获取方法的调用堆栈
-            }
-        };
-    }
-}
-
 ```
 
 # 📌 安全使用
