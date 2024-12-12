@@ -60,7 +60,7 @@ public final class SystemPropTool {
     }
 
     /**
-     * 只有系统核心可以调用。
+     * 只有系统框架才可能可以调用。
      */
     public static void setProp(String key, String vale) {
         invokeMethod("set", new Class[]{String.class, String.class}, key, vale);

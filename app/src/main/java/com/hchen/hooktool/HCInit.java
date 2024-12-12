@@ -100,6 +100,7 @@ public final class HCInit {
         HCData.setStartupParam(startupParam);
         HCData.setModulePath(startupParam.modulePath);
         HCData.setClassLoader(startupParam.getClass().getClassLoader());
+        BaseHC.lpparam = null;
         BaseHC.classLoader = startupParam.getClass().getClassLoader();
     }
 

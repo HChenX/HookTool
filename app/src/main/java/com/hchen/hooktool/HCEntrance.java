@@ -65,8 +65,21 @@ public abstract class HCEntrance implements IXposedHookLoadPackage, IXposedHookZ
         return null;
     }
 
+    /**
+     * 忽略的包名。
+     * <p>
+     * Tip: 因为传入的 lpparam 偶尔会被其他系统应用干扰，所以可以配置排除名单。
+     */
+    public String[] ignoreList() {
+        return null;
+    }
+
     @Override
     public final void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) throws Throwable {
+        if (ignoreList() != null) {
+            if (Arrays.stream(ignoreList()).anyMatch(s -> Objects.equals(s, lpparam.packageName)))
+                return;
+        }
         HCInit.initLoadPackageParam(lpparam);
 
         if (HCData.getModulePackageName() != null && Objects.equals(HCData.getModulePackageName(), lpparam.packageName)) {
