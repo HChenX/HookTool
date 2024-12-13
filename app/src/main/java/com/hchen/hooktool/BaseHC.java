@@ -40,7 +40,7 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
  */
 public abstract class BaseHC extends CoreTool {
     public String TAG = getClass().getSimpleName(); // 快捷获取类的简单名称作为 TAG, 为了效果建议配置相应的混淆规则。
-    private final ChainTool mChainTool = new ChainTool();
+    private static final ChainTool mChainTool = new ChainTool();
     public static XC_LoadPackage.LoadPackageParam lpparam; // onZygote 状态下为 null。
     public static ClassLoader classLoader;
 
@@ -110,27 +110,27 @@ public abstract class BaseHC extends CoreTool {
         ChainTool.chain(clazz, chain);
     }
 
-    final public ChainTool.ChainHook method(String name, Object... params) {
+    public static ChainTool.ChainHook method(String name, Object... params) {
         return mChainTool.method(name, params);
     }
 
-    final public ChainTool.ChainHook methodIfExist(String name, Object... params) {
+    public static ChainTool.ChainHook methodIfExist(String name, Object... params) {
         return mChainTool.methodIfExist(name, params);
     }
 
-    final public ChainTool.ChainHook anyMethod(String name) {
+    public static ChainTool.ChainHook anyMethod(String name) {
         return mChainTool.anyMethod(name);
     }
 
-    final public ChainTool.ChainHook constructor(Object... params) {
+    public static ChainTool.ChainHook constructor(Object... params) {
         return mChainTool.constructor(params);
     }
 
-    final public ChainTool.ChainHook constructorIfExist(Object... params) {
+    public static ChainTool.ChainHook constructorIfExist(Object... params) {
         return mChainTool.constructorIfExist(params);
     }
 
-    final public ChainTool.ChainHook anyConstructor() {
+    public static ChainTool.ChainHook anyConstructor() {
         return mChainTool.anyConstructor();
     }
 

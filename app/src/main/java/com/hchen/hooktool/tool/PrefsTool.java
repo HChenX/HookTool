@@ -139,7 +139,7 @@ public final class PrefsTool {
             throw new RuntimeException(HCData.getInitTag() +
                     "[" + getTag() + "][E]: Context is null, can't create sprefs!" + getStackTrace());
         }
-        if (sPrefs.get(context + prefsName) == null) {
+        if (sPrefs.get(context.getPackageName() + prefsName) == null) {
             SharedPreferences s;
             try {
                 s = context.getSharedPreferences(prefsName, Context.MODE_WORLD_READABLE);
@@ -147,7 +147,7 @@ public final class PrefsTool {
                 s = context.getSharedPreferences(prefsName, Context.MODE_PRIVATE);
                 AndroidLog.logW(getTag(), "Maybe can't use xSharedPreferences!" + getStackTrace());
             }
-            sPrefs.put(context + prefsName, s);
+            sPrefs.put(context.getPackageName() + prefsName, s);
             return s;
         } else {
             return sPrefs.get(prefsName);

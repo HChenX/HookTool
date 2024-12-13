@@ -120,12 +120,15 @@ public final class ChainTool {
 
     // 各种奇奇怪怪的添加 >.<
     private void doFind(Class<?> clazz) {
-        if (clazz == null) return;
-        if (cacheDataList.isEmpty()) {
-            logW(getTag(), "cache data list is empty, can't find or hook anything!" + getStackTrace());
+        if (clazz == null) {
             cacheDataList.clear();
             return;
         }
+        if (cacheDataList.isEmpty()) {
+            logW(getTag(), "cache data list is empty, can't find or hook anything!" + getStackTrace());
+            return;
+        }
+
         ArrayList<ChainData> members = new ArrayList<>();
         for (ChainData cacheData : cacheDataList) {
             String UUID = cacheData.mType + "#" + clazz.getName() + "#" + cacheData.mName + "#" + Arrays.toString(cacheData.mParams);
