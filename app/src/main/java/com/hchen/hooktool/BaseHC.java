@@ -44,7 +44,7 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
  * @author 焕晨HChen
  */
 public abstract class BaseHC extends CoreTool {
-    public String TAG = getClass().getSimpleName(); // 快捷获取类的简单名称作为 TAG, 为了效果建议配置相应的混淆规则。
+    protected String TAG = getClass().getSimpleName(); // 快捷获取类的简单名称作为 TAG, 为了效果建议配置相应的混淆规则。
     private static final List<BaseHC> mIApplications = new ArrayList<>();
     private static boolean isFirstHookApplication = true;
     private static final ChainTool mChainTool = new ChainTool();
@@ -108,6 +108,7 @@ public abstract class BaseHC extends CoreTool {
         }
     }
 
+    // Hook Application
     final public BaseHC onApplicationCreate() {
         if (!mIApplications.contains(this))
             mIApplications.add(this);
