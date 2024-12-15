@@ -20,15 +20,20 @@ package com.hchen.hooktool;
 
 import static com.hchen.hooktool.log.XposedLog.logE;
 
+import android.app.Application;
 import android.content.Context;
 import android.content.res.Resources;
 
+import com.hchen.hooktool.hook.IHook;
 import com.hchen.hooktool.tool.ChainTool;
 import com.hchen.hooktool.tool.CoreTool;
 import com.hchen.hooktool.tool.PrefsTool;
 import com.hchen.hooktool.tool.additional.ResInjectTool;
 import com.hchen.hooktool.tool.itool.IAsyncPrefs;
 import com.hchen.hooktool.tool.itool.IPrefsApply;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import de.robv.android.xposed.IXposedHookZygoteInit;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
@@ -40,6 +45,8 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
  */
 public abstract class BaseHC extends CoreTool {
     public String TAG = getClass().getSimpleName(); // 快捷获取类的简单名称作为 TAG, 为了效果建议配置相应的混淆规则。
+    private static final List<BaseHC> mIApplications = new ArrayList<>();
+    private static boolean isFirstHookApplication = true;
     private static final ChainTool mChainTool = new ChainTool();
     public static XC_LoadPackage.LoadPackageParam lpparam; // onZygote 状态下为 null。
     public static ClassLoader classLoader;
@@ -49,14 +56,14 @@ public abstract class BaseHC extends CoreTool {
      * <p>
      * Tip: 作为覆写使用，请勿直接调用！
      */
-    public abstract void init();
+    protected abstract void init();
 
     /**
      * 带 classLoader 的初始化。
      * <p>
      * Tip: 作为覆写使用，请勿直接调用！
      */
-    public void init(ClassLoader classLoader) {
+    protected void init(ClassLoader classLoader) {
     }
 
     /**
@@ -68,7 +75,19 @@ public abstract class BaseHC extends CoreTool {
      * <p>
      * Tip: 作为覆写使用，请勿直接调用！
      */
-    public void initZygote(IXposedHookZygoteInit.StartupParam startupParam) {
+    protected void initZygote(IXposedHookZygoteInit.StartupParam startupParam) {
+    }
+
+    /**
+     * Application Context 创建之前调用。
+     * */
+    protected void onApplicationBefore(Context context) {
+    }
+
+    /**
+     * Application Context 创建之后调用。
+     * */
+    protected void onApplicationAfter(Context context) {
     }
 
     // 请在 handleLoadPackage 阶段调用。
@@ -87,6 +106,13 @@ public abstract class BaseHC extends CoreTool {
         } catch (Throwable e) {
             logE(TAG, "Waring! will stop hook process!!", e);
         }
+    }
+
+    final public BaseHC onApplicationCreate() {
+        if (!mIApplications.contains(this))
+            mIApplications.add(this);
+        initApplicationHook();
+        return this;
     }
 
     // 请在 initZygote 阶段调用。
@@ -175,5 +201,34 @@ public abstract class BaseHC extends CoreTool {
 
     public static void setObjectReplacement(String pkg, String type, String name, Object replacementResValue) {
         ResInjectTool.setObjectReplacement(pkg, type, name, replacementResValue);
+    }
+
+    // ------------ Application Hook --------------
+    private static void initApplicationHook() {
+        if (!isFirstHookApplication) return;
+        hookMethod(Application.class, "attach", Context.class, new IHook() {
+            @Override
+            public void before() {
+                mIApplications.forEach(iApplication -> {
+                    try {
+                        iApplication.onApplicationBefore((Context) getArgs(0));
+                    } catch (Throwable e) {
+                        logE("Application", "Failed to call iApplication: " + iApplication, e);
+                    }
+                });
+            }
+
+            @Override
+            public void after() {
+                mIApplications.forEach(iApplication -> {
+                    try {
+                        iApplication.onApplicationAfter((Context) getArgs(0));
+                    } catch (Throwable e) {
+                        logE("Application", "Failed to call iApplication: " + iApplication, e);
+                    }
+                });
+            }
+        });
+        isFirstHookApplication = false;
     }
 }

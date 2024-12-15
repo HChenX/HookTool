@@ -18,17 +18,9 @@
  */
 package com.hchen.hooktool;
 
-import static com.hchen.hooktool.log.XposedLog.logE;
-
-import android.app.Application;
-import android.content.Context;
-
-import com.hchen.hooktool.hook.IHook;
 import com.hchen.hooktool.tool.CoreTool;
-import com.hchen.hooktool.tool.itool.IApplication;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Objects;
 
 import de.robv.android.xposed.IXposedHookLoadPackage;
@@ -59,13 +51,6 @@ public abstract class HCEntrance implements IXposedHookLoadPackage, IXposedHookZ
     }
 
     /**
-     * Hook 应用 Application 类的 attach 方法，并获取 Context。
-     */
-    public HashMap<String, IApplication[]> onApplication() {
-        return null;
-    }
-
-    /**
      * 忽略的包名。
      * <p>
      * Tip: 因为传入的 lpparam 偶尔会被其他系统应用干扰，所以可以配置排除名单。
@@ -85,10 +70,6 @@ public abstract class HCEntrance implements IXposedHookLoadPackage, IXposedHookZ
         if (HCData.getModulePackageName() != null && Objects.equals(HCData.getModulePackageName(), lpparam.packageName)) {
             initHCState();
         }
-
-        HashMap<String, IApplication[]> iApplications = onApplication();
-        if (iApplications != null)
-            applicationHook(iApplications.get(lpparam.packageName));
 
         onLoadPackage(lpparam);
     }
@@ -114,33 +95,5 @@ public abstract class HCEntrance implements IXposedHookLoadPackage, IXposedHookZ
         } else
             bridgeTag = "Unknown";
         CoreTool.setStaticField(HCState.class, "mFramework", bridgeTag);
-    }
-
-    private void applicationHook(IApplication[] iApplications) {
-        if (iApplications == null) return;
-
-        CoreTool.hookMethod(Application.class, "attach", Context.class, new IHook() {
-            @Override
-            public void before() {
-                Arrays.stream(iApplications).forEach(iApplication -> {
-                    try {
-                        iApplication.before((Context) getArgs(0));
-                    } catch (Throwable e) {
-                        logE("Application", e);
-                    }
-                });
-            }
-
-            @Override
-            public void after() {
-                Arrays.stream(iApplications).forEach(iApplication -> {
-                    try {
-                        iApplication.after((Context) getArgs(0));
-                    } catch (Throwable e) {
-                        logE("Application", e);
-                    }
-                });
-            }
-        });
     }
 }
