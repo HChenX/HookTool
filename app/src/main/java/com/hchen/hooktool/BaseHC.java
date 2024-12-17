@@ -19,6 +19,7 @@
 package com.hchen.hooktool;
 
 import static com.hchen.hooktool.log.XposedLog.logE;
+import static com.hchen.hooktool.log.XposedLog.logI;
 
 import android.app.Application;
 import android.content.Context;
@@ -228,6 +229,7 @@ public abstract class BaseHC extends CoreTool {
                         logE("Application", "Failed to call iApplication: " + iApplication, e);
                     }
                 });
+                logI("Application", "Application is created! package: " + ((Context) getArgs(0)).getPackageName());
             }
         });
         isFirstHookApplication = false;

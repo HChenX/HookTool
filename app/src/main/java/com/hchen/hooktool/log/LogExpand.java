@@ -103,8 +103,14 @@ public final class LogExpand {
                     break;
                 }
                 tag = className.substring(index + 1, index2);
+                while (tag.lastIndexOf("$") != -1) {
+                    index = tag.lastIndexOf("$");
+                    tag = tag.substring(0, index);
+                }
             }
         }
+        if (tag == null)
+            return "HookTool";
         return tag;
     }
 

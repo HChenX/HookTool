@@ -29,7 +29,9 @@ import static com.hchen.hooktool.tool.CoreTool.setField;
 
 import com.hchen.hooktool.log.LogExpand;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Member;
+import java.lang.reflect.Method;
 
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedBridge;
@@ -197,13 +199,25 @@ public class ParamTool {
         return callMethod(mParam.thisObject, name, objs);
     }
 
+    final public Object callThisMethod(Method method, Object... objs) {
+        return callMethod(mParam.thisObject, method, objs);
+    }
+
     // ----------- 获取/修改 字段 -------------
     final public Object getThisField(String name) {
         return getField(mParam.thisObject, name);
     }
 
+    final public Object getThisField(Field field) {
+        return getField(mParam.thisObject, field);
+    }
+
     final public boolean setThisField(String name, Object value) {
         return setField(mParam.thisObject, name, value);
+    }
+
+    final public boolean setThisField(Field field, Object value) {
+        return setField(mParam.thisObject, field, value);
     }
 
     // ---------- 设置自定义字段 --------------

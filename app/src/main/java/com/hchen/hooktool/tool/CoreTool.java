@@ -21,6 +21,7 @@ package com.hchen.hooktool.tool;
 import static com.hchen.hooktool.helper.TryHelper.run;
 import static com.hchen.hooktool.log.LogExpand.getTag;
 import static com.hchen.hooktool.log.XposedLog.logI;
+import static com.hchen.hooktool.tool.CoreBase.baseCallMethod;
 import static com.hchen.hooktool.tool.CoreBase.baseCallStaticMethod;
 import static com.hchen.hooktool.tool.CoreBase.baseFilterConstructor;
 import static com.hchen.hooktool.tool.CoreBase.baseFilterMethod;
@@ -32,12 +33,14 @@ import static com.hchen.hooktool.tool.CoreBase.baseFindField;
 import static com.hchen.hooktool.tool.CoreBase.baseFindMethod;
 import static com.hchen.hooktool.tool.CoreBase.baseFirstUnhook;
 import static com.hchen.hooktool.tool.CoreBase.baseGetAdditionalStaticField;
+import static com.hchen.hooktool.tool.CoreBase.baseGetField;
 import static com.hchen.hooktool.tool.CoreBase.baseGetStaticField;
 import static com.hchen.hooktool.tool.CoreBase.baseHook;
 import static com.hchen.hooktool.tool.CoreBase.baseHookAll;
 import static com.hchen.hooktool.tool.CoreBase.baseNewInstance;
 import static com.hchen.hooktool.tool.CoreBase.baseRemoveAdditionalStaticField;
 import static com.hchen.hooktool.tool.CoreBase.baseSetAdditionalStaticField;
+import static com.hchen.hooktool.tool.CoreBase.baseSetField;
 import static com.hchen.hooktool.tool.CoreBase.baseSetStaticField;
 
 import com.hchen.hooktool.HCData;
@@ -334,35 +337,27 @@ public class CoreTool {
 
     // ---------- 非静态 -----------
     public static Object callMethod(Object instance, String name, Object... objs) {
-        return run(() -> XposedHelpers.callMethod(instance, name, objs))
-                .orErrMag(null, "Failed to call method!");
+        return baseCallMethod(instance, name, objs);
+    }
+
+    public static Object callMethod(Object instance, Method method, Object... objs) {
+        return baseCallMethod(instance, method, objs);
     }
 
     public static Object getField(Object instance, String name) {
-        return run(() -> XposedHelpers.getObjectField(instance, name))
-                .orErrMag(null, "Failed to get field!");
+        return baseGetField(instance, name);
     }
 
     public static Object getField(Object instance, Field field) {
-        return run(() -> {
-            field.setAccessible(true);
-            return field.get(instance);
-        }).orErrMag(null, "Failed to get field!");
+        return baseGetField(instance, field);
     }
 
     public static boolean setField(Object instance, String name, Object value) {
-        return run(() -> {
-            XposedHelpers.setObjectField(instance, name, value);
-            return true;
-        }).orErrMag(false, "Failed to set field!");
+        return baseSetField(instance, name, value);
     }
 
     public static boolean setField(Object instance, Field field, Object value) {
-        return run(() -> {
-            field.setAccessible(true);
-            field.set(instance, value);
-            return true;
-        }).orErrMag(false, "Failed to set field!");
+        return baseSetField(instance, field, value);
     }
 
     public static Object setAdditionalInstanceField(Object instance, String key, Object value) {
@@ -394,61 +389,51 @@ public class CoreTool {
     }
 
     public static Object callStaticMethod(Class<?> clz, String name, Object... objs) {
-        return baseCallStaticMethod(new SingleMember<>(clz, null), name, objs);
+        return baseCallStaticMethod(new SingleMember<>(clz, null), null, name, objs);
     }
 
     public static Object callStaticMethod(String clz, String name, Object... objs) {
-        return baseCallStaticMethod(findClass(clz), name, objs);
+        return baseCallStaticMethod(findClass(clz), null, name, objs);
     }
 
     public static Object callStaticMethod(String clz, ClassLoader classLoader, String name, Object... objs) {
-        return baseCallStaticMethod(findClass(clz, classLoader), name, objs);
+        return baseCallStaticMethod(findClass(clz, classLoader), null, name, objs);
     }
 
     public static Object callStaticMethod(Method method, Object... objs) {
-        return run(() -> {
-            method.setAccessible(true);
-            return method.invoke(null, objs);
-        }).orErrMag(null, "Failed to call static method!");
+        return baseCallStaticMethod(null, method, null, objs);
     }
 
     public static Object getStaticField(Class<?> clz, String name) {
-        return baseGetStaticField(new SingleMember<>(clz, null), name);
+        return baseGetStaticField(new SingleMember<>(clz, null), null, name);
     }
 
     public static Object getStaticField(String clz, String name) {
-        return baseGetStaticField(findClass(clz), name);
+        return baseGetStaticField(findClass(clz), null, name);
     }
 
     public static Object getStaticField(String clz, ClassLoader classLoader, String name) {
-        return baseGetStaticField(findClass(clz, classLoader), name);
+        return baseGetStaticField(findClass(clz, classLoader), null, name);
     }
 
     public static Object getStaticField(Field field) {
-        return run(() -> {
-            field.setAccessible(true);
-            return field.get(null);
-        }).orErrMag(null, "Failed to get static field!");
+        return baseGetStaticField(null, field, null);
     }
 
     public static boolean setStaticField(Class<?> clz, String name, Object value) {
-        return baseSetStaticField(new SingleMember<>(clz, null), name, value);
+        return baseSetStaticField(new SingleMember<>(clz, null), null, name, value);
     }
 
     public static boolean setStaticField(String clz, String name, Object value) {
-        return baseSetStaticField(findClass(clz), name, value);
+        return baseSetStaticField(findClass(clz), null, name, value);
     }
 
     public static boolean setStaticField(String clz, ClassLoader classLoader, String name, Object value) {
-        return baseSetStaticField(findClass(clz, classLoader), name, value);
+        return baseSetStaticField(findClass(clz, classLoader), null, name, value);
     }
 
     public static boolean setStaticField(Field field, Object value) {
-        return run(() -> {
-            field.setAccessible(true);
-            field.set(null, value);
-            return true;
-        }).orErrMag(false, "Failed to set static field!");
+        return baseSetStaticField(null, field, null, value);
     }
 
     public static Object setAdditionalStaticField(Class<?> clz, String key, Object value) {
