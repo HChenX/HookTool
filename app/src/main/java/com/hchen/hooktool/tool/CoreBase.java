@@ -43,6 +43,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -55,7 +56,7 @@ import de.robv.android.xposed.XposedHelpers;
  *
  * @author 焕晨HChen
  */
-public final class CoreBase {
+final class CoreBase {
     private CoreBase() {
     }
 
@@ -78,7 +79,7 @@ public final class CoreBase {
                 new SingleMember<>(null));
     }
 
-    static ArrayList<Method> baseFindAllMethod(SingleMember<Class<?>> clazz, String name) {
+    static List<Method> baseFindAllMethod(SingleMember<Class<?>> clazz, String name) {
         return clazz.reportOrRun(member ->
                         createSingleMember(
                                 () -> Arrays.stream(member.getDeclaredMethods())
@@ -97,7 +98,7 @@ public final class CoreBase {
                 new SingleMember<>(null));
     }
 
-    static ArrayList<Constructor<?>> baseFindAllConstructor(SingleMember<Class<?>> clazz) {
+    static List<Constructor<?>> baseFindAllConstructor(SingleMember<Class<?>> clazz) {
         return clazz.reportOrRun(member ->
                         createSingleMember(
                                 () -> new ArrayList<>(Arrays.asList(member.getDeclaredConstructors()))
@@ -145,7 +146,11 @@ public final class CoreBase {
         }).orErrMag(null, "Failed to hook! \ndebug: " + debug);
     }
 
-    static ArrayList<XC_MethodHook.Unhook> baseHookAll(Member[] members, IHook iHook) {
+    static <T extends Member> List<XC_MethodHook.Unhook> baseHookAll(List<T> members, IHook iHook) {
+        return baseHookAll(members.toArray(new Member[0]), iHook);
+    }
+
+    static List<XC_MethodHook.Unhook> baseHookAll(Member[] members, IHook iHook) {
         if (members == null) return new ArrayList<>();
         String tag = getTag();
 
@@ -161,12 +166,12 @@ public final class CoreBase {
                 .collect(Collectors.toCollection(ArrayList::new));
     }
 
-    static XC_MethodHook.Unhook baseFirstUnhook(ArrayList<XC_MethodHook.Unhook> unhooks) {
+    static XC_MethodHook.Unhook baseFirstUnhook(List<XC_MethodHook.Unhook> unhooks) {
         if (unhooks.isEmpty()) return null;
         return unhooks.get(0);
     }
 
-    static ArrayList<Method> baseFilterMethod(SingleMember<Class<?>> clazz, IMemberFilter<Method> iMemberFilter) {
+    static List<Method> baseFilterMethod(SingleMember<Class<?>> clazz, IMemberFilter<Method> iMemberFilter) {
         return clazz.reportOrRun(member ->
                         createSingleMember(
                                 () -> Arrays.stream(member.getDeclaredMethods())
@@ -177,7 +182,7 @@ public final class CoreBase {
                 new ArrayList<>());
     }
 
-    static ArrayList<Constructor<?>> baseFilterConstructor(SingleMember<Class<?>> clazz, IMemberFilter<Constructor<?>> iMemberFilter) {
+    static List<Constructor<?>> baseFilterConstructor(SingleMember<Class<?>> clazz, IMemberFilter<Constructor<?>> iMemberFilter) {
         return clazz.reportOrRun(member ->
                         createSingleMember(
                                 () -> Arrays.stream(member.getDeclaredConstructors())

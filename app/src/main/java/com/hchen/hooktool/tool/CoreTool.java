@@ -54,8 +54,8 @@ import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedBridge;
@@ -128,15 +128,15 @@ public class CoreTool {
         return baseFindMethod(new SingleMember<>(clazz, null), name, objs);
     }
 
-    public static ArrayList<Method> findAllMethod(String clazz, String name) {
+    public static List<Method> findAllMethod(String clazz, String name) {
         return baseFindAllMethod(findClass(clazz), name);
     }
 
-    public static ArrayList<Method> findAllMethod(String clazz, ClassLoader classLoader, String name) {
+    public static List<Method> findAllMethod(String clazz, ClassLoader classLoader, String name) {
         return baseFindAllMethod(findClass(clazz, classLoader), name);
     }
 
-    public static ArrayList<Method> findAllMethod(Class<?> clazz, String name) {
+    public static List<Method> findAllMethod(Class<?> clazz, String name) {
         return baseFindAllMethod(new SingleMember<>(clazz, null), name);
     }
 
@@ -167,15 +167,15 @@ public class CoreTool {
         return baseFindConstructor(new SingleMember<>(clazz, null), objs);
     }
 
-    public static ArrayList<Constructor<?>> findAllConstructor(String clazz) {
+    public static List<Constructor<?>> findAllConstructor(String clazz) {
         return baseFindAllConstructor(findClass(clazz));
     }
 
-    public static ArrayList<Constructor<?>> findAllConstructor(String clazz, ClassLoader classLoader) {
+    public static List<Constructor<?>> findAllConstructor(String clazz, ClassLoader classLoader) {
         return baseFindAllConstructor(findClass(clazz, classLoader));
     }
 
-    public static ArrayList<Constructor<?>> findAllConstructor(Class<?> clazz) {
+    public static List<Constructor<?>> findAllConstructor(Class<?> clazz) {
         return baseFindAllConstructor(new SingleMember<>(clazz, null));
     }
 
@@ -220,16 +220,16 @@ public class CoreTool {
         return baseHook(new SingleMember<>(clazz, null), method, params);
     }
 
-    public static ArrayList<XC_MethodHook.Unhook> hookAllMethod(String clazz, String method, IHook iHook) {
-        return hookAll(findAllMethod(clazz, method), iHook);
+    public static List<XC_MethodHook.Unhook> hookAllMethod(String clazz, String method, IHook iHook) {
+        return baseHookAll(findAllMethod(clazz, method), iHook);
     }
 
-    public static ArrayList<XC_MethodHook.Unhook> hookAllMethod(String clazz, ClassLoader classLoader, String method, IHook iHook) {
-        return hookAll(findAllMethod(clazz, classLoader, method), iHook);
+    public static List<XC_MethodHook.Unhook> hookAllMethod(String clazz, ClassLoader classLoader, String method, IHook iHook) {
+        return baseHookAll(findAllMethod(clazz, classLoader, method), iHook);
     }
 
-    public static ArrayList<XC_MethodHook.Unhook> hookAllMethod(Class<?> clazz, String method, IHook iHook) {
-        return hookAll(findAllMethod(clazz, method), iHook);
+    public static List<XC_MethodHook.Unhook> hookAllMethod(Class<?> clazz, String method, IHook iHook) {
+        return baseHookAll(findAllMethod(clazz, method), iHook);
     }
 
     // --------- 构造函数 ------------
@@ -245,24 +245,24 @@ public class CoreTool {
         return baseHook(new SingleMember<>(clazz, null), null, params);
     }
 
-    public static ArrayList<XC_MethodHook.Unhook> hookAllConstructor(String clazz, IHook iHook) {
-        return hookAll(findAllConstructor(clazz), iHook);
+    public static List<XC_MethodHook.Unhook> hookAllConstructor(String clazz, IHook iHook) {
+        return baseHookAll(findAllConstructor(clazz), iHook);
     }
 
-    public static ArrayList<XC_MethodHook.Unhook> hookAllConstructor(String clazz, ClassLoader classLoader, IHook iHook) {
-        return hookAll(findAllConstructor(clazz, classLoader), iHook);
+    public static List<XC_MethodHook.Unhook> hookAllConstructor(String clazz, ClassLoader classLoader, IHook iHook) {
+        return baseHookAll(findAllConstructor(clazz, classLoader), iHook);
     }
 
-    public static ArrayList<XC_MethodHook.Unhook> hookAllConstructor(Class<?> clazz, IHook iHook) {
-        return hookAll(findAllConstructor(clazz), iHook);
+    public static List<XC_MethodHook.Unhook> hookAllConstructor(Class<?> clazz, IHook iHook) {
+        return baseHookAll(findAllConstructor(clazz), iHook);
     }
 
     public static XC_MethodHook.Unhook hook(Member member, IHook iHook) {
         return baseFirstUnhook(baseHookAll(new Member[]{member}, iHook));
     }
 
-    public static <T extends Member> ArrayList<XC_MethodHook.Unhook> hookAll(ArrayList<T> members, IHook iHook) {
-        return baseHookAll(members.toArray(new Member[0]), iHook);
+    public static <T extends Member> List<XC_MethodHook.Unhook> hookAll(T[] members, IHook iHook) {
+        return baseHookAll(members, iHook);
     }
 
     // --------- 快捷方法 -----------
@@ -290,27 +290,27 @@ public class CoreTool {
     }
 
     // --------- 过滤方法 -----------
-    public static ArrayList<Method> filterMethod(String clazz, IMemberFilter<Method> iMemberFilter) {
+    public static List<Method> filterMethod(String clazz, IMemberFilter<Method> iMemberFilter) {
         return baseFilterMethod(findClass(clazz), iMemberFilter);
     }
 
-    public static ArrayList<Method> filterMethod(String clazz, ClassLoader classLoader, IMemberFilter<Method> iMemberFilter) {
+    public static List<Method> filterMethod(String clazz, ClassLoader classLoader, IMemberFilter<Method> iMemberFilter) {
         return baseFilterMethod(findClass(clazz, classLoader), iMemberFilter);
     }
 
-    public static ArrayList<Method> filterMethod(Class<?> clazz, IMemberFilter<Method> iMemberFilter) {
+    public static List<Method> filterMethod(Class<?> clazz, IMemberFilter<Method> iMemberFilter) {
         return baseFilterMethod(new SingleMember<>(clazz, null), iMemberFilter);
     }
 
-    public static ArrayList<Constructor<?>> filterConstructor(String clazz, IMemberFilter<Constructor<?>> iMemberFilter) {
+    public static List<Constructor<?>> filterConstructor(String clazz, IMemberFilter<Constructor<?>> iMemberFilter) {
         return baseFilterConstructor(findClass(clazz), iMemberFilter);
     }
 
-    public static ArrayList<Constructor<?>> filterConstructor(String clazz, ClassLoader classLoader, IMemberFilter<Constructor<?>> iMemberFilter) {
+    public static List<Constructor<?>> filterConstructor(String clazz, ClassLoader classLoader, IMemberFilter<Constructor<?>> iMemberFilter) {
         return baseFilterConstructor(findClass(clazz, classLoader), iMemberFilter);
     }
 
-    public static ArrayList<Constructor<?>> filterConstructor(Class<?> clazz, IMemberFilter<Constructor<?>> iMemberFilter) {
+    public static List<Constructor<?>> filterConstructor(Class<?> clazz, IMemberFilter<Constructor<?>> iMemberFilter) {
         return baseFilterConstructor(new SingleMember<>(clazz, null), iMemberFilter);
     }
 

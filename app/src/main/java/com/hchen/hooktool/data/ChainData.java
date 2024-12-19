@@ -22,6 +22,7 @@ import com.hchen.hooktool.hook.IHook;
 
 import java.lang.reflect.Member;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 链式调用数据
@@ -29,14 +30,14 @@ import java.util.ArrayList;
  * @author 焕晨HChen
  */
 public final class ChainData {
-    public ArrayList<ChainData> members = new ArrayList<>(); /* 目标成员组 */
+    public List<ChainData> members = new ArrayList<>(); /* 目标成员组 */
     public Member member; /* 查找到的成员 */
     public IHook iHook; /* hook 动作 */
     public HookState hookState; /* 状态 */
     public String UUID = "UNKNOWN"; /* 唯一标识符 */
 
     // 数据存储
-    public ChainData(ArrayList<ChainData> members, IHook iHook, HookState hookState, String uuid) {
+    public ChainData(List<ChainData> members, IHook iHook, HookState hookState, String uuid) {
         this.members = members;
         this.iHook = iHook;
         this.hookState = hookState;

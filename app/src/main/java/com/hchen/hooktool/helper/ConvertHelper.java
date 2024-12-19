@@ -29,6 +29,7 @@ import com.hchen.hooktool.hook.IHook;
 import com.hchen.hooktool.log.LogExpand;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 快捷转换
@@ -56,7 +57,7 @@ public final class ConvertHelper {
     public static Class<?>[] arrayToClass(ClassLoader classLoader, Object... objs) {
         if (classLoader == null || objs == null) return null;
         if (objs.length == 0) return new Class<?>[]{};
-        ArrayList<Class<?>> classes = new ArrayList<>();
+        List<Class<?>> classes = new ArrayList<>();
         for (Object o : objs) {
             if (o instanceof Class<?> c) {
                 classes.add(c);

@@ -43,6 +43,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.ListIterator;
 import java.util.stream.Collectors;
 
@@ -56,8 +57,8 @@ import de.robv.android.xposed.XposedBridge;
 public final class ChainTool {
     private final ChainHook chainHook; // 创建 hook
     private ChainData cacheData;
-    private final ArrayList<ChainData> chainDataList = new ArrayList<>(); // 链式数据
-    private final ArrayList<ChainData> cacheDataList = new ArrayList<>(); // 暂时的缓存数据
+    private final List<ChainData> chainDataList = new ArrayList<>(); // 链式数据
+    private final List<ChainData> cacheDataList = new ArrayList<>(); // 暂时的缓存数据
     private final HashSet<Member> existingMembers = new HashSet<>();
 
     public ChainTool() {
@@ -129,7 +130,7 @@ public final class ChainTool {
             return;
         }
 
-        ArrayList<ChainData> members = new ArrayList<>();
+        List<ChainData> members = new ArrayList<>();
         for (ChainData cacheData : cacheDataList) {
             String UUID = cacheData.mType + "#" + clazz.getName() + "#" + cacheData.mName + "#" + Arrays.toString(cacheData.mParams);
             switch (cacheData.mType) {
@@ -180,7 +181,7 @@ public final class ChainTool {
 
     // 太复杂啦，我也迷糊了 >.<
     public void doChainHook() {
-        ArrayList<ChainData> chainDataList = this.chainDataList;
+        List<ChainData> chainDataList = this.chainDataList;
 
         ListIterator<ChainData> iterator = chainDataList.listIterator();
         while (iterator.hasNext()) {

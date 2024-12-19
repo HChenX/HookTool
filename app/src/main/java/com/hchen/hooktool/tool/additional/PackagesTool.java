@@ -151,7 +151,7 @@ public final class PackagesTool {
     /**
      * 通过自定义代码获取 Package 信息，
      * 支持: PackageInfo, ResolveInfo, ActivityInfo, ApplicationInfo, ProviderInfo. 类型的返回值.
-     * 返回使用 return new ArrayList<>(XX); 包裹。
+     * 返回使用 return new List<>(XX); 包裹。
      *
      * @param iCode 需要执行的代码
      * @return ListAppData 包含各种应用详细信息

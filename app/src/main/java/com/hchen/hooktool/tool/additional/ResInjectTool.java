@@ -48,6 +48,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -199,9 +200,9 @@ public final class ResInjectTool {
         return true;
     }
 
-    private static final ArrayList<Resources> resourcesArrayList = new ArrayList<>();
+    private static final List<Resources> resourcesArrayList = new ArrayList<>();
     private static final ConcurrentHashMap<Integer, Boolean> resMap = new ConcurrentHashMap<>();
-    private static final ArrayList<XC_MethodHook.Unhook> unhooks = new ArrayList<>();
+    private static final List<XC_MethodHook.Unhook> unhooks = new ArrayList<>();
     private static final ConcurrentHashMap<String, Pair<ReplacementType, Object>> replacements = new ConcurrentHashMap<>();
 
     private static boolean hooked;
