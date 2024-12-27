@@ -24,13 +24,11 @@ import static com.hchen.hooktool.helper.TryHelper.run;
 import static com.hchen.hooktool.hook.HookFactory.createHook;
 import static com.hchen.hooktool.log.LogExpand.getStackTrace;
 import static com.hchen.hooktool.log.LogExpand.getTag;
-import static com.hchen.hooktool.log.XposedLog.logD;
 import static com.hchen.hooktool.log.XposedLog.logE;
+import static com.hchen.hooktool.log.XposedLog.logI;
 import static com.hchen.hooktool.log.XposedLog.logW;
 import static com.hchen.hooktool.tool.CoreTool.findConstructor;
 import static com.hchen.hooktool.tool.CoreTool.findMethod;
-
-import androidx.annotation.Nullable;
 
 import com.hchen.hooktool.helper.TryHelper;
 import com.hchen.hooktool.hook.IHook;
@@ -42,7 +40,6 @@ import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -61,14 +58,9 @@ final class CoreBase {
     }
 
     static SingleMember<Class<?>> baseFindClass(String name, ClassLoader classLoader) {
-        return TryHelper.<Class<?>>createSingleMember(() -> {
-            Class<?> clazz = MemberCache.readClassCache(name, classLoader);
-            if (clazz == null) {
-                clazz = XposedHelpers.findClass(name, classLoader);
-                MemberCache.writeClassCache(clazz);
-            }
-            return clazz;
-        }).setErrMsg("Failed to find class!");
+        return TryHelper.<Class<?>>createSingleMember(() ->
+                XposedHelpers.findClass(name, classLoader)
+        ).setErrMsg("Failed to find class!");
     }
 
     static SingleMember<Method> baseFindMethod(SingleMember<Class<?>> clazz, String name, Object... objs) {
@@ -141,7 +133,7 @@ final class CoreBase {
 
         return run(() -> {
             XC_MethodHook.Unhook unHook = XposedBridge.hookMethod(((SingleMember<Member>) member).getNoReport(), createHook(tag, iHook));
-            logD(tag, "Success to hook: " + member.getNoReport());
+            logI(tag, "Success to hook: " + member.getNoReport());
             return unHook;
         }).orErrMag(null, "Failed to hook! \ndebug: " + debug);
     }
@@ -157,7 +149,7 @@ final class CoreBase {
         return Arrays.stream(members).map(member ->
                         run(() -> {
                                     XC_MethodHook.Unhook unhook = XposedBridge.hookMethod(member, createHook(tag, iHook));
-                                    logD(tag, "Success to hook: " + member);
+                            logI(tag, "Success to hook: " + member);
                                     return unhook;
                                 }
                         ).orErrMag(null, "Failed to hook: " + member)
@@ -316,31 +308,5 @@ final class CoreBase {
                         ).setErrMsg("Failed to remove static additional instance!")
                                 .or(null),
                 null);
-    }
-
-    private final static class MemberCache {
-        private static final HashMap<String, Class<?>> mClassMap = new HashMap<>();
-
-        public static void writeClassCache(Class<?> clazz) {
-            if (clazz != null) {
-                ClassLoader classLoader = clazz.getClassLoader();
-                if (classLoader == null) classLoader = CoreTool.systemClassLoader;
-                String clazzId = classLoader + "#" + classLoader.hashCode() + "#" + clazz.getName();
-                mClassMap.put(clazzId, clazz);
-            }
-        }
-
-        @Nullable
-        public static Class<?> readClassCache(String name, ClassLoader classLoader) {
-            if (classLoader == null) classLoader = CoreTool.systemClassLoader;
-            String clazzId = classLoader + "#" + classLoader.hashCode() + "#" + name;
-            Class<?> cache = mClassMap.get(clazzId);
-            if (cache == null) {
-                classLoader = classLoader.getParent();
-                clazzId = classLoader + "#" + classLoader.hashCode() + "#" + name;
-                cache = mClassMap.get(clazzId);
-            }
-            return cache;
-        }
     }
 }
