@@ -61,7 +61,6 @@ tasks.register('androidSourcesJar', Jar) {
 
 dependencies {
     compileOnly libs.xposed
-    compileOnly libs.commons.lang3
     implementation libs.annotation
     // implementation 'org.apache.commons:commons-lang3:3.14.0'
 }

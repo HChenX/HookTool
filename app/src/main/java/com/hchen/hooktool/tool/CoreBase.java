@@ -36,13 +36,12 @@ import com.hchen.hooktool.helper.TryHelper;
 import com.hchen.hooktool.hook.IHook;
 import com.hchen.hooktool.tool.itool.IMemberFilter;
 
-import org.apache.commons.lang3.ClassUtils;
-
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 
@@ -326,10 +325,11 @@ final class CoreBase {
             Method method = null;
             Class<?> clazz = clz;
             Class<?>[] params = arrayToClass(clazz.getClassLoader(), objs);
+            HashSet<Class<?>> paramsSet = new HashSet<>(Arrays.asList(params));
             superWhile:
             do {
                 for (Method m : clazz.getDeclaredMethods()) {
-                    if (m.getName().equals(name) && ClassUtils.isAssignable(params, m.getParameterTypes(), true)) {
+                    if (m.getName().equals(name) && paramsSet.containsAll(Arrays.asList(m.getParameterTypes()))) {
                         method = m;
                         break superWhile;
                     }
