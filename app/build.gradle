@@ -3,8 +3,8 @@ plugins {
     id 'maven-publish'
 }
 
-def defVersion = 'v.1.1.4'
-int defVersionCode = 2024122800
+def defVersion = 'v.1.1.5'
+int defVersionCode = 2025010300
 
 group = 'com.github.HChenX'
 version = defVersion
@@ -61,6 +61,7 @@ tasks.register('androidSourcesJar', Jar) {
 
 dependencies {
     compileOnly libs.xposed
+    compileOnly libs.commons.lang3
     implementation libs.annotation
     // implementation 'org.apache.commons:commons-lang3:3.14.0'
 }

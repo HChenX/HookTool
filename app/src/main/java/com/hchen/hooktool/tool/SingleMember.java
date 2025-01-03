@@ -62,22 +62,6 @@ public final class SingleMember<T> {
         return mMember;
     }
 
-    <R> R reportOrRun(Run<T> run) {
-        return reportOrRun(run, null);
-    }
-
-    <R> R reportOrRun(Run<T> run, R def) {
-        if (mThrowable != null) {
-            report();
-            return def;
-        }
-        return (R) run.run(mMember);
-    }
-
-    interface Run<T> {
-        Object run(T member);
-    }
-
     @Nullable
     public Throwable getThrowable() {
         return mThrowable;
@@ -99,5 +83,21 @@ public final class SingleMember<T> {
     private void report() {
         if (mThrowable != null)
             logE(LogExpand.getTag(), mMsg, mThrowable);
+    }
+
+    <R> R reportOrRun(Run<T> run) {
+        return reportOrRun(run, null);
+    }
+
+    <R> R reportOrRun(Run<T> run, R def) {
+        if (mThrowable != null) {
+            report();
+            return def;
+        }
+        return (R) run.run(mMember);
+    }
+
+    interface Run<T> {
+        Object run(T member);
     }
 }

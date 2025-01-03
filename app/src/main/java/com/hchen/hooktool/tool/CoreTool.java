@@ -23,6 +23,8 @@ import static com.hchen.hooktool.log.LogExpand.getTag;
 import static com.hchen.hooktool.log.XposedLog.logI;
 import static com.hchen.hooktool.tool.CoreBase.baseCallMethod;
 import static com.hchen.hooktool.tool.CoreBase.baseCallStaticMethod;
+import static com.hchen.hooktool.tool.CoreBase.baseCallSuperPrivateMethod;
+import static com.hchen.hooktool.tool.CoreBase.baseCallSuperStaticPrivateMethod;
 import static com.hchen.hooktool.tool.CoreBase.baseFilterConstructor;
 import static com.hchen.hooktool.tool.CoreBase.baseFilterMethod;
 import static com.hchen.hooktool.tool.CoreBase.baseFindAllConstructor;
@@ -55,7 +57,6 @@ import java.lang.reflect.Method;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
-import java.util.List;
 
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedBridge;
@@ -128,15 +129,15 @@ public class CoreTool {
         return baseFindMethod(new SingleMember<>(clazz, null), name, objs);
     }
 
-    public static List<Method> findAllMethod(String clazz, String name) {
+    public static Method[] findAllMethod(String clazz, String name) {
         return baseFindAllMethod(findClass(clazz), name);
     }
 
-    public static List<Method> findAllMethod(String clazz, ClassLoader classLoader, String name) {
+    public static Method[] findAllMethod(String clazz, ClassLoader classLoader, String name) {
         return baseFindAllMethod(findClass(clazz, classLoader), name);
     }
 
-    public static List<Method> findAllMethod(Class<?> clazz, String name) {
+    public static Method[] findAllMethod(Class<?> clazz, String name) {
         return baseFindAllMethod(new SingleMember<>(clazz, null), name);
     }
 
@@ -167,15 +168,15 @@ public class CoreTool {
         return baseFindConstructor(new SingleMember<>(clazz, null), objs);
     }
 
-    public static List<Constructor<?>> findAllConstructor(String clazz) {
+    public static Constructor<?>[] findAllConstructor(String clazz) {
         return baseFindAllConstructor(findClass(clazz));
     }
 
-    public static List<Constructor<?>> findAllConstructor(String clazz, ClassLoader classLoader) {
+    public static Constructor<?>[] findAllConstructor(String clazz, ClassLoader classLoader) {
         return baseFindAllConstructor(findClass(clazz, classLoader));
     }
 
-    public static List<Constructor<?>> findAllConstructor(Class<?> clazz) {
+    public static Constructor<?>[] findAllConstructor(Class<?> clazz) {
         return baseFindAllConstructor(new SingleMember<>(clazz, null));
     }
 
@@ -220,15 +221,15 @@ public class CoreTool {
         return baseHook(new SingleMember<>(clazz, null), method, params);
     }
 
-    public static List<XC_MethodHook.Unhook> hookAllMethod(String clazz, String method, IHook iHook) {
+    public static XC_MethodHook.Unhook[] hookAllMethod(String clazz, String method, IHook iHook) {
         return baseHookAll(findAllMethod(clazz, method), iHook);
     }
 
-    public static List<XC_MethodHook.Unhook> hookAllMethod(String clazz, ClassLoader classLoader, String method, IHook iHook) {
+    public static XC_MethodHook.Unhook[] hookAllMethod(String clazz, ClassLoader classLoader, String method, IHook iHook) {
         return baseHookAll(findAllMethod(clazz, classLoader, method), iHook);
     }
 
-    public static List<XC_MethodHook.Unhook> hookAllMethod(Class<?> clazz, String method, IHook iHook) {
+    public static XC_MethodHook.Unhook[] hookAllMethod(Class<?> clazz, String method, IHook iHook) {
         return baseHookAll(findAllMethod(clazz, method), iHook);
     }
 
@@ -245,23 +246,24 @@ public class CoreTool {
         return baseHook(new SingleMember<>(clazz, null), null, params);
     }
 
-    public static List<XC_MethodHook.Unhook> hookAllConstructor(String clazz, IHook iHook) {
+    public static XC_MethodHook.Unhook[] hookAllConstructor(String clazz, IHook iHook) {
         return baseHookAll(findAllConstructor(clazz), iHook);
     }
 
-    public static List<XC_MethodHook.Unhook> hookAllConstructor(String clazz, ClassLoader classLoader, IHook iHook) {
+    public static XC_MethodHook.Unhook[] hookAllConstructor(String clazz, ClassLoader classLoader, IHook iHook) {
         return baseHookAll(findAllConstructor(clazz, classLoader), iHook);
     }
 
-    public static List<XC_MethodHook.Unhook> hookAllConstructor(Class<?> clazz, IHook iHook) {
+    public static XC_MethodHook.Unhook[] hookAllConstructor(Class<?> clazz, IHook iHook) {
         return baseHookAll(findAllConstructor(clazz), iHook);
     }
 
+    // --------------- Member -----------
     public static XC_MethodHook.Unhook hook(Member member, IHook iHook) {
         return baseFirstUnhook(baseHookAll(new Member[]{member}, iHook));
     }
 
-    public static <T extends Member> List<XC_MethodHook.Unhook> hookAll(T[] members, IHook iHook) {
+    public static <T extends Member> XC_MethodHook.Unhook[] hookAll(T[] members, IHook iHook) {
         return baseHookAll(members, iHook);
     }
 
@@ -290,27 +292,27 @@ public class CoreTool {
     }
 
     // --------- 过滤方法 -----------
-    public static List<Method> filterMethod(String clazz, IMemberFilter<Method> iMemberFilter) {
+    public static Method[] filterMethod(String clazz, IMemberFilter<Method> iMemberFilter) {
         return baseFilterMethod(findClass(clazz), iMemberFilter);
     }
 
-    public static List<Method> filterMethod(String clazz, ClassLoader classLoader, IMemberFilter<Method> iMemberFilter) {
+    public static Method[] filterMethod(String clazz, ClassLoader classLoader, IMemberFilter<Method> iMemberFilter) {
         return baseFilterMethod(findClass(clazz, classLoader), iMemberFilter);
     }
 
-    public static List<Method> filterMethod(Class<?> clazz, IMemberFilter<Method> iMemberFilter) {
+    public static Method[] filterMethod(Class<?> clazz, IMemberFilter<Method> iMemberFilter) {
         return baseFilterMethod(new SingleMember<>(clazz, null), iMemberFilter);
     }
 
-    public static List<Constructor<?>> filterConstructor(String clazz, IMemberFilter<Constructor<?>> iMemberFilter) {
+    public static Constructor<?>[] filterConstructor(String clazz, IMemberFilter<Constructor<?>> iMemberFilter) {
         return baseFilterConstructor(findClass(clazz), iMemberFilter);
     }
 
-    public static List<Constructor<?>> filterConstructor(String clazz, ClassLoader classLoader, IMemberFilter<Constructor<?>> iMemberFilter) {
+    public static Constructor<?>[] filterConstructor(String clazz, ClassLoader classLoader, IMemberFilter<Constructor<?>> iMemberFilter) {
         return baseFilterConstructor(findClass(clazz, classLoader), iMemberFilter);
     }
 
-    public static List<Constructor<?>> filterConstructor(Class<?> clazz, IMemberFilter<Constructor<?>> iMemberFilter) {
+    public static Constructor<?>[] filterConstructor(Class<?> clazz, IMemberFilter<Constructor<?>> iMemberFilter) {
         return baseFilterConstructor(new SingleMember<>(clazz, null), iMemberFilter);
     }
 
@@ -342,6 +344,10 @@ public class CoreTool {
 
     public static Object callMethod(Object instance, Method method, Object... objs) {
         return baseCallMethod(instance, method, objs);
+    }
+
+    public static Object callSuperPrivateMethod(Object instance, String name, Object... objs) {
+        return baseCallSuperPrivateMethod(instance, name, objs);
     }
 
     public static Object getField(Object instance, String name) {
@@ -402,6 +408,18 @@ public class CoreTool {
 
     public static Object callStaticMethod(Method method, Object... objs) {
         return baseCallStaticMethod(null, method, null, objs);
+    }
+
+    public static Object callSuperStaticPrivateMethod(String clz, String name, Object... objs) {
+        return baseCallSuperStaticPrivateMethod(findClass(clz), name, objs);
+    }
+
+    public static Object callSuperStaticPrivateMethod(String clz, ClassLoader classLoader, String name, Object... objs) {
+        return baseCallSuperStaticPrivateMethod(findClass(clz, classLoader), name, objs);
+    }
+
+    public static Object callSuperStaticPrivateMethod(Class<?> clz, String name, Object... objs) {
+        return baseCallSuperStaticPrivateMethod(new SingleMember<>(clz, null), name, objs);
     }
 
     public static Object getStaticField(Class<?> clz, String name) {

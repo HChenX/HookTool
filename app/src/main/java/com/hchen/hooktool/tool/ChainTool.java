@@ -145,10 +145,10 @@ public final class ChainTool {
                     members.add(new ChainData(findConstructor(clazz, cacheData.mParams).get()));
                 }
                 case TYPE_ANY_METHOD ->
-                        members.addAll(CoreTool.findAllMethod(clazz, cacheData.mName).stream().map(
+                        members.addAll(Arrays.stream(CoreTool.findAllMethod(clazz, cacheData.mName)).map(
                                 ChainData::new).collect(Collectors.toCollection(ArrayList::new)));
                 case TYPE_ANY_CONSTRUCTOR ->
-                        members.addAll(CoreTool.findAllConstructor(clazz).stream().map(
+                        members.addAll(Arrays.stream(CoreTool.findAllConstructor(clazz)).map(
                                 ChainData::new).collect(Collectors.toCollection(ArrayList::new)));
                 default -> {
                     logW(getTag(), "Unknown type: " + cacheData.mType + getStackTrace());
