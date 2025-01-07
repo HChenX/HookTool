@@ -14,14 +14,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
 
- * Copyright (C) 2023-2024 HookTool Contributions
+ * Copyright (C) 2023-2024 HChenX
  */
 package com.hchen.hooktool.tool.itool;
 
 import android.content.pm.PackageManager;
 import android.os.Parcelable;
-
-import java.util.List;
 
 /**
  * 软件包工具接口
@@ -29,5 +27,5 @@ import java.util.List;
  * @author 焕晨HChen
  */
 public interface IPackageInfoGetter {
-    List<Parcelable> packageInfoGetter(PackageManager pm);
+    Parcelable[] packageInfoGetter(PackageManager pm) throws PackageManager.NameNotFoundException;
 }

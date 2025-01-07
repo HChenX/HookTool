@@ -14,10 +14,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
 
- * Copyright (C) 2023-2024 HookTool Contributions
+ * Copyright (C) 2023-2024 HChenX
  */
 package com.hchen.hooktool.tool.additional;
 
+import static com.hchen.hooktool.log.AndroidLog.logE;
 import static com.hchen.hooktool.log.AndroidLog.logW;
 import static com.hchen.hooktool.log.LogExpand.getStackTrace;
 import static com.hchen.hooktool.log.LogExpand.getTag;
@@ -30,21 +31,15 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ProviderInfo;
 import android.content.pm.ResolveInfo;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.PixelFormat;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
-import android.graphics.drawable.NinePatchDrawable;
 import android.os.Parcelable;
 import android.os.UserHandle;
+
+import androidx.annotation.Nullable;
 
 import com.hchen.hooktool.data.AppData;
 import com.hchen.hooktool.log.AndroidLog;
 import com.hchen.hooktool.tool.itool.IPackageInfoGetter;
 
-import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -55,7 +50,7 @@ import java.util.Optional;
  *
  * @author 焕晨HChen
  */
-public final class PackagesTool {
+public final class PackageTool {
 
     public static boolean isUninstall(String pkg) {
         return isUninstall(getContext(), pkg);
@@ -155,36 +150,61 @@ public final class PackagesTool {
      *
      * @param iCode 需要执行的代码
      * @return ListAppData 包含各种应用详细信息
-     * @see #addAppData(Parcelable, PackageManager)
+     * @see #createAppData(Parcelable, PackageManager)
      */
-    public static List<AppData> getPackagesByCode(Context context, IPackageInfoGetter iCode) {
+    public static AppData[] getPackagesByCode(Context context, IPackageInfoGetter iCode) {
         List<AppData> appDataList = new ArrayList<>();
         if (context == null) {
             logW(getTag(), "Context is null, can't get packages by code!" + getStackTrace());
-            return appDataList;
+            return new AppData[0];
         }
         PackageManager packageManager = context.getPackageManager();
-        List<Parcelable> parcelables = iCode.packageInfoGetter(packageManager);
+        Parcelable[] parcelables;
+        try {
+            parcelables = iCode.packageInfoGetter(packageManager);
+        } catch (PackageManager.NameNotFoundException e) {
+            logE(getTag(), e);
+            return new AppData[0];
+        }
         if (parcelables != null) {
             for (Parcelable parcelable : parcelables) {
                 try {
-                    appDataList.add(addAppData(parcelable, packageManager));
+                    appDataList.add(createAppData(parcelable, packageManager));
                 } catch (Throwable e) {
                     AndroidLog.logE(getTag(), e);
                 }
             }
         }
-        return appDataList;
+        return appDataList.toArray(new AppData[0]);
     }
 
-    public static List<AppData> getPackagesByCode(IPackageInfoGetter iCode) {
+    public static AppData[] getPackagesByCode(IPackageInfoGetter iCode) {
         return getPackagesByCode(getContext(), iCode);
     }
 
-    private static AppData addAppData(Parcelable parcelable, PackageManager pm) {
+    /**
+     * 获取指定包名的 APP 信息。
+     */
+    @Nullable
+    public static AppData getTargetPackage(Context context, String packageName) {
+        PackageManager packageManager = context.getPackageManager();
+        try {
+            return createAppData(packageManager.getPackageInfo(packageName, PackageManager.GET_ACTIVITIES), packageManager);
+        } catch (PackageManager.NameNotFoundException e) {
+            logE(getTag(), e);
+            return null;
+        }
+    }
+
+    @Nullable
+    public static AppData getTargetPackage(String packageName) {
+        return getTargetPackage(getContext(), packageName);
+    }
+
+    private static AppData createAppData(Parcelable parcelable, PackageManager pm) {
         AppData appData = new AppData();
         if (parcelable instanceof PackageInfo packageInfo) {
-            appData.icon = BitmapTool.drawableToBitmap(packageInfo.applicationInfo.loadIcon(pm));
+            appData.icon = packageInfo.applicationInfo.loadIcon(pm);
             appData.label = packageInfo.applicationInfo.loadLabel(pm).toString();
             appData.packageName = packageInfo.applicationInfo.packageName;
             appData.versionName = packageInfo.versionName;
@@ -194,7 +214,7 @@ public final class PackagesTool {
             appData.user = getUserId(packageInfo.applicationInfo.uid);
             appData.uid = packageInfo.applicationInfo.uid;
         } else if (parcelable instanceof ResolveInfo resolveInfo) {
-            appData.icon = BitmapTool.drawableToBitmap(aboutResolveInfo(resolveInfo).applicationInfo.loadIcon(pm));
+            appData.icon = aboutResolveInfo(resolveInfo).applicationInfo.loadIcon(pm);
             appData.label = aboutResolveInfo(resolveInfo).applicationInfo.loadLabel(pm).toString();
             appData.packageName = aboutResolveInfo(resolveInfo).applicationInfo.packageName;
             appData.isSystemApp = isSystem(aboutResolveInfo(resolveInfo).applicationInfo);
@@ -202,7 +222,7 @@ public final class PackagesTool {
             appData.user = getUserId(aboutResolveInfo(resolveInfo).applicationInfo.uid);
             appData.uid = aboutResolveInfo(resolveInfo).applicationInfo.uid;
         } else if (parcelable instanceof ActivityInfo activityInfo) {
-            appData.icon = BitmapTool.drawableToBitmap(activityInfo.applicationInfo.loadIcon(pm));
+            appData.icon = activityInfo.applicationInfo.loadIcon(pm);
             appData.label = activityInfo.applicationInfo.loadLabel(pm).toString();
             appData.packageName = activityInfo.applicationInfo.packageName;
             appData.isSystemApp = isSystem(activityInfo.applicationInfo);
@@ -210,7 +230,7 @@ public final class PackagesTool {
             appData.user = getUserId(activityInfo.applicationInfo.uid);
             appData.uid = activityInfo.applicationInfo.uid;
         } else if (parcelable instanceof ApplicationInfo applicationInfo) {
-            appData.icon = BitmapTool.drawableToBitmap(applicationInfo.loadIcon(pm));
+            appData.icon = applicationInfo.loadIcon(pm);
             appData.label = applicationInfo.loadLabel(pm).toString();
             appData.packageName = applicationInfo.packageName;
             appData.isSystemApp = isSystem(applicationInfo);
@@ -218,7 +238,7 @@ public final class PackagesTool {
             appData.user = getUserId(applicationInfo.uid);
             appData.uid = applicationInfo.uid;
         } else if (parcelable instanceof ProviderInfo providerInfo) {
-            appData.icon = BitmapTool.drawableToBitmap(providerInfo.applicationInfo.loadIcon(pm));
+            appData.icon = providerInfo.applicationInfo.loadIcon(pm);
             appData.label = providerInfo.applicationInfo.loadLabel(pm).toString();
             appData.packageName = providerInfo.applicationInfo.packageName;
             appData.isSystemApp = isSystem(providerInfo.applicationInfo);
@@ -238,52 +258,5 @@ public final class PackagesTool {
 
     private static Context getContext() {
         return ContextTool.getContextNoLog(ContextTool.FLAG_ALL);
-    }
-
-    public static class BitmapTool {
-        public static Bitmap drawableToBitmap(Drawable drawable) {
-            int w = drawable.getIntrinsicWidth();
-            int h = drawable.getIntrinsicHeight();
-            Bitmap.Config config = drawable.getOpacity() != PixelFormat.OPAQUE ? Bitmap.Config.ARGB_8888 : Bitmap.Config.RGB_565;
-            Bitmap bitmap = Bitmap.createBitmap(w, h, config);
-            Canvas canvas = new Canvas(bitmap);
-            drawable.setBounds(0, 0, w, h);
-            drawable.draw(canvas);
-            return bitmap;
-        }
-
-        Bitmap drawable2Bitmap(Drawable drawable) {
-            if (drawable instanceof BitmapDrawable) {
-                return ((BitmapDrawable) drawable).getBitmap();
-            } else if (drawable instanceof NinePatchDrawable) {
-                Bitmap bitmap = Bitmap
-                        .createBitmap(
-                                drawable.getIntrinsicWidth(),
-                                drawable.getIntrinsicHeight(),
-                                drawable.getOpacity() != PixelFormat.OPAQUE ? Bitmap.Config.ARGB_8888
-                                        : Bitmap.Config.RGB_565);
-                Canvas canvas = new Canvas(bitmap);
-                drawable.setBounds(0, 0, drawable.getIntrinsicWidth(),
-                        drawable.getIntrinsicHeight());
-                drawable.draw(canvas);
-                return bitmap;
-            } else {
-                return null;
-            }
-        }
-
-        public static byte[] Bitmap2Bytes(Bitmap bm) {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            bm.compress(Bitmap.CompressFormat.PNG, 100, baos);
-            return baos.toByteArray();
-        }
-
-        public static Bitmap Bytes2Bimap(byte[] b) {
-            if (b.length != 0) {
-                return BitmapFactory.decodeByteArray(b, 0, b.length);
-            } else {
-                return null;
-            }
-        }
     }
 }

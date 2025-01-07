@@ -14,11 +14,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
 
- * Copyright (C) 2023-2024 HookTool Contributions
+ * Copyright (C) 2023-2024 HChenX
  */
 package com.hchen.hooktool.data;
 
-import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 
 /**
  * App 数据
@@ -28,7 +28,7 @@ import android.graphics.Bitmap;
 public final class AppData {
     public int user = 0; /* user id */
     public int uid = -1; /* uid */
-    public Bitmap icon; /* 图标 */
+    public Drawable icon; /* 图标 */
     public String label; /* 应用名 */
     public String packageName; /* 包名 */
     public String versionName; /* 版本名 */
