@@ -20,7 +20,6 @@ package com.hchen.hooktool.tool.additional;
 
 import static com.hchen.hooktool.log.AndroidLog.logE;
 import static com.hchen.hooktool.log.LogExpand.getTag;
-import static com.hchen.hooktool.tool.additional.InvokeTool.findClass;
 import static com.hchen.hooktool.tool.additional.InvokeTool.getStaticField;
 import static com.hchen.hooktool.tool.additional.SystemPropTool.getProp;
 
@@ -200,7 +199,7 @@ public class DeviceTool {
         if (!isMoreAndroidVersion(Build.VERSION_CODES.Q)) return false;
         try {
             Object osBrand = InvokeTool.callStaticMethod(
-                    InvokeTool.findClass("com.huawei.system.BuildEx"),
+                    "com.huawei.system.BuildEx",
                     "getOsBrand", new Class[]{});
             return "Harmony".equalsIgnoreCase(String.valueOf(osBrand));
         } catch (Throwable throwable) {
@@ -247,8 +246,7 @@ public class DeviceTool {
      * 是否为国际版小米系统。
      */
     public static boolean isMiuiInternational() {
-        return Boolean.TRUE.equals(getStaticField(
-                findClass("miui.os.Build", null), "IS_INTERNATIONAL_BUILD"));
+        return Boolean.TRUE.equals(getStaticField("miui.os.Build", "IS_INTERNATIONAL_BUILD"));
     }
 
     /**
@@ -275,8 +273,7 @@ public class DeviceTool {
      * 是否是小米平板。
      */
     public static boolean isMiuiPad() {
-        return Boolean.TRUE.equals(getStaticField(
-                findClass("miui.os.Build", null), "IS_TABLET"));
+        return Boolean.TRUE.equals(getStaticField("miui.os.Build", "IS_TABLET"));
     }
 
     private static boolean isPadByProp() {

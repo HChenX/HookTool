@@ -20,6 +20,8 @@ package com.hchen.hooktool;
 
 import android.content.pm.ApplicationInfo;
 
+import androidx.annotation.Nullable;
+
 import de.robv.android.xposed.IXposedHookZygoteInit;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
@@ -32,145 +34,171 @@ public final class HCData {
     private static String mInitTag = "[Unknown]";
     private static String mSpareTag = "Unknown";
     private static int mInitLogLevel = HCInit.LOG_I;
-    private static String mPackageName = null;
-    private static String mProcessName = null;
-    private static String mModulePackageName = null;
-    private static String mModulePath = null;
-    private static String mPrefsName = null;
+    private static String mModulePackageName = "";
+    private static String mPrefsName = "";
     private static String[] mLogExpandPath = null;
     private static boolean isAutoReload = true;
     private static boolean isXposed = false;
-    private static boolean isFirstApplication = false;
-    private static ApplicationInfo mAppInfo = null;
     private static ClassLoader mClassLoader = null;
     private static XC_LoadPackage.LoadPackageParam mLpparam = null;
     private static IXposedHookZygoteInit.StartupParam mStartupParam = null;
 
+    // ---------------------------- Getter -----------------------------------
+
+    /**
+     * 带 [] 的 TAG。
+     * <p>
+     * 例如: [HookTool]
+     */
     public static String getInitTag() {
         return mInitTag;
     }
 
-    static void setInitTag(String mInitTag) {
-        HCData.mInitTag = mInitTag;
-    }
-
+    /**
+     * 原始的 TAG。
+     */
     public static String getSpareTag() {
         return mSpareTag;
+    }
+
+    /**
+     * 获取日志等级。
+     */
+    public static int getInitLogLevel() {
+        return mInitLogLevel;
+    }
+
+    /**
+     * 获取模块的包名。
+     */
+    public static String getModulePackageName() {
+        return mModulePackageName;
+    }
+
+    /**
+     * 获取自定义的 prefs 名。
+     */
+    public static String getPrefsName() {
+        return mPrefsName;
+    }
+
+    /**
+     * 获取日志增强 path。
+     */
+    public static String[] getLogExpandPath() {
+        return mLogExpandPath;
+    }
+
+    /**
+     * 是否自动更新 prefs。
+     */
+    public static boolean isAutoReload() {
+        return isAutoReload;
+    }
+
+    /**
+     * 是否处于 xposed 环境。
+     */
+    public static boolean isXposed() {
+        return isXposed;
+    }
+
+    /**
+     * 获取当前的 Classloader。
+     */
+    public static ClassLoader getClassLoader() {
+        return mClassLoader;
+    }
+
+    /**
+     * 获取当前的 LoadPackageParam。
+     */
+    public static XC_LoadPackage.LoadPackageParam getLoadPackageParam() {
+        return mLpparam;
+    }
+
+    /**
+     * 获取当前的 StartupParam。
+     */
+    public static IXposedHookZygoteInit.StartupParam getStartupParam() {
+        return mStartupParam;
+    }
+
+    @Nullable
+    public static String getModulePath() {
+        if (mStartupParam != null)
+            return mStartupParam.modulePath;
+        return null;
+    }
+
+    public static String getPackageName() {
+        if (mLpparam != null)
+            return mLpparam.packageName;
+        return "Unknown";
+    }
+
+    @Nullable
+    public static ApplicationInfo getAppInfo() {
+        if (mLpparam != null)
+            return mLpparam.appInfo;
+        return null;
+    }
+
+    public static boolean isFirstApplication() {
+        if (mLpparam != null)
+            return mLpparam.isFirstApplication;
+        return false;
+    }
+
+    public static String getProcessName() {
+        if (mLpparam != null)
+            return mLpparam.processName;
+        return "Unknown";
+    }
+
+    // ---------------------------- Setter ----------------------------------
+
+    static void setInitTag(String mInitTag) {
+        HCData.mInitTag = mInitTag;
     }
 
     static void setSpareTag(String mSpareTag) {
         HCData.mSpareTag = mSpareTag;
     }
 
-    public static int getInitLogLevel() {
-        return mInitLogLevel;
-    }
-
     static void setInitLogLevel(int mInitLogLevel) {
         HCData.mInitLogLevel = mInitLogLevel;
-    }
-
-    public static String getModulePackageName() {
-        return mModulePackageName;
     }
 
     static void setModulePackageName(String mModulePackageName) {
         HCData.mModulePackageName = mModulePackageName;
     }
 
-    public static String getPrefsName() {
-        return mPrefsName;
-    }
-
     static void setPrefsName(String mPrefsName) {
         HCData.mPrefsName = mPrefsName;
-    }
-
-    public static String[] getLogExpandPath() {
-        return mLogExpandPath;
     }
 
     static void setLogExpandPath(String[] mLogExpandPath) {
         HCData.mLogExpandPath = mLogExpandPath;
     }
 
-    public static boolean isIsAutoReload() {
-        return isAutoReload;
-    }
-
-    static void setIsAutoReload(boolean isAutoReload) {
+    static void setAutoReload(boolean isAutoReload) {
         HCData.isAutoReload = isAutoReload;
-    }
-
-    public static boolean isXposed() {
-        return isXposed;
     }
 
     static void setIsXposed(boolean isXposed) {
         HCData.isXposed = isXposed;
     }
 
-    public static ClassLoader getClassLoader() {
-        return mClassLoader;
-    }
-
     static void setClassLoader(ClassLoader mClassLoader) {
         HCData.mClassLoader = mClassLoader;
     }
 
-    public static XC_LoadPackage.LoadPackageParam getLpparam() {
-        return mLpparam;
-    }
-
-    static void setLpparam(XC_LoadPackage.LoadPackageParam mLpparam) {
+    static void setLoadPackageParam(XC_LoadPackage.LoadPackageParam mLpparam) {
         HCData.mLpparam = mLpparam;
-    }
-
-    public static IXposedHookZygoteInit.StartupParam getStartupParam() {
-        return mStartupParam;
     }
 
     static void setStartupParam(IXposedHookZygoteInit.StartupParam mStartupParam) {
         HCData.mStartupParam = mStartupParam;
-    }
-
-    public static String getModulePath() {
-        return mModulePath;
-    }
-
-    static void setModulePath(String mModulePath) {
-        HCData.mModulePath = mModulePath;
-    }
-
-    public static String getPackageName() {
-        return mPackageName;
-    }
-
-    static void setPackageName(String mPackageName) {
-        HCData.mPackageName = mPackageName;
-    }
-
-    public static ApplicationInfo getAppInfo() {
-        return mAppInfo;
-    }
-
-    static void setAppInfo(ApplicationInfo mAppInfo) {
-        HCData.mAppInfo = mAppInfo;
-    }
-
-    public static boolean isFirstApplication() {
-        return isFirstApplication;
-    }
-
-    static void setIsFirstApplication(boolean isFirstApplication) {
-        HCData.isFirstApplication = isFirstApplication;
-    }
-
-    public static String getProcessName() {
-        return mProcessName;
-    }
-
-    static void setProcessName(String mProcessName) {
-        HCData.mProcessName = mProcessName;
     }
 }

@@ -47,6 +47,14 @@ public final class InvokeTool {
         return baseInvokeMethod(clz, null, method, param, value);
     }
 
+    public static <T> T callStaticMethod(String clz, String method, Class<?>[] param, Object... value) {
+        return baseInvokeMethod(findClass(clz), null, method, param, value);
+    }
+
+    public static <T> T callStaticMethod(String clz, ClassLoader classLoader, String method, Class<?>[] param, Object... value) {
+        return baseInvokeMethod(findClass(clz, classLoader), null, method, param, value);
+    }
+
     // ----------------------------设置字段--------------------------------
     public static <T> T setField(Object instance, String field, Object value) {
         return baseInvokeField(null, instance, field, true, value);
@@ -56,12 +64,28 @@ public final class InvokeTool {
         return baseInvokeField(clz, null, field, true, value);
     }
 
+    public static <T> T setStaticField(String clz, String field, Object value) {
+        return baseInvokeField(findClass(clz), null, field, true, value);
+    }
+
+    public static <T> T setStaticField(String clz, ClassLoader classLoader, String field, Object value) {
+        return baseInvokeField(findClass(clz, classLoader), null, field, true, value);
+    }
+
     public static <T> T getField(Object instance, String field) {
         return baseInvokeField(null, instance, field, false, null);
     }
 
     public static <T> T getStaticField(Class<?> clz, String field) {
         return baseInvokeField(clz, null, field, false, null);
+    }
+
+    public static <T> T getStaticField(String clz, String field) {
+        return baseInvokeField(findClass(clz), null, field, false, null);
+    }
+
+    public static <T> T getStaticField(String clz, ClassLoader classLoader, String field) {
+        return baseInvokeField(findClass(clz, classLoader), null, field, false, null);
     }
 
     /**
@@ -143,9 +167,9 @@ public final class InvokeTool {
 
     public static Class<?> findClass(String className, ClassLoader classLoader) {
         try {
-            if (classLoader == null) {
+            if (classLoader == null)
                 classLoader = ClassLoader.getSystemClassLoader();
-            }
+
             return classLoader.loadClass(className);
         } catch (ClassNotFoundException e) {
             AndroidLog.logE(getTag(), e);

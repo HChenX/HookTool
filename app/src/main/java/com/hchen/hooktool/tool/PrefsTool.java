@@ -18,6 +18,7 @@
  */
 package com.hchen.hooktool.tool;
 
+import static com.hchen.hooktool.log.LogExpand.createRuntimeExceptionLog;
 import static com.hchen.hooktool.log.LogExpand.getStackTrace;
 import static com.hchen.hooktool.log.LogExpand.getTag;
 import static com.hchen.hooktool.log.XposedLog.logE;
@@ -63,7 +64,7 @@ public final class PrefsTool {
     /**
      * 共享首选项储存至应用私有目录内/从私有目录读取，并使用指定的 prefsName 命名文件，模块如果设置 xposedsharedprefs 为 true 则由 xposed 统一管理。
      */
-    public static IPrefsApply prefs(Context context, String prefsName) {
+    public static IPrefsApply prefs(Context context, @NonNull String prefsName) {
         return new Sprefs(currentSp(context, prefsName));
     }
 
@@ -74,8 +75,7 @@ public final class PrefsTool {
      */
     public static IPrefsApply prefs() {
         if (!HCData.isXposed())
-            throw new RuntimeException(HCData.getInitTag() +
-                    "[" + getTag() + "][E]: Not xposed environment!" + getStackTrace());
+            throw new RuntimeException(createRuntimeExceptionLog("Not xposed environment!"));
         return prefs("");
     }
 
@@ -84,10 +84,9 @@ public final class PrefsTool {
      * <p>
      * 将读取指定 prefsName 名的模块共享首选项文件并供寄生应用使用。此状态下仅可读取，不可修改。
      */
-    public static IPrefsApply prefs(String prefsName) {
+    public static IPrefsApply prefs(@NonNull String prefsName) {
         if (!HCData.isXposed())
-            throw new RuntimeException(HCData.getInitTag() +
-                    "[" + getTag() + "][E]: Not xposed environment!" + getStackTrace());
+            throw new RuntimeException(createRuntimeExceptionLog("Not xposed environment!"));
         return new Xprefs(currentXsp(prefsName));
     }
 
@@ -98,15 +97,14 @@ public final class PrefsTool {
      */
     public static void asyncPrefs(IAsyncPrefs asyncPrefs) {
         if (!HCData.isXposed())
-            throw new RuntimeException(HCData.getInitTag() +
-                    "[" + getTag() + "][E]: Not xposed environment!" + getStackTrace());
+            throw new RuntimeException(createRuntimeExceptionLog("Not xposed environment!"));
+
         ContextTool.getAsyncContext(new IContextGetter() {
             @Override
             public void tryToFindContext(@androidx.annotation.Nullable Context context) {
-                if (context == null) {
-                    throw new RuntimeException(HCData.getInitTag() +
-                            "[" + getTag() + "][E]: Async prefs context is null!" + getStackTrace());
-                }
+                if (context == null)
+                    throw new RuntimeException(createRuntimeExceptionLog("Async prefs context is null!"));
+
                 asyncPrefs.async(context);
             }
         }, ContextTool.FLAG_CURRENT_APP);
@@ -115,10 +113,9 @@ public final class PrefsTool {
     private static XSharedPreferences currentXsp(String prefsName) {
         prefsName = initPrefsName(prefsName);
         if (xPrefs.get(prefsName) == null) {
-            if (HCData.getModulePackageName() == null) {
-                throw new RuntimeException(HCData.getInitTag() +
-                        "[" + getTag() + "][E]: Module package name is null, Please set module package name!" + getStackTrace());
-            }
+            if (HCData.getModulePackageName() == null || HCData.getModulePackageName().isEmpty())
+                throw new RuntimeException(createRuntimeExceptionLog("Module package name is null, Please set module package name!"));
+
             XSharedPreferences x = new XSharedPreferences(HCData.getModulePackageName(), prefsName);
             x.makeWorldReadable();
             x.reload();
@@ -135,10 +132,9 @@ public final class PrefsTool {
     @SuppressLint("WorldReadableFiles")
     private static SharedPreferences currentSp(Context context, String prefsName) {
         prefsName = initPrefsName(prefsName);
-        if (context == null) {
-            throw new RuntimeException(HCData.getInitTag() +
-                    "[" + getTag() + "][E]: Context is null, can't create sprefs!" + getStackTrace());
-        }
+        if (context == null)
+            throw new RuntimeException(createRuntimeExceptionLog("Context is null, can't create sprefs!"));
+
         if (sPrefs.get(context.getPackageName() + prefsName) == null) {
             SharedPreferences s;
             try {
@@ -154,13 +150,15 @@ public final class PrefsTool {
         }
     }
 
-    private static String initPrefsName(@NonNull String name) {
+    private static String initPrefsName(String name) {
+        if (name == null)
+            throw new RuntimeException(createRuntimeExceptionLog("prefs name can't is null!!"));
+
         if (name.isEmpty()) {
-            if (HCData.getPrefsName() == null) {
-                if (HCData.getModulePackageName() == null) {
-                    throw new RuntimeException(HCData.getInitTag() +
-                            "[" + getTag() + "][E]: What prefs name you want use??" + getStackTrace());
-                }
+            if (HCData.getPrefsName() == null || HCData.getPrefsName().isEmpty()) {
+                if (HCData.getModulePackageName() == null || HCData.getModulePackageName().isEmpty())
+                    throw new RuntimeException(createRuntimeExceptionLog("What prefs name you want use??"));
+
                 return HCData.getModulePackageName() + "_preferences";
             }
             return HCData.getPrefsName();
@@ -255,7 +253,7 @@ public final class PrefsTool {
         }
 
         private void reload() {
-            if (HCData.isIsAutoReload()) {
+            if (HCData.isAutoReload()) {
                 if (xSharedPreferences.hasFileChanged()) {
                     xSharedPreferences.reload();
                 }

@@ -47,7 +47,7 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
 public abstract class BaseHC extends CoreTool {
     public String TAG = getClass().getSimpleName(); // 快捷获取类的简单名称作为 TAG, 为了效果建议配置相应的混淆规则。
     private static final List<BaseHC> mIApplications = new ArrayList<>();
-    private static boolean isFirstHookApplication = true;
+    private static boolean isHookedApplication = false;
     private static final ChainTool mChainTool = new ChainTool();
     public static XC_LoadPackage.LoadPackageParam lpparam; // onZygote 状态下为 null。
     public static ClassLoader classLoader;
@@ -81,13 +81,13 @@ public abstract class BaseHC extends CoreTool {
 
     /**
      * Application Context 创建之前调用。
-     * */
+     */
     protected void onApplicationBefore(Context context) {
     }
 
     /**
      * Application Context 创建之后调用。
-     * */
+     */
     protected void onApplicationAfter(Context context) {
     }
 
@@ -207,13 +207,14 @@ public abstract class BaseHC extends CoreTool {
 
     // ------------ Application Hook --------------
     private static void initApplicationHook() {
-        if (!isFirstHookApplication) return;
+        if (isHookedApplication) return;
         hookMethod(Application.class, "attach", Context.class, new IHook() {
             @Override
             public void before() {
+                Context context = (Context) getArgs(0);
                 mIApplications.forEach(iApplication -> {
                     try {
-                        iApplication.onApplicationBefore((Context) getArgs(0));
+                        iApplication.onApplicationBefore(context);
                     } catch (Throwable e) {
                         logE("Application", "Failed to call iApplication: " + iApplication, e);
                     }
@@ -222,16 +223,17 @@ public abstract class BaseHC extends CoreTool {
 
             @Override
             public void after() {
+                Context context = (Context) getArgs(0);
                 mIApplications.forEach(iApplication -> {
                     try {
-                        iApplication.onApplicationAfter((Context) getArgs(0));
+                        iApplication.onApplicationAfter(context);
                     } catch (Throwable e) {
                         logE("Application", "Failed to call iApplication: " + iApplication, e);
                     }
                 });
-                logI("Application", "Application is created! package: " + ((Context) getArgs(0)).getPackageName());
+                logI("Application", "Application is created, package name: " + (context != null ? context.getPackageName() : "unknown"));
             }
         });
-        isFirstHookApplication = false;
+        isHookedApplication = true;
     }
 }

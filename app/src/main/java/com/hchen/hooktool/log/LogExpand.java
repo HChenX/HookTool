@@ -82,11 +82,17 @@ public final class LogExpand {
         return stringBuilder.toString();
     }
 
+    public static String createRuntimeExceptionLog(String msg) {
+        return HCData.getInitTag() + "[" + getTag() + "][E]: " + msg + getStackTrace();
+    }
+
     public static String getTag() {
         String[] logExpandPath = HCData.getLogExpandPath();
         if (logExpandPath == null) return "HookTool";
         if (logExpandPath.length == 0) {
-            if (HCData.getModulePackageName() == null) return "HookTool";
+            if (HCData.getModulePackageName() == null || HCData.getModulePackageName().isEmpty())
+                return "HookTool";
+
             logExpandPath = new String[]{HCData.getModulePackageName()};
         }
         String tag = null;
@@ -132,18 +138,23 @@ public final class LogExpand {
 
     public void detailedLogs() {
         if (param.args == null || param.args.length == 0) {
-            logI(TAG, "Method called! Class: [" + className + "] Method: [" + methodName + "] Param: { }");
+            logI(TAG, "Method called! Class: [" + className + "], Method: [" + methodName + "], Param: { }");
             return;
         }
 
         StringBuilder log = new StringBuilder();
         for (int i = 0; i < param.args.length; i++) {
             log.append("(").append(param.args[i] == null ? "null" : param.args[i].getClass().getSimpleName())
-                    .append(")->").append("[").append(param.args[i]).append("]");
-            if (i < param.args.length - 1) {
-                log.append(", ");
-            }
+                    .append(")->").append("[").append(paramToString(param.args[i])).append("]\n");
         }
-        logI(TAG, "Method called! Class: [" + className + "] Method: [" + methodName + "]\n Param: {" + log + "}");
+        logI(TAG, "Method called! Class: [" + className + "], Method: [" + methodName + "], Param: {\n" + log + "}");
+    }
+
+    private String paramToString(Object param) {
+        if (param == null) return "null";
+        if (param.getClass().isArray())
+            return Arrays.toString((Object[]) param);
+
+        return param.toString();
     }
 }

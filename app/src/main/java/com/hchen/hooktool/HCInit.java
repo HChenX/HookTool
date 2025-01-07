@@ -21,8 +21,7 @@ package com.hchen.hooktool;
 import static com.hchen.hooktool.log.XposedLog.logI;
 
 import androidx.annotation.IntDef;
-
-import org.jetbrains.annotations.NotNull;
+import androidx.annotation.NonNull;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -74,12 +73,8 @@ public final class HCInit {
             throw new RuntimeException(HCData.getInitTag() + "[E]: LoadPackageParam is null!!");
         }
         HCData.setIsXposed(true);
-        HCData.setLpparam(loadPackageParam);
+        HCData.setLoadPackageParam(loadPackageParam);
         HCData.setClassLoader(loadPackageParam.classLoader);
-        HCData.setPackageName(loadPackageParam.packageName);
-        HCData.setAppInfo(loadPackageParam.appInfo);
-        HCData.setIsFirstApplication(loadPackageParam.isFirstApplication);
-        HCData.setProcessName(loadPackageParam.processName);
         BaseHC.lpparam = loadPackageParam;
         BaseHC.classLoader = loadPackageParam.classLoader;
         logI("Init classloader: [" + loadPackageParam.classLoader + "], pkg: " + loadPackageParam.packageName);
@@ -98,7 +93,6 @@ public final class HCInit {
     public static void initStartupParam(IXposedHookZygoteInit.StartupParam startupParam) {
         HCData.setIsXposed(true);
         HCData.setStartupParam(startupParam);
-        HCData.setModulePath(startupParam.modulePath);
         HCData.setClassLoader(startupParam.getClass().getClassLoader());
         BaseHC.lpparam = null;
         BaseHC.classLoader = startupParam.getClass().getClassLoader();
@@ -130,7 +124,7 @@ public final class HCInit {
         HCData.setInitLogLevel(basicData.logLevel);
         HCData.setModulePackageName(basicData.packageName);
         HCData.setPrefsName(basicData.prefsName);
-        HCData.setIsAutoReload(basicData.isAutoReload);
+        HCData.setAutoReload(basicData.isAutoReload);
         HCData.setLogExpandPath(basicData.logExpandPath);
     }
 
@@ -144,7 +138,7 @@ public final class HCInit {
         String[] logExpandPath = null;
 
         // 设置模块包名。 Tip: 建议设置。
-        public BasicData setModulePackageName(String modulePackageName) {
+        public BasicData setModulePackageName(@NonNull String modulePackageName) {
             packageName = modulePackageName;
             return this;
         }
@@ -162,7 +156,7 @@ public final class HCInit {
         }
 
         // 设置共享首选项的储存名。
-        public BasicData setPrefsName(String prefsName) {
+        public BasicData setPrefsName(@NonNull String prefsName) {
             this.prefsName = prefsName;
             return this;
         }
@@ -191,7 +185,7 @@ public final class HCInit {
          *
          * Tip: 建议设置。
          */
-        public BasicData initLogExpand(@NotNull String[] path) {
+        public BasicData initLogExpand(@NonNull String[] path) {
             this.logExpandPath = path;
             return this;
         }

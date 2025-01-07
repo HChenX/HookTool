@@ -66,7 +66,8 @@ public abstract class HCEntrance implements IXposedHookLoadPackage, IXposedHookZ
                 return;
         }
 
-        if (HCData.getModulePackageName() != null && Objects.equals(HCData.getModulePackageName(), lpparam.packageName)) {
+        if (HCData.getModulePackageName() != null && !HCData.getModulePackageName().isEmpty()
+                && Objects.equals(HCData.getModulePackageName(), lpparam.packageName)) {
             initHCState();
         }
 

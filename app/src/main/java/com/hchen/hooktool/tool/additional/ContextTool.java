@@ -18,9 +18,8 @@
  */
 package com.hchen.hooktool.tool.additional;
 
-import static com.hchen.hooktool.log.LogExpand.getStackTrace;
+import static com.hchen.hooktool.log.AndroidLog.logE;
 import static com.hchen.hooktool.log.LogExpand.getTag;
-import static com.hchen.hooktool.log.XposedLog.logE;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -128,10 +127,10 @@ public final class ContextTool {
                 context = android(clz);
             }
             default -> {
-                throw new Throwable("Unexpected flag!" + getStackTrace());
+                throw new Throwable("Unexpected flag!");
             }
         }
-        if (context == null) throw new Throwable("Context is null!" + getStackTrace());
+        if (context == null) throw new Throwable("Context is null!");
         return context;
     }
 
