@@ -26,7 +26,6 @@ import android.os.Parcelable;
 
 import com.hchen.hooktool.data.AppData;
 import com.hchen.hooktool.hook.IHook;
-import com.hchen.hooktool.tool.additional.BitmapTool;
 import com.hchen.hooktool.tool.additional.PackageTool;
 import com.hchen.hooktool.tool.itool.IPackageInfoGetter;
 
@@ -119,7 +118,7 @@ final class ToolTest extends BaseHC {
                 return arrayList.toArray(new PackageInfo[0]);
             }
         })[0];
-        Bitmap bitmap = BitmapTool.drawableToBitmap(appData.icon);
+        Bitmap bitmap = appData.icon;
 
         prefs().get("test_key", "0"); // 获取 prefs test_key 的值
         prefs().getBoolean("test_key_bool", false); // 获取 prefs test_key_bool 的值

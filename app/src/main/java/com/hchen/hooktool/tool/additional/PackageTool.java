@@ -204,7 +204,7 @@ public final class PackageTool {
     private static AppData createAppData(Parcelable parcelable, PackageManager pm) {
         AppData appData = new AppData();
         if (parcelable instanceof PackageInfo packageInfo) {
-            appData.icon = packageInfo.applicationInfo.loadIcon(pm);
+            appData.icon = BitmapTool.drawableToBitmap(packageInfo.applicationInfo.loadIcon(pm));
             appData.label = packageInfo.applicationInfo.loadLabel(pm).toString();
             appData.packageName = packageInfo.applicationInfo.packageName;
             appData.versionName = packageInfo.versionName;
@@ -214,7 +214,7 @@ public final class PackageTool {
             appData.user = getUserId(packageInfo.applicationInfo.uid);
             appData.uid = packageInfo.applicationInfo.uid;
         } else if (parcelable instanceof ResolveInfo resolveInfo) {
-            appData.icon = aboutResolveInfo(resolveInfo).applicationInfo.loadIcon(pm);
+            appData.icon = BitmapTool.drawableToBitmap(aboutResolveInfo(resolveInfo).applicationInfo.loadIcon(pm));
             appData.label = aboutResolveInfo(resolveInfo).applicationInfo.loadLabel(pm).toString();
             appData.packageName = aboutResolveInfo(resolveInfo).applicationInfo.packageName;
             appData.isSystemApp = isSystem(aboutResolveInfo(resolveInfo).applicationInfo);
@@ -222,7 +222,7 @@ public final class PackageTool {
             appData.user = getUserId(aboutResolveInfo(resolveInfo).applicationInfo.uid);
             appData.uid = aboutResolveInfo(resolveInfo).applicationInfo.uid;
         } else if (parcelable instanceof ActivityInfo activityInfo) {
-            appData.icon = activityInfo.applicationInfo.loadIcon(pm);
+            appData.icon = BitmapTool.drawableToBitmap(activityInfo.applicationInfo.loadIcon(pm));
             appData.label = activityInfo.applicationInfo.loadLabel(pm).toString();
             appData.packageName = activityInfo.applicationInfo.packageName;
             appData.isSystemApp = isSystem(activityInfo.applicationInfo);
@@ -230,7 +230,7 @@ public final class PackageTool {
             appData.user = getUserId(activityInfo.applicationInfo.uid);
             appData.uid = activityInfo.applicationInfo.uid;
         } else if (parcelable instanceof ApplicationInfo applicationInfo) {
-            appData.icon = applicationInfo.loadIcon(pm);
+            appData.icon = BitmapTool.drawableToBitmap(applicationInfo.loadIcon(pm));
             appData.label = applicationInfo.loadLabel(pm).toString();
             appData.packageName = applicationInfo.packageName;
             appData.isSystemApp = isSystem(applicationInfo);
@@ -238,7 +238,7 @@ public final class PackageTool {
             appData.user = getUserId(applicationInfo.uid);
             appData.uid = applicationInfo.uid;
         } else if (parcelable instanceof ProviderInfo providerInfo) {
-            appData.icon = providerInfo.applicationInfo.loadIcon(pm);
+            appData.icon = BitmapTool.drawableToBitmap(providerInfo.applicationInfo.loadIcon(pm));
             appData.label = providerInfo.applicationInfo.loadLabel(pm).toString();
             appData.packageName = providerInfo.applicationInfo.packageName;
             appData.isSystemApp = isSystem(providerInfo.applicationInfo);

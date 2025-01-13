@@ -324,7 +324,7 @@ final class CoreBase {
         return run(() -> {
             Method method = null;
             Class<?> clazz = clz;
-            Class<?>[] params = arrayToClass(clazz.getClassLoader(), objs);
+            Class<?>[] params = XposedHelpers.getParameterTypes(objs);
             HashSet<Class<?>> paramsSet = new HashSet<>(Arrays.asList(params));
             superWhile:
             do {
