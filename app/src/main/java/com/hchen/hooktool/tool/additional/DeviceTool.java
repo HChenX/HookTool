@@ -250,7 +250,7 @@ public class DeviceTool {
     }
 
     /**
-     * 是否是神色模式。
+     * 是否是深色模式。
      */
     public static boolean isDarkMode(Resources resources) {
         return (resources.getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
