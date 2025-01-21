@@ -53,6 +53,13 @@ public abstract class BaseHC extends CoreTool {
     public static ClassLoader classLoader;
 
     /**
+     * 是否启用
+     */
+    protected boolean enabled() {
+        return true;
+    }
+
+    /**
      * handleLoadPackage 阶段。
      * <p>
      * Tip: 作为覆写使用，请勿直接调用！
@@ -91,11 +98,19 @@ public abstract class BaseHC extends CoreTool {
     protected void onApplicationAfter(Context context) {
     }
 
+    /**
+     * 发生崩溃时回调，不要在这里继续执行 hook 逻辑。
+     */
+    protected void onThrowable(Throwable throwable) {
+    }
+
     // 请在 handleLoadPackage 阶段调用。
     final public void onLoadPackage() {
         try {
-            init();
+            if (enabled())
+                init();
         } catch (Throwable e) {
+            onThrowable(e);
             logE(TAG, "Waring! will stop hook process!!", e);
         }
     }
@@ -103,14 +118,18 @@ public abstract class BaseHC extends CoreTool {
     // 请传入自定义的 classLoader。
     final public void onClassLoader(ClassLoader classLoader) {
         try {
-            init(classLoader);
+            if (enabled())
+                init(classLoader);
         } catch (Throwable e) {
+            onThrowable(e);
             logE(TAG, "Waring! will stop hook process!!", e);
         }
     }
 
     // Hook Application
     final public BaseHC onApplicationCreate() {
+        if (!enabled()) return this;
+
         if (!mIApplications.contains(this))
             mIApplications.add(this);
         initApplicationHook();
@@ -120,8 +139,10 @@ public abstract class BaseHC extends CoreTool {
     // 请在 initZygote 阶段调用。
     final public void onZygote() {
         try {
-            initZygote(HCData.getStartupParam());
+            if (enabled())
+                initZygote(HCData.getStartupParam());
         } catch (Throwable e) {
+            onThrowable(e);
             logE(TAG, "Waring! will stop hook process!!", e);
         }
     }

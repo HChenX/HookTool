@@ -253,8 +253,31 @@ public class DeviceTool {
      * 是否是神色模式。
      */
     public static boolean isDarkMode(Resources resources) {
-        return (resources.getConfiguration().uiMode &
-                Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
+        return (resources.getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
+    }
+
+    public static int px2dp(Context context, float pxValue) {
+        // 获取屏幕密度（每英寸多少个像素点）
+        float scale = context.getResources().getDisplayMetrics().density;
+        return (int) (pxValue / scale + 0.5f);
+    }
+
+    public static int px2sp(Context context, float pxValue) {
+        // 获取字体的缩放密度
+        float fontScale = context.getResources().getDisplayMetrics().scaledDensity;
+        return (int) (pxValue / fontScale + 0.5f);
+    }
+
+    public static int dp2px(Context context, float dpValue) {
+        // 获取屏幕密度
+        float scale = context.getResources().getDisplayMetrics().density;
+        return (int) (dpValue * scale + 0.5f);
+    }
+
+    public static int sp2px(Context context, float spValue) {
+        // 获取字体的缩放密度
+        float fontScale = context.getResources().getDisplayMetrics().scaledDensity;
+        return (int) (spValue * fontScale + 0.5f);
     }
 
     /**
