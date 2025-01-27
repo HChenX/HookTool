@@ -41,22 +41,22 @@ public final class SystemPropTool {
 
     public static int getProp(String key, int def) {
         return (int) Optional.ofNullable(invokeMethod("getInt", new Class[]{String.class, int.class}, key, def))
-                .orElse(def);
+            .orElse(def);
     }
 
     public static long getProp(String key, long def) {
         return (long) Optional.ofNullable(invokeMethod("getLong", new Class[]{String.class, long.class}, key, def))
-                .orElse(def);
+            .orElse(def);
     }
 
     public static String getProp(String key, String def) {
         return (String) Optional.ofNullable(invokeMethod("get", new Class[]{String.class, String.class}, key, def))
-                .orElse(def);
+            .orElse(def);
     }
 
     public static String getProp(String key) {
         return (String) Optional.ofNullable(invokeMethod("get", new Class[]{String.class}, key))
-                .orElse("");
+            .orElse("");
     }
 
     /**
@@ -68,8 +68,8 @@ public final class SystemPropTool {
 
     private static String classLoaderMethod(ClassLoader classLoader, String name) {
         return (String) Optional.ofNullable(InvokeTool.callStaticMethod(
-               "android.os.SystemProperties", classLoader,
-                "get", new Class[]{String.class}, name)).orElse("");
+            "android.os.SystemProperties", classLoader,
+            "get", new Class[]{String.class}, name)).orElse("");
     }
 
     private static <T> T invokeMethod(String str, Class<?>[] clsArr, Object... objArr) {

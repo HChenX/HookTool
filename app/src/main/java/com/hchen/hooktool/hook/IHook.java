@@ -23,7 +23,7 @@ import com.hchen.hooktool.tool.ParamTool;
 
 /**
  * Hook 动作接口
- * 
+ *
  * @author 焕晨HChen
  */
 public abstract class IHook extends ParamTool {

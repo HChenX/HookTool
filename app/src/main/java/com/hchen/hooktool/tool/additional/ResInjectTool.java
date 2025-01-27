@@ -139,7 +139,7 @@ public final class ResInjectTool {
     private static boolean loadResAboveApi30(Resources resources, boolean doOnMainLooper) {
         if (resourcesLoader == null) {
             try (ParcelFileDescriptor pfd = ParcelFileDescriptor.open(new File(mModulePath),
-                    ParcelFileDescriptor.MODE_READ_ONLY)) {
+                ParcelFileDescriptor.MODE_READ_ONLY)) {
                 ResourcesProvider provider = ResourcesProvider.loadFromApk(pfd);
                 ResourcesLoader loader = new ResourcesLoader();
                 loader.addProvider(provider);
@@ -283,7 +283,7 @@ public final class ResInjectTool {
                      "getDimensionPixelOffset", "getDimensionPixelSize", "getText", "getFloat",
                      "getIntArray", "getStringArray", "getTextArray", "getAnimation" -> {
                     if (method.getParameterTypes().length == 1
-                            && method.getParameterTypes()[0].equals(int.class)) {
+                        && method.getParameterTypes()[0].equals(int.class)) {
                         hookResMethod(method.getName(), int.class, hookResBefore);
                     }
                 }

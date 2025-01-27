@@ -77,38 +77,38 @@ public class CoreTool {
     }
 
     public static boolean existsClass(String clazz, ClassLoader classLoader) {
-        return findClass(clazz, classLoader).isSuccess();
+        return baseFindClass(clazz, classLoader).isSuccess();
     }
 
     // --------- 查找类 -----------
-    public static SingleMember<Class<?>> findClass(String name) {
+    public static Class<?> findClass(String name) {
         return findClass(name, HCData.getClassLoader());
     }
 
-    public static SingleMember<Class<?>> findClass(String name, ClassLoader classLoader) {
-        return baseFindClass(name, classLoader);
+    public static Class<?> findClass(String name, ClassLoader classLoader) {
+        return baseFindClass(name, classLoader).get();
     }
 
     //------------ 检查指定方法是否存在 --------------
     public static boolean existsMethod(String clazz, String name, Object... objs) {
-        return existsMethod(findClass(clazz).getNoReport(), name, objs);
+        return existsMethod(baseFindClass(clazz).getNotReport(), name, objs);
     }
 
     public static boolean existsMethod(String clazz, ClassLoader classLoader, String name, Object... objs) {
-        return existsMethod(findClass(clazz, classLoader).getNoReport(), name, objs);
+        return existsMethod(baseFindClass(clazz, classLoader).getNotReport(), name, objs);
     }
 
     public static boolean existsMethod(Class<?> clazz, String name, Object... objs) {
         if (clazz == null || name == null || name.isEmpty() || objs == null) return false;
-        return findMethod(clazz, name, objs).isSuccess();
+        return baseFindMethod(new SingleMember<>(clazz), name, objs).isSuccess();
     }
 
     public static boolean existsAnyMethod(String clazz, String name) {
-        return existsAnyMethod(findClass(clazz).getNoReport(), name);
+        return existsAnyMethod(baseFindClass(clazz).getNotReport(), name);
     }
 
     public static boolean existsAnyMethod(String clazz, ClassLoader classLoader, String name) {
-        return existsAnyMethod(findClass(clazz, classLoader).getNoReport(), name);
+        return existsAnyMethod(baseFindClass(clazz, classLoader).getNotReport(), name);
     }
 
     public static boolean existsAnyMethod(Class<?> clazz, String name) {
@@ -117,24 +117,24 @@ public class CoreTool {
     }
 
     // ------------ 查找方法 --------------
-    public static SingleMember<Method> findMethod(String clazz, String name, Object... objs) {
-        return baseFindMethod(findClass(clazz), name, objs);
+    public static Method findMethod(String clazz, String name, Object... objs) {
+        return baseFindMethod(baseFindClass(clazz), name, objs).get();
     }
 
-    public static SingleMember<Method> findMethod(String clazz, ClassLoader classLoader, String name, Object... objs) {
-        return baseFindMethod(findClass(clazz, classLoader), name, objs);
+    public static Method findMethod(String clazz, ClassLoader classLoader, String name, Object... objs) {
+        return baseFindMethod(baseFindClass(clazz, classLoader), name, objs).get();
     }
 
-    public static SingleMember<Method> findMethod(Class<?> clazz, String name, Object... objs) {
-        return baseFindMethod(new SingleMember<>(clazz, null), name, objs);
+    public static Method findMethod(Class<?> clazz, String name, Object... objs) {
+        return baseFindMethod(new SingleMember<>(clazz, null), name, objs).get();
     }
 
     public static Method[] findAllMethod(String clazz, String name) {
-        return baseFindAllMethod(findClass(clazz), name);
+        return baseFindAllMethod(baseFindClass(clazz), name);
     }
 
     public static Method[] findAllMethod(String clazz, ClassLoader classLoader, String name) {
-        return baseFindAllMethod(findClass(clazz, classLoader), name);
+        return baseFindAllMethod(baseFindClass(clazz, classLoader), name);
     }
 
     public static Method[] findAllMethod(Class<?> clazz, String name) {
@@ -143,37 +143,37 @@ public class CoreTool {
 
     //------------ 检查指定构造函数是否存在 --------------
     public static boolean existsConstructor(String clazz, Object... objs) {
-        return existsConstructor(findClass(clazz).getNoReport(), objs);
+        return existsConstructor(baseFindClass(clazz).getNotReport(), objs);
     }
 
     public static boolean existsConstructor(String clazz, ClassLoader classLoader, Object... objs) {
-        return existsConstructor(findClass(clazz, classLoader).getNoReport(), objs);
+        return existsConstructor(baseFindClass(clazz, classLoader).getNotReport(), objs);
     }
 
     public static boolean existsConstructor(Class<?> clazz, Object... objs) {
         if (clazz == null || objs == null) return false;
-        return findConstructor(clazz, objs).isSuccess();
+        return baseFindConstructor(new SingleMember<>(clazz), objs).isSuccess();
     }
 
     // --------- 查找构造函数 -----------
-    public static SingleMember<Constructor<?>> findConstructor(String clazz, Object... objs) {
-        return baseFindConstructor(findClass(clazz), objs);
+    public static Constructor<?> findConstructor(String clazz, Object... objs) {
+        return baseFindConstructor(baseFindClass(clazz), objs).get();
     }
 
-    public static SingleMember<Constructor<?>> findConstructor(String clazz, ClassLoader classLoader, Object... objs) {
-        return baseFindConstructor(findClass(clazz, classLoader), objs);
+    public static Constructor<?> findConstructor(String clazz, ClassLoader classLoader, Object... objs) {
+        return baseFindConstructor(baseFindClass(clazz, classLoader), objs).get();
     }
 
-    public static SingleMember<Constructor<?>> findConstructor(Class<?> clazz, Object... objs) {
-        return baseFindConstructor(new SingleMember<>(clazz, null), objs);
+    public static Constructor<?> findConstructor(Class<?> clazz, Object... objs) {
+        return baseFindConstructor(new SingleMember<>(clazz, null), objs).get();
     }
 
     public static Constructor<?>[] findAllConstructor(String clazz) {
-        return baseFindAllConstructor(findClass(clazz));
+        return baseFindAllConstructor(baseFindClass(clazz));
     }
 
     public static Constructor<?>[] findAllConstructor(String clazz, ClassLoader classLoader) {
-        return baseFindAllConstructor(findClass(clazz, classLoader));
+        return baseFindAllConstructor(baseFindClass(clazz, classLoader));
     }
 
     public static Constructor<?>[] findAllConstructor(Class<?> clazz) {
@@ -182,39 +182,39 @@ public class CoreTool {
 
     //------------ 检查指定字段是否存在 --------------
     public static boolean existsField(String clazz, String name) {
-        return existsField(findClass(clazz).getNoReport(), name);
+        return existsField(baseFindClass(clazz).getNotReport(), name);
     }
 
     public static boolean existsField(String clazz, ClassLoader classLoader, String name) {
-        return existsField(findClass(clazz, classLoader).getNoReport(), name);
+        return existsField(baseFindClass(clazz, classLoader).getNotReport(), name);
     }
 
     public static boolean existsField(Class<?> clazz, String name) {
         if (clazz == null || name == null || name.isEmpty()) return false;
-        return findField(clazz, name).isSuccess();
+        return baseFindField(new SingleMember<>(clazz), name).isSuccess();
     }
 
     // --------- 查找字段 -----------
-    public static SingleMember<Field> findField(String clazz, String name) {
-        return baseFindField(findClass(clazz), name);
+    public static Field findField(String clazz, String name) {
+        return baseFindField(baseFindClass(clazz), name).get();
     }
 
-    public static SingleMember<Field> findField(String clazz, ClassLoader classLoader, String name) {
-        return baseFindField(findClass(clazz, classLoader), name);
+    public static Field findField(String clazz, ClassLoader classLoader, String name) {
+        return baseFindField(baseFindClass(clazz, classLoader), name).get();
     }
 
-    public static SingleMember<Field> findField(Class<?> clazz, String name) {
-        return baseFindField(new SingleMember<>(clazz, null), name);
+    public static Field findField(Class<?> clazz, String name) {
+        return baseFindField(new SingleMember<>(clazz, null), name).get();
     }
 
     // --------- 执行 hook -----------
     // --------- 普通方法 -------------
     public static XC_MethodHook.Unhook hookMethod(String clazz, String method, Object... params) {
-        return baseHook(findClass(clazz), method, params);
+        return baseHook(baseFindClass(clazz), method, params);
     }
 
     public static XC_MethodHook.Unhook hookMethod(String clazz, ClassLoader classLoader, String method, Object... params) {
-        return baseHook(findClass(clazz, classLoader), method, params);
+        return baseHook(baseFindClass(clazz, classLoader), method, params);
     }
 
     public static XC_MethodHook.Unhook hookMethod(Class<?> clazz, String method, Object... params) {
@@ -235,11 +235,11 @@ public class CoreTool {
 
     // --------- 构造函数 ------------
     public static XC_MethodHook.Unhook hookConstructor(String clazz, Object... params) {
-        return baseHook(findClass(clazz), null, params);
+        return baseHook(baseFindClass(clazz), null, params);
     }
 
     public static XC_MethodHook.Unhook hookConstructor(String clazz, ClassLoader classLoader, Object... params) {
-        return baseHook(findClass(clazz, classLoader), null, params);
+        return baseHook(baseFindClass(clazz, classLoader), null, params);
     }
 
     public static XC_MethodHook.Unhook hookConstructor(Class<?> clazz, Object... params) {
@@ -293,11 +293,11 @@ public class CoreTool {
 
     // --------- 过滤方法 -----------
     public static Method[] filterMethod(String clazz, IMemberFilter<Method> iMemberFilter) {
-        return baseFilterMethod(findClass(clazz), iMemberFilter);
+        return baseFilterMethod(baseFindClass(clazz), iMemberFilter);
     }
 
     public static Method[] filterMethod(String clazz, ClassLoader classLoader, IMemberFilter<Method> iMemberFilter) {
-        return baseFilterMethod(findClass(clazz, classLoader), iMemberFilter);
+        return baseFilterMethod(baseFindClass(clazz, classLoader), iMemberFilter);
     }
 
     public static Method[] filterMethod(Class<?> clazz, IMemberFilter<Method> iMemberFilter) {
@@ -305,11 +305,11 @@ public class CoreTool {
     }
 
     public static Constructor<?>[] filterConstructor(String clazz, IMemberFilter<Constructor<?>> iMemberFilter) {
-        return baseFilterConstructor(findClass(clazz), iMemberFilter);
+        return baseFilterConstructor(baseFindClass(clazz), iMemberFilter);
     }
 
     public static Constructor<?>[] filterConstructor(String clazz, ClassLoader classLoader, IMemberFilter<Constructor<?>> iMemberFilter) {
-        return baseFilterConstructor(findClass(clazz, classLoader), iMemberFilter);
+        return baseFilterConstructor(baseFindClass(clazz, classLoader), iMemberFilter);
     }
 
     public static Constructor<?>[] filterConstructor(Class<?> clazz, IMemberFilter<Constructor<?>> iMemberFilter) {
@@ -334,7 +334,7 @@ public class CoreTool {
             runnable.run();
             Instant end = Instant.now();
             return Duration.between(start, end).toMillis();
-        }).orErrMag(-1L, "Failed to check code time consumption!");
+        }).orErrorMag(-1L, "Failed to check code time consumption!");
     }
 
     // ---------- 非静态 -----------
@@ -368,17 +368,17 @@ public class CoreTool {
 
     public static Object setAdditionalInstanceField(Object instance, String key, Object value) {
         return run(() -> XposedHelpers.setAdditionalInstanceField(instance, key, value))
-                .orErrMag(null, "Failed to set additional instance!");
+            .orErrorMag(null, "Failed to set additional instance!");
     }
 
     public static Object getAdditionalInstanceField(Object instance, String key) {
         return run(() -> XposedHelpers.getAdditionalInstanceField(instance, key))
-                .orErrMag(null, "Failed to get additional instance!");
+            .orErrorMag(null, "Failed to get additional instance!");
     }
 
     public static Object removeAdditionalInstanceField(Object instance, String key) {
         return run(() -> XposedHelpers.removeAdditionalInstanceField(instance, key))
-                .orErrMag(null, "Failed to remove additional instance!");
+            .orErrorMag(null, "Failed to remove additional instance!");
     }
 
     // ---------- 静态 ------------
@@ -387,11 +387,11 @@ public class CoreTool {
     }
 
     public static Object newInstance(String clz, Object... objs) {
-        return baseNewInstance(findClass(clz), objs);
+        return baseNewInstance(baseFindClass(clz), objs);
     }
 
     public static Object newInstance(String clz, ClassLoader classLoader, Object... objs) {
-        return baseNewInstance(findClass(clz, classLoader), objs);
+        return baseNewInstance(baseFindClass(clz, classLoader), objs);
     }
 
     public static Object callStaticMethod(Class<?> clz, String name, Object... objs) {
@@ -399,11 +399,11 @@ public class CoreTool {
     }
 
     public static Object callStaticMethod(String clz, String name, Object... objs) {
-        return baseCallStaticMethod(findClass(clz), null, name, objs);
+        return baseCallStaticMethod(baseFindClass(clz), null, name, objs);
     }
 
     public static Object callStaticMethod(String clz, ClassLoader classLoader, String name, Object... objs) {
-        return baseCallStaticMethod(findClass(clz, classLoader), null, name, objs);
+        return baseCallStaticMethod(baseFindClass(clz, classLoader), null, name, objs);
     }
 
     public static Object callStaticMethod(Method method, Object... objs) {
@@ -411,11 +411,11 @@ public class CoreTool {
     }
 
     public static Object callSuperStaticPrivateMethod(String clz, String name, Object... objs) {
-        return baseCallSuperStaticPrivateMethod(findClass(clz), name, objs);
+        return baseCallSuperStaticPrivateMethod(baseFindClass(clz), name, objs);
     }
 
     public static Object callSuperStaticPrivateMethod(String clz, ClassLoader classLoader, String name, Object... objs) {
-        return baseCallSuperStaticPrivateMethod(findClass(clz, classLoader), name, objs);
+        return baseCallSuperStaticPrivateMethod(baseFindClass(clz, classLoader), name, objs);
     }
 
     public static Object callSuperStaticPrivateMethod(Class<?> clz, String name, Object... objs) {
@@ -427,11 +427,11 @@ public class CoreTool {
     }
 
     public static Object getStaticField(String clz, String name) {
-        return baseGetStaticField(findClass(clz), null, name);
+        return baseGetStaticField(baseFindClass(clz), null, name);
     }
 
     public static Object getStaticField(String clz, ClassLoader classLoader, String name) {
-        return baseGetStaticField(findClass(clz, classLoader), null, name);
+        return baseGetStaticField(baseFindClass(clz, classLoader), null, name);
     }
 
     public static Object getStaticField(Field field) {
@@ -443,11 +443,11 @@ public class CoreTool {
     }
 
     public static boolean setStaticField(String clz, String name, Object value) {
-        return baseSetStaticField(findClass(clz), null, name, value);
+        return baseSetStaticField(baseFindClass(clz), null, name, value);
     }
 
     public static boolean setStaticField(String clz, ClassLoader classLoader, String name, Object value) {
-        return baseSetStaticField(findClass(clz, classLoader), null, name, value);
+        return baseSetStaticField(baseFindClass(clz, classLoader), null, name, value);
     }
 
     public static boolean setStaticField(Field field, Object value) {
@@ -459,11 +459,11 @@ public class CoreTool {
     }
 
     public static Object setAdditionalStaticField(String clz, String key, Object value) {
-        return baseSetAdditionalStaticField(findClass(clz), key, value);
+        return baseSetAdditionalStaticField(baseFindClass(clz), key, value);
     }
 
     public static Object setAdditionalStaticField(String clz, ClassLoader classLoader, String key, Object value) {
-        return baseSetAdditionalStaticField(findClass(clz, classLoader), key, value);
+        return baseSetAdditionalStaticField(baseFindClass(clz, classLoader), key, value);
     }
 
     public static Object getAdditionalStaticField(Class<?> clz, String key) {
@@ -471,11 +471,11 @@ public class CoreTool {
     }
 
     public static Object getAdditionalStaticField(String clz, String key) {
-        return baseGetAdditionalStaticField(findClass(clz), key);
+        return baseGetAdditionalStaticField(baseFindClass(clz), key);
     }
 
     public static Object getAdditionalStaticField(String clz, ClassLoader classLoader, String key) {
-        return baseGetAdditionalStaticField(findClass(key, classLoader), key);
+        return baseGetAdditionalStaticField(baseFindClass(key, classLoader), key);
     }
 
     public static Object removeAdditionalStaticField(Class<?> clz, String key) {
@@ -483,10 +483,10 @@ public class CoreTool {
     }
 
     public static Object removeAdditionalStaticField(String clz, String key) {
-        return baseRemoveAdditionalStaticField(findClass(clz), key);
+        return baseRemoveAdditionalStaticField(baseFindClass(clz), key);
     }
 
     public static Object removeAdditionalStaticField(String clz, ClassLoader classLoader, String key) {
-        return baseRemoveAdditionalStaticField(findClass(clz, classLoader), key);
+        return baseRemoveAdditionalStaticField(baseFindClass(clz, classLoader), key);
     }
 }

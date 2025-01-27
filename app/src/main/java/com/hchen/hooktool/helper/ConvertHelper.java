@@ -62,7 +62,7 @@ public final class ConvertHelper {
             if (o instanceof Class<?> c) {
                 classes.add(c);
             } else if (o instanceof String s) {
-                Class<?> ct = findClass(s, classLoader).get();
+                Class<?> ct = findClass(s, classLoader);
                 if (ct == null) return null;
                 classes.add(ct);
             } else if (o instanceof IHook) {

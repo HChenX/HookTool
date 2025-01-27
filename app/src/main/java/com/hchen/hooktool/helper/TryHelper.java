@@ -21,8 +21,6 @@ package com.hchen.hooktool.helper;
 import static com.hchen.hooktool.log.LogExpand.getTag;
 import static com.hchen.hooktool.log.XposedLog.logE;
 
-import com.hchen.hooktool.tool.SingleMember;
-
 /**
  * 方法执行与异常处理类
  *
@@ -34,13 +32,6 @@ public final class TryHelper {
      * */
     public static <V> Result<V> run(Run<V> supplier) {
         return new Result<>(supplier);
-    }
-
-    /*
-     * 执行并储存执行的结果与抛错。
-     * */
-    public static <V> SingleMember<V> createSingleMember(Run<V> supplier) {
-        return new Result<>(supplier).create();
     }
 
     /*
@@ -71,10 +62,6 @@ public final class TryHelper {
             }
         }
 
-        private SingleMember<V> create() {
-            return new SingleMember<V>(mResult, mThrowable);
-        }
-
         // 获取执行结果
         public V get() {
             return mResult;
@@ -86,14 +73,19 @@ public final class TryHelper {
             return or;
         }
 
+        // 获取抛错
+        public Throwable getThrowable() {
+            return mThrowable;
+        }
+
         // 如果失败返回指定 or 值，并执行异常回调
-        public V orErr(V or, Err err) {
+        public V orError(V or, Error error) {
             if (isSuccess) return mResult;
-            err.err(mThrowable);
+            error.error(mThrowable);
             return or;
         }
 
-        public V orErrMag(V or, String msg) {
+        public V orErrorMag(V or, String msg) {
             if (isSuccess) return mResult;
             logE(getTag(), msg, mThrowable);
             return or;
@@ -108,8 +100,8 @@ public final class TryHelper {
             return !isSuccess;
         }
 
-        public interface Err {
-            void err(Throwable throwable);
+        public interface Error {
+            void error(Throwable throwable);
         }
     }
 }

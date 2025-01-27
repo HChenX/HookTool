@@ -24,7 +24,7 @@ import com.hchen.hooktool.HCData;
 
 /**
  * 安卓日志
- * 
+ *
  * @author 焕晨HChen
  */
 public final class AndroidLog {

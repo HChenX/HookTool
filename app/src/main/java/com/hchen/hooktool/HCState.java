@@ -39,8 +39,12 @@ import kotlin.text.Charsets;
  * <p>
  * 记得配置混淆，否则不可用:
  * <p>
- * {@code
- * -keep class com.hchen.hooktool.HCState
+ * <pre>{@code
+ * -keep class  com.hchen.hooktool.HCState {
+ *         static boolean isEnabled;
+ *         static java.lang.String mFramework;
+ *         static int  mVersion;
+ * }
  * }
  *
  * @author 焕晨HChen

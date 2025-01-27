@@ -124,8 +124,8 @@ public final class PackageTool {
      */
     public static int getUserId(int uid) {
         return (int) Optional.ofNullable(
-                        InvokeTool.callStaticMethod(UserHandle.class, "getUserId", new Class[]{int.class}, uid))
-                .orElse(-1);
+                InvokeTool.callStaticMethod(UserHandle.class, "getUserId", new Class[]{int.class}, uid))
+            .orElse(-1);
     }
 
     /**

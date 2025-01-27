@@ -74,9 +74,9 @@ public final class LogExpand {
                 String field = stackTraceElement.getFileName();
                 int line = stackTraceElement.getLineNumber();
                 stringBuilder.append("\nat ").append(clazz).append(".")
-                        .append(method).append("(")
-                        .append(field).append(":")
-                        .append(line).append(")");
+                    .append(method).append("(")
+                    .append(field).append(":")
+                    .append(line).append(")");
             }
         });
         return stringBuilder.toString();
@@ -145,7 +145,7 @@ public final class LogExpand {
         StringBuilder log = new StringBuilder();
         for (int i = 0; i < param.args.length; i++) {
             log.append("    (").append(param.args[i] == null ? "null" : param.args[i].getClass().getSimpleName())
-                    .append(")->").append("[").append(paramToString(param.args[i])).append("]\n");
+                .append(")->").append("[").append(paramToString(param.args[i])).append("]\n");
         }
         logI(TAG, "Method called! Class: [" + className + "], Method: [" + methodName + "]\nParam: {\n" + log + "}");
     }

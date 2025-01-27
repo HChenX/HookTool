@@ -109,7 +109,7 @@ public class ParamTool {
     private boolean checkIndex(int index) {
         if (argsLength() < index + 1) {
             logE(PRIVATETAG, "Args available index length is: [" + (argsLength() - 1) +
-                    "] but index is : [" + index + "] , Exceeding!!" + getStackTrace());
+                "] but index is : [" + index + "] , Exceeding!!" + getStackTrace());
             return false;
         }
         return true;

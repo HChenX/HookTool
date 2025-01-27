@@ -50,23 +50,23 @@ final class ToolTest extends BaseHC {
     public void init() {
         // 链式
         chain("com.hchen.demo", method("test")
-                .hook(new IHook() {
-                    @Override
-                    public void before() {
-                        super.before();
-                    }
-                })
+            .hook(new IHook() {
+                @Override
+                public void before() {
+                    super.before();
+                }
+            })
 
-                .method("test1", String.class)
-                .hook(new IHook() {
-                    @Override
-                    public void after() {
-                        super.after();
-                    }
-                })
+            .method("test1", String.class)
+            .hook(new IHook() {
+                @Override
+                public void after() {
+                    super.after();
+                }
+            })
 
-                .constructor()
-                .returnResult(false)
+            .constructor()
+            .returnResult(false)
         );
 
         hookMethod("com.hchen.demo", "test", new IHook() {
@@ -132,13 +132,13 @@ final class ToolTest extends BaseHC {
         @Override
         public HCInit.BasicData initHC(HCInit.BasicData basicData) {
             return basicData.setTag("HookTool")
-                    .setLogLevel(HCInit.LOG_D)
-                    .setModulePackageName("com.hchen.demo")
-                    .setPrefsName("myprefs") // 可选
-                    .xPrefsAutoReload(true) // 可选
-                    .initLogExpand(new String[]{
-                            "com.hchen.demo.hook"
-                    });
+                .setLogLevel(HCInit.LOG_D)
+                .setModulePackageName("com.hchen.demo")
+                .setPrefsName("myprefs") // 可选
+                .xPrefsAutoReload(true) // 可选
+                .initLogExpand(new String[]{
+                    "com.hchen.demo.hook"
+                });
         }
 
         @Override

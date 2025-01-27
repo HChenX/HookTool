@@ -66,11 +66,11 @@ public final class ChainTool {
     }
 
     public static void chain(String clazz, ChainTool chain) {
-        chain.doFind(findClass(clazz).get());
+        chain.doFind(findClass(clazz));
     }
 
     public static void chain(String clazz, ClassLoader classLoader, ChainTool chain) {
-        chain.doFind(findClass(clazz, classLoader).get());
+        chain.doFind(findClass(clazz, classLoader));
     }
 
     public static void chain(Class<?> clazz, ChainTool chain) {
@@ -137,19 +137,19 @@ public final class ChainTool {
                 case TYPE_METHOD -> {
                     if (cacheData.mCheckExist)
                         if (!existsMethod(clazz, cacheData.mName, cacheData.mParams)) continue;
-                    members.add(new ChainData(findMethod(clazz, cacheData.mName, cacheData.mParams).get()));
+                    members.add(new ChainData(findMethod(clazz, cacheData.mName, cacheData.mParams)));
                 }
                 case TYPE_CONSTRUCTOR -> {
                     if (cacheData.mCheckExist)
                         if (!existsConstructor(clazz, cacheData.mParams)) continue;
-                    members.add(new ChainData(findConstructor(clazz, cacheData.mParams).get()));
+                    members.add(new ChainData(findConstructor(clazz, cacheData.mParams)));
                 }
                 case TYPE_ANY_METHOD ->
-                        members.addAll(Arrays.stream(CoreTool.findAllMethod(clazz, cacheData.mName)).map(
-                                ChainData::new).collect(Collectors.toCollection(ArrayList::new)));
+                    members.addAll(Arrays.stream(CoreTool.findAllMethod(clazz, cacheData.mName)).map(
+                        ChainData::new).collect(Collectors.toCollection(ArrayList::new)));
                 case TYPE_ANY_CONSTRUCTOR ->
-                        members.addAll(Arrays.stream(CoreTool.findAllConstructor(clazz)).map(
-                                ChainData::new).collect(Collectors.toCollection(ArrayList::new)));
+                    members.addAll(Arrays.stream(CoreTool.findAllConstructor(clazz)).map(
+                        ChainData::new).collect(Collectors.toCollection(ArrayList::new)));
                 default -> {
                     logW(getTag(), "Unknown type: " + cacheData.mType + getStackTrace());
                     members.clear();
@@ -164,7 +164,7 @@ public final class ChainTool {
                     if (memberData.member == null || existingMembers.contains(memberData.member)) {
                         iterator.remove();
                         logW(getTag(), "This member maybe repeated or maybe is null, will remove it! " +
-                                "\ndebug: " + UUID + "#member: " + memberData.member);
+                            "\ndebug: " + UUID + "#member: " + memberData.member);
                         continue;
                     }
                     existingMembers.add(memberData.member);

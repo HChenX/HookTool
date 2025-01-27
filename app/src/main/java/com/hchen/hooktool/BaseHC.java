@@ -99,7 +99,7 @@ public abstract class BaseHC extends CoreTool {
     }
 
     /**
-     * 发生崩溃时回调，不要在这里继续执行 hook 逻辑。
+     * 发生崩溃时回调，可用于清理操作；不要在这里继续执行 hook 或可能引发崩溃的逻辑。
      */
     protected void onThrowable(Throwable throwable) {
     }
@@ -128,11 +128,16 @@ public abstract class BaseHC extends CoreTool {
 
     // Hook Application
     final public BaseHC onApplicationCreate() {
-        if (!enabled()) return this;
+        try {
+            if (!enabled()) return this;
 
-        if (!mIApplications.contains(this))
-            mIApplications.add(this);
-        initApplicationHook();
+            if (!mIApplications.contains(this))
+                mIApplications.add(this);
+            initApplicationHook();
+        } catch (Throwable e) {
+            onThrowable(e);
+            logE(TAG, "Waring! can't hook application!!", e);
+        }
         return this;
     }
 
