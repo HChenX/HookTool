@@ -18,7 +18,6 @@
  */
 package com.hchen.hooktool.tool;
 
-import static com.hchen.hooktool.helper.ConvertHelper.arrayToClass;
 import static com.hchen.hooktool.helper.TryHelper.run;
 import static com.hchen.hooktool.hook.HookFactory.createHook;
 import static com.hchen.hooktool.log.LogExpand.getStackTrace;
@@ -26,17 +25,22 @@ import static com.hchen.hooktool.log.LogExpand.getTag;
 import static com.hchen.hooktool.log.XposedLog.logE;
 import static com.hchen.hooktool.log.XposedLog.logI;
 import static com.hchen.hooktool.log.XposedLog.logW;
+import static com.hchen.hooktool.tool.CoreBase.ConvertHelper.arrayToClass;
 import static com.hchen.hooktool.tool.CoreTool.callStaticMethod;
 import static com.hchen.hooktool.tool.SingleMember.createSingleMember;
 
+import androidx.annotation.Nullable;
+
 import com.hchen.hooktool.HCData;
 import com.hchen.hooktool.hook.IHook;
+import com.hchen.hooktool.log.LogExpand;
 import com.hchen.hooktool.tool.itool.IMemberFilter;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -361,5 +365,45 @@ final class CoreBase {
 
             return method;
         }).orErrorMag(null, "Failed to get super private method!");
+    }
+
+    static final class ConvertHelper {
+        /**
+         * 泛型转换为数组。
+         */
+        public static <T> Object[] genericToArray(T ts) {
+            if (ts instanceof Object[] objects) return objects;
+            return new Object[]{ts};
+        }
+
+        @Nullable
+        public static Class<?>[] arrayToClass(Object... objs) {
+            return arrayToClass(HCData.getClassLoader(), objs);
+        }
+
+        /**
+         * 数组参数转为类。
+         */
+        @Nullable
+        public static Class<?>[] arrayToClass(ClassLoader classLoader, Object... objs) {
+            if (classLoader == null || objs == null) return null;
+            if (objs.length == 0) return new Class<?>[]{};
+            List<Class<?>> classes = new ArrayList<>();
+            for (Object o : objs) {
+                if (o instanceof Class<?> c) {
+                    classes.add(c);
+                } else if (o instanceof String s) {
+                    Class<?> ct = baseFindClass(s, classLoader).getNotReport();
+                    if (ct == null) return null;
+                    classes.add(ct);
+                } else if (o instanceof IHook) {
+                    break; // 一定为最后一个参数
+                } else {
+                    logW(LogExpand.getTag(), "Unknown type: " + o + getStackTrace());
+                    return null;
+                }
+            }
+            return classes.toArray(new Class<?>[0]);
+        }
     }
 }

@@ -42,8 +42,8 @@ dependencyResolutionManagement {
 dependencies {
     // Choose one of these options; jitpack is recommended as maven might not update as frequently.
     // Tip: Replace v.*.*.* with the latest release version.
-  implementation 'com.github.HChenX:HookTool:v.1.1.7' // jitpack
-  implementation 'io.github.hchenx:hooktool:v.1.1.7'
+    implementation 'com.github.HChenX:HookTool:v.1.2.0' // jitpack
+    // implementation 'io.github.hchenx:hooktool:v.1.2.0'
     // maven Tip: Almost abandoned, please do not use!
 }
 ```
@@ -110,7 +110,7 @@ public static class MainActivity {
 public class MainTest {
     public void test() {
         CoreTool.hookMethod(/* content */); // Hook method
-        CoreTool.findClass().get(); // Find class
+        CoreTool.findClass(); // Find class
         CoreTool.callMethod(); // Call method
         ChainTool.chain("com.hchen.demo", new ChainTool()
                 .method("method")
@@ -141,7 +141,7 @@ public class MainTest extends BaseHC {
     // Be sure to initialize HCInit.initStartupParam(startupParam) at the hook entry point.
     @Override
     public void initZygote(IXposedHookZygoteInit.StartupParam startupParam) {
-        Class<?> c = findClass("com.hchen.demo.Main").get();
+        Class<?> c = findClass("com.hchen.demo.Main");
         hookMethod(c, "test", new IHook() {
             /* content */
         });
@@ -221,7 +221,7 @@ public class MainTest extends BaseHC {
 ```java
 public class MainTest extends BaseHC {
     public void init() {
-        Class<?> c = findClass("com.hchen.demo.Demo").get(); // If the class cannot be retrieved, an error log is recorded and null is returned.
+        Class<?> c = findClass("com.hchen.demo.Demo"); // If the class cannot be retrieved, an error log is recorded and null is returned.
         hookMethod(c, "test", new IHook() { // If c is null, an error log is recorded and the hook is skipped, allowing the rest of the code to continue.
             @Override
             public void before() {

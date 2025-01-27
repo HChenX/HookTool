@@ -42,8 +42,8 @@ dependencyResolutionManagement {
 dependencies {
     // 二选一即可，推荐使用 jitpack，maven 可能不会同步更新！
     // Tip: v.*.*.* 填写当前最新发行版版本号即可！
-    implementation 'com.github.HChenX:HookTool:v.1.1.7' // jitpack
-    implementation 'io.github.hchenx:hooktool:v.1.1.7' // maven Tip: 几乎废弃，请不要使用！
+    implementation 'com.github.HChenX:HookTool:v.1.2.0' // jitpack
+    // implementation 'io.github.hchenx:hooktool:v.1.2.0' // maven Tip: 几乎废弃，请不要使用！
 }
 ```
 
@@ -108,7 +108,7 @@ public static class MainActivity {
 public class MainTest {
     public void test() {
         CoreTool.hookMethod(/* 内容 */); // 即可 hook
-        CoreTool.findClass().get(); // 查找类
+        CoreTool.findClass(); // 查找类
         CoreTool.callMethod(); // 调用方法
         ChainTool.chain("com.hchen.demo", new ChainTool()
                 .method("method")
@@ -139,7 +139,7 @@ public class MainTest extends BaseHC {
     // 请务必在 hook 入口处初始化 HCInit.initStartupParam(startupParam);
     @Override
     public void initZygote(IXposedHookZygoteInit.StartupParam startupParam) {
-        Class<?> c = findClass("com.hchen.demo.Main").get();
+        Class<?> c = findClass("com.hchen.demo.Main");
         hookMethod(c, "test", new IHook() {
             /* 内容 */
         });
@@ -220,7 +220,7 @@ public class MainTest extends BaseHC {
 ```java
 public class MainTest extends BaseHC {
     public void init() {
-        Class<?> c = findClass("com.hchen.demo.Demo").get(); // 如果无法获取 class 则会记录 Error 日志并返回 null。
+        Class<?> c = findClass("com.hchen.demo.Demo"); // 如果无法获取 class 则会记录 Error 日志并返回 null。
         hookMethod(c, "test", new IHook() { // c 为 null 也会记录 Error 日志，并跳过 hook 继续执行后面逻辑。
             @Override
             public void before() {
