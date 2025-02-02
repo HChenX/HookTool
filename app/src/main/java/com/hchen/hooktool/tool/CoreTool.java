@@ -14,13 +14,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
 
- * Copyright (C) 2023-2024 HChenX
+ * Copyright (C) 2023-2025 HChenX
  */
 package com.hchen.hooktool.tool;
 
 import static com.hchen.hooktool.helper.TryHelper.run;
 import static com.hchen.hooktool.log.LogExpand.getTag;
-import static com.hchen.hooktool.log.XposedLog.logI;
 import static com.hchen.hooktool.tool.CoreBase.baseCallMethod;
 import static com.hchen.hooktool.tool.CoreBase.baseCallStaticMethod;
 import static com.hchen.hooktool.tool.CoreBase.baseCallSuperPrivateMethod;
@@ -48,6 +47,7 @@ import static com.hchen.hooktool.tool.CoreBase.baseSetStaticField;
 import com.hchen.hooktool.HCData;
 import com.hchen.hooktool.hook.IHook;
 import com.hchen.hooktool.log.LogExpand;
+import com.hchen.hooktool.log.XposedLog;
 import com.hchen.hooktool.tool.itool.IMemberFilter;
 
 import java.lang.reflect.Constructor;
@@ -68,7 +68,7 @@ import de.robv.android.xposed.XposedHelpers;
  * @author 焕晨HChen
  * @noinspection unused
  */
-public class CoreTool {
+public class CoreTool extends XposedLog {
     public static ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
 
     //------------ 检查指定类是否存在 --------------

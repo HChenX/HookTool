@@ -14,12 +14,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
 
- * Copyright (C) 2023-2024 HChenX
+ * Copyright (C) 2023-2025 HChenX
  */
 package com.hchen.hooktool;
-
-import static com.hchen.hooktool.log.XposedLog.logE;
-import static com.hchen.hooktool.log.XposedLog.logI;
 
 import android.app.Application;
 import android.content.Context;

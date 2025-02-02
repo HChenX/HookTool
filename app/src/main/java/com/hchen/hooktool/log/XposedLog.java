@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
 
- * Copyright (C) 2023-2024 HChenX
+ * Copyright (C) 2023-2025 HChenX
  */
 package com.hchen.hooktool.log;
 
@@ -27,7 +27,7 @@ import de.robv.android.xposed.XposedBridge;
  *
  * @author 焕晨HChen
  */
-public final class XposedLog {
+public class XposedLog {
     // -------- logE -------------
     public static void logE(String tag, String log) {
         if (HCData.getInitLogLevel() < 1) return;
