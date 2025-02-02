@@ -85,7 +85,7 @@ public final class TryHelper {
             return or;
         }
 
-        public V orErrorMag(V or, String msg) {
+        public V orErrorMsg(V or, String msg) {
             if (isSuccess) return mResult;
             logE(getTag(), msg, mThrowable);
             return or;

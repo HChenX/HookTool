@@ -30,7 +30,7 @@ import com.hchen.hooktool.log.LogExpand;
  *
  * @author 焕晨HChen
  */
-public final class SingleMember<V> {
+final class SingleMember<V> {
     private final V mMember;
     private final Throwable mThrowable;
     private String mErrorMsg = "Unknown";

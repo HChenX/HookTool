@@ -83,7 +83,7 @@ public final class LogExpand {
     }
 
     public static String createRuntimeExceptionLog(String msg) {
-        return HCData.getInitTag() + "[" + getTag() + "][E]: " + msg + getStackTrace();
+        return HCData.getInitTag() + "[" + getTag() + "][E]: " + msg + "\n[Stack Info]: " + getStackTrace();
     }
 
     public static String getTag() {
@@ -128,7 +128,7 @@ public final class LogExpand {
             className = constructor.getDeclaringClass().getName();
             methodName = "<init>";
         } else {
-            logE(TAG, "Unknown type! member: " + member + getStackTrace());
+            logE(TAG, "Unknown type! member: " + member, getStackTrace());
         }
     }
 

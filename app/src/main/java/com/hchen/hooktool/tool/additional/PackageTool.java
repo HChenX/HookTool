@@ -61,7 +61,7 @@ public final class PackageTool {
      */
     public static boolean isUninstall(Context context, String pkg) {
         if (context == null) {
-            logW(getTag(), "Context is null, can't check if the app is uninstalled!" + getStackTrace());
+            logW(getTag(), "Context is null, can't check if the app is uninstalled!", getStackTrace());
             return false;
         }
         PackageManager packageManager = context.getPackageManager();
@@ -83,7 +83,7 @@ public final class PackageTool {
      */
     public static boolean isDisable(Context context, String pkg) {
         if (context == null) {
-            logW(getTag(), "Context is null, can't check if an app is disabled!" + getStackTrace());
+            logW(getTag(), "Context is null, can't check if an app is disabled!", getStackTrace());
             return false;
         }
         PackageManager packageManager = context.getPackageManager();
@@ -108,7 +108,7 @@ public final class PackageTool {
     public static boolean isHidden(Context context, String pkg) {
         try {
             if (context == null) {
-                logW(getTag(), "Context is null, can't check if an app is hidden!" + getStackTrace());
+                logW(getTag(), "Context is null, can't check if an app is hidden!", getStackTrace());
                 return false;
             }
             PackageManager packageManager = context.getPackageManager();
@@ -124,8 +124,8 @@ public final class PackageTool {
      */
     public static int getUserId(int uid) {
         return (int) Optional.ofNullable(
-                InvokeTool.callStaticMethod(UserHandle.class, "getUserId", new Class[]{int.class}, uid))
-            .orElse(-1);
+            InvokeTool.callStaticMethod(UserHandle.class, "getUserId", new Class[]{int.class}, uid)
+        ).orElse(-1);
     }
 
     /**
@@ -134,7 +134,7 @@ public final class PackageTool {
      */
     public static boolean isSystem(ApplicationInfo app) {
         if (Objects.isNull(app)) {
-            AndroidLog.logE(getTag(), "ApplicationInfo is null, can't check if it's a system app!" + getStackTrace());
+            AndroidLog.logE(getTag(), "ApplicationInfo is null, can't check if it's a system app!", getStackTrace());
             return false;
         }
         if (app.uid < 10000) {
@@ -146,22 +146,35 @@ public final class PackageTool {
     /**
      * 通过自定义代码获取 Package 信息，
      * 支持: PackageInfo, ResolveInfo, ActivityInfo, ApplicationInfo, ProviderInfo. 类型的返回值.
-     * 返回使用 return new List<>(XX); 包裹。
+     * <p>
+     * 示例：
+     * <p>
+     * <pre>{@code
+     * AppData appData = PackageTool.getPackagesByCode(new IPackageInfoGetter() {
+     *             @Override
+     *             public Parcelable[] packageInfoGetter(PackageManager pm) throws PackageManager.NameNotFoundException {
+     *                 PackageInfo packageInfo = null;
+     *                 ArrayList<PackageInfo> arrayList = new ArrayList<>();
+     *                 arrayList.add(packageInfo);
+     *                 return arrayList.toArray(new PackageInfo[0]);
+     *             }
+     *         })[0];
+     * }
      *
-     * @param iCode 需要执行的代码
-     * @return ListAppData 包含各种应用详细信息
+     * @param infoGetter 需要执行的代码
+     * @return AppData[] 包含各种应用详细信息
      * @see #createAppData(Parcelable, PackageManager)
      */
-    public static AppData[] getPackagesByCode(Context context, IPackageInfoGetter iCode) {
+    public static AppData[] getPackagesByCode(Context context, IPackageInfoGetter infoGetter) {
         List<AppData> appDataList = new ArrayList<>();
         if (context == null) {
-            logW(getTag(), "Context is null, can't get packages by code!" + getStackTrace());
+            logW(getTag(), "Context is null, can't get packages by code!", getStackTrace());
             return new AppData[0];
         }
         PackageManager packageManager = context.getPackageManager();
         Parcelable[] parcelables;
         try {
-            parcelables = iCode.packageInfoGetter(packageManager);
+            parcelables = infoGetter.packageInfoGetter(packageManager);
         } catch (PackageManager.NameNotFoundException e) {
             logE(getTag(), e);
             return new AppData[0];

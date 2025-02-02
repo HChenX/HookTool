@@ -70,8 +70,9 @@ final class CoreBase {
         return clazz.exec(new SingleMember<>(),
             member ->
                 createSingleMember(
-                    () -> XposedHelpers.findMethodExact(member, name, arrayToClass(member.getClassLoader(), objs)))
-                    .setErrorMsg("Failed to find method!"));
+                    () -> XposedHelpers.findMethodExact(member, name, arrayToClass(member.getClassLoader(), objs))
+                ).setErrorMsg("Failed to find method!")
+        );
     }
 
     static Method[] baseFindAllMethod(SingleMember<Class<?>> clazz, String name) {
@@ -82,7 +83,8 @@ final class CoreBase {
                         .filter(method -> name.equals(method.getName()))
                         .toArray(Method[]::new)
                 ).setErrorMsg("Failed to find all method!")
-                    .or(new Method[0]));
+                    .or(new Method[0])
+        );
     }
 
     static SingleMember<Constructor<?>> baseFindConstructor(SingleMember<Class<?>> clazz, Object... objs) {
@@ -90,7 +92,8 @@ final class CoreBase {
             member ->
                 SingleMember.<Constructor<?>>createSingleMember(
                     () -> XposedHelpers.findConstructorExact(member, arrayToClass(member.getClassLoader(), objs))
-                ).setErrorMsg("Failed to find constructor!"));
+                ).setErrorMsg("Failed to find constructor!")
+        );
     }
 
     static Constructor<?>[] baseFindAllConstructor(SingleMember<Class<?>> clazz) {
@@ -99,7 +102,8 @@ final class CoreBase {
                 createSingleMember(
                     member::getDeclaredConstructors
                 ).setErrorMsg("Failed to find constructor!")
-                    .or(new Constructor[0]));
+                    .or(new Constructor[0])
+        );
     }
 
     static SingleMember<Field> baseFindField(SingleMember<Class<?>> clazz, String name) {
@@ -107,15 +111,18 @@ final class CoreBase {
             member ->
                 createSingleMember(
                     () -> XposedHelpers.findField(member, name)
-                ).setErrorMsg("Failed to find field!"));
+                ).setErrorMsg("Failed to find field!")
+        );
     }
 
     static XC_MethodHook.Unhook baseHook(SingleMember<Class<?>> clazz, String method, Object... params) {
         String tag = getTag();
-        String debug = (method != null ? "METHOD" : "CONSTRUCTOR") + "#" + (clazz.getNotReport() == null ? "null" : clazz.getNotReport().getName())
+        String debug = (method != null ? "METHOD" : "CONSTRUCTOR") + "#"
+            + (clazz.getNotReport() == null ? "null" : clazz.getNotReport().getName())
             + "#" + method + "#" + Arrays.toString(params);
+
         if (params == null || params.length == 0 || !(params[params.length - 1] instanceof IHook iHook)) {
-            logW(tag, "Hook params is null or length is 0 or last param not is IAction! \ndebug: " + debug + getStackTrace());
+            logW(tag, "Hook params is null or length is 0 or last param not is IHook object! \ndebug: " + debug, getStackTrace());
             return null;
         }
 
@@ -138,15 +145,11 @@ final class CoreBase {
             XC_MethodHook.Unhook unHook = XposedBridge.hookMethod(member.getNotReport(), createHook(tag, iHook));
             logI(tag, "Success to hook: " + member.getNotReport());
             return unHook;
-        }).orErrorMag(null, "Failed to hook! \ndebug: " + debug);
-    }
-
-    static <T extends Member> XC_MethodHook.Unhook[] baseHookAll(List<T> members, IHook iHook) {
-        return baseHookAll(members.toArray(new Member[0]), iHook);
+        }).orErrorMsg(null, "Failed to hook! \ndebug: " + debug);
     }
 
     static XC_MethodHook.Unhook[] baseHookAll(Member[] members, IHook iHook) {
-        if (members == null) return new XC_MethodHook.Unhook[0];
+        if (members == null || members.length == 0) return new XC_MethodHook.Unhook[0];
         String tag = getTag();
 
         return Arrays.stream(members).map(member ->
@@ -155,7 +158,7 @@ final class CoreBase {
                         logI(tag, "Success to hook: " + member);
                         return unhook;
                     }
-                ).orErrorMag(null, "Failed to hook: " + member)
+                ).orErrorMsg(null, "Failed to hook: " + member)
             )
             .filter(Objects::nonNull)
             .toArray(XC_MethodHook.Unhook[]::new);
@@ -194,14 +197,16 @@ final class CoreBase {
         if (type instanceof String name) {
             return run(
                 () -> XposedHelpers.callMethod(instance, name, objs)
-            ).orErrorMag(null, "Failed to call method!");
+            ).orErrorMsg(null, "Failed to call method!");
         } else if (type instanceof Method method) {
             return run(() -> {
                 method.setAccessible(true);
                 return method.invoke(instance, objs);
-            }).orErrorMag(null, "Failed to call method!");
+            }).orErrorMsg(null, "Failed to call method!");
+        } else {
+            logW(getTag(), "Unknown type: " + type, getStackTrace());
+            return null;
         }
-        return null;
     }
 
     static Object baseCallSuperPrivateMethod(Object instance, String name, Object... objs) {
@@ -210,21 +215,23 @@ final class CoreBase {
             if (method == null) return null;
 
             return baseCallMethod(instance, method, objs);
-        }).orErrorMag(null, "Failed to call super private method!");
+        }).orErrorMsg(null, "Failed to call super private method!");
     }
 
     static Object baseGetField(Object instance, Object type) {
         if (type instanceof String name) {
             return run(
                 () -> XposedHelpers.getObjectField(instance, name)
-            ).orErrorMag(null, "Failed to get field!");
+            ).orErrorMsg(null, "Failed to get field!");
         } else if (type instanceof Field field) {
             return run(() -> {
                 field.setAccessible(true);
                 return field.get(instance);
-            }).orErrorMag(null, "Failed to get field!");
+            }).orErrorMsg(null, "Failed to get field!");
+        } else {
+            logW(getTag(), "Unknown type: " + type, getStackTrace());
+            return null;
         }
-        return null;
     }
 
     static boolean baseSetField(Object instance, Object type, Object value) {
@@ -232,15 +239,17 @@ final class CoreBase {
             return run(() -> {
                 XposedHelpers.setObjectField(instance, name, value);
                 return true;
-            }).orErrorMag(false, "Failed to set field!");
+            }).orErrorMsg(false, "Failed to set field!");
         } else if (type instanceof Field field) {
             return run(() -> {
                 field.setAccessible(true);
                 field.set(instance, value);
                 return true;
-            }).orErrorMag(false, "Failed to set field!");
+            }).orErrorMsg(false, "Failed to set field!");
+        } else {
+            logW(getTag(), "Unknown type: " + type, getStackTrace());
+            return false;
         }
-        return false;
     }
 
     static Object baseNewInstance(SingleMember<Class<?>> clz, Object... objs) {
@@ -266,7 +275,7 @@ final class CoreBase {
             return run(() -> {
                 method.setAccessible(true);
                 return method.invoke(null, objs);
-            }).orErrorMag(null, "Failed to call static method!");
+            }).orErrorMsg(null, "Failed to call static method!");
     }
 
     static Object baseCallSuperStaticPrivateMethod(SingleMember<Class<?>> clz, String name, Object... objs) {
@@ -296,7 +305,7 @@ final class CoreBase {
             return run(() -> {
                 field.setAccessible(true);
                 return field.get(null);
-            }).orErrorMag(null, "Failed to get static field!");
+            }).orErrorMsg(null, "Failed to get static field!");
     }
 
     static boolean baseSetStaticField(SingleMember<Class<?>> clz, Field field, String name, Object value) {
@@ -314,7 +323,7 @@ final class CoreBase {
                 field.setAccessible(true);
                 field.set(null, value);
                 return true;
-            }).orErrorMag(false, "Failed to set static field!");
+            }).orErrorMsg(false, "Failed to set static field!");
     }
 
     static Object baseSetAdditionalStaticField(SingleMember<Class<?>> clz, String key, Object value) {
@@ -364,7 +373,7 @@ final class CoreBase {
             } while ((clazz = clazz.getSuperclass()) != null);
 
             return method;
-        }).orErrorMag(null, "Failed to get super private method!");
+        }).orErrorMsg(null, "Failed to get super private method!");
     }
 
     static final class ConvertHelper {
@@ -399,7 +408,7 @@ final class CoreBase {
                 } else if (o instanceof IHook) {
                     break; // 一定为最后一个参数
                 } else {
-                    logW(LogExpand.getTag(), "Unknown type: " + o + getStackTrace());
+                    logW(LogExpand.getTag(), "Unknown type: " + o, getStackTrace());
                     return null;
                 }
             }

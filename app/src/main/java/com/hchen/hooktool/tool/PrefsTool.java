@@ -141,7 +141,7 @@ public final class PrefsTool {
                 s = context.getSharedPreferences(prefsName, Context.MODE_WORLD_READABLE);
             } catch (Throwable ignored) {
                 s = context.getSharedPreferences(prefsName, Context.MODE_PRIVATE);
-                AndroidLog.logW(getTag(), "Maybe can't use xSharedPreferences!" + getStackTrace());
+                AndroidLog.logW(getTag(), "Maybe can't use xSharedPreferences!", getStackTrace());
             }
             sPrefs.put(context.getPackageName() + prefsName, s);
             return s;
@@ -248,7 +248,7 @@ public final class PrefsTool {
         @Override
         @Nullable
         public Editor editor() {
-            logW(getTag(), "Xposed can't edit prefs!" + getStackTrace());
+            logW(getTag(), "Xposed can't edit prefs!", getStackTrace());
             return null;
         }
 

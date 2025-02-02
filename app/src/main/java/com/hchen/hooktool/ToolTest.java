@@ -115,6 +115,7 @@ final class ToolTest extends BaseHC {
             public Parcelable[] packageInfoGetter(PackageManager pm) throws PackageManager.NameNotFoundException {
                 PackageInfo packageInfo = null;
                 ArrayList<PackageInfo> arrayList = new ArrayList<>();
+                arrayList.add(packageInfo);
                 return arrayList.toArray(new PackageInfo[0]);
             }
         })[0];

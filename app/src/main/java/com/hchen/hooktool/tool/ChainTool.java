@@ -75,7 +75,7 @@ public final class ChainTool {
 
     public static void chain(Class<?> clazz, ChainTool chain) {
         if (clazz == null) {
-            logW(getTag(), "Class is null, can't create chain hook!" + getStackTrace());
+            logW(getTag(), "Class is null, can't create chain hook!", getStackTrace());
             return;
         }
         chain.doFind(clazz);
@@ -126,7 +126,7 @@ public final class ChainTool {
             return;
         }
         if (cacheDataList.isEmpty()) {
-            logW(getTag(), "cache data list is empty, can't find or hook anything!" + getStackTrace());
+            logW(getTag(), "cache data list is empty, can't find or hook anything!", getStackTrace());
             return;
         }
 
@@ -151,7 +151,7 @@ public final class ChainTool {
                     members.addAll(Arrays.stream(CoreTool.findAllConstructor(clazz)).map(
                         ChainData::new).collect(Collectors.toCollection(ArrayList::new)));
                 default -> {
-                    logW(getTag(), "Unknown type: " + cacheData.mType + getStackTrace());
+                    logW(getTag(), "Unknown type: " + cacheData.mType, getStackTrace());
                     members.clear();
                     continue;
                 }
@@ -163,8 +163,7 @@ public final class ChainTool {
                     ChainData memberData = iterator.next();
                     if (memberData.member == null || existingMembers.contains(memberData.member)) {
                         iterator.remove();
-                        logW(getTag(), "This member maybe repeated or maybe is null, will remove it! " +
-                            "\ndebug: " + UUID + "#member: " + memberData.member);
+                        logW(getTag(), "This member maybe repeated or maybe is null, will remove it! " + "\ndebug: " + UUID + "#member: " + memberData.member);
                         continue;
                     }
                     existingMembers.add(memberData.member);

@@ -93,13 +93,13 @@ public final class ResInjectTool {
     public static Resources loadModuleRes(Resources resources, boolean doOnMainLooper) {
         boolean load;
         if (resources == null) {
-            logW(getTag(), "Context can't is null!" + getStackTrace());
+            logW(getTag(), "Context can't is null!", getStackTrace());
             return null;
         }
         if (mModulePath == null) {
             mModulePath = HCData.getModulePath() != null ? HCData.getModulePath() : null;
             if (mModulePath == null) {
-                logW(getTag(), "Module path is null, can't load module res!" + getStackTrace());
+                logW(getTag(), "Module path is null, can't load module res!", getStackTrace());
                 return null;
             }
         }
@@ -191,7 +191,7 @@ public final class ResInjectTool {
             addAssetPath.setAccessible(true);
             Integer cookie = (Integer) addAssetPath.invoke(assets, mModulePath);
             if (cookie == null || cookie == 0) {
-                logW(getTag(), "Method 'addAssetPath' result 0, maybe load res failed!" + getStackTrace());
+                logW(getTag(), "Method 'addAssetPath' result 0, maybe load res failed!", getStackTrace());
                 return false;
             }
         } catch (Throwable e) {

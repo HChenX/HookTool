@@ -42,7 +42,7 @@ dependencyResolutionManagement {
 dependencies {
     // Choose one of these options; jitpack is recommended as maven might not update as frequently.
     // Tip: Replace v.*.*.* with the latest release version.
-    implementation 'com.github.HChenX:HookTool:v.1.2.0' // jitpack
+    implementation 'com.github.HChenX:HookTool:v.1.2.1' // jitpack
     // implementation 'io.github.hchenx:hooktool:v.1.2.0'
     // maven Tip: Almost abandoned, please do not use!
 }

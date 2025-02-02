@@ -34,6 +34,11 @@ public final class AndroidLog {
         Log.e(HCData.getSpareTag(), "[" + tag + "]" + "[E]: " + log);
     }
 
+    public static void logE(String tag, String log, String stackTrace) {
+        if (HCData.getInitLogLevel() < 1) return;
+        Log.e(HCData.getSpareTag(), "[" + tag + "]" + "[E]: " + log + "\n[Stack Info]: " + stackTrace);
+    }
+
     public static void logE(String tag, Throwable throwable) {
         if (HCData.getInitLogLevel() < 1) return;
         Log.e(HCData.getSpareTag(), "[" + tag + "]" + "[E]: ", throwable);
@@ -48,6 +53,11 @@ public final class AndroidLog {
     public static void logW(String tag, String log) {
         if (HCData.getInitLogLevel() < 2) return;
         Log.w(HCData.getSpareTag(), "[" + tag + "]" + "[W]: " + log);
+    }
+
+    public static void logW(String tag, String log, String stackTrace) {
+        if (HCData.getInitLogLevel() < 2) return;
+        Log.w(HCData.getSpareTag(), "[" + tag + "]" + "[W]: " + log + "\n[Stack Info]: " + stackTrace);
     }
 
     public static void logW(String tag, Throwable throwable) {
@@ -85,6 +95,11 @@ public final class AndroidLog {
     public static void logD(String tag, String log) {
         if (HCData.getInitLogLevel() < 4) return;
         Log.d(HCData.getSpareTag(), "[" + tag + "]" + "[D]: " + log);
+    }
+
+    public static void logD(String tag, String log, String stackTrace) {
+        if (HCData.getInitLogLevel() < 4) return;
+        Log.d(HCData.getSpareTag(), "[" + tag + "]" + "[D]: " + log + "\n[Stack Info]: " + stackTrace);
     }
 
     public static void logD(String tag, Throwable throwable) {

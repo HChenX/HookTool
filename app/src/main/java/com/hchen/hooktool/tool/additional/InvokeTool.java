@@ -95,7 +95,7 @@ public final class InvokeTool {
                                           Class<?>[] param /* 方法参数 */, Object... value /* 值 */) {
         Method declaredMethod;
         if (clz == null && instance == null) {
-            AndroidLog.logW(getTag(), "Class and instance is null, can't invoke method: " + method + getStackTrace());
+            AndroidLog.logW(getTag(), "Class and instance is null, can't invoke method: " + method, getStackTrace());
             return null;
         } else if (clz == null) {
             clz = instance.getClass();
@@ -122,7 +122,7 @@ public final class InvokeTool {
                                          boolean set /* 是否为 set 模式 */, Object value /* 指定值 */) {
         Field declaredField = null;
         if (clz == null && instance == null) {
-            AndroidLog.logW(getTag(), "Class and instance is null, can't invoke field: " + field + getStackTrace());
+            AndroidLog.logW(getTag(), "Class and instance is null, can't invoke field: " + field, getStackTrace());
             return null;
         } else if (clz == null) {
             clz = instance.getClass();

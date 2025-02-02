@@ -126,7 +126,7 @@ public class CoreTool {
     }
 
     public static Method findMethod(Class<?> clazz, String name, Object... objs) {
-        return baseFindMethod(new SingleMember<>(clazz, null), name, objs).get();
+        return baseFindMethod(new SingleMember<>(clazz), name, objs).get();
     }
 
     public static Method[] findAllMethod(String clazz, String name) {
@@ -138,7 +138,7 @@ public class CoreTool {
     }
 
     public static Method[] findAllMethod(Class<?> clazz, String name) {
-        return baseFindAllMethod(new SingleMember<>(clazz, null), name);
+        return baseFindAllMethod(new SingleMember<>(clazz), name);
     }
 
     //------------ 检查指定构造函数是否存在 --------------
@@ -165,7 +165,7 @@ public class CoreTool {
     }
 
     public static Constructor<?> findConstructor(Class<?> clazz, Object... objs) {
-        return baseFindConstructor(new SingleMember<>(clazz, null), objs).get();
+        return baseFindConstructor(new SingleMember<>(clazz), objs).get();
     }
 
     public static Constructor<?>[] findAllConstructor(String clazz) {
@@ -177,7 +177,7 @@ public class CoreTool {
     }
 
     public static Constructor<?>[] findAllConstructor(Class<?> clazz) {
-        return baseFindAllConstructor(new SingleMember<>(clazz, null));
+        return baseFindAllConstructor(new SingleMember<>(clazz));
     }
 
     //------------ 检查指定字段是否存在 --------------
@@ -204,7 +204,7 @@ public class CoreTool {
     }
 
     public static Field findField(Class<?> clazz, String name) {
-        return baseFindField(new SingleMember<>(clazz, null), name).get();
+        return baseFindField(new SingleMember<>(clazz), name).get();
     }
 
     // --------- 执行 hook -----------
@@ -218,7 +218,7 @@ public class CoreTool {
     }
 
     public static XC_MethodHook.Unhook hookMethod(Class<?> clazz, String method, Object... params) {
-        return baseHook(new SingleMember<>(clazz, null), method, params);
+        return baseHook(new SingleMember<>(clazz), method, params);
     }
 
     public static XC_MethodHook.Unhook[] hookAllMethod(String clazz, String method, IHook iHook) {
@@ -243,7 +243,7 @@ public class CoreTool {
     }
 
     public static XC_MethodHook.Unhook hookConstructor(Class<?> clazz, Object... params) {
-        return baseHook(new SingleMember<>(clazz, null), null, params);
+        return baseHook(new SingleMember<>(clazz), null, params);
     }
 
     public static XC_MethodHook.Unhook[] hookAllConstructor(String clazz, IHook iHook) {
@@ -301,7 +301,7 @@ public class CoreTool {
     }
 
     public static Method[] filterMethod(Class<?> clazz, IMemberFilter<Method> iMemberFilter) {
-        return baseFilterMethod(new SingleMember<>(clazz, null), iMemberFilter);
+        return baseFilterMethod(new SingleMember<>(clazz), iMemberFilter);
     }
 
     public static Constructor<?>[] filterConstructor(String clazz, IMemberFilter<Constructor<?>> iMemberFilter) {
@@ -313,7 +313,7 @@ public class CoreTool {
     }
 
     public static Constructor<?>[] filterConstructor(Class<?> clazz, IMemberFilter<Constructor<?>> iMemberFilter) {
-        return baseFilterConstructor(new SingleMember<>(clazz, null), iMemberFilter);
+        return baseFilterConstructor(new SingleMember<>(clazz), iMemberFilter);
     }
 
     // --------- 打印堆栈 ----------
@@ -334,7 +334,7 @@ public class CoreTool {
             runnable.run();
             Instant end = Instant.now();
             return Duration.between(start, end).toMillis();
-        }).orErrorMag(-1L, "Failed to check code time consumption!");
+        }).orErrorMsg(-1L, "Failed to check code time consumption!");
     }
 
     // ---------- 非静态 -----------
@@ -368,22 +368,22 @@ public class CoreTool {
 
     public static Object setAdditionalInstanceField(Object instance, String key, Object value) {
         return run(() -> XposedHelpers.setAdditionalInstanceField(instance, key, value))
-            .orErrorMag(null, "Failed to set additional instance!");
+            .orErrorMsg(null, "Failed to set additional instance!");
     }
 
     public static Object getAdditionalInstanceField(Object instance, String key) {
         return run(() -> XposedHelpers.getAdditionalInstanceField(instance, key))
-            .orErrorMag(null, "Failed to get additional instance!");
+            .orErrorMsg(null, "Failed to get additional instance!");
     }
 
     public static Object removeAdditionalInstanceField(Object instance, String key) {
         return run(() -> XposedHelpers.removeAdditionalInstanceField(instance, key))
-            .orErrorMag(null, "Failed to remove additional instance!");
+            .orErrorMsg(null, "Failed to remove additional instance!");
     }
 
     // ---------- 静态 ------------
     public static Object newInstance(Class<?> clz, Object... objs) {
-        return baseNewInstance(new SingleMember<>(clz, null), objs);
+        return baseNewInstance(new SingleMember<>(clz), objs);
     }
 
     public static Object newInstance(String clz, Object... objs) {
@@ -395,7 +395,7 @@ public class CoreTool {
     }
 
     public static Object callStaticMethod(Class<?> clz, String name, Object... objs) {
-        return baseCallStaticMethod(new SingleMember<>(clz, null), null, name, objs);
+        return baseCallStaticMethod(new SingleMember<>(clz), null, name, objs);
     }
 
     public static Object callStaticMethod(String clz, String name, Object... objs) {
@@ -419,11 +419,11 @@ public class CoreTool {
     }
 
     public static Object callSuperStaticPrivateMethod(Class<?> clz, String name, Object... objs) {
-        return baseCallSuperStaticPrivateMethod(new SingleMember<>(clz, null), name, objs);
+        return baseCallSuperStaticPrivateMethod(new SingleMember<>(clz), name, objs);
     }
 
     public static Object getStaticField(Class<?> clz, String name) {
-        return baseGetStaticField(new SingleMember<>(clz, null), null, name);
+        return baseGetStaticField(new SingleMember<>(clz), null, name);
     }
 
     public static Object getStaticField(String clz, String name) {
@@ -439,7 +439,7 @@ public class CoreTool {
     }
 
     public static boolean setStaticField(Class<?> clz, String name, Object value) {
-        return baseSetStaticField(new SingleMember<>(clz, null), null, name, value);
+        return baseSetStaticField(new SingleMember<>(clz), null, name, value);
     }
 
     public static boolean setStaticField(String clz, String name, Object value) {
@@ -455,7 +455,7 @@ public class CoreTool {
     }
 
     public static Object setAdditionalStaticField(Class<?> clz, String key, Object value) {
-        return baseSetAdditionalStaticField(new SingleMember<>(clz, null), key, value);
+        return baseSetAdditionalStaticField(new SingleMember<>(clz), key, value);
     }
 
     public static Object setAdditionalStaticField(String clz, String key, Object value) {
@@ -467,7 +467,7 @@ public class CoreTool {
     }
 
     public static Object getAdditionalStaticField(Class<?> clz, String key) {
-        return baseGetAdditionalStaticField(new SingleMember<>(clz, null), key);
+        return baseGetAdditionalStaticField(new SingleMember<>(clz), key);
     }
 
     public static Object getAdditionalStaticField(String clz, String key) {
@@ -479,7 +479,7 @@ public class CoreTool {
     }
 
     public static Object removeAdditionalStaticField(Class<?> clz, String key) {
-        return baseRemoveAdditionalStaticField(new SingleMember<>(clz, null), key);
+        return baseRemoveAdditionalStaticField(new SingleMember<>(clz), key);
     }
 
     public static Object removeAdditionalStaticField(String clz, String key) {
