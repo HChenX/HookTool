@@ -22,11 +22,8 @@ import static com.hchen.hooktool.data.ChainData.TYPE_ANY_CONSTRUCTOR;
 import static com.hchen.hooktool.data.ChainData.TYPE_ANY_METHOD;
 import static com.hchen.hooktool.data.ChainData.TYPE_CONSTRUCTOR;
 import static com.hchen.hooktool.data.ChainData.TYPE_METHOD;
-import static com.hchen.hooktool.hook.HookFactory.createHook;
 import static com.hchen.hooktool.log.LogExpand.getStackTrace;
 import static com.hchen.hooktool.log.LogExpand.getTag;
-import static com.hchen.hooktool.log.XposedLog.logE;
-import static com.hchen.hooktool.log.XposedLog.logI;
 import static com.hchen.hooktool.log.XposedLog.logW;
 import static com.hchen.hooktool.tool.CoreTool.existsConstructor;
 import static com.hchen.hooktool.tool.CoreTool.existsMethod;
@@ -46,8 +43,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.stream.Collectors;
-
-import de.robv.android.xposed.XposedBridge;
 
 /**
  * 创建链式调用
@@ -192,12 +187,7 @@ public final class ChainTool {
                 continue;
             }
             for (ChainData memberData : chainData.members) {
-                try {
-                    XposedBridge.hookMethod(memberData.member, createHook(getTag(), chainData.iHook));
-                    logI(getTag(), "Success to hook: " + memberData.member);
-                } catch (Throwable e) {
-                    logE(getTag(), "Failed to hook: " + memberData.member, e);
-                }
+                CoreBase.baseHookAll(new Member[]{memberData.member}, chainData.iHook);
             }
             chainData.hookState = HookState.HOOKED;
             iterator.set(chainData);

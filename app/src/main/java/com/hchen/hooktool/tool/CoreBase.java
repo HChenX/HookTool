@@ -19,7 +19,6 @@
 package com.hchen.hooktool.tool;
 
 import static com.hchen.hooktool.helper.TryHelper.run;
-import static com.hchen.hooktool.hook.HookFactory.createHook;
 import static com.hchen.hooktool.log.LogExpand.getStackTrace;
 import static com.hchen.hooktool.log.LogExpand.getTag;
 import static com.hchen.hooktool.log.XposedLog.logE;
@@ -376,6 +375,33 @@ final class CoreBase {
         }).orErrorMsg(null, "Failed to get super private method!");
     }
 
+    static XC_MethodHook createHook(String tag, IHook iHook) {
+        iHook.PRIVATETAG = tag;
+        XC_MethodHook xcMethodHook = new XC_MethodHook(iHook.PRIORITY) {
+            @Override
+            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                try {
+                    iHook.MethodHookParam(param);
+                    iHook.before();
+                } catch (Throwable e) {
+                    logE(iHook.PRIVATETAG + ":before", e);
+                }
+            }
+
+            @Override
+            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                try {
+                    iHook.MethodHookParam(param);
+                    iHook.after();
+                } catch (Throwable e) {
+                    logE(iHook.PRIVATETAG + ":after", e);
+                }
+            }
+        };
+        iHook.XCMethodHook(xcMethodHook);
+        return xcMethodHook;
+    }
+
     static final class ConvertHelper {
         /**
          * 泛型转换为数组。
@@ -402,7 +428,7 @@ final class CoreBase {
                 if (o instanceof Class<?> c) {
                     classes.add(c);
                 } else if (o instanceof String s) {
-                    Class<?> ct = baseFindClass(s, classLoader).getNotReport();
+                    Class<?> ct = CoreTool.findClass(s, classLoader);
                     if (ct == null) return null;
                     classes.add(ct);
                 } else if (o instanceof IHook) {

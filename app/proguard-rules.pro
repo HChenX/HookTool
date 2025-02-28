@@ -26,3 +26,6 @@
         static java.lang.String mFramework;
         static int  mVersion;
  }
+-keep class * implements android.os.Parcelable {
+        public static ** CREATOR;
+}
