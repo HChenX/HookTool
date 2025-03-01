@@ -75,8 +75,11 @@ public final class SystemPropTool {
     private static String classLoaderMethod(String name, ClassLoader classLoader) {
         return (String) Optional.ofNullable(
             InvokeTool.callStaticMethod(
-                "android.os.SystemProperties", classLoader,
-                "get", new Class[]{String.class}, name
+                "android.os.SystemProperties",
+                classLoader,
+                "get",
+                new Class[]{String.class},
+                name
             )
         ).orElse("");
     }

@@ -25,9 +25,11 @@ import android.graphics.Bitmap;
 import android.os.Parcelable;
 
 import com.hchen.hooktool.data.AppData;
+import com.hchen.hooktool.data.ShellResult;
 import com.hchen.hooktool.hook.IHook;
 import com.hchen.hooktool.tool.additional.PackageTool;
 import com.hchen.hooktool.tool.additional.ShellTool;
+import com.hchen.hooktool.tool.itool.IExecListener;
 import com.hchen.hooktool.tool.itool.IPackageInfoGetter;
 
 import java.util.ArrayList;
@@ -113,7 +115,10 @@ final class ToolTest extends BaseHC {
 
         ShellTool shellTool = ShellTool.builder().isRoot(true).create();
         shellTool = ShellTool.obtain();
-        ShellTool.ShellResult shellResult = shellTool.cmd("ls").exec();
+        ShellResult shellResult = shellTool.cmd("ls").exec();
+        if (shellResult != null) {
+            boolean result = shellResult.isSuccess();
+        }
         shellTool.cmd("""
             if [[ 1 == 1 ]]; then
                 echo hello;
@@ -122,31 +127,31 @@ final class ToolTest extends BaseHC {
             fi
             """).exec();
         shellTool.cmd("echo hello").async();
-        shellTool.cmd("echo world").async(new ShellTool.IExecListener() {
+        shellTool.cmd("echo world").async(new IExecListener() {
             @Override
             public void output(String command, String[] outputs, String exitCode) {
-                ShellTool.IExecListener.super.output(command, outputs, exitCode);
+                IExecListener.super.output(command, outputs, exitCode);
             }
         });
-        shellTool.addExecListener(new ShellTool.IExecListener() {
+        shellTool.addExecListener(new IExecListener() {
             @Override
             public void output(String command, String[] outputs, String exitCode) {
-                ShellTool.IExecListener.super.output(command, outputs, exitCode);
+                IExecListener.super.output(command, outputs, exitCode);
             }
 
             @Override
             public void error(String command, String[] errors, String exitCode) {
-                ShellTool.IExecListener.super.error(command, errors, exitCode);
+                IExecListener.super.error(command, errors, exitCode);
             }
 
             @Override
-            public void notRoot(String result) {
-                ShellTool.IExecListener.super.notRoot(result);
+            public void notRoot(String exitCode) {
+                IExecListener.super.notRoot(exitCode);
             }
 
             @Override
             public void brokenPip(String command, String[] errors, String reason) {
-                ShellTool.IExecListener.super.brokenPip(command, errors, reason);
+                IExecListener.super.brokenPip(command, errors, reason);
             }
         });
         shellTool.close();
@@ -165,7 +170,7 @@ final class ToolTest extends BaseHC {
         prefs().get("test_key", "0"); // 获取 prefs test_key 的值
         prefs().getBoolean("test_key_bool", false); // 获取 prefs test_key_bool 的值
 
-        getFakeResId("test_res"); // 获取 test_res 的虚拟资源 id
+        createFakeResId("test_res"); // 获取 test_res 的虚拟资源 id
         // 设置 pkg 的 string 资源 test_res_str 值为 HC!
         setObjectReplacement("com.hchen.demo", "string", "test_res_str", "HC!");
     }

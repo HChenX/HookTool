@@ -41,16 +41,12 @@ public final class TryHelper {
         V run() throws Throwable;
     }
 
-    public static class Result<V> {
+    public static final class Result<V> {
         private V mResult;
         private boolean isSuccess;
         private Throwable mThrowable;
 
         public Result(Run<V> supplier) {
-            doRun(supplier);
-        }
-
-        private void doRun(Run<V> supplier) {
             try {
                 mResult = supplier.run();
                 isSuccess = true;

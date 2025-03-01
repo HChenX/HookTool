@@ -44,8 +44,8 @@ public final class LogExpand {
     private String methodName;
     private String className;
 
-    public LogExpand(XC_MethodHook.MethodHookParam param, String TAG) {
-        this.TAG = TAG;
+    public LogExpand(XC_MethodHook.MethodHookParam param, String tag) {
+        this.TAG = tag;
         this.param = param;
         getName(param.method);
     }

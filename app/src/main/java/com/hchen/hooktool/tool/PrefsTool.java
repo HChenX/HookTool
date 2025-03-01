@@ -101,7 +101,7 @@ public final class PrefsTool {
 
         ContextTool.getAsyncContext(new IContextGetter() {
             @Override
-            public void tryToFindContext(@androidx.annotation.Nullable Context context) {
+            public void onContext(@androidx.annotation.Nullable Context context) {
                 if (context == null)
                     throw new RuntimeException(createRuntimeExceptionLog("Async prefs context is null!"));
 

@@ -69,7 +69,6 @@ public final class PackageTool {
             packageManager.getPackageInfo(pkg, PackageManager.MATCH_ALL);
             return false;
         } catch (PackageManager.NameNotFoundException e) {
-            AndroidLog.logE(getTag(), e);
             return true;
         }
     }
@@ -176,7 +175,7 @@ public final class PackageTool {
         try {
             parcelables = infoGetter.packageInfoGetter(packageManager);
         } catch (PackageManager.NameNotFoundException e) {
-            logE(getTag(), e);
+            logE(getTag(), "Failed to get package!", e);
             return new AppData[0];
         }
         if (parcelables != null) {
@@ -184,7 +183,7 @@ public final class PackageTool {
                 try {
                     appDataList.add(createAppData(parcelable, packageManager));
                 } catch (Throwable e) {
-                    AndroidLog.logE(getTag(), e);
+                    AndroidLog.logE(getTag(), "Failed to create app data!", e);
                 }
             }
         }
@@ -204,7 +203,7 @@ public final class PackageTool {
         try {
             return createAppData(packageManager.getPackageInfo(packageName, PackageManager.GET_ACTIVITIES), packageManager);
         } catch (PackageManager.NameNotFoundException e) {
-            logE(getTag(), e);
+            logE(getTag(), "Failed to get package info!", e);
             return null;
         }
     }

@@ -208,12 +208,12 @@ public abstract class BaseHC extends CoreTool {
     }
 
     // ------------ ResTool ----------------
-    public static int getFakeResId(String resName) {
-        return ResInjectTool.getFakeResId(resName);
+    public static int createFakeResId(String resName) {
+        return ResInjectTool.createFakeResId(resName);
     }
 
-    public static int getFakeResId(Resources res, int id) {
-        return ResInjectTool.getFakeResId(res, id);
+    public static int createFakeResId(Resources res, int id) {
+        return ResInjectTool.createFakeResId(res, id);
     }
 
     public static void setResReplacement(String pkg, String type, String name, int replacementResId) {

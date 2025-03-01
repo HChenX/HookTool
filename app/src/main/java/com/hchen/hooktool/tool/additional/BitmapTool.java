@@ -28,6 +28,8 @@ import java.io.ByteArrayOutputStream;
 
 /**
  * Drawable 转 Bitmap
+ *
+ * @author 焕晨HChen
  */
 public final class BitmapTool {
     public static Bitmap drawableToBitmap(Drawable drawable) {

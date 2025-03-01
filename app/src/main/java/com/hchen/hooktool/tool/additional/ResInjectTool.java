@@ -222,12 +222,12 @@ public final class ResInjectTool {
         OBJECT
     }
 
-    public static int getFakeResId(String resName) {
+    public static int createFakeResId(String resName) {
         return 0x7e000000 | (resName.hashCode() & 0x00ffffff);
     }
 
-    public static int getFakeResId(Resources res, int id) {
-        return getFakeResId(res.getResourceName(id));
+    public static int createFakeResId(Resources res, int id) {
+        return createFakeResId(res.getResourceName(id));
     }
 
     /**

@@ -16,17 +16,28 @@
 
  * Copyright (C) 2023-2025 HChenX
  */
-package com.hchen.hooktool.tool.itool;
+package com.hchen.hooktool.data;
 
-import android.content.Context;
+import androidx.annotation.NonNull;
 
-import androidx.annotation.Nullable;
+import java.util.Arrays;
 
 /**
- * 上下文获取工具接口
+ * Shell 工具返回的数据
  *
  * @author 焕晨HChen
  */
-public interface IContextGetter {
-    void onContext(@Nullable Context context);
+public record ShellResult(String command, String[] outputs, String exitCode) {
+    @NonNull
+    @Override
+    public String toString() {
+        return "ShellResult[command=" + command + ", outputs=" + Arrays.toString(outputs) + ", exitCode=" + exitCode + "]";
+    }
+
+    /**
+     * 是否成功执行。
+     */
+    public boolean isSuccess() {
+        return "0".equals(exitCode);
+    }
 }

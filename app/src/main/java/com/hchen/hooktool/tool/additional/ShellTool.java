@@ -26,7 +26,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.Size;
 
+import com.hchen.hooktool.data.ShellResult;
 import com.hchen.hooktool.log.AndroidLog;
+import com.hchen.hooktool.tool.itool.IExecListener;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
@@ -35,7 +37,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
@@ -53,7 +54,10 @@ import java.util.concurrent.TimeUnit;
  * <pre>{@code
  *         ShellTool shellTool = ShellTool.builder().isRoot(true).create();
  *         shellTool = ShellTool.obtain();
- *         ShellTool.ShellResult shellResult = shellTool.cmd("ls").exec();
+ *         ShellResult shellResult = shellTool.cmd("ls").exec();
+ *         if (shellResult != null) {
+ *             boolean result = shellResult.isSuccess();
+ *         }
  *         shellTool.cmd("""
  *             if [[ 1 == 1 ]]; then
  *                 echo hello;
@@ -62,31 +66,31 @@ import java.util.concurrent.TimeUnit;
  *             fi
  *             """).exec();
  *         shellTool.cmd("echo hello").async();
- *         shellTool.cmd("echo world").async(new ShellTool.IExecListener() {
+ *         shellTool.cmd("echo world").async(new IExecListener() {
  *             @Override
  *             public void output(String command, String[] outputs, String exitCode) {
- *                 ShellTool.IExecListener.super.output(command, outputs, exitCode);
+ *                 IExecListener.super.output(command, outputs, exitCode);
  *             }
  *         });
- *         shellTool.addExecListener(new ShellTool.IExecListener() {
+ *         shellTool.addExecListener(new IExecListener() {
  *             @Override
  *             public void output(String command, String[] outputs, String exitCode) {
- *                 ShellTool.IExecListener.super.output(command, outputs, exitCode);
+ *                 IExecListener.super.output(command, outputs, exitCode);
  *             }
  *
  *             @Override
  *             public void error(String command, String[] errors, String exitCode) {
- *                 ShellTool.IExecListener.super.error(command, errors, exitCode);
+ *                 IExecListener.super.error(command, errors, exitCode);
  *             }
  *
  *             @Override
- *             public void notRoot(String result) {
- *                 ShellTool.IExecListener.super.notRoot(result);
+ *             public void notRoot(String exitCode) {
+ *                 IExecListener.super.notRoot(exitCode);
  *             }
  *
  *             @Override
  *             public void brokenPip(String command, String[] errors, String reason) {
- *                 ShellTool.IExecListener.super.brokenPip(command, errors, reason);
+ *                 IExecListener.super.brokenPip(command, errors, reason);
  *             }
  *         });
  *         shellTool.close();
@@ -131,6 +135,7 @@ public class ShellTool {
     /**
      * 同步执行命令，并获取返回值。
      */
+    @Nullable
     public ShellResult exec() {
         return mShellImpl.exec();
     }
@@ -670,28 +675,6 @@ public class ShellTool {
         public ShellTool create() {
             mShell.create();
             return mShell;
-        }
-    }
-
-    public record ShellResult(String command, String[] outputs, String exitCode) {
-        @NonNull
-        @Override
-        public String toString() {
-            return "ShellResult[command=" + command + ", outputs=" + Arrays.toString(outputs) + ", exitCode=" + exitCode + "]";
-        }
-    }
-
-    public interface IExecListener {
-        default void output(String command, String[] outputs, String exitCode) {
-        }
-
-        default void error(String command, String[] errors, String exitCode) {
-        }
-
-        default void notRoot(String result) {
-        }
-
-        default void brokenPip(String command, String[] errors, String reason) {
         }
     }
 }

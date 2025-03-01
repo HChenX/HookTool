@@ -41,7 +41,7 @@ public class XposedLog {
 
     public static void logE(String tag, Throwable e) {
         if (HCData.getInitLogLevel() < 1) return;
-        XposedBridge.log(HCData.getInitTag() + "[" + tag + "]" + "[E]: \n" + LogExpand.printStackTrace(e));
+        XposedBridge.log(HCData.getInitTag() + "[" + tag + "]" + "[E]:\n" + LogExpand.printStackTrace(e));
     }
 
     public static void logE(String tag, String log, Throwable e) {
