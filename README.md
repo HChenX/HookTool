@@ -42,8 +42,8 @@ dependencyResolutionManagement {
 dependencies {
     // 二选一即可，推荐使用 jitpack，maven 可能不会同步更新！
     // Tip: v.*.*.* 填写当前最新发行版版本号即可！
-    implementation 'com.github.HChenX:HookTool:v.1.1.6.2' // jitpack
-    implementation 'io.github.hchenx:hooktool:v.1.1.6.2' // maven Tip: 几乎废弃，请不要使用！
+    implementation 'com.github.HChenX:HookTool:v.1.2.3' // jitpack
+    // implementation 'io.github.hchenx:hooktool:v.1.2.3' // maven Tip: 几乎废弃，请不要使用！
 }
 ```
 
@@ -68,14 +68,14 @@ public void init() {
 @Override
 public void initZygote(IXposedHookZygoteInit.StartupParam startupParam) {
     HCInit.initBasicData(new BasicData()
-            .setModulePackageName("com.hchen.demo") // 模块包名
-            .setTag("HChenDemo") // 日志 tag
-            .setLogLevel(LOG_D) // 日志等级
-            .setPrefsName("hchen_prefs") // prefs 存储文件名 (可选)
-            .xPrefsAutoReload(true) // 是否自动更新共享首选项，默认开启 (可选)
-            .useLogExpand(new String[]{
-                    "com.hchen.demo.hook"
-            }) // 是否使用日志增强功能，具体参见方法注释内容
+        .setModulePackageName("com.hchen.demo") // 模块包名
+        .setTag("HChenDemo") // 日志 tag
+        .setLogLevel(LOG_D) // 日志等级
+        .setPrefsName("hchen_prefs") // prefs 存储文件名 (可选)
+        .xPrefsAutoReload(true) // 是否自动更新共享首选项，默认开启 (可选)
+        .useLogExpand(new String[]{
+            "com.hchen.demo.hook"
+        }) // 是否使用日志增强功能，具体参见方法注释内容
     ); // Tip: 若有使用 initZygote 建议配置在这里，因为时机很早。
     HCInit.initStartupParam(startupParam); // 在 zygote 阶段初始化工具
 }
@@ -93,10 +93,10 @@ public static class MainActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         HCInit.initBasicData(new BasicData()
-                .setModulePackageName("com.hchen.demo") // 模块包名
-                .setTag("HChenDemo") // 日志 tag
-                .setLogLevel(LOG_D) // 日志等级
-                .setPrefsName("hchen_prefs") // prefs 存储文件名。(可选) Tip: 请保持与 Xposed 内填写的文件名一致
+            .setModulePackageName("com.hchen.demo") // 模块包名
+            .setTag("HChenDemo") // 日志 tag
+            .setLogLevel(LOG_D) // 日志等级
+            .setPrefsName("hchen_prefs") // prefs 存储文件名。(可选) Tip: 请保持与 Xposed 内填写的文件名一致
         );
     }
 }
@@ -108,14 +108,14 @@ public static class MainActivity {
 public class MainTest {
     public void test() {
         CoreTool.hookMethod(/* 内容 */); // 即可 hook
-        CoreTool.findClass().get(); // 查找类
+        CoreTool.findClass(); // 查找类
         CoreTool.callMethod(); // 调用方法
         ChainTool.chain("com.hchen.demo", new ChainTool()
-                .method("method")
-                .hook()
+            .method("method")
+            .hook()
 
-                .method("method")
-                .hook()
+            .method("method")
+            .hook()
         ); // 即可链式调用
         PrefsTool.prefs().getString(); // 即可读取共享首选项
         // ......
@@ -139,7 +139,7 @@ public class MainTest extends BaseHC {
     // 请务必在 hook 入口处初始化 HCInit.initStartupParam(startupParam);
     @Override
     public void initZygote(IXposedHookZygoteInit.StartupParam startupParam) {
-        Class<?> c = findClass("com.hchen.demo.Main").get();
+        Class<?> c = findClass("com.hchen.demo.Main");
         hookMethod(c, "test", new IHook() {
             /* 内容 */
         });
@@ -174,6 +174,16 @@ public class RunHook implements IXposedHookLoadPackage, IXposedHookZygoteInit {
 -keep class com.hchen.demo.hook.**$*
 
 // 如果既不继承 BaseHC 使用，也不使用日志增强功能则不需要配置混淆规则。
+
+// 其他建议配置:
+-keep class  com.hchen.hooktool.HCState {
+        static boolean isEnabled;
+        static java.lang.String mFramework;
+        static int  mVersion;
+ }
+-keep class * implements android.os.Parcelable {
+        public static ** CREATOR;
+}
 ```
 
 - 到此完成全部工作，可以愉快的使用了！
@@ -190,23 +200,23 @@ public class MainTest extends BaseHC {
     public void test() {
         // 看！是不是很简洁易懂？
         chain("com.hchen.demo", method("test")
-                .hook(new IHook() {
-                    @Override
-                    public void before() {
-                        super.before();
-                    }
-                })
+            .hook(new IHook() {
+                @Override
+                public void before() {
+                    super.before();
+                }
+            })
 
-                .anyMethod("test")
-                .hook(new IHook() {
-                    @Override
-                    public void after() {
-                        super.after();
-                    }
-                })
+            .anyMethod("test")
+            .hook(new IHook() {
+                @Override
+                public void after() {
+                    super.after();
+                }
+            })
 
-                .constructor()
-                .returnResult(false)
+            .constructor()
+            .returnResult(false)
         );
     }
 }
@@ -220,7 +230,7 @@ public class MainTest extends BaseHC {
 ```java
 public class MainTest extends BaseHC {
     public void init() {
-        Class<?> c = findClass("com.hchen.demo.Demo").get(); // 如果无法获取 class 则会记录 Error 日志并返回 null。
+        Class<?> c = findClass("com.hchen.demo.Demo"); // 如果无法获取 class 则会记录 Error 日志并返回 null。
         hookMethod(c, "test", new IHook() { // c 为 null 也会记录 Error 日志，并跳过 hook 继续执行后面逻辑。
             @Override
             public void before() {
@@ -265,7 +275,7 @@ public class MainTest {
     public void test() {
         // 即可反射调用方法，其他反射操作同理。
         InvokeTool.callMethod(InvokeTool.findClass("com.hchen.demo.Main",
-                getClass().getClassLoader()), "test", new Class[]{});
+            getClass().getClassLoader()), "test", new Class[]{});
     }
 }
 ```
@@ -335,6 +345,61 @@ public static class MainActivity {
 
 ---
 
+- ShellTool 类：
+- 提供简易的执行 Shell 命令的能力:
+- 使用方法:
+
+```java
+public class MainTest {
+    public void test() {
+        ShellTool shellTool = ShellTool.builder().isRoot(true).create();
+        shellTool = ShellTool.obtain();
+        ShellResult shellResult = shellTool.cmd("ls").exec();
+        if (shellResult != null) {
+            boolean result = shellResult.isSuccess();
+        }
+        shellTool.cmd("""
+            if [[ 1 == 1 ]]; then
+                echo hello;
+            elif [[ 1 == 2 ]]; then
+                echo world;
+            fi
+            """).exec();
+        shellTool.cmd("echo hello").async();
+        shellTool.cmd("echo world").async(new IExecListener() {
+            @Override
+            public void output(String command, String[] outputs, String exitCode) {
+                IExecListener.super.output(command, outputs, exitCode);
+            }
+        });
+        shellTool.addExecListener(new IExecListener() {
+            @Override
+            public void output(String command, String[] outputs, String exitCode) {
+                IExecListener.super.output(command, outputs, exitCode);
+            }
+
+            @Override
+            public void error(String command, String[] errors, String exitCode) {
+                IExecListener.super.error(command, errors, exitCode);
+            }
+
+            @Override
+            public void notRoot(String exitCode) {
+                IExecListener.super.notRoot(exitCode);
+            }
+
+            @Override
+            public void brokenPip(String command, String[] errors, String reason) {
+                IExecListener.super.brokenPip(command, errors, reason);
+            }
+        });
+        shellTool.close();
+    }
+}
+```
+
+---
+
 - CoreTool 类:
 - 提供完善的 Hook 方法！
 - 绝对满足需求！
@@ -364,11 +429,13 @@ public static class MainActivity {
 
 - 以下项目使用了本工具！
 
-|      项目名称      |                            项目链接                            |
-|:--------------:|:----------------------------------------------------------:|
-| ForegroundPin  |  [ForegroundPin](https://github.com/HChenX/ForegroundPin)  |
-| AutoSEffSwitch | [AutoSEffSwitch](https://github.com/HChenX/AutoSEffSwitch) |
-| ClipboardList  |  [ClipboardList](https://github.com/HChenX/ClipboardList)  |
+|       项目名称       |                              项目链接                              |
+|:----------------:|:--------------------------------------------------------------:|
+| AppRetentionHook | [AppRetentionHook](https://github.com/HChenX/AppRetentionHook) |
+|  AutoSEffSwitch  |   [AutoSEffSwitch](https://github.com/HChenX/AutoSEffSwitch)   |
+|  SwitchFreeForm  |   [SwitchFreeForm](https://github.com/HChenX/SwitchFreeForm)   |
+|  ForegroundPin   |    [ForegroundPin](https://github.com/HChenX/ForegroundPin)    |
+|  ClipboardList   |    [ClipboardList](https://github.com/HChenX/ClipboardList)    |
 
 - 如果你的项目使用了本工具，可以告诉我，我将会把其加入表格。
 - 想要详细了解本工具也可以参考上述项目，希望给你带来帮助！

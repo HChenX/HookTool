@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
 
- * Copyright (C) 2023-2024 HChenX
+ * Copyright (C) 2023-2025 HChenX
  */
 package com.hchen.hooktool.hook;
 
@@ -23,7 +23,7 @@ import com.hchen.hooktool.tool.ParamTool;
 
 /**
  * Hook 动作接口
- * 
+ *
  * @author 焕晨HChen
  */
 public abstract class IHook extends ParamTool {

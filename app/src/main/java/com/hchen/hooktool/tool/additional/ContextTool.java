@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
 
- * Copyright (C) 2023-2024 HChenX
+ * Copyright (C) 2023-2025 HChenX
  */
 package com.hchen.hooktool.tool.additional;
 
@@ -40,9 +40,9 @@ import java.util.concurrent.Executors;
 @SuppressLint({"PrivateApi", "SoonBlockedPrivateApi", "DiscouragedPrivateApi"})
 public final class ContextTool {
     @IntDef(value = {
-            FLAG_ALL,
-            FLAG_CURRENT_APP,
-            FlAG_ONLY_ANDROID
+        FLAG_ALL,
+        FLAG_CURRENT_APP,
+        FlAG_ONLY_ANDROID
     })
     @Retention(RetentionPolicy.SOURCE)
     private @interface Duration {
@@ -72,6 +72,10 @@ public final class ContextTool {
         }
     }
 
+    public static void getAsyncContext(IContextGetter iContextGetter, @Duration int flag) {
+        getAsyncContext(iContextGetter, flag, 15000);
+    }
+
     /**
      * 异步获取当前应用的 Context，为了防止过早获取导致的 null。
      * 使用方法:
@@ -79,7 +83,7 @@ public final class ContextTool {
      * handler = new Handler();
      * ContextTool.getAsyncContext(new IContextGetter() {
      *   @Override
-     *   public void tryToFindContext(@Nullable Context context) {
+     *   public void onContext(@Nullable Context context) {
      *      handler.post(new Runnable() {
      *        @Override
      *        public void run() {
@@ -87,18 +91,17 @@ public final class ContextTool {
      *        }
      *      });
      *   }
-     * }, FLAG_ALL);
+     * }, FLAG_ALL, 15000);
      * }
      * 当然 Handler 是可选项, 适用于 Toast 显示等场景。
      * @param iContextGetter 回调获取 Context
      * @author 焕晨HChen
      */
-    public static void getAsyncContext(IContextGetter iContextGetter, @Duration int flag) {
+    public static void getAsyncContext(IContextGetter iContextGetter, @Duration int flag, int timeout) {
         Executors.newSingleThreadExecutor().submit(() -> {
             Context context = getContextNoLog(flag);
             if (context == null) {
                 long time = System.currentTimeMillis();
-                long timeout = 15000; // 15秒
                 while (true) {
                     long nowTime = System.currentTimeMillis();
                     context = getContextNoLog(flag);
@@ -107,7 +110,7 @@ public final class ContextTool {
                     }
                 }
             }
-            iContextGetter.tryToFindContext(context);
+            iContextGetter.onContext(context);
         });
     }
 

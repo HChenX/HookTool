@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
 
- * Copyright (C) 2023-2024 HChenX
+ * Copyright (C) 2023-2025 HChenX
  */
 package com.hchen.hooktool;
 
@@ -55,19 +55,18 @@ public abstract class HCEntrance implements IXposedHookLoadPackage, IXposedHookZ
      * <p>
      * Tip: 因为传入的 lpparam 偶尔会被其他系统应用干扰，所以可以配置排除名单。
      */
-    public String[] ignoreList() {
+    public String[] ignorePackageNameList() {
         return null;
     }
 
     @Override
     public final void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) throws Throwable {
-        if (ignoreList() != null) {
-            if (Arrays.stream(ignoreList()).anyMatch(s -> Objects.equals(s, lpparam.packageName)))
+        if (ignorePackageNameList() != null) {
+            if (Arrays.stream(ignorePackageNameList()).anyMatch(s -> Objects.equals(s, lpparam.packageName)))
                 return;
         }
 
-        if (HCData.getModulePackageName() != null && !HCData.getModulePackageName().isEmpty()
-                && Objects.equals(HCData.getModulePackageName(), lpparam.packageName)) {
+        if (HCData.getModulePackageName() != null && Objects.equals(HCData.getModulePackageName(), lpparam.packageName)) {
             initHCState();
         }
 

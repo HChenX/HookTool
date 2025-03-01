@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
 
- * Copyright (C) 2023-2024 HChenX
+ * Copyright (C) 2023-2025 HChenX
  */
 package com.hchen.hooktool.tool.additional;
 
@@ -61,7 +61,7 @@ public final class PackageTool {
      */
     public static boolean isUninstall(Context context, String pkg) {
         if (context == null) {
-            logW(getTag(), "Context is null, can't check if the app is uninstalled!" + getStackTrace());
+            logW(getTag(), "Context is null, can't check if the app is uninstalled!", getStackTrace());
             return false;
         }
         PackageManager packageManager = context.getPackageManager();
@@ -69,7 +69,6 @@ public final class PackageTool {
             packageManager.getPackageInfo(pkg, PackageManager.MATCH_ALL);
             return false;
         } catch (PackageManager.NameNotFoundException e) {
-            AndroidLog.logE(getTag(), e);
             return true;
         }
     }
@@ -83,7 +82,7 @@ public final class PackageTool {
      */
     public static boolean isDisable(Context context, String pkg) {
         if (context == null) {
-            logW(getTag(), "Context is null, can't check if an app is disabled!" + getStackTrace());
+            logW(getTag(), "Context is null, can't check if an app is disabled!", getStackTrace());
             return false;
         }
         PackageManager packageManager = context.getPackageManager();
@@ -108,7 +107,7 @@ public final class PackageTool {
     public static boolean isHidden(Context context, String pkg) {
         try {
             if (context == null) {
-                logW(getTag(), "Context is null, can't check if an app is hidden!" + getStackTrace());
+                logW(getTag(), "Context is null, can't check if an app is hidden!", getStackTrace());
                 return false;
             }
             PackageManager packageManager = context.getPackageManager();
@@ -124,8 +123,8 @@ public final class PackageTool {
      */
     public static int getUserId(int uid) {
         return (int) Optional.ofNullable(
-                        InvokeTool.callStaticMethod(UserHandle.class, "getUserId", new Class[]{int.class}, uid))
-                .orElse(-1);
+            InvokeTool.callStaticMethod(UserHandle.class, "getUserId", new Class[]{int.class}, uid)
+        ).orElse(-1);
     }
 
     /**
@@ -134,7 +133,7 @@ public final class PackageTool {
      */
     public static boolean isSystem(ApplicationInfo app) {
         if (Objects.isNull(app)) {
-            AndroidLog.logE(getTag(), "ApplicationInfo is null, can't check if it's a system app!" + getStackTrace());
+            AndroidLog.logE(getTag(), "ApplicationInfo is null, can't check if it's a system app!", getStackTrace());
             return false;
         }
         if (app.uid < 10000) {
@@ -146,24 +145,37 @@ public final class PackageTool {
     /**
      * 通过自定义代码获取 Package 信息，
      * 支持: PackageInfo, ResolveInfo, ActivityInfo, ApplicationInfo, ProviderInfo. 类型的返回值.
-     * 返回使用 return new List<>(XX); 包裹。
+     * <p>
+     * 示例：
+     * <p>
+     * <pre>{@code
+     * AppData appData = PackageTool.getPackagesByCode(new IPackageInfoGetter() {
+     *             @Override
+     *             public Parcelable[] packageInfoGetter(PackageManager pm) throws PackageManager.NameNotFoundException {
+     *                 PackageInfo packageInfo = null;
+     *                 ArrayList<PackageInfo> arrayList = new ArrayList<>();
+     *                 arrayList.add(packageInfo);
+     *                 return arrayList.toArray(new PackageInfo[0]);
+     *             }
+     *         })[0];
+     * }
      *
-     * @param iCode 需要执行的代码
-     * @return ListAppData 包含各种应用详细信息
+     * @param infoGetter 需要执行的代码
+     * @return AppData[] 包含各种应用详细信息
      * @see #createAppData(Parcelable, PackageManager)
      */
-    public static AppData[] getPackagesByCode(Context context, IPackageInfoGetter iCode) {
+    public static AppData[] getPackagesByCode(Context context, IPackageInfoGetter infoGetter) {
         List<AppData> appDataList = new ArrayList<>();
         if (context == null) {
-            logW(getTag(), "Context is null, can't get packages by code!" + getStackTrace());
+            logW(getTag(), "Context is null, can't get packages by code!", getStackTrace());
             return new AppData[0];
         }
         PackageManager packageManager = context.getPackageManager();
         Parcelable[] parcelables;
         try {
-            parcelables = iCode.packageInfoGetter(packageManager);
+            parcelables = infoGetter.packageInfoGetter(packageManager);
         } catch (PackageManager.NameNotFoundException e) {
-            logE(getTag(), e);
+            logE(getTag(), "Failed to get package!", e);
             return new AppData[0];
         }
         if (parcelables != null) {
@@ -171,7 +183,7 @@ public final class PackageTool {
                 try {
                     appDataList.add(createAppData(parcelable, packageManager));
                 } catch (Throwable e) {
-                    AndroidLog.logE(getTag(), e);
+                    AndroidLog.logE(getTag(), "Failed to create app data!", e);
                 }
             }
         }
@@ -191,7 +203,7 @@ public final class PackageTool {
         try {
             return createAppData(packageManager.getPackageInfo(packageName, PackageManager.GET_ACTIVITIES), packageManager);
         } catch (PackageManager.NameNotFoundException e) {
-            logE(getTag(), e);
+            logE(getTag(), "Failed to get package info!", e);
             return null;
         }
     }
@@ -204,7 +216,7 @@ public final class PackageTool {
     private static AppData createAppData(Parcelable parcelable, PackageManager pm) {
         AppData appData = new AppData();
         if (parcelable instanceof PackageInfo packageInfo) {
-            appData.icon = packageInfo.applicationInfo.loadIcon(pm);
+            appData.icon = BitmapTool.drawableToBitmap(packageInfo.applicationInfo.loadIcon(pm));
             appData.label = packageInfo.applicationInfo.loadLabel(pm).toString();
             appData.packageName = packageInfo.applicationInfo.packageName;
             appData.versionName = packageInfo.versionName;
@@ -214,7 +226,7 @@ public final class PackageTool {
             appData.user = getUserId(packageInfo.applicationInfo.uid);
             appData.uid = packageInfo.applicationInfo.uid;
         } else if (parcelable instanceof ResolveInfo resolveInfo) {
-            appData.icon = aboutResolveInfo(resolveInfo).applicationInfo.loadIcon(pm);
+            appData.icon = BitmapTool.drawableToBitmap(aboutResolveInfo(resolveInfo).applicationInfo.loadIcon(pm));
             appData.label = aboutResolveInfo(resolveInfo).applicationInfo.loadLabel(pm).toString();
             appData.packageName = aboutResolveInfo(resolveInfo).applicationInfo.packageName;
             appData.isSystemApp = isSystem(aboutResolveInfo(resolveInfo).applicationInfo);
@@ -222,7 +234,7 @@ public final class PackageTool {
             appData.user = getUserId(aboutResolveInfo(resolveInfo).applicationInfo.uid);
             appData.uid = aboutResolveInfo(resolveInfo).applicationInfo.uid;
         } else if (parcelable instanceof ActivityInfo activityInfo) {
-            appData.icon = activityInfo.applicationInfo.loadIcon(pm);
+            appData.icon = BitmapTool.drawableToBitmap(activityInfo.applicationInfo.loadIcon(pm));
             appData.label = activityInfo.applicationInfo.loadLabel(pm).toString();
             appData.packageName = activityInfo.applicationInfo.packageName;
             appData.isSystemApp = isSystem(activityInfo.applicationInfo);
@@ -230,7 +242,7 @@ public final class PackageTool {
             appData.user = getUserId(activityInfo.applicationInfo.uid);
             appData.uid = activityInfo.applicationInfo.uid;
         } else if (parcelable instanceof ApplicationInfo applicationInfo) {
-            appData.icon = applicationInfo.loadIcon(pm);
+            appData.icon = BitmapTool.drawableToBitmap(applicationInfo.loadIcon(pm));
             appData.label = applicationInfo.loadLabel(pm).toString();
             appData.packageName = applicationInfo.packageName;
             appData.isSystemApp = isSystem(applicationInfo);
@@ -238,7 +250,7 @@ public final class PackageTool {
             appData.user = getUserId(applicationInfo.uid);
             appData.uid = applicationInfo.uid;
         } else if (parcelable instanceof ProviderInfo providerInfo) {
-            appData.icon = providerInfo.applicationInfo.loadIcon(pm);
+            appData.icon = BitmapTool.drawableToBitmap(providerInfo.applicationInfo.loadIcon(pm));
             appData.label = providerInfo.applicationInfo.loadLabel(pm).toString();
             appData.packageName = providerInfo.applicationInfo.packageName;
             appData.isSystemApp = isSystem(providerInfo.applicationInfo);

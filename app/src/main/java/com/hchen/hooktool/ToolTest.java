@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
 
- * Copyright (C) 2023-2024 HChenX
+ * Copyright (C) 2023-2025 HChenX
  */
 package com.hchen.hooktool;
 
@@ -25,9 +25,11 @@ import android.graphics.Bitmap;
 import android.os.Parcelable;
 
 import com.hchen.hooktool.data.AppData;
+import com.hchen.hooktool.data.ShellResult;
 import com.hchen.hooktool.hook.IHook;
-import com.hchen.hooktool.tool.additional.BitmapTool;
 import com.hchen.hooktool.tool.additional.PackageTool;
+import com.hchen.hooktool.tool.additional.ShellTool;
+import com.hchen.hooktool.tool.itool.IExecListener;
 import com.hchen.hooktool.tool.itool.IPackageInfoGetter;
 
 import java.util.ArrayList;
@@ -51,23 +53,23 @@ final class ToolTest extends BaseHC {
     public void init() {
         // 链式
         chain("com.hchen.demo", method("test")
-                .hook(new IHook() {
-                    @Override
-                    public void before() {
-                        super.before();
-                    }
-                })
+            .hook(new IHook() {
+                @Override
+                public void before() {
+                    super.before();
+                }
+            })
 
-                .method("test1", String.class)
-                .hook(new IHook() {
-                    @Override
-                    public void after() {
-                        super.after();
-                    }
-                })
+            .method("test1", String.class)
+            .hook(new IHook() {
+                @Override
+                public void after() {
+                    super.after();
+                }
+            })
 
-                .constructor()
-                .returnResult(false)
+            .constructor()
+            .returnResult(false)
         );
 
         hookMethod("com.hchen.demo", "test", new IHook() {
@@ -111,20 +113,64 @@ final class ToolTest extends BaseHC {
             }
         };
 
+        ShellTool shellTool = ShellTool.builder().isRoot(true).create();
+        shellTool = ShellTool.obtain();
+        ShellResult shellResult = shellTool.cmd("ls").exec();
+        if (shellResult != null) {
+            boolean result = shellResult.isSuccess();
+        }
+        shellTool.cmd("""
+            if [[ 1 == 1 ]]; then
+                echo hello;
+            elif [[ 1 == 2 ]]; then
+                echo world;
+            fi
+            """).exec();
+        shellTool.cmd("echo hello").async();
+        shellTool.cmd("echo world").async(new IExecListener() {
+            @Override
+            public void output(String command, String[] outputs, String exitCode) {
+                IExecListener.super.output(command, outputs, exitCode);
+            }
+        });
+        shellTool.addExecListener(new IExecListener() {
+            @Override
+            public void output(String command, String[] outputs, String exitCode) {
+                IExecListener.super.output(command, outputs, exitCode);
+            }
+
+            @Override
+            public void error(String command, String[] errors, String exitCode) {
+                IExecListener.super.error(command, errors, exitCode);
+            }
+
+            @Override
+            public void notRoot(String exitCode) {
+                IExecListener.super.notRoot(exitCode);
+            }
+
+            @Override
+            public void brokenPip(String command, String[] errors, String reason) {
+                IExecListener.super.brokenPip(command, errors, reason);
+            }
+        });
+        shellTool.close();
+
         AppData appData = PackageTool.getPackagesByCode(new IPackageInfoGetter() {
             @Override
             public Parcelable[] packageInfoGetter(PackageManager pm) throws PackageManager.NameNotFoundException {
                 PackageInfo packageInfo = null;
                 ArrayList<PackageInfo> arrayList = new ArrayList<>();
+                arrayList.add(packageInfo);
                 return arrayList.toArray(new PackageInfo[0]);
             }
         })[0];
-        Bitmap bitmap = BitmapTool.drawableToBitmap(appData.icon);
+        Bitmap bitmap = appData.icon;
 
         prefs().get("test_key", "0"); // 获取 prefs test_key 的值
         prefs().getBoolean("test_key_bool", false); // 获取 prefs test_key_bool 的值
 
-        getFakeResId("test_res"); // 获取 test_res 的虚拟资源 id
+        createFakeResId("test_res"); // 获取 test_res 的虚拟资源 id
         // 设置 pkg 的 string 资源 test_res_str 值为 HC!
         setObjectReplacement("com.hchen.demo", "string", "test_res_str", "HC!");
     }
@@ -133,13 +179,13 @@ final class ToolTest extends BaseHC {
         @Override
         public HCInit.BasicData initHC(HCInit.BasicData basicData) {
             return basicData.setTag("HookTool")
-                    .setLogLevel(HCInit.LOG_D)
-                    .setModulePackageName("com.hchen.demo")
-                    .setPrefsName("myprefs") // 可选
-                    .xPrefsAutoReload(true) // 可选
-                    .initLogExpand(new String[]{
-                            "com.hchen.demo.hook"
-                    });
+                .setLogLevel(HCInit.LOG_D)
+                .setModulePackageName("com.hchen.demo")
+                .setPrefsName("myprefs") // 可选
+                .xPrefsAutoReload(true) // 可选
+                .initLogExpand(new String[]{
+                    "com.hchen.demo.hook"
+                });
         }
 
         @Override

@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
 
- * Copyright (C) 2023-2024 HChenX
+ * Copyright (C) 2023-2025 HChenX
  */
 package com.hchen.hooktool.tool;
 
@@ -22,11 +22,8 @@ import static com.hchen.hooktool.data.ChainData.TYPE_ANY_CONSTRUCTOR;
 import static com.hchen.hooktool.data.ChainData.TYPE_ANY_METHOD;
 import static com.hchen.hooktool.data.ChainData.TYPE_CONSTRUCTOR;
 import static com.hchen.hooktool.data.ChainData.TYPE_METHOD;
-import static com.hchen.hooktool.hook.HookFactory.createHook;
 import static com.hchen.hooktool.log.LogExpand.getStackTrace;
 import static com.hchen.hooktool.log.LogExpand.getTag;
-import static com.hchen.hooktool.log.XposedLog.logE;
-import static com.hchen.hooktool.log.XposedLog.logI;
 import static com.hchen.hooktool.log.XposedLog.logW;
 import static com.hchen.hooktool.tool.CoreTool.existsConstructor;
 import static com.hchen.hooktool.tool.CoreTool.existsMethod;
@@ -47,8 +44,6 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.stream.Collectors;
 
-import de.robv.android.xposed.XposedBridge;
-
 /**
  * 创建链式调用
  *
@@ -66,16 +61,16 @@ public final class ChainTool {
     }
 
     public static void chain(String clazz, ChainTool chain) {
-        chain.doFind(findClass(clazz).get());
+        chain.doFind(findClass(clazz));
     }
 
     public static void chain(String clazz, ClassLoader classLoader, ChainTool chain) {
-        chain.doFind(findClass(clazz, classLoader).get());
+        chain.doFind(findClass(clazz, classLoader));
     }
 
     public static void chain(Class<?> clazz, ChainTool chain) {
         if (clazz == null) {
-            logW(getTag(), "Class is null, can't create chain hook!" + getStackTrace());
+            logW(getTag(), "Class is null, can't create chain hook!", getStackTrace());
             return;
         }
         chain.doFind(clazz);
@@ -126,7 +121,7 @@ public final class ChainTool {
             return;
         }
         if (cacheDataList.isEmpty()) {
-            logW(getTag(), "cache data list is empty, can't find or hook anything!" + getStackTrace());
+            logW(getTag(), "cache data list is empty, can't find or hook anything!", getStackTrace());
             return;
         }
 
@@ -137,21 +132,21 @@ public final class ChainTool {
                 case TYPE_METHOD -> {
                     if (cacheData.mCheckExist)
                         if (!existsMethod(clazz, cacheData.mName, cacheData.mParams)) continue;
-                    members.add(new ChainData(findMethod(clazz, cacheData.mName, cacheData.mParams).get()));
+                    members.add(new ChainData(findMethod(clazz, cacheData.mName, cacheData.mParams)));
                 }
                 case TYPE_CONSTRUCTOR -> {
                     if (cacheData.mCheckExist)
                         if (!existsConstructor(clazz, cacheData.mParams)) continue;
-                    members.add(new ChainData(findConstructor(clazz, cacheData.mParams).get()));
+                    members.add(new ChainData(findConstructor(clazz, cacheData.mParams)));
                 }
                 case TYPE_ANY_METHOD ->
-                        members.addAll(Arrays.stream(CoreTool.findAllMethod(clazz, cacheData.mName)).map(
-                                ChainData::new).collect(Collectors.toCollection(ArrayList::new)));
+                    members.addAll(Arrays.stream(CoreTool.findAllMethod(clazz, cacheData.mName)).map(
+                        ChainData::new).collect(Collectors.toCollection(ArrayList::new)));
                 case TYPE_ANY_CONSTRUCTOR ->
-                        members.addAll(Arrays.stream(CoreTool.findAllConstructor(clazz)).map(
-                                ChainData::new).collect(Collectors.toCollection(ArrayList::new)));
+                    members.addAll(Arrays.stream(CoreTool.findAllConstructor(clazz)).map(
+                        ChainData::new).collect(Collectors.toCollection(ArrayList::new)));
                 default -> {
-                    logW(getTag(), "Unknown type: " + cacheData.mType + getStackTrace());
+                    logW(getTag(), "Unknown type: " + cacheData.mType, getStackTrace());
                     members.clear();
                     continue;
                 }
@@ -163,8 +158,7 @@ public final class ChainTool {
                     ChainData memberData = iterator.next();
                     if (memberData.member == null || existingMembers.contains(memberData.member)) {
                         iterator.remove();
-                        logW(getTag(), "This member maybe repeated or maybe is null, will remove it! " +
-                                "\ndebug: " + UUID + "#member: " + memberData.member);
+                        logW(getTag(), "This member maybe repeated or maybe is null, will remove it! " + "\ndebug: " + UUID + "#member: " + memberData.member);
                         continue;
                     }
                     existingMembers.add(memberData.member);
@@ -193,12 +187,7 @@ public final class ChainTool {
                 continue;
             }
             for (ChainData memberData : chainData.members) {
-                try {
-                    XposedBridge.hookMethod(memberData.member, createHook(getTag(), chainData.iHook));
-                    logI(getTag(), "Success to hook: " + memberData.member);
-                } catch (Throwable e) {
-                    logE(getTag(), "Failed to hook: " + memberData.member, e);
-                }
+                CoreBase.baseHookAll(new Member[]{memberData.member}, chainData.iHook);
             }
             chainData.hookState = HookState.HOOKED;
             iterator.set(chainData);

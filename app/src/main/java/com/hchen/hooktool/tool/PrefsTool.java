@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
 
- * Copyright (C) 2023-2024 HChenX
+ * Copyright (C) 2023-2025 HChenX
  */
 package com.hchen.hooktool.tool;
 
@@ -101,7 +101,7 @@ public final class PrefsTool {
 
         ContextTool.getAsyncContext(new IContextGetter() {
             @Override
-            public void tryToFindContext(@androidx.annotation.Nullable Context context) {
+            public void onContext(@androidx.annotation.Nullable Context context) {
                 if (context == null)
                     throw new RuntimeException(createRuntimeExceptionLog("Async prefs context is null!"));
 
@@ -141,7 +141,7 @@ public final class PrefsTool {
                 s = context.getSharedPreferences(prefsName, Context.MODE_WORLD_READABLE);
             } catch (Throwable ignored) {
                 s = context.getSharedPreferences(prefsName, Context.MODE_PRIVATE);
-                AndroidLog.logW(getTag(), "Maybe can't use xSharedPreferences!" + getStackTrace());
+                AndroidLog.logW(getTag(), "Maybe can't use xSharedPreferences!", getStackTrace());
             }
             sPrefs.put(context.getPackageName() + prefsName, s);
             return s;
@@ -248,7 +248,7 @@ public final class PrefsTool {
         @Override
         @Nullable
         public Editor editor() {
-            logW(getTag(), "Xposed can't edit prefs!" + getStackTrace());
+            logW(getTag(), "Xposed can't edit prefs!", getStackTrace());
             return null;
         }
 

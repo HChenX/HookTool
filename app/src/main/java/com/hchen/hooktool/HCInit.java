@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
 
- * Copyright (C) 2023-2024 HChenX
+ * Copyright (C) 2023-2025 HChenX
  */
 package com.hchen.hooktool;
 
@@ -46,11 +46,11 @@ public final class HCInit {
     // ------- END --------------
 
     @IntDef(value = {
-            LOG_NONE,
-            LOG_I,
-            LOG_W,
-            LOG_E,
-            LOG_D
+        LOG_NONE,
+        LOG_I,
+        LOG_W,
+        LOG_E,
+        LOG_D
     })
     @Retention(RetentionPolicy.SOURCE)
     private @interface LogLevel {
@@ -144,7 +144,7 @@ public final class HCInit {
         }
 
         // 设置日志 TAG。Tip: 建议设置。
-        public BasicData setTag(String tag) {
+        public BasicData setTag(@NonNull String tag) {
             this.tag = tag;
             return this;
         }

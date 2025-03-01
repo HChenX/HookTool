@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
 
- * Copyright (C) 2023-2024 HChenX
+ * Copyright (C) 2023-2025 HChenX
  */
 package com.hchen.hooktool.tool.additional;
 
@@ -28,6 +28,8 @@ import java.io.ByteArrayOutputStream;
 
 /**
  * Drawable 转 Bitmap
+ *
+ * @author 焕晨HChen
  */
 public final class BitmapTool {
     public static Bitmap drawableToBitmap(Drawable drawable) {

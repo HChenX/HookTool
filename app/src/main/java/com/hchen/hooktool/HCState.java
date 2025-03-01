@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
 
- * Copyright (C) 2023-2024 HChenX
+ * Copyright (C) 2023-2025 HChenX
  */
 package com.hchen.hooktool;
 
@@ -39,8 +39,12 @@ import kotlin.text.Charsets;
  * <p>
  * 记得配置混淆，否则不可用:
  * <p>
- * {@code
- * -keep class com.hchen.hooktool.HCState
+ * <pre>{@code
+ * -keep class  com.hchen.hooktool.HCState {
+ *         static boolean isEnabled;
+ *         static java.lang.String mFramework;
+ *         static int  mVersion;
+ * }
  * }
  *
  * @author 焕晨HChen

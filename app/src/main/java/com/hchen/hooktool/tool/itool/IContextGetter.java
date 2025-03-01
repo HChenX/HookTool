@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
 
- * Copyright (C) 2023-2024 HChenX
+ * Copyright (C) 2023-2025 HChenX
  */
 package com.hchen.hooktool.tool.itool;
 
@@ -28,5 +28,5 @@ import androidx.annotation.Nullable;
  * @author 焕晨HChen
  */
 public interface IContextGetter {
-    void tryToFindContext(@Nullable Context context);
+    void onContext(@Nullable Context context);
 }

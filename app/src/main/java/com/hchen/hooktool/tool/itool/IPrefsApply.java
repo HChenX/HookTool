@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
 
- * Copyright (C) 2023-2024 HChenX
+ * Copyright (C) 2023-2025 HChenX
  */
 package com.hchen.hooktool.tool.itool;
 
@@ -26,7 +26,7 @@ import java.util.Set;
 /**
  * prefs 工具接口，方法具体介绍请看实现类 >>
  * {@link com.hchen.hooktool.tool.PrefsTool}
- * 
+ *
  * @author 焕晨HChen
  */
 public interface IPrefsApply {

@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
 
- * Copyright (C) 2023-2024 HChenX
+ * Copyright (C) 2023-2025 HChenX
  */
 package com.hchen.hooktool.tool.additional;
 
@@ -93,13 +93,13 @@ public final class ResInjectTool {
     public static Resources loadModuleRes(Resources resources, boolean doOnMainLooper) {
         boolean load;
         if (resources == null) {
-            logW(getTag(), "Context can't is null!" + getStackTrace());
+            logW(getTag(), "Context can't is null!", getStackTrace());
             return null;
         }
         if (mModulePath == null) {
             mModulePath = HCData.getModulePath() != null ? HCData.getModulePath() : null;
             if (mModulePath == null) {
-                logW(getTag(), "Module path is null, can't load module res!" + getStackTrace());
+                logW(getTag(), "Module path is null, can't load module res!", getStackTrace());
                 return null;
             }
         }
@@ -139,7 +139,7 @@ public final class ResInjectTool {
     private static boolean loadResAboveApi30(Resources resources, boolean doOnMainLooper) {
         if (resourcesLoader == null) {
             try (ParcelFileDescriptor pfd = ParcelFileDescriptor.open(new File(mModulePath),
-                    ParcelFileDescriptor.MODE_READ_ONLY)) {
+                ParcelFileDescriptor.MODE_READ_ONLY)) {
                 ResourcesProvider provider = ResourcesProvider.loadFromApk(pfd);
                 ResourcesLoader loader = new ResourcesLoader();
                 loader.addProvider(provider);
@@ -191,7 +191,7 @@ public final class ResInjectTool {
             addAssetPath.setAccessible(true);
             Integer cookie = (Integer) addAssetPath.invoke(assets, mModulePath);
             if (cookie == null || cookie == 0) {
-                logW(getTag(), "Method 'addAssetPath' result 0, maybe load res failed!" + getStackTrace());
+                logW(getTag(), "Method 'addAssetPath' result 0, maybe load res failed!", getStackTrace());
                 return false;
             }
         } catch (Throwable e) {
@@ -222,12 +222,12 @@ public final class ResInjectTool {
         OBJECT
     }
 
-    public static int getFakeResId(String resName) {
+    public static int createFakeResId(String resName) {
         return 0x7e000000 | (resName.hashCode() & 0x00ffffff);
     }
 
-    public static int getFakeResId(Resources res, int id) {
-        return getFakeResId(res.getResourceName(id));
+    public static int createFakeResId(Resources res, int id) {
+        return createFakeResId(res.getResourceName(id));
     }
 
     /**
@@ -283,7 +283,7 @@ public final class ResInjectTool {
                      "getDimensionPixelOffset", "getDimensionPixelSize", "getText", "getFloat",
                      "getIntArray", "getStringArray", "getTextArray", "getAnimation" -> {
                     if (method.getParameterTypes().length == 1
-                            && method.getParameterTypes()[0].equals(int.class)) {
+                        && method.getParameterTypes()[0].equals(int.class)) {
                         hookResMethod(method.getName(), int.class, hookResBefore);
                     }
                 }

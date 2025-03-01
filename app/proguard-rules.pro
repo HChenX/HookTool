@@ -21,5 +21,11 @@
 #-renamesourcefileattribute SourceFile
 
 -keep class * extends com.hchen.hooktool.BaseHC
--keep class  com.hchen.hooktool.HCEntrance
--keep class  com.hchen.hooktool.HCState
+-keep class  com.hchen.hooktool.HCState {
+        static boolean isEnabled;
+        static java.lang.String mFramework;
+        static int  mVersion;
+ }
+-keep class * implements android.os.Parcelable {
+        public static ** CREATOR;
+}

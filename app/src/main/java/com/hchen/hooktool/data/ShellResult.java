@@ -16,13 +16,28 @@
 
  * Copyright (C) 2023-2025 HChenX
  */
-package com.hchen.hooktool.tool.itool;
+package com.hchen.hooktool.data;
+
+import androidx.annotation.NonNull;
+
+import java.util.Arrays;
 
 /**
- * 过滤接口
+ * Shell 工具返回的数据
  *
  * @author 焕晨HChen
  */
-public interface IMemberFilter<T> {
-    boolean test(T member);
+public record ShellResult(String command, String[] outputs, String exitCode) {
+    @NonNull
+    @Override
+    public String toString() {
+        return "ShellResult[command=" + command + ", outputs=" + Arrays.toString(outputs) + ", exitCode=" + exitCode + "]";
+    }
+
+    /**
+     * 是否成功执行。
+     */
+    public boolean isSuccess() {
+        return "0".equals(exitCode);
+    }
 }

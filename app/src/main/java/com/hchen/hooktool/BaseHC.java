@@ -14,12 +14,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
 
- * Copyright (C) 2023-2024 HChenX
+ * Copyright (C) 2023-2025 HChenX
  */
 package com.hchen.hooktool;
-
-import static com.hchen.hooktool.log.XposedLog.logE;
-import static com.hchen.hooktool.log.XposedLog.logI;
 
 import android.app.Application;
 import android.content.Context;
@@ -51,6 +48,13 @@ public abstract class BaseHC extends CoreTool {
     private static final ChainTool mChainTool = new ChainTool();
     public static XC_LoadPackage.LoadPackageParam lpparam; // onZygote 状态下为 null。
     public static ClassLoader classLoader;
+
+    /**
+     * 是否启用
+     */
+    protected boolean enabled() {
+        return true;
+    }
 
     /**
      * handleLoadPackage 阶段。
@@ -91,11 +95,19 @@ public abstract class BaseHC extends CoreTool {
     protected void onApplicationAfter(Context context) {
     }
 
+    /**
+     * 发生崩溃时回调，可用于清理操作；不要在这里继续执行 hook 或可能引发崩溃的逻辑。
+     */
+    protected void onThrowable(Throwable throwable) {
+    }
+
     // 请在 handleLoadPackage 阶段调用。
     final public void onLoadPackage() {
         try {
-            init();
+            if (enabled())
+                init();
         } catch (Throwable e) {
+            onThrowable(e);
             logE(TAG, "Waring! will stop hook process!!", e);
         }
     }
@@ -103,25 +115,36 @@ public abstract class BaseHC extends CoreTool {
     // 请传入自定义的 classLoader。
     final public void onClassLoader(ClassLoader classLoader) {
         try {
-            init(classLoader);
+            if (enabled())
+                init(classLoader);
         } catch (Throwable e) {
+            onThrowable(e);
             logE(TAG, "Waring! will stop hook process!!", e);
         }
     }
 
     // Hook Application
     final public BaseHC onApplicationCreate() {
-        if (!mIApplications.contains(this))
-            mIApplications.add(this);
-        initApplicationHook();
+        try {
+            if (!enabled()) return this;
+
+            if (!mIApplications.contains(this))
+                mIApplications.add(this);
+            initApplicationHook();
+        } catch (Throwable e) {
+            onThrowable(e);
+            logE(TAG, "Waring! can't hook application!!", e);
+        }
         return this;
     }
 
     // 请在 initZygote 阶段调用。
     final public void onZygote() {
         try {
-            initZygote(HCData.getStartupParam());
+            if (enabled())
+                initZygote(HCData.getStartupParam());
         } catch (Throwable e) {
+            onThrowable(e);
             logE(TAG, "Waring! will stop hook process!!", e);
         }
     }
@@ -185,12 +208,12 @@ public abstract class BaseHC extends CoreTool {
     }
 
     // ------------ ResTool ----------------
-    public static int getFakeResId(String resName) {
-        return ResInjectTool.getFakeResId(resName);
+    public static int createFakeResId(String resName) {
+        return ResInjectTool.createFakeResId(resName);
     }
 
-    public static int getFakeResId(Resources res, int id) {
-        return ResInjectTool.getFakeResId(res, id);
+    public static int createFakeResId(Resources res, int id) {
+        return ResInjectTool.createFakeResId(res, id);
     }
 
     public static void setResReplacement(String pkg, String type, String name, int replacementResId) {

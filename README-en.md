@@ -42,8 +42,8 @@ dependencyResolutionManagement {
 dependencies {
     // Choose one of these options; jitpack is recommended as maven might not update as frequently.
     // Tip: Replace v.*.*.* with the latest release version.
-  implementation 'com.github.HChenX:HookTool:v.1.1.6.2' // jitpack
-  implementation 'io.github.hchenx:hooktool:v.1.1.6.2'
+    implementation 'com.github.HChenX:HookTool:v.1.2.3' // jitpack
+    // implementation 'io.github.hchenx:hooktool:v.1.2.3'
     // maven Tip: Almost abandoned, please do not use!
 }
 ```
@@ -69,14 +69,14 @@ public void init() {
 @Override
 public void initZygote(IXposedHookZygoteInit.StartupParam startupParam) {
     HCInit.initBasicData(new BasicData()
-            .setModulePackageName("com.hchen.demo") // Module package name
-            .setTag("HChenDemo") // Log tag
-            .setLogLevel(LOG_D) // Log level
-            .setPrefsName("hchen_prefs") // Prefs storage file name (optional)
-            .xPrefsAutoReload(true) // Automatically reload shared preferences, enabled by default (optional)
-            .useLogExpand(new String[]{
-                    "com.hchen.demo.hook"
-            }) // Enable logging enhancement features, see method comments for details
+        .setModulePackageName("com.hchen.demo") // Module package name
+        .setTag("HChenDemo") // Log tag
+        .setLogLevel(LOG_D) // Log level
+        .setPrefsName("hchen_prefs") // Prefs storage file name (optional)
+        .xPrefsAutoReload(true) // Automatically reload shared preferences, enabled by default (optional)
+        .useLogExpand(new String[]{
+            "com.hchen.demo.hook"
+        }) // Enable logging enhancement features, see method comments for details
     ); // Tip: Recommended to configure here if using initZygote, as it is initialized early on.
     HCInit.initStartupParam(startupParam); // Initialize the tool during the zygote phase
 }
@@ -95,10 +95,10 @@ public static class MainActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         HCInit.initBasicData(new BasicData()
-                .setModulePackageName("com.hchen.demo") // Module package name
-                .setTag("HChenDemo") // Log tag
-                .setLogLevel(LOG_D) // Log level
-                .setPrefsName("hchen_prefs") // Prefs storage file name. (Optional) Tip: Ensure it matches the file name in Xposed.
+            .setModulePackageName("com.hchen.demo") // Module package name
+            .setTag("HChenDemo") // Log tag
+            .setLogLevel(LOG_D) // Log level
+            .setPrefsName("hchen_prefs") // Prefs storage file name. (Optional) Tip: Ensure it matches the file name in Xposed.
         );
     }
 }
@@ -110,14 +110,14 @@ public static class MainActivity {
 public class MainTest {
     public void test() {
         CoreTool.hookMethod(/* content */); // Hook method
-        CoreTool.findClass().get(); // Find class
+        CoreTool.findClass(); // Find class
         CoreTool.callMethod(); // Call method
         ChainTool.chain("com.hchen.demo", new ChainTool()
-                .method("method")
-                .hook()
+            .method("method")
+            .hook()
 
-                .method("method")
-                .hook()
+            .method("method")
+            .hook()
         ); // Chain calls
         PrefsTool.prefs().getString(); // Access shared preferences
         // ......
@@ -141,7 +141,7 @@ public class MainTest extends BaseHC {
     // Be sure to initialize HCInit.initStartupParam(startupParam) at the hook entry point.
     @Override
     public void initZygote(IXposedHookZygoteInit.StartupParam startupParam) {
-        Class<?> c = findClass("com.hchen.demo.Main").get();
+        Class<?> c = findClass("com.hchen.demo.Main");
         hookMethod(c, "test", new IHook() {
             /* content */
         });
@@ -173,6 +173,18 @@ public class RunHook implements IXposedHookLoadPackage, IXposedHookZygoteInit {
 // If stored in multiple directories, add each directory accordingly.
 -keep class com.hchen.demo.hook.**
 -keep class com.hchen.demo.hook.**$*
+
+// If neither BaseHC inheritance nor log augmentation is used, there is no need to configure obfuscation rules.
+
+// Other suggested configurations:
+-keep class  com.hchen.hooktool.HCState {
+        static boolean isEnabled;
+        static java.lang.String mFramework;
+        static int  mVersion;
+ }
+-keep class * implements android.os.Parcelable {
+        public static ** CREATOR;
+}
 ```
 
 - Done! Enjoy using the tool!
@@ -190,23 +202,23 @@ public class MainTest extends BaseHC {
     public void test() {
         // Look! Isn't it clear and easy to understand?
         chain("com.hchen.demo", method("test")
-                .hook(new IHook() {
-                    @Override
-                    public void before() {
-                        super.before();
-                    }
-                })
+            .hook(new IHook() {
+                @Override
+                public void before() {
+                    super.before();
+                }
+            })
 
-                .anyMethod("test")
-                .hook(new IHook() {
-                    @Override
-                    public void after() {
-                        super.after();
-                    }
-                })
+            .anyMethod("test")
+            .hook(new IHook() {
+                @Override
+                public void after() {
+                    super.after();
+                }
+            })
 
-                .constructor()
-                .returnResult(false)
+            .constructor()
+            .returnResult(false)
         );
     }
 }
@@ -221,7 +233,7 @@ public class MainTest extends BaseHC {
 ```java
 public class MainTest extends BaseHC {
     public void init() {
-        Class<?> c = findClass("com.hchen.demo.Demo").get(); // If the class cannot be retrieved, an error log is recorded and null is returned.
+        Class<?> c = findClass("com.hchen.demo.Demo"); // If the class cannot be retrieved, an error log is recorded and null is returned.
         hookMethod(c, "test", new IHook() { // If c is null, an error log is recorded and the hook is skipped, allowing the rest of the code to continue.
             @Override
             public void before() {
@@ -266,7 +278,7 @@ public class MainTest {
     public void test() {
         // Reflectively calls a method; other reflection operations are similar.
         InvokeTool.callMethod(InvokeTool.findClass("com.hchen.demo.Main",
-                getClass().getClassLoader()), "test", new Class[]{});
+            getClass().getClassLoader()), "test", new Class[]{});
     }
 }
 ```
@@ -336,6 +348,61 @@ public static class MainActivity {
 
 ---
 
+- ShellTool Class：
+- Provide the ability to execute simple Shell commands:
+- usage method:
+
+```java
+public class MainTest {
+    public void test() {
+        ShellTool shellTool = ShellTool.builder().isRoot(true).create();
+        shellTool = ShellTool.obtain();
+        ShellResult shellResult = shellTool.cmd("ls").exec();
+        if (shellResult != null) {
+            boolean result = shellResult.isSuccess();
+        }
+        shellTool.cmd("""
+            if [[ 1 == 1 ]]; then
+                echo hello;
+            elif [[ 1 == 2 ]]; then
+                echo world;
+            fi
+            """).exec();
+        shellTool.cmd("echo hello").async();
+        shellTool.cmd("echo world").async(new IExecListener() {
+            @Override
+            public void output(String command, String[] outputs, String exitCode) {
+                IExecListener.super.output(command, outputs, exitCode);
+            }
+        });
+        shellTool.addExecListener(new IExecListener() {
+            @Override
+            public void output(String command, String[] outputs, String exitCode) {
+                IExecListener.super.output(command, outputs, exitCode);
+            }
+
+            @Override
+            public void error(String command, String[] errors, String exitCode) {
+                IExecListener.super.error(command, errors, exitCode);
+            }
+
+            @Override
+            public void notRoot(String exitCode) {
+                IExecListener.super.notRoot(exitCode);
+            }
+
+            @Override
+            public void brokenPip(String command, String[] errors, String reason) {
+                IExecListener.super.brokenPip(command, errors, reason);
+            }
+        });
+        shellTool.close();
+    }
+}
+```
+
+---
+
 - CoreTool class:
 - Provides complete Hook methods!
 - Fully meets your needs!
@@ -365,10 +432,13 @@ public static class MainActivity {
 
 - The following projects use this tool:
 
-|  Project Name  |                        Project Link                        |
-|:--------------:|:----------------------------------------------------------:|
-| ForegroundPin  |  [ForegroundPin](https://github.com/HChenX/ForegroundPin)  |
-| AutoSEffSwitch | [AutoSEffSwitch](https://github.com/HChenX/AutoSEffSwitch) |
+|   Project Name   |                          Project Link                          |
+|:----------------:|:--------------------------------------------------------------:|
+| AppRetentionHook | [AppRetentionHook](https://github.com/HChenX/AppRetentionHook) |
+|  AutoSEffSwitch  |   [AutoSEffSwitch](https://github.com/HChenX/AutoSEffSwitch)   |
+|  SwitchFreeForm  |   [SwitchFreeForm](https://github.com/HChenX/SwitchFreeForm)   |
+|  ForegroundPin   |    [ForegroundPin](https://github.com/HChenX/ForegroundPin)    |
+|  ClipboardList   |    [ClipboardList](https://github.com/HChenX/ClipboardList)    |
 
 - If your project uses this tool, let me know, and I’ll add it to this list.
 - For more details on using this tool, check out the projects above—hope they’re helpful!

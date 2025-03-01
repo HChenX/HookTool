@@ -3,8 +3,8 @@ plugins {
     id 'maven-publish'
 }
 
-def defVersion = 'v.1.1.6.2'
-int defVersionCode = 2025010702
+def defVersion = 'v.1.2.3'
+int defVersionCode = 2025030100
 
 group = 'com.github.HChenX'
 version = defVersion
@@ -74,7 +74,7 @@ afterEvaluate {
                 groupId = 'com.github.HChenX'
                 artifactId = 'HookTool'
                 version = defVersion
-                
+
                 artifact androidSourcesJar
             }
         }

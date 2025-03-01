@@ -14,14 +14,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
 
- * Copyright (C) 2023-2024 HChenX
+ * Copyright (C) 2023-2025 HChenX
  */
 package com.hchen.hooktool.helper;
 
 import static com.hchen.hooktool.log.LogExpand.getTag;
 import static com.hchen.hooktool.log.XposedLog.logE;
-
-import com.hchen.hooktool.tool.SingleMember;
 
 /**
  * 方法执行与异常处理类
@@ -37,29 +35,18 @@ public final class TryHelper {
     }
 
     /*
-     * 执行并储存执行的结果与抛错。
-     * */
-    public static <V> SingleMember<V> createSingleMember(Run<V> supplier) {
-        return new Result<>(supplier).create();
-    }
-
-    /*
      * 简单的执行代码并获取返回值，与此同时主动抛出可能的异常。
      */
     public interface Run<V> {
         V run() throws Throwable;
     }
 
-    public static class Result<V> {
+    public static final class Result<V> {
         private V mResult;
         private boolean isSuccess;
         private Throwable mThrowable;
 
         public Result(Run<V> supplier) {
-            doRun(supplier);
-        }
-
-        private void doRun(Run<V> supplier) {
             try {
                 mResult = supplier.run();
                 isSuccess = true;
@@ -69,10 +56,6 @@ public final class TryHelper {
                 isSuccess = false;
                 mResult = null;
             }
-        }
-
-        private SingleMember<V> create() {
-            return new SingleMember<V>(mResult, mThrowable);
         }
 
         // 获取执行结果
@@ -86,14 +69,19 @@ public final class TryHelper {
             return or;
         }
 
+        // 获取抛错
+        public Throwable getThrowable() {
+            return mThrowable;
+        }
+
         // 如果失败返回指定 or 值，并执行异常回调
-        public V orErr(V or, Err err) {
+        public V orError(V or, Error error) {
             if (isSuccess) return mResult;
-            err.err(mThrowable);
+            error.error(mThrowable);
             return or;
         }
 
-        public V orErrMag(V or, String msg) {
+        public V orErrorMsg(V or, String msg) {
             if (isSuccess) return mResult;
             logE(getTag(), msg, mThrowable);
             return or;
@@ -108,8 +96,8 @@ public final class TryHelper {
             return !isSuccess;
         }
 
-        public interface Err {
-            void err(Throwable throwable);
+        public interface Error {
+            void error(Throwable throwable);
         }
     }
 }

@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
 
- * Copyright (C) 2023-2024 HChenX
+ * Copyright (C) 2023-2025 HChenX
  */
 package com.hchen.hooktool.log;
 
@@ -44,8 +44,8 @@ public final class LogExpand {
     private String methodName;
     private String className;
 
-    public LogExpand(XC_MethodHook.MethodHookParam param, String TAG) {
-        this.TAG = TAG;
+    public LogExpand(XC_MethodHook.MethodHookParam param, String tag) {
+        this.TAG = tag;
         this.param = param;
         getName(param.method);
     }
@@ -74,16 +74,16 @@ public final class LogExpand {
                 String field = stackTraceElement.getFileName();
                 int line = stackTraceElement.getLineNumber();
                 stringBuilder.append("\nat ").append(clazz).append(".")
-                        .append(method).append("(")
-                        .append(field).append(":")
-                        .append(line).append(")");
+                    .append(method).append("(")
+                    .append(field).append(":")
+                    .append(line).append(")");
             }
         });
         return stringBuilder.toString();
     }
 
     public static String createRuntimeExceptionLog(String msg) {
-        return HCData.getInitTag() + "[" + getTag() + "][E]: " + msg + getStackTrace();
+        return HCData.getInitTag() + "[" + getTag() + "][E]: " + msg + "\n[Stack Info]: " + getStackTrace();
     }
 
     public static String getTag() {
@@ -128,7 +128,7 @@ public final class LogExpand {
             className = constructor.getDeclaringClass().getName();
             methodName = "<init>";
         } else {
-            logE(TAG, "Unknown type! member: " + member + getStackTrace());
+            logE(TAG, "Unknown type! member: " + member, getStackTrace());
         }
     }
 
@@ -145,7 +145,7 @@ public final class LogExpand {
         StringBuilder log = new StringBuilder();
         for (int i = 0; i < param.args.length; i++) {
             log.append("    (").append(param.args[i] == null ? "null" : param.args[i].getClass().getSimpleName())
-                    .append(")->").append("[").append(paramToString(param.args[i])).append("]\n");
+                .append(")->").append("[").append(paramToString(param.args[i])).append("]\n");
         }
         logI(TAG, "Method called! Class: [" + className + "], Method: [" + methodName + "]\nParam: {\n" + log + "}");
     }

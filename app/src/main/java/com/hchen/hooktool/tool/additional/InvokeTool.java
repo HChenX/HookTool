@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
 
- * Copyright (C) 2023-2024 HChenX
+ * Copyright (C) 2023-2025 HChenX
  */
 package com.hchen.hooktool.tool.additional;
 
@@ -95,7 +95,7 @@ public final class InvokeTool {
                                           Class<?>[] param /* 方法参数 */, Object... value /* 值 */) {
         Method declaredMethod;
         if (clz == null && instance == null) {
-            AndroidLog.logW(getTag(), "Class and instance is null, can't invoke method: " + method + getStackTrace());
+            AndroidLog.logW(getTag(), "Class and instance is null, can't invoke method: " + method, getStackTrace());
             return null;
         } else if (clz == null) {
             clz = instance.getClass();
@@ -122,7 +122,7 @@ public final class InvokeTool {
                                          boolean set /* 是否为 set 模式 */, Object value /* 指定值 */) {
         Field declaredField = null;
         if (clz == null && instance == null) {
-            AndroidLog.logW(getTag(), "Class and instance is null, can't invoke field: " + field + getStackTrace());
+            AndroidLog.logW(getTag(), "Class and instance is null, can't invoke field: " + field, getStackTrace());
             return null;
         } else if (clz == null) {
             clz = instance.getClass();
