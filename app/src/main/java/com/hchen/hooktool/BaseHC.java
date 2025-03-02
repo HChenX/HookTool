@@ -207,6 +207,10 @@ public abstract class BaseHC extends CoreTool {
         PrefsTool.asyncPrefs(asyncPrefs);
     }
 
+    public static void asyncPrefs(String prefsName, IAsyncPrefs asyncPrefs) {
+        PrefsTool.asyncPrefs(prefsName, asyncPrefs);
+    }
+
     // ------------ ResTool ----------------
     public static int createFakeResId(String resName) {
         return ResInjectTool.createFakeResId(resName);

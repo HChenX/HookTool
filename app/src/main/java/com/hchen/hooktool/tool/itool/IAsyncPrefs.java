@@ -18,13 +18,11 @@
  */
 package com.hchen.hooktool.tool.itool;
 
-import android.content.Context;
-
 /**
  * 异步 prefs 接口
  *
  * @author 焕晨HChen
  */
 public interface IAsyncPrefs {
-    void async(Context context);
+    void async(IPrefsApply sp);
 }

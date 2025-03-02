@@ -51,8 +51,9 @@ import de.robv.android.xposed.XSharedPreferences;
  * @author 焕晨HChen
  */
 public final class PrefsTool {
-    private final static HashMap<String, XSharedPreferences> xPrefs = new HashMap<>();
-    private final static HashMap<String, SharedPreferences> sPrefs = new HashMap<>();
+    private final static HashMap<String, XSharedPreferences> xPrefsMap = new HashMap<>();
+    private final static HashMap<String, SharedPreferences> sPrefsMap = new HashMap<>();
+    private final static HashMap<SharedPreferences, IPrefsApply> mPrefs2IPrefsApplyMap = new HashMap<>();
 
     /**
      * 共享首选项储存至应用私有目录内/从私有目录读取，模块如果设置 xposedsharedprefs 为 true 则由 xposed 统一管理。
@@ -65,7 +66,7 @@ public final class PrefsTool {
      * 共享首选项储存至应用私有目录内/从私有目录读取，并使用指定的 prefsName 命名文件，模块如果设置 xposedsharedprefs 为 true 则由 xposed 统一管理。
      */
     public static IPrefsApply prefs(Context context, @NonNull String prefsName) {
-        return new Sprefs(currentSp(context, prefsName));
+        return getIPrefsApplyInMap(createSpIfNeed(context, prefsName));
     }
 
     /**
@@ -87,7 +88,11 @@ public final class PrefsTool {
     public static IPrefsApply prefs(@NonNull String prefsName) {
         if (!HCData.isXposed())
             throw new RuntimeException(createRuntimeExceptionLog("Not xposed environment!"));
-        return new Xprefs(currentXsp(prefsName));
+        return getIPrefsApplyInMap(createXspIfNeed(prefsName));
+    }
+
+    public static void asyncPrefs(IAsyncPrefs asyncPrefs) {
+        asyncPrefs("", asyncPrefs);
     }
 
     /**
@@ -95,7 +100,7 @@ public final class PrefsTool {
      * <p>
      * 仅限寄生应用内调用，适用于不方便获取 context 的情况。
      */
-    public static void asyncPrefs(IAsyncPrefs asyncPrefs) {
+    public static void asyncPrefs(String prefsName, IAsyncPrefs asyncPrefs) {
         if (!HCData.isXposed())
             throw new RuntimeException(createRuntimeExceptionLog("Not xposed environment!"));
 
@@ -105,24 +110,49 @@ public final class PrefsTool {
                 if (context == null)
                     throw new RuntimeException(createRuntimeExceptionLog("Async prefs context is null!"));
 
-                asyncPrefs.async(context);
+                asyncPrefs.async(getIPrefsApplyInMap(createSpIfNeed(context, prefsName)));
             }
         }, ContextTool.FLAG_CURRENT_APP);
     }
 
-    private static XSharedPreferences currentXsp(String prefsName) {
-        prefsName = initPrefsName(prefsName);
-        if (xPrefs.get(prefsName) == null) {
-            if (HCData.getModulePackageName() == null || HCData.getModulePackageName().isEmpty())
-                throw new RuntimeException(createRuntimeExceptionLog("Module package name is null, Please set module package name!"));
+    public static boolean clear() {
+        mPrefs2IPrefsApplyMap.clear();
+        sPrefsMap.clear();
+        xPrefsMap.clear();
+        return true;
+    }
 
+    private static IPrefsApply getIPrefsApplyInMap(SharedPreferences sharedPreferences) {
+        if (sharedPreferences instanceof XSharedPreferences xSharedPreferences) {
+            if (mPrefs2IPrefsApplyMap.get(sharedPreferences) == null) {
+                Xprefs xprefs = new Xprefs(xSharedPreferences);
+                mPrefs2IPrefsApplyMap.put(sharedPreferences, xprefs);
+                return xprefs;
+            } else
+                return mPrefs2IPrefsApplyMap.get(sharedPreferences);
+        } else {
+            if (mPrefs2IPrefsApplyMap.get(sharedPreferences) == null) {
+                Sprefs sprefs = new Sprefs(sharedPreferences);
+                mPrefs2IPrefsApplyMap.put(sharedPreferences, sprefs);
+                return sprefs;
+            } else
+                return mPrefs2IPrefsApplyMap.get(sharedPreferences);
+        }
+    }
+
+    private static XSharedPreferences createXspIfNeed(String prefsName) {
+        if (HCData.getModulePackageName() == null || HCData.getModulePackageName().isEmpty())
+            throw new RuntimeException(createRuntimeExceptionLog("Module package name is null, Please set module package name!"));
+
+        prefsName = initPrefsName(prefsName);
+        if (xPrefsMap.get(HCData.getModulePackageName() + prefsName) == null) {
             XSharedPreferences x = new XSharedPreferences(HCData.getModulePackageName(), prefsName);
             x.makeWorldReadable();
             x.reload();
-            xPrefs.put(prefsName, x);
+            xPrefsMap.put(HCData.getModulePackageName() + prefsName, x);
             return x;
         } else {
-            return xPrefs.get(prefsName);
+            return xPrefsMap.get(HCData.getModulePackageName() + prefsName);
         }
     }
 
@@ -130,12 +160,12 @@ public final class PrefsTool {
      * @noinspection deprecation
      */
     @SuppressLint("WorldReadableFiles")
-    private static SharedPreferences currentSp(Context context, String prefsName) {
-        prefsName = initPrefsName(prefsName);
+    private static SharedPreferences createSpIfNeed(Context context, String prefsName) {
         if (context == null)
             throw new RuntimeException(createRuntimeExceptionLog("Context is null, can't create sprefs!"));
 
-        if (sPrefs.get(context.getPackageName() + prefsName) == null) {
+        prefsName = initPrefsName(prefsName);
+        if (sPrefsMap.get(context.getPackageName() + prefsName) == null) {
             SharedPreferences s;
             try {
                 s = context.getSharedPreferences(prefsName, Context.MODE_WORLD_READABLE);
@@ -143,10 +173,10 @@ public final class PrefsTool {
                 s = context.getSharedPreferences(prefsName, Context.MODE_PRIVATE);
                 AndroidLog.logW(getTag(), "Maybe can't use xSharedPreferences!", getStackTrace());
             }
-            sPrefs.put(context.getPackageName() + prefsName, s);
+            sPrefsMap.put(context.getPackageName() + prefsName, s);
             return s;
         } else {
-            return sPrefs.get(prefsName);
+            return sPrefsMap.get(prefsName);
         }
     }
 
@@ -165,7 +195,7 @@ public final class PrefsTool {
         } else return name;
     }
 
-    public static class Xprefs implements IPrefsApply {
+    private static class Xprefs implements IPrefsApply {
         private final XSharedPreferences xSharedPreferences;
 
         private Xprefs(XSharedPreferences xSharedPreferences) {
@@ -261,7 +291,7 @@ public final class PrefsTool {
         }
     }
 
-    public static class Sprefs implements IPrefsApply {
+    private static class Sprefs implements IPrefsApply {
         private final SharedPreferences preferences;
 
         private Sprefs(SharedPreferences preferences) {

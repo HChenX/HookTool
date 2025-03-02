@@ -152,7 +152,7 @@ public class ShellTool {
     }
 
     /**
-     * 添加回调。
+     * 添加回调，传入 null 则删除全部回调。
      */
     public void addExecListener(@Nullable IExecListener execListener) {
         if (execListener == null) {
@@ -162,6 +162,9 @@ public class ShellTool {
         mIExecListeners.add(execListener);
     }
 
+    /**
+     * 移除指定回调。
+     */
     public void removeExecListener(@NonNull IExecListener execListener) {
         mIExecListeners.remove(execListener);
     }
@@ -651,22 +654,34 @@ public class ShellTool {
             }
         }
 
+        /**
+         * 是否使用 Root 模式。
+         */
         public Builder isRoot(boolean isRoot) {
             mShell.isRoot = isRoot;
             return this;
         }
 
+        /**
+         * 设置启动时执行的命令。默认: {"su", "sh"}
+         */
         public Builder setEntranceCmds(@NonNull @Size(2) String[] cmds) {
             if (cmds.length != 2) return this;
             mShell.mEntranceCmds = cmds;
             return this;
         }
 
+        /**
+         * 设置 Shell 执行监听。
+         */
         public Builder addExecListener(@Nullable IExecListener execListener) {
             mShell.addExecListener(execListener);
             return this;
         }
 
+        /**
+         * 移除指定的监听。
+         */
         public Builder removeExecListener(IExecListener execListener) {
             mShell.removeExecListener(execListener);
             return this;

@@ -42,8 +42,8 @@ dependencyResolutionManagement {
 dependencies {
     // 二选一即可，推荐使用 jitpack，maven 可能不会同步更新！
     // Tip: v.*.*.* 填写当前最新发行版版本号即可！
-    implementation 'com.github.HChenX:HookTool:v.1.2.3' // jitpack
-    // implementation 'io.github.hchenx:hooktool:v.1.2.3' // maven Tip: 几乎废弃，请不要使用！
+    implementation 'com.github.HChenX:HookTool:v.1.2.4' // jitpack
+    // implementation 'io.github.hchenx:hooktool:v.1.2.4' // maven Tip: 几乎废弃，请不要使用！
 }
 ```
 
@@ -319,10 +319,10 @@ public class MainTest extends BaseHC {
         // 注意 sprefs 模式 是和 xprefs 模式相互独立的，可共同存在。
 
         // 如果不方便获取 context 可用使用此方法，异步获取寄生应用上下文后再设置。
-        asyncPrefs(new PrefsTool.IAsyncPrefs() {
+        asyncPrefs(new IAsyncPrefs() {
             @Override
-            public void async(Context context) {
-                prefs(context).editor().putString("test", "1").commit();
+            public void async(IPrefsApply sp) {
+                sp.editor().put("test", "1").commit();
             }
         });
     }

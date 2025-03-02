@@ -42,8 +42,8 @@ dependencyResolutionManagement {
 dependencies {
     // Choose one of these options; jitpack is recommended as maven might not update as frequently.
     // Tip: Replace v.*.*.* with the latest release version.
-    implementation 'com.github.HChenX:HookTool:v.1.2.3' // jitpack
-    // implementation 'io.github.hchenx:hooktool:v.1.2.3'
+    implementation 'com.github.HChenX:HookTool:v.1.2.4' // jitpack
+    // implementation 'io.github.hchenx:hooktool:v.1.2.4'
     // maven Tip: Almost abandoned, please do not use!
 }
 ```
@@ -309,25 +309,25 @@ public class MainTest {
 public class MainTest extends BaseHC {
     @Override
     public void init() {
-        // xprefs mode:
-        // Note: in xprefs mode, the host app can only read but not modify configurations.
-        String s = prefs().getString("test", "1"); // Read preferences
-        s = prefs("myPrefs").getString("test", "1"); // Specify file name to read
+      // Xprefs mode:
+      // Note the xprefs mode, parasitic applications cannot modify configurations and can only read.
+      String s = prefs().getString("test", "1");  // Just read it
+      s = prefs("myPrefs").getString("test", "1");  // Can specify the file name for reading
 
-        // sprefs mode:
-        // Configurations are saved to the host app's private directory, and reads are from the same.
-        prefs(context).editor().putString("test", "1").commit();
-        // If not inheriting BaseHC, call this way.
-        PrefsTool.prefs(context).editor().putString("test", "2").commit();
-        // Note: sprefs and xprefs modes operate independently and can coexist.
+      // Sprefs mode:
+      // The configuration will be saved to the private directory of the parasitic application, and read from the private directory of the parasitic application.
+      prefs(context).editor().putString("test", "1").commit();
+      // If BaseHC is not inherited, it can be called in this way.
+      PrefsTool.prefs(context).editor().putString("test", "2").commit();
+      // Note that the spreads mode is independent of the xprefs mode and can coexist.
 
-        // If obtaining context is difficult, this method provides async host app context retrieval.
-        asyncPrefs(new PrefsTool.IAsyncPrefs() {
-            @Override
-            public void async(Context context) {
-                prefs(context).editor().putString("test", "1").commit();
-            }
-        });
+      // If it is inconvenient to obtain the context, this method can be used to asynchronously obtain the parasitic application context before setting it.
+      asyncPrefs(new IAsyncPrefs() {
+        @Override
+        public void async(IPrefsApply sp) {
+          sp.editor().put("test", "1").commit();
+        }
+      });
     }
 }
 

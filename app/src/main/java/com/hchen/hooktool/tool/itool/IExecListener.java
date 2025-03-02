@@ -28,7 +28,7 @@ public interface IExecListener {
      * 标准输出。
      *
      * @param command  输入的命令
-     * @param outputs  执行后输出内容
+     * @param outputs  执行后输出的内容
      * @param exitCode 退出码
      */
     default void output(String command, String[] outputs, String exitCode) {

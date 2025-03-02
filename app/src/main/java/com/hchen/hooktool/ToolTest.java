@@ -27,10 +27,13 @@ import android.os.Parcelable;
 import com.hchen.hooktool.data.AppData;
 import com.hchen.hooktool.data.ShellResult;
 import com.hchen.hooktool.hook.IHook;
+import com.hchen.hooktool.tool.PrefsTool;
 import com.hchen.hooktool.tool.additional.PackageTool;
 import com.hchen.hooktool.tool.additional.ShellTool;
+import com.hchen.hooktool.tool.itool.IAsyncPrefs;
 import com.hchen.hooktool.tool.itool.IExecListener;
 import com.hchen.hooktool.tool.itool.IPackageInfoGetter;
+import com.hchen.hooktool.tool.itool.IPrefsApply;
 
 import java.util.ArrayList;
 
@@ -173,6 +176,27 @@ final class ToolTest extends BaseHC {
         createFakeResId("test_res"); // 获取 test_res 的虚拟资源 id
         // 设置 pkg 的 string 资源 test_res_str 值为 HC!
         setObjectReplacement("com.hchen.demo", "string", "test_res_str", "HC!");
+
+        Context context = null;
+        // xprefs 模式：
+        // 注意 xprefs 模式，寄生应用不能修改配置只能读取。
+        String s = prefs().getString("test", "1");  // 即可读取
+        s = prefs("myPrefs").getString("test", "1");  // 可指定读取文件名
+
+        // sprefs 模式：
+        // 配置会保存到寄生应用的私有目录，读取也会从寄生应用私有目录读取。
+        prefs(context).editor().putString("test", "1").commit();
+        // 如果没有继承 BaseHC 可以这样调用。
+        PrefsTool.prefs(context).editor().putString("test", "2").commit();
+        // 注意 sprefs 模式 是和 xprefs 模式相互独立的，可共同存在。
+
+        // 如果不方便获取 context 可用使用此方法，异步获取寄生应用上下文后再设置。
+        asyncPrefs(new IAsyncPrefs() {
+            @Override
+            public void async(IPrefsApply sp) {
+                sp.editor().put("test", "1").commit();
+            }
+        });
     }
 
     private static class InitHook extends HCEntrance {
