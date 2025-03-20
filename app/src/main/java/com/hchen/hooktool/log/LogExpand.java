@@ -26,7 +26,6 @@ import com.hchen.hooktool.HCData;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.function.Consumer;
@@ -39,15 +38,24 @@ import de.robv.android.xposed.XC_MethodHook;
  * @author 焕晨HChen
  */
 public final class LogExpand {
-    private XC_MethodHook.MethodHookParam param;
+    private XC_MethodHook.MethodHookParam mParam;
     private final String TAG;
-    private String methodName;
-    private String className;
+    private String mMethodName;
+    private String mClassName;
 
     public LogExpand(XC_MethodHook.MethodHookParam param, String tag) {
         this.TAG = tag;
-        this.param = param;
-        getName(param.method);
+        this.mParam = param;
+
+        if (param.method instanceof Method method) {
+            mMethodName = method.getName();
+            mClassName = method.getDeclaringClass().getName();
+        } else if (param.method instanceof Constructor<?> constructor) {
+            mMethodName = "<init>";
+            mClassName = constructor.getDeclaringClass().getName();
+        } else {
+            logE(TAG, "Unknown type! member: " + param.method, getStackTrace());
+        }
     }
 
     /**
@@ -120,34 +128,22 @@ public final class LogExpand {
         return tag;
     }
 
-    private void getName(Member member) {
-        if (member instanceof Method method) {
-            methodName = method.getName();
-            className = method.getDeclaringClass().getName();
-        } else if (member instanceof Constructor<?> constructor) {
-            className = constructor.getDeclaringClass().getName();
-            methodName = "<init>";
-        } else {
-            logE(TAG, "Unknown type! member: " + member, getStackTrace());
-        }
-    }
-
     public void update(XC_MethodHook.MethodHookParam param) {
-        this.param = param;
+        this.mParam = param;
     }
 
     public void detailedLogs() {
-        if (param.args == null || param.args.length == 0) {
-            logI(TAG, "Method called! Class: [" + className + "], Method: [" + methodName + "], Param: { }");
+        if (mParam.args == null || mParam.args.length == 0) {
+            logI(TAG, "Method called! Class: [" + mClassName + "], Method: [" + mMethodName + "], Param: { }");
             return;
         }
 
         StringBuilder log = new StringBuilder();
-        for (int i = 0; i < param.args.length; i++) {
-            log.append("    (").append(param.args[i] == null ? "null" : param.args[i].getClass().getSimpleName())
-                .append(")->").append("[").append(paramToString(param.args[i])).append("]\n");
+        for (int i = 0; i < mParam.args.length; i++) {
+            log.append("    (").append(mParam.args[i] == null ? "null" : mParam.args[i].getClass().getSimpleName())
+                .append(")->").append("[").append(paramToString(mParam.args[i])).append("]\n");
         }
-        logI(TAG, "Method called! Class: [" + className + "], Method: [" + methodName + "]\nParam: {\n" + log + "}");
+        logI(TAG, "Method called! Class: [" + mClassName + "], Method: [" + mMethodName + "]\nParam: {\n" + log + "}");
     }
 
     private String paramToString(Object param) {

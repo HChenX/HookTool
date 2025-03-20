@@ -50,14 +50,14 @@ import java.util.stream.Collectors;
  * @author 焕晨HChen
  */
 public final class ChainTool {
-    private final ChainHook chainHook; // 创建 hook
-    private ChainData cacheData;
-    private final List<ChainData> chainDataList = new ArrayList<>(); // 链式数据
-    private final List<ChainData> cacheDataList = new ArrayList<>(); // 暂时的缓存数据
-    private final HashSet<Member> existingMembers = new HashSet<>();
+    private final ChainHook mChainHook; // 创建 hook
+    private ChainData mCacheData;
+    private final List<ChainData> mChainDataList = new ArrayList<>(); // 链式数据
+    private final List<ChainData> mCacheDataList = new ArrayList<>(); // 暂时的缓存数据
+    private final HashSet<Member> mExistingMembers = new HashSet<>();
 
     public ChainTool() {
-        chainHook = new ChainHook(this);
+        mChainHook = new ChainHook(this);
     }
 
     public static void chain(String clazz, ChainTool chain) {
@@ -80,63 +80,65 @@ public final class ChainTool {
      * 查找方法。
      */
     public ChainHook method(String name, Object... params) {
-        cacheData = new ChainData(name, params);
-        return chainHook;
+        mCacheData = new ChainData(name, params);
+        return mChainHook;
     }
 
     public ChainHook methodIfExist(String name, Object... params) {
-        cacheData = new ChainData(name, params);
-        cacheData.setCheckExist(true);
-        return chainHook;
+        mCacheData = new ChainData(name, params);
+        mCacheData.setCheckExist(true);
+        return mChainHook;
     }
 
     public ChainHook anyMethod(String name) {
-        cacheData = new ChainData(name);
-        return chainHook;
+        mCacheData = new ChainData(name);
+        return mChainHook;
     }
 
     /**
      * 查找构造函数。
      */
     public ChainHook constructor(Object... params) {
-        cacheData = new ChainData(params);
-        return chainHook;
+        mCacheData = new ChainData(params);
+        return mChainHook;
     }
 
     public ChainHook constructorIfExist(Object... params) {
-        cacheData = new ChainData(params);
-        cacheData.setCheckExist(true);
-        return chainHook;
+        mCacheData = new ChainData(params);
+        mCacheData.setCheckExist(true);
+        return mChainHook;
     }
 
     public ChainHook anyConstructor() {
-        cacheData = new ChainData();
-        return chainHook;
+        mCacheData = new ChainData();
+        return mChainHook;
     }
 
     // 各种奇奇怪怪的添加 >.<
     private void doFind(Class<?> clazz) {
         if (clazz == null) {
-            cacheDataList.clear();
+            mCacheDataList.clear();
             return;
         }
-        if (cacheDataList.isEmpty()) {
+        if (mCacheDataList.isEmpty()) {
             logW(getTag(), "cache data list is empty, can't find or hook anything!", getStackTrace());
             return;
         }
 
         List<ChainData> members = new ArrayList<>();
-        for (ChainData cacheData : cacheDataList) {
+        for (ChainData cacheData : mCacheDataList) {
             String UUID = cacheData.mType + "#" + clazz.getName() + "#" + cacheData.mName + "#" + Arrays.toString(cacheData.mParams);
             switch (cacheData.mType) {
                 case TYPE_METHOD -> {
                     if (cacheData.mCheckExist)
                         if (!existsMethod(clazz, cacheData.mName, cacheData.mParams)) continue;
+
                     members.add(new ChainData(findMethod(clazz, cacheData.mName, cacheData.mParams)));
                 }
                 case TYPE_CONSTRUCTOR -> {
                     if (cacheData.mCheckExist)
                         if (!existsConstructor(clazz, cacheData.mParams)) continue;
+
                     members.add(new ChainData(findConstructor(clazz, cacheData.mParams)));
                 }
                 case TYPE_ANY_METHOD ->
@@ -152,44 +154,42 @@ public final class ChainTool {
                 }
             }
             if (members.isEmpty()) continue;
-            if (chainDataList.stream().noneMatch(c -> c.UUID.equals(UUID))) {
+            if (mChainDataList.stream().noneMatch(c -> c.UUID.equals(UUID))) {
                 Iterator<ChainData> iterator = members.iterator();
                 while (iterator.hasNext()) {
                     ChainData memberData = iterator.next();
-                    if (memberData.member == null || existingMembers.contains(memberData.member)) {
+                    if (memberData.mMember == null || mExistingMembers.contains(memberData.mMember)) {
                         iterator.remove();
-                        logW(getTag(), "This member maybe repeated or maybe is null, will remove it! " + "\ndebug: " + UUID + "#member: " + memberData.member);
+                        logW(getTag(), "This member maybe repeated or maybe is null, will remove it! " + "\ndebug: " + UUID + "#member: " + memberData.mMember);
                         continue;
                     }
-                    existingMembers.add(memberData.member);
+                    mExistingMembers.add(memberData.mMember);
                 }
                 if (members.isEmpty()) continue;
-                chainDataList.add(new ChainData(new ArrayList<>(members), cacheData.iHook, HookState.NONE, UUID));
+                mChainDataList.add(new ChainData(new ArrayList<>(members), cacheData.mIHook, HookState.NONE, UUID));
             } else
                 logW(getTag(), "This member maybe repeated, will skip add it! \ndebug: " + UUID);
             members.clear();
         }
-        cacheDataList.clear();
+        mCacheDataList.clear();
         doChainHook();
     }
 
     // 太复杂啦，我也迷糊了 >.<
     public void doChainHook() {
-        List<ChainData> chainDataList = this.chainDataList;
-
-        ListIterator<ChainData> iterator = chainDataList.listIterator();
+        ListIterator<ChainData> iterator = mChainDataList.listIterator();
         while (iterator.hasNext()) {
             ChainData chainData = iterator.next();
-            if (chainData.hookState == HookState.HOOKED) continue;
-            if (chainData.iHook == null) {
+            if (chainData.mHookState == HookState.HOOKED) continue;
+            if (chainData.mIHook == null) {
                 logW(getTag(), "Action is null, can't hook! will remove this! \ndebug: " + chainData.UUID);
                 iterator.remove();
                 continue;
             }
-            for (ChainData memberData : chainData.members) {
-                CoreBase.baseHookAll(new Member[]{memberData.member}, chainData.iHook);
+            for (ChainData memberData : chainData.mMembers) {
+                CoreBase.baseHookAll(new Member[]{memberData.mMember}, chainData.mIHook);
             }
-            chainData.hookState = HookState.HOOKED;
+            chainData.mHookState = HookState.HOOKED;
             iterator.set(chainData);
         }
     }
@@ -205,8 +205,8 @@ public final class ChainTool {
          * Hook 动作。
          */
         public ChainTool hook(IHook iHook) {
-            chain.cacheData.iHook = iHook;
-            chain.cacheDataList.add(chain.cacheData);
+            chain.mCacheData.mIHook = iHook;
+            chain.mCacheDataList.add(chain.mCacheData);
             return chain;
         }
 
@@ -214,8 +214,8 @@ public final class ChainTool {
          * 直接返回指定值。
          */
         public ChainTool returnResult(final Object result) {
-            chain.cacheData.iHook = CoreTool.returnResult(result);
-            chain.cacheDataList.add(chain.cacheData);
+            chain.mCacheData.mIHook = CoreTool.returnResult(result);
+            chain.mCacheDataList.add(chain.mCacheData);
             return chain;
         }
 
@@ -223,8 +223,8 @@ public final class ChainTool {
          * 拦截方法执行。
          */
         public ChainTool doNothing() {
-            chain.cacheData.iHook = CoreTool.doNothing();
-            chain.cacheDataList.add(chain.cacheData);
+            chain.mCacheData.mIHook = CoreTool.doNothing();
+            chain.mCacheDataList.add(chain.mCacheData);
             return chain;
         }
     }

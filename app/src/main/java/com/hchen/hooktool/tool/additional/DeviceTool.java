@@ -23,9 +23,12 @@ import static com.hchen.hooktool.log.LogExpand.getTag;
 import static com.hchen.hooktool.tool.additional.InvokeTool.getStaticField;
 import static com.hchen.hooktool.tool.additional.SystemPropTool.getProp;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.content.res.Resources;
+import android.graphics.Point;
+import android.graphics.Rect;
 import android.os.Build;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
@@ -126,7 +129,7 @@ public class DeviceTool {
         return SystemPropTool.getProp("sys.boot_completed", false);
     }
 
-    // --------- 手机品牌 -------------
+    // ----------------------------------- 手机品牌 -------------------------------------
     public static final String[] ROM_HUAWEI = {"huawei"};
     public static final String[] ROM_VIVO = {"vivo"};
     public static final String[] ROM_XIAOMI = {"xiaomi", "redmi"};
@@ -244,6 +247,70 @@ public class DeviceTool {
      */
     public static boolean isMiuiInternational() {
         return Boolean.TRUE.equals(getStaticField("miui.os.Build", "IS_INTERNATIONAL_BUILD"));
+    }
+
+    // ------------------------------------------------------------------------------
+    private static final Point mWindowSizePoint = new Point();
+    private static final Point mScreenSizePoint = new Point();
+
+    // --------------- 获取窗口参数 --------------
+    public static WindowManager getWindowManager(Context context) {
+        return (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+    }
+
+    @SuppressLint("NewApi")
+    public static Display getDisplay(Context context) {
+        try {
+            return context.getDisplay();
+        } catch (UnsupportedOperationException unused) {
+            // Log.w("WindowUtils", "This context is not associated with a display. You should use createDisplayContext() to create a display context to work with windows.");
+            return getWindowManager(context).getDefaultDisplay();
+        }
+    }
+
+    public static void getWindowSize(Context context, Point point) {
+        getWindowSize(getWindowManager(context), point);
+    }
+
+    @SuppressLint("NewApi")
+    public static void getWindowSize(WindowManager windowManager, Point point) {
+        Rect bounds = windowManager.getCurrentWindowMetrics().getBounds();
+        point.x = bounds.width();
+        point.y = bounds.height();
+    }
+
+    public static Point getWindowSize(Context context) {
+        getWindowSize(context, mWindowSizePoint);
+        return mWindowSizePoint;
+    }
+
+    @Deprecated
+    public static int getWindowHeight(Context context) {
+        return getWindowSize(context).y;
+    }
+
+    public static void getScreenSize(Context context, Point point) {
+        getScreenSize(getWindowManager(context), point);
+    }
+
+    public static Point getScreenSize(Context context) {
+        getScreenSize(getWindowManager(context), mScreenSizePoint);
+        return mScreenSizePoint;
+    }
+
+    @SuppressLint("NewApi")
+    public static void getScreenSize(WindowManager windowManager, Point point) {
+        Rect bounds = windowManager.getMaximumWindowMetrics().getBounds();
+        point.x = bounds.width();
+        point.y = bounds.height();
+    }
+
+    public static boolean isHorizontalScreen(Context context) {
+        return context.getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE;
+    }
+
+    public static boolean isVerticalScreen(Context context) {
+        return context.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT;
     }
 
     /**

@@ -62,7 +62,7 @@ import de.robv.android.xposed.XC_MethodHook;
  * @author 焕晨HChen
  */
 public final class ResInjectTool {
-    private static ResourcesLoader resourcesLoader = null;
+    private static ResourcesLoader mResourcesLoader = null;
     private static String mModulePath = null;
     private static Handler mHandler = null;
 
@@ -115,8 +115,8 @@ public final class ResInjectTool {
                 logE(tag(), "failed to load resource! critical error!! scope may crash!!", e);
             }*/
         }
-        if (!resourcesArrayList.contains(resources))
-            resourcesArrayList.add(resources);
+        if (!mResourcesArrayList.contains(resources))
+            mResourcesArrayList.add(resources);
         return resources;
     }
 
@@ -137,13 +137,13 @@ public final class ResInjectTool {
      */
     @RequiresApi(api = Build.VERSION_CODES.R)
     private static boolean loadResAboveApi30(Resources resources, boolean doOnMainLooper) {
-        if (resourcesLoader == null) {
+        if (mResourcesLoader == null) {
             try (ParcelFileDescriptor pfd = ParcelFileDescriptor.open(new File(mModulePath),
                 ParcelFileDescriptor.MODE_READ_ONLY)) {
                 ResourcesProvider provider = ResourcesProvider.loadFromApk(pfd);
                 ResourcesLoader loader = new ResourcesLoader();
                 loader.addProvider(provider);
-                resourcesLoader = loader;
+                mResourcesLoader = loader;
             } catch (IOException e) {
                 logE(getTag(), "Failed to add resource! debug: above api 30.", e);
                 return false;
@@ -166,7 +166,7 @@ public final class ResInjectTool {
     @RequiresApi(api = Build.VERSION_CODES.R)
     private static boolean addLoaders(Resources resources) {
         try {
-            resources.addLoaders(resourcesLoader);
+            resources.addLoaders(mResourcesLoader);
         } catch (IllegalArgumentException e) {
             String expected1 = "Cannot modify resource loaders of ResourcesImpl not registered with ResourcesManager";
             if (expected1.equals(e.getMessage())) {
@@ -201,19 +201,18 @@ public final class ResInjectTool {
         return true;
     }
 
-    private static final List<Resources> resourcesArrayList = new ArrayList<>();
-    private static final ConcurrentHashMap<Integer, Boolean> resMap = new ConcurrentHashMap<>();
-    private static final List<XC_MethodHook.Unhook> unhooks = new ArrayList<>();
-    private static final ConcurrentHashMap<String, Pair<ReplacementType, Object>> replacements = new ConcurrentHashMap<>();
-
-    private static boolean hooked;
+    private static final List<Resources> mResourcesArrayList = new ArrayList<>();
+    private static final ConcurrentHashMap<Integer, Boolean> mResMap = new ConcurrentHashMap<>();
+    private static final List<XC_MethodHook.Unhook> mUnhooks = new ArrayList<>();
+    private static final ConcurrentHashMap<String, Pair<ReplacementType, Object>> mReplacements = new ConcurrentHashMap<>();
+    private static boolean isHooked;
 
     private ResInjectTool() {
-        hooked = false;
-        resourcesArrayList.clear();
-        resMap.clear();
-        unhooks.clear();
-        replacements.clear();
+        isHooked = false;
+        mResourcesArrayList.clear();
+        mResMap.clear();
+        mUnhooks.clear();
+        mReplacements.clear();
     }
 
     private enum ReplacementType {
@@ -236,7 +235,7 @@ public final class ResInjectTool {
     public static void setResReplacement(String pkg, String type, String name, int replacementResId) {
         try {
             applyHooks();
-            replacements.put(pkg + ":" + type + "/" + name, new Pair<>(ReplacementType.ID, replacementResId));
+            mReplacements.put(pkg + ":" + type + "/" + name, new Pair<>(ReplacementType.ID, replacementResId));
         } catch (Throwable t) {
             logE(getTag(), "Failed to set res replacement!", t);
         }
@@ -248,7 +247,7 @@ public final class ResInjectTool {
     public static void setDensityReplacement(String pkg, String type, String name, float replacementResValue) {
         try {
             applyHooks();
-            replacements.put(pkg + ":" + type + "/" + name, new Pair<>(ReplacementType.DENSITY, replacementResValue));
+            mReplacements.put(pkg + ":" + type + "/" + name, new Pair<>(ReplacementType.DENSITY, replacementResValue));
         } catch (Throwable t) {
             logE(getTag(), "Failed to set density res replacement!", t);
         }
@@ -260,14 +259,14 @@ public final class ResInjectTool {
     public static void setObjectReplacement(String pkg, String type, String name, Object replacementResValue) {
         try {
             applyHooks();
-            replacements.put(pkg + ":" + type + "/" + name, new Pair<>(ReplacementType.OBJECT, replacementResValue));
+            mReplacements.put(pkg + ":" + type + "/" + name, new Pair<>(ReplacementType.OBJECT, replacementResValue));
         } catch (Throwable t) {
             logE(getTag(), "Failed to set object res replacement!", t);
         }
     }
 
     private static void applyHooks() {
-        if (hooked) return;
+        if (isHooked) return;
         if (mModulePath == null) {
             mModulePath = HCData.getModulePath() != null ? HCData.getModulePath() : null;
             if (mModulePath == null) {
@@ -311,27 +310,27 @@ public final class ResInjectTool {
                 hookTypedMethod(method.getName(), int.class, int.class, hookTypedBefore);
             }
         }
-        hooked = true;
+        isHooked = true;
     }
 
     private static void hookResMethod(String name, Object... args) {
-        unhooks.add(CoreTool.hookMethod(Resources.class, name, args));
+        mUnhooks.add(CoreTool.hookMethod(Resources.class, name, args));
     }
 
     private static void hookTypedMethod(String name, Object... args) {
-        unhooks.add(CoreTool.hookMethod(TypedArray.class, name, args));
+        mUnhooks.add(CoreTool.hookMethod(TypedArray.class, name, args));
     }
 
     public static void unHookRes() {
-        if (unhooks.isEmpty()) {
-            hooked = false;
+        if (mUnhooks.isEmpty()) {
+            isHooked = false;
             return;
         }
-        for (XC_MethodHook.Unhook unhook : unhooks) {
+        for (XC_MethodHook.Unhook unhook : mUnhooks) {
             unhook.unhook();
         }
-        unhooks.clear();
-        hooked = false;
+        mUnhooks.clear();
+        isHooked = false;
     }
 
     private static final IHook hookTypedBefore = new IHook() {
@@ -355,13 +354,13 @@ public final class ResInjectTool {
     private static final IHook hookResBefore = new IHook() {
         @Override
         public void before() {
-            if (resourcesArrayList.isEmpty()) {
-                resourcesArrayList.add(loadModuleRes(ContextTool.getContext(FLAG_ALL)));
+            if (mResourcesArrayList.isEmpty()) {
+                mResourcesArrayList.add(loadModuleRes(ContextTool.getContext(FLAG_ALL)));
             }
-            if (Boolean.TRUE.equals(resMap.get((int) getArgs(0)))) {
+            if (Boolean.TRUE.equals(mResMap.get((int) getArgs(0)))) {
                 return;
             }
-            for (Resources resources : resourcesArrayList) {
+            for (Resources resources : mResourcesArrayList) {
                 if (resources == null) return;
                 String method = mMember.getName();
                 Object value;
@@ -400,10 +399,10 @@ public final class ResInjectTool {
         Object value;
         Integer modResId;
         Pair<ReplacementType, Object> replacement = null;
-        if (replacements.containsKey(resFullName)) {
-            replacement = replacements.get(resFullName);
-        } else if (replacements.containsKey(resAnyPkgName)) {
-            replacement = replacements.get(resAnyPkgName);
+        if (mReplacements.containsKey(resFullName)) {
+            replacement = mReplacements.get(resFullName);
+        } else if (mReplacements.containsKey(resAnyPkgName)) {
+            replacement = mReplacements.get(resAnyPkgName);
         }
         if (replacement != null) {
             switch (replacement.first) {
@@ -422,14 +421,14 @@ public final class ResInjectTool {
                         throw n;
                     }
                     if (method == null) return null;
-                    resMap.put(modResId, true);
+                    mResMap.put(modResId, true);
                     if ("getDrawable".equals(method))
                         value = CoreTool.callMethod(resources, method, modResId, args[1]);
                     else if ("getDrawableForDensity".equals(method) || "getFraction".equals(method))
                         value = CoreTool.callMethod(resources, method, modResId, args[1], args[2]);
                     else
                         value = CoreTool.callMethod(resources, method, modResId);
-                    resMap.remove(modResId);
+                    mResMap.remove(modResId);
                     return value;
                 }
             }
@@ -455,10 +454,10 @@ public final class ResInjectTool {
                 String resAnyPkgName = "*:" + resType + "/" + resName;
 
                 Pair<ReplacementType, Object> replacement = null;
-                if (replacements.containsKey(resFullName)) {
-                    replacement = replacements.get(resFullName);
-                } else if (replacements.containsKey(resAnyPkgName)) {
-                    replacement = replacements.get(resAnyPkgName);
+                if (mReplacements.containsKey(resFullName)) {
+                    replacement = mReplacements.get(resFullName);
+                } else if (mReplacements.containsKey(resAnyPkgName)) {
+                    replacement = mReplacements.get(resAnyPkgName);
                 }
                 if (replacement != null && (Objects.requireNonNull(replacement.first) == ReplacementType.OBJECT)) {
                     return replacement.second;

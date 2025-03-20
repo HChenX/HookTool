@@ -44,6 +44,8 @@ import static com.hchen.hooktool.tool.CoreBase.baseSetAdditionalStaticField;
 import static com.hchen.hooktool.tool.CoreBase.baseSetField;
 import static com.hchen.hooktool.tool.CoreBase.baseSetStaticField;
 
+import androidx.annotation.Nullable;
+
 import com.hchen.hooktool.HCData;
 import com.hchen.hooktool.hook.IHook;
 import com.hchen.hooktool.log.LogExpand;
@@ -81,10 +83,12 @@ public class CoreTool extends XposedLog {
     }
 
     // --------- 查找类 -----------
+    @Nullable
     public static Class<?> findClass(String name) {
         return findClass(name, HCData.getClassLoader());
     }
 
+    @Nullable
     public static Class<?> findClass(String name, ClassLoader classLoader) {
         return baseFindClass(name, classLoader).get();
     }
@@ -117,14 +121,17 @@ public class CoreTool extends XposedLog {
     }
 
     // ------------ 查找方法 --------------
+    @Nullable
     public static Method findMethod(String clazz, String name, Object... objs) {
         return baseFindMethod(baseFindClass(clazz), name, objs).get();
     }
 
+    @Nullable
     public static Method findMethod(String clazz, ClassLoader classLoader, String name, Object... objs) {
         return baseFindMethod(baseFindClass(clazz, classLoader), name, objs).get();
     }
 
+    @Nullable
     public static Method findMethod(Class<?> clazz, String name, Object... objs) {
         return baseFindMethod(new SingleMember<>(clazz), name, objs).get();
     }
@@ -156,14 +163,17 @@ public class CoreTool extends XposedLog {
     }
 
     // --------- 查找构造函数 -----------
+    @Nullable
     public static Constructor<?> findConstructor(String clazz, Object... objs) {
         return baseFindConstructor(baseFindClass(clazz), objs).get();
     }
 
+    @Nullable
     public static Constructor<?> findConstructor(String clazz, ClassLoader classLoader, Object... objs) {
         return baseFindConstructor(baseFindClass(clazz, classLoader), objs).get();
     }
 
+    @Nullable
     public static Constructor<?> findConstructor(Class<?> clazz, Object... objs) {
         return baseFindConstructor(new SingleMember<>(clazz), objs).get();
     }
@@ -195,14 +205,17 @@ public class CoreTool extends XposedLog {
     }
 
     // --------- 查找字段 -----------
+    @Nullable
     public static Field findField(String clazz, String name) {
         return baseFindField(baseFindClass(clazz), name).get();
     }
 
+    @Nullable
     public static Field findField(String clazz, ClassLoader classLoader, String name) {
         return baseFindField(baseFindClass(clazz, classLoader), name).get();
     }
 
+    @Nullable
     public static Field findField(Class<?> clazz, String name) {
         return baseFindField(new SingleMember<>(clazz), name).get();
     }
@@ -222,15 +235,15 @@ public class CoreTool extends XposedLog {
     }
 
     public static XC_MethodHook.Unhook[] hookAllMethod(String clazz, String method, IHook iHook) {
-        return baseHookAll(findAllMethod(clazz, method), iHook);
+        return baseHookAll(baseFindAllMethod(baseFindClass(clazz), method), iHook);
     }
 
     public static XC_MethodHook.Unhook[] hookAllMethod(String clazz, ClassLoader classLoader, String method, IHook iHook) {
-        return baseHookAll(findAllMethod(clazz, classLoader, method), iHook);
+        return baseHookAll(baseFindAllMethod(baseFindClass(clazz, classLoader), method), iHook);
     }
 
     public static XC_MethodHook.Unhook[] hookAllMethod(Class<?> clazz, String method, IHook iHook) {
-        return baseHookAll(findAllMethod(clazz, method), iHook);
+        return baseHookAll(baseFindAllMethod(new SingleMember<>(clazz), method), iHook);
     }
 
     // --------- 构造函数 ------------
@@ -247,18 +260,19 @@ public class CoreTool extends XposedLog {
     }
 
     public static XC_MethodHook.Unhook[] hookAllConstructor(String clazz, IHook iHook) {
-        return baseHookAll(findAllConstructor(clazz), iHook);
+        return baseHookAll(baseFindAllConstructor(baseFindClass(clazz)), iHook);
     }
 
     public static XC_MethodHook.Unhook[] hookAllConstructor(String clazz, ClassLoader classLoader, IHook iHook) {
-        return baseHookAll(findAllConstructor(clazz, classLoader), iHook);
+        return baseHookAll(baseFindAllConstructor(baseFindClass(clazz, classLoader)), iHook);
     }
 
     public static XC_MethodHook.Unhook[] hookAllConstructor(Class<?> clazz, IHook iHook) {
-        return baseHookAll(findAllConstructor(clazz), iHook);
+        return baseHookAll(baseFindAllConstructor(new SingleMember<>(clazz)), iHook);
     }
 
     // --------------- Member -----------
+    @Nullable
     public static XC_MethodHook.Unhook hook(Member member, IHook iHook) {
         return baseFirstUnhook(baseHookAll(new Member[]{member}, iHook));
     }
@@ -338,22 +352,27 @@ public class CoreTool extends XposedLog {
     }
 
     // ---------- 非静态 -----------
+    @Nullable
     public static Object callMethod(Object instance, String name, Object... objs) {
         return baseCallMethod(instance, name, objs);
     }
 
+    @Nullable
     public static Object callMethod(Object instance, Method method, Object... objs) {
         return baseCallMethod(instance, method, objs);
     }
 
+    @Nullable
     public static Object callSuperPrivateMethod(Object instance, String name, Object... objs) {
         return baseCallSuperPrivateMethod(instance, name, objs);
     }
 
+    @Nullable
     public static Object getField(Object instance, String name) {
         return baseGetField(instance, name);
     }
 
+    @Nullable
     public static Object getField(Object instance, Field field) {
         return baseGetField(instance, field);
     }
@@ -382,76 +401,90 @@ public class CoreTool extends XposedLog {
     }
 
     // ---------- 静态 ------------
+    @Nullable
     public static Object newInstance(Class<?> clz, Object... objs) {
         return baseNewInstance(new SingleMember<>(clz), objs);
     }
 
+    @Nullable
     public static Object newInstance(String clz, Object... objs) {
         return baseNewInstance(baseFindClass(clz), objs);
     }
 
+    @Nullable
     public static Object newInstance(String clz, ClassLoader classLoader, Object... objs) {
         return baseNewInstance(baseFindClass(clz, classLoader), objs);
     }
 
+    @Nullable
     public static Object callStaticMethod(Class<?> clz, String name, Object... objs) {
-        return baseCallStaticMethod(new SingleMember<>(clz), null, name, objs);
+        return baseCallStaticMethod(new SingleMember<>(clz), name, objs);
     }
 
+    @Nullable
     public static Object callStaticMethod(String clz, String name, Object... objs) {
-        return baseCallStaticMethod(baseFindClass(clz), null, name, objs);
+        return baseCallStaticMethod(baseFindClass(clz), name, objs);
     }
 
+    @Nullable
     public static Object callStaticMethod(String clz, ClassLoader classLoader, String name, Object... objs) {
-        return baseCallStaticMethod(baseFindClass(clz, classLoader), null, name, objs);
+        return baseCallStaticMethod(baseFindClass(clz, classLoader), name, objs);
     }
 
+    @Nullable
     public static Object callStaticMethod(Method method, Object... objs) {
-        return baseCallStaticMethod(null, method, null, objs);
+        return baseCallStaticMethod(method, objs);
     }
 
+    @Nullable
     public static Object callSuperStaticPrivateMethod(String clz, String name, Object... objs) {
         return baseCallSuperStaticPrivateMethod(baseFindClass(clz), name, objs);
     }
 
+    @Nullable
     public static Object callSuperStaticPrivateMethod(String clz, ClassLoader classLoader, String name, Object... objs) {
         return baseCallSuperStaticPrivateMethod(baseFindClass(clz, classLoader), name, objs);
     }
 
+    @Nullable
     public static Object callSuperStaticPrivateMethod(Class<?> clz, String name, Object... objs) {
         return baseCallSuperStaticPrivateMethod(new SingleMember<>(clz), name, objs);
     }
 
+    @Nullable
     public static Object getStaticField(Class<?> clz, String name) {
-        return baseGetStaticField(new SingleMember<>(clz), null, name);
+        return baseGetStaticField(new SingleMember<>(clz), name);
     }
 
+    @Nullable
     public static Object getStaticField(String clz, String name) {
-        return baseGetStaticField(baseFindClass(clz), null, name);
+        return baseGetStaticField(baseFindClass(clz), name);
     }
 
+    @Nullable
     public static Object getStaticField(String clz, ClassLoader classLoader, String name) {
-        return baseGetStaticField(baseFindClass(clz, classLoader), null, name);
+        return baseGetStaticField(baseFindClass(clz, classLoader), name);
     }
 
+    @Nullable
     public static Object getStaticField(Field field) {
-        return baseGetStaticField(null, field, null);
+        return baseGetStaticField(field);
     }
 
     public static boolean setStaticField(Class<?> clz, String name, Object value) {
-        return baseSetStaticField(new SingleMember<>(clz), null, name, value);
+        return baseSetStaticField(new SingleMember<>(clz), name, value);
     }
 
     public static boolean setStaticField(String clz, String name, Object value) {
-        return baseSetStaticField(baseFindClass(clz), null, name, value);
+        return baseSetStaticField(baseFindClass(clz), name, value);
     }
 
     public static boolean setStaticField(String clz, ClassLoader classLoader, String name, Object value) {
-        return baseSetStaticField(baseFindClass(clz, classLoader), null, name, value);
+        return baseSetStaticField(baseFindClass(clz, classLoader), name, value);
     }
 
     public static boolean setStaticField(Field field, Object value) {
-        return baseSetStaticField(null, field, null, value);
+        return baseSetStaticField(field, value);
     }
 
     public static Object setAdditionalStaticField(Class<?> clz, String key, Object value) {

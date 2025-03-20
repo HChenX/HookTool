@@ -25,7 +25,6 @@ import static com.hchen.hooktool.log.XposedLog.logE;
 import static com.hchen.hooktool.log.XposedLog.logI;
 import static com.hchen.hooktool.log.XposedLog.logW;
 import static com.hchen.hooktool.tool.CoreBase.ConvertHelper.arrayToClass;
-import static com.hchen.hooktool.tool.CoreTool.callStaticMethod;
 import static com.hchen.hooktool.tool.SingleMember.createSingleMember;
 
 import androidx.annotation.Nullable;
@@ -192,20 +191,17 @@ final class CoreBase {
         );
     }
 
-    static Object baseCallMethod(Object instance, Object type, Object... objs) {
-        if (type instanceof String name) {
-            return run(
-                () -> XposedHelpers.callMethod(instance, name, objs)
-            ).orErrorMsg(null, "Failed to call method!");
-        } else if (type instanceof Method method) {
-            return run(() -> {
-                method.setAccessible(true);
-                return method.invoke(instance, objs);
-            }).orErrorMsg(null, "Failed to call method!");
-        } else {
-            logW(getTag(), "Unknown type: " + type, getStackTrace());
-            return null;
-        }
+    static Object baseCallMethod(Object instance, String name, Object... objs) {
+        return run(
+            () -> XposedHelpers.callMethod(instance, name, objs)
+        ).orErrorMsg(null, "Failed to call method!");
+    }
+
+    static Object baseCallMethod(Object instance, Method method, Object... objs) {
+        return run(() -> {
+            method.setAccessible(true);
+            return method.invoke(instance, objs);
+        }).orErrorMsg(null, "Failed to call method!");
     }
 
     static Object baseCallSuperPrivateMethod(Object instance, String name, Object... objs) {
@@ -217,38 +213,32 @@ final class CoreBase {
         }).orErrorMsg(null, "Failed to call super private method!");
     }
 
-    static Object baseGetField(Object instance, Object type) {
-        if (type instanceof String name) {
-            return run(
-                () -> XposedHelpers.getObjectField(instance, name)
-            ).orErrorMsg(null, "Failed to get field!");
-        } else if (type instanceof Field field) {
-            return run(() -> {
-                field.setAccessible(true);
-                return field.get(instance);
-            }).orErrorMsg(null, "Failed to get field!");
-        } else {
-            logW(getTag(), "Unknown type: " + type, getStackTrace());
-            return null;
-        }
+    static Object baseGetField(Object instance, String name) {
+        return run(
+            () -> XposedHelpers.getObjectField(instance, name)
+        ).orErrorMsg(null, "Failed to get field!");
     }
 
-    static boolean baseSetField(Object instance, Object type, Object value) {
-        if (type instanceof String name) {
-            return run(() -> {
-                XposedHelpers.setObjectField(instance, name, value);
-                return true;
-            }).orErrorMsg(false, "Failed to set field!");
-        } else if (type instanceof Field field) {
-            return run(() -> {
-                field.setAccessible(true);
-                field.set(instance, value);
-                return true;
-            }).orErrorMsg(false, "Failed to set field!");
-        } else {
-            logW(getTag(), "Unknown type: " + type, getStackTrace());
-            return false;
-        }
+    static Object baseGetField(Object instance, Field field) {
+        return run(() -> {
+            field.setAccessible(true);
+            return field.get(instance);
+        }).orErrorMsg(null, "Failed to get field!");
+    }
+
+    static boolean baseSetField(Object instance, Field field, Object value) {
+        return run(() -> {
+            field.setAccessible(true);
+            field.set(instance, value);
+            return true;
+        }).orErrorMsg(false, "Failed to set field!");
+    }
+
+    static boolean baseSetField(Object instance, String name, Object value) {
+        return run(() -> {
+            XposedHelpers.setObjectField(instance, name, value);
+            return true;
+        }).orErrorMsg(false, "Failed to set field!");
     }
 
     static Object baseNewInstance(SingleMember<Class<?>> clz, Object... objs) {
@@ -261,20 +251,21 @@ final class CoreBase {
         );
     }
 
-    static Object baseCallStaticMethod(SingleMember<Class<?>> clz, Method method, String name, Object... objs) {
-        if (clz != null)
-            return clz.exec(null,
-                member ->
-                    createSingleMember(
-                        () -> XposedHelpers.callStaticMethod(member, name, objs)
-                    ).setErrorMsg("Failed to call static method!")
-                        .or(null)
-            );
-        else
-            return run(() -> {
-                method.setAccessible(true);
-                return method.invoke(null, objs);
-            }).orErrorMsg(null, "Failed to call static method!");
+    static Object baseCallStaticMethod(SingleMember<Class<?>> clz, String name, Object... objs) {
+        return clz.exec(null,
+            member ->
+                createSingleMember(
+                    () -> XposedHelpers.callStaticMethod(member, name, objs)
+                ).setErrorMsg("Failed to call static method!")
+                    .or(null)
+        );
+    }
+
+    static Object baseCallStaticMethod(Method method, Object... objs) {
+        return run(() -> {
+            method.setAccessible(true);
+            return method.invoke(null, objs);
+        }).orErrorMsg(null, "Failed to call static method!");
     }
 
     static Object baseCallSuperStaticPrivateMethod(SingleMember<Class<?>> clz, String name, Object... objs) {
@@ -284,45 +275,47 @@ final class CoreBase {
                         Method method = baseGetSuperPrivateMethod(member, name, objs);
                         if (method == null) return null;
 
-                        return callStaticMethod(method, objs);
+                        return baseCallStaticMethod(method, objs);
                     }
                 ).setErrorMsg("Failed to call super private static field!")
                     .or(null)
         );
     }
 
-    static Object baseGetStaticField(SingleMember<Class<?>> clz, Field field, String name) {
-        if (clz != null)
-            return clz.exec(null,
-                member ->
-                    createSingleMember(
-                        () -> XposedHelpers.getStaticObjectField(member, name)
-                    ).setErrorMsg("Failed to get static field!")
-                        .or(null)
-            );
-        else
-            return run(() -> {
-                field.setAccessible(true);
-                return field.get(null);
-            }).orErrorMsg(null, "Failed to get static field!");
+    static Object baseGetStaticField(SingleMember<Class<?>> clz, String name) {
+        return clz.exec(null,
+            member ->
+                createSingleMember(
+                    () -> XposedHelpers.getStaticObjectField(member, name)
+                ).setErrorMsg("Failed to get static field!")
+                    .or(null)
+        );
     }
 
-    static boolean baseSetStaticField(SingleMember<Class<?>> clz, Field field, String name, Object value) {
-        if (clz != null)
-            return clz.exec(false,
-                member ->
-                    createSingleMember(() -> {
-                        XposedHelpers.setStaticObjectField(member, name, value);
-                        return true;
-                    }).setErrorMsg("Failed to set static field!")
-                        .or(false)
-            );
-        else
-            return run(() -> {
-                field.setAccessible(true);
-                field.set(null, value);
-                return true;
-            }).orErrorMsg(false, "Failed to set static field!");
+    static Object baseGetStaticField(Field field) {
+        return run(() -> {
+            field.setAccessible(true);
+            return field.get(null);
+        }).orErrorMsg(null, "Failed to get static field!");
+    }
+
+    static boolean baseSetStaticField(SingleMember<Class<?>> clz, String name, Object value) {
+        return clz.exec(false,
+            member ->
+                createSingleMember(() -> {
+                    XposedHelpers.setStaticObjectField(member, name, value);
+                    return true;
+                }).setErrorMsg("Failed to set static field!")
+                    .or(false)
+        );
+    }
+
+    static boolean baseSetStaticField(Field field, Object value) {
+        return run(() -> {
+            field.setAccessible(true);
+            field.set(null, value);
+            return true;
+        }).orErrorMsg(false, "Failed to set static field!");
     }
 
     static Object baseSetAdditionalStaticField(SingleMember<Class<?>> clz, String key, Object value) {
@@ -423,6 +416,7 @@ final class CoreBase {
         public static Class<?>[] arrayToClass(ClassLoader classLoader, Object... objs) {
             if (classLoader == null || objs == null) return null;
             if (objs.length == 0) return new Class<?>[]{};
+
             List<Class<?>> classes = new ArrayList<>();
             for (Object o : objs) {
                 if (o instanceof Class<?> c) {

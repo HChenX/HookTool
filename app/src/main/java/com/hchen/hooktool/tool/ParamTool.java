@@ -27,6 +27,8 @@ import static com.hchen.hooktool.tool.CoreTool.removeAdditionalInstanceField;
 import static com.hchen.hooktool.tool.CoreTool.setAdditionalInstanceField;
 import static com.hchen.hooktool.tool.CoreTool.setField;
 
+import androidx.annotation.Nullable;
+
 import com.hchen.hooktool.log.LogExpand;
 
 import java.lang.reflect.Field;
@@ -195,19 +197,23 @@ public class ParamTool {
     }
 
     // --------- 调用方法 --------------
+    @Nullable
     final public Object callThisMethod(String name, Object... objs) {
         return callMethod(mParam.thisObject, name, objs);
     }
 
+    @Nullable
     final public Object callThisMethod(Method method, Object... objs) {
         return callMethod(mParam.thisObject, method, objs);
     }
 
     // ----------- 获取/修改 字段 -------------
+    @Nullable
     final public Object getThisField(String name) {
         return getField(mParam.thisObject, name);
     }
 
+    @Nullable
     final public Object getThisField(Field field) {
         return getField(mParam.thisObject, field);
     }

@@ -75,14 +75,16 @@ public final class TryHelper {
         }
 
         // 如果失败返回指定 or 值，并执行异常回调
-        public V orError(V or, Error error) {
+        public V orError(V or, IError iError) {
             if (isSuccess) return mResult;
-            error.error(mThrowable);
+
+            iError.error(mThrowable);
             return or;
         }
 
         public V orErrorMsg(V or, String msg) {
             if (isSuccess) return mResult;
+
             logE(getTag(), msg, mThrowable);
             return or;
         }
@@ -96,7 +98,7 @@ public final class TryHelper {
             return !isSuccess;
         }
 
-        public interface Error {
+        public interface IError {
             void error(Throwable throwable);
         }
     }

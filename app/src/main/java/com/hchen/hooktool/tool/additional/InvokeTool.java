@@ -35,8 +35,8 @@ import java.util.HashMap;
  * @author 焕晨HChen
  */
 public final class InvokeTool {
-    private static final HashMap<String, Method> methodCache = new HashMap<>();
-    private static final HashMap<String, Field> fieldCache = new HashMap<>();
+    private static final HashMap<String, Method> mMethodCache = new HashMap<>();
+    private static final HashMap<String, Field> mFieldCache = new HashMap<>();
 
     // ----------------------------反射调用方法--------------------------------
     public static <T> T callMethod(Object instance, String method, Class<?>[] param, Object... value) {
@@ -102,10 +102,10 @@ public final class InvokeTool {
         }
         try {
             String methodTag = clz.getName() + "#" + method + "#" + Arrays.toString(param);
-            declaredMethod = methodCache.get(methodTag);
+            declaredMethod = mMethodCache.get(methodTag);
             if (declaredMethod == null) {
                 declaredMethod = clz.getDeclaredMethod(method, param);
-                methodCache.put(methodTag, declaredMethod);
+                mMethodCache.put(methodTag, declaredMethod);
             }
             declaredMethod.setAccessible(true);
             return (T) declaredMethod.invoke(instance, value);
@@ -129,7 +129,7 @@ public final class InvokeTool {
         }
         try {
             String fieldTag = clz.getName() + "#" + field;
-            declaredField = fieldCache.get(fieldTag);
+            declaredField = mFieldCache.get(fieldTag);
             if (declaredField == null) {
                 try {
                     declaredField = clz.getDeclaredField(field);
@@ -147,7 +147,7 @@ public final class InvokeTool {
                     }
                     if (declaredField == null) throw e;
                 }
-                fieldCache.put(fieldTag, declaredField);
+                mFieldCache.put(fieldTag, declaredField);
             }
             declaredField.setAccessible(true);
             if (set) {

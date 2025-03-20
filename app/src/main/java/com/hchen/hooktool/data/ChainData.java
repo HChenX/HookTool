@@ -30,23 +30,23 @@ import java.util.List;
  * @author 焕晨HChen
  */
 public final class ChainData {
-    public List<ChainData> members = new ArrayList<>(); /* 目标成员组 */
-    public Member member; /* 查找到的成员 */
-    public IHook iHook; /* hook 动作 */
-    public HookState hookState; /* 状态 */
+    public List<ChainData> mMembers = new ArrayList<>(); /* 目标成员组 */
+    public Member mMember; /* 查找到的成员 */
+    public IHook mIHook; /* hook 动作 */
+    public HookState mHookState; /* 状态 */
     public String UUID = "UNKNOWN"; /* 唯一标识符 */
 
     // 数据存储
     public ChainData(List<ChainData> members, IHook iHook, HookState hookState, String uuid) {
-        this.members = members;
-        this.iHook = iHook;
-        this.hookState = hookState;
+        this.mMembers = members;
+        this.mIHook = iHook;
+        this.mHookState = hookState;
         this.UUID = uuid;
     }
 
     // members 内数据
     public ChainData(Member member) {
-        this.member = member;
+        this.mMember = member;
     }
 
     //################################
