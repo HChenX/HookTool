@@ -90,7 +90,7 @@ public final class LogExpand {
         return stringBuilder.toString();
     }
 
-    public static String createRuntimeExceptionLog(String msg) {
+    public static String createRuntimeExceptionMsg(String msg) {
         return HCData.getInitTag() + "[" + getTag() + "][E]: " + msg + "\n[Stack Info]: " + getStackTrace();
     }
 
@@ -132,18 +132,19 @@ public final class LogExpand {
         this.mParam = param;
     }
 
-    public void detailedLogs() {
+    public void observeCall() {
         if (mParam.args == null || mParam.args.length == 0) {
-            logI(TAG, "Method called! Class: [" + mClassName + "], Method: [" + mMethodName + "], Param: { }");
+            logI(TAG, "Method called! Class=[" + mClassName + "], Method=[" + mMethodName + "], Param={ }");
             return;
         }
 
         StringBuilder log = new StringBuilder();
         for (int i = 0; i < mParam.args.length; i++) {
-            log.append("    (").append(mParam.args[i] == null ? "null" : mParam.args[i].getClass().getSimpleName())
-                .append(")->").append("[").append(paramToString(mParam.args[i])).append("]\n");
+            log.append("    ").append(mParam.args[i] == null ? "null" : mParam.args[i].getClass().getSimpleName())
+                .append("=").append(paramToString(mParam.args[i])).append("\n");
         }
-        logI(TAG, "Method called! Class: [" + mClassName + "], Method: [" + mMethodName + "]\nParam: {\n" + log + "}");
+
+        logI(TAG, "Called!\nClass=[" + mClassName + "]\nMethod=[" + mMethodName + "]\nParam={\n" + log + "}");
     }
 
     private String paramToString(Object param) {

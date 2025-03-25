@@ -89,6 +89,7 @@ public class ParamTool {
     /**
      * 获取方法的指定参数。
      */
+    @Nullable
     final public Object getArgs(int index) {
         return checkIndex(index) ? mParam.args[index] : null;
     }
@@ -110,8 +111,8 @@ public class ParamTool {
 
     private boolean checkIndex(int index) {
         if (argsLength() < index + 1) {
-            logE(PRIVATETAG, "Args available index length is: [" + (argsLength() - 1) +
-                "] but index is : [" + index + "] , Exceeding!!", getStackTrace());
+            logE(PRIVATETAG, "Args available index length is: [" + (argsLength() - 1) + "]" +
+                " but index is : [" + index + "] , Exceeding!!", getStackTrace());
             return false;
         }
         return true;
@@ -193,7 +194,7 @@ public class ParamTool {
         if (logExpand == null)
             logExpand = new LogExpand(mParam, PRIVATETAG);
         logExpand.update(mParam);
-        logExpand.detailedLogs();
+        logExpand.observeCall();
     }
 
     // --------- 调用方法 --------------
@@ -227,14 +228,17 @@ public class ParamTool {
     }
 
     // ---------- 设置自定义字段 --------------
+    @Nullable
     final public Object setThisAdditionalInstanceField(String key, Object value) {
         return setAdditionalInstanceField(mParam.thisObject, key, value);
     }
 
+    @Nullable
     final public Object getThisAdditionalInstanceField(String key) {
         return getAdditionalInstanceField(mParam.thisObject, key);
     }
 
+    @Nullable
     final public Object removeThisAdditionalInstanceField(String key) {
         return removeAdditionalInstanceField(mParam.thisObject, key);
     }

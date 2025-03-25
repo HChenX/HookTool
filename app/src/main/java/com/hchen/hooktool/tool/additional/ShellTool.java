@@ -18,7 +18,7 @@
  */
 package com.hchen.hooktool.tool.additional;
 
-import static com.hchen.hooktool.log.LogExpand.createRuntimeExceptionLog;
+import static com.hchen.hooktool.log.LogExpand.createRuntimeExceptionMsg;
 
 import android.util.Pair;
 
@@ -210,7 +210,7 @@ public class ShellTool {
                 }
                 return exitCode;
             } catch (IOException | InterruptedException e) {
-                AndroidLog.logE(TAG, "Error checking if root permission is supported:", e);
+                AndroidLog.logE(TAG, "Error checking if root permission is supported!", e);
                 return -1;
             } finally {
                 if (process != null)
@@ -259,7 +259,7 @@ public class ShellTool {
                 isActive = true;
             } catch (IOException e) {
                 isActive = false;
-                AndroidLog.logE(TAG, "Error initializing Shell stream:", e);
+                AndroidLog.logE(TAG, "Error initializing Shell stream!", e);
             }
             notify();
         }
@@ -329,7 +329,7 @@ public class ShellTool {
                 os.write(LINE_BREAK);
                 os.flush();
             } catch (IOException e) {
-                AndroidLog.logE(TAG, "Error writing data to shell stream:", e);
+                AndroidLog.logE(TAG, "Error writing data to shell stream!", e);
             }
         }
 
@@ -344,7 +344,7 @@ public class ShellTool {
                 }
                 os.flush();
             } catch (IOException e) {
-                AndroidLog.logE(TAG, "Error writing data to shell stream:", e);
+                AndroidLog.logE(TAG, "Error writing data to shell stream!", e);
             }
         }
 
@@ -364,7 +364,7 @@ public class ShellTool {
                     try {
                         os.close();
                     } catch (IOException e) {
-                        AndroidLog.logE(TAG, "Error closing OS:", e);
+                        AndroidLog.logE(TAG, "Error closing OS!", e);
                     }
                 }
 
@@ -373,18 +373,22 @@ public class ShellTool {
                 if (mStreamThread.mErrorService != null)
                     mStreamThread.mErrorService.shutdown();
             } catch (InterruptedException e) {
-                AndroidLog.logE(TAG, "Error closing shell stream:", e);
+                AndroidLog.logE(TAG, "Error closing shell stream!", e);
             } finally {
+                mStreamThread.clearAll();
                 mProcess = null;
                 os = null;
-                mStreamThread.clearAll();
             }
             isActive = false;
         }
 
         private synchronized boolean isActive() {
             if (mStreamThread == null || mProcess == null) return false;
-            return isActive && mStreamThread.isActive() && mProcess.isAlive();
+            boolean state = isActive && mStreamThread.isActive() && mProcess.isAlive();
+            if (!state && isActive)
+                close();
+
+            return state;
         }
     }
 
@@ -428,7 +432,7 @@ public class ShellTool {
                             mOutputList.add(line);
                         }
                     } catch (Throwable e) {
-                        AndroidLog.logE(TAG, "Error reading shell standard output stream:", e);
+                        AndroidLog.logE(TAG, "Error reading shell standard output stream!", e);
                     }
                 }
             );
@@ -454,7 +458,7 @@ public class ShellTool {
                             mShellImpl.init();
                         }
                     } catch (Throwable e) {
-                        AndroidLog.logE(TAG, "Error reading shell standard error stream:", e);
+                        AndroidLog.logE(TAG, "Error reading shell standard error stream!", e);
                     }
                 }
             );
@@ -603,7 +607,7 @@ public class ShellTool {
                 try {
                     iExecListener.brokenPip((String) finalVar[0], toArray((List<String>) finalVar[3]), "Incorrect shell code causing pipeline rupture!");
                 } catch (Throwable e) {
-                    AndroidLog.logE(TAG, "Error during callback:", e);
+                    AndroidLog.logE(TAG, "Error during callback!", e);
                 }
             }
         }
@@ -647,7 +651,7 @@ public class ShellTool {
                 return mShell;
             else {
                 throw new RuntimeException(
-                    createRuntimeExceptionLog(
+                    createRuntimeExceptionMsg(
                         "The shell tool has not been initialized, please use it after initialization!"
                     )
                 );

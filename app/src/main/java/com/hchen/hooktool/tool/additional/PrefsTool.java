@@ -16,9 +16,9 @@
 
  * Copyright (C) 2023-2025 HChenX
  */
-package com.hchen.hooktool.tool;
+package com.hchen.hooktool.tool.additional;
 
-import static com.hchen.hooktool.log.LogExpand.createRuntimeExceptionLog;
+import static com.hchen.hooktool.log.LogExpand.createRuntimeExceptionMsg;
 import static com.hchen.hooktool.log.LogExpand.getStackTrace;
 import static com.hchen.hooktool.log.LogExpand.getTag;
 import static com.hchen.hooktool.log.XposedLog.logE;
@@ -32,7 +32,6 @@ import androidx.annotation.NonNull;
 
 import com.hchen.hooktool.HCData;
 import com.hchen.hooktool.log.AndroidLog;
-import com.hchen.hooktool.tool.additional.ContextTool;
 import com.hchen.hooktool.tool.itool.IAsyncPrefs;
 import com.hchen.hooktool.tool.itool.IContextGetter;
 import com.hchen.hooktool.tool.itool.IPrefsApply;
@@ -75,7 +74,7 @@ public final class PrefsTool {
      */
     public static IPrefsApply prefs() {
         if (!HCData.isXposed())
-            throw new RuntimeException(createRuntimeExceptionLog("Not xposed environment!"));
+            throw new RuntimeException(createRuntimeExceptionMsg("Not xposed environment!"));
         return prefs("");
     }
 
@@ -86,7 +85,7 @@ public final class PrefsTool {
      */
     public static IPrefsApply prefs(@NonNull String prefsName) {
         if (!HCData.isXposed())
-            throw new RuntimeException(createRuntimeExceptionLog("Not xposed environment!"));
+            throw new RuntimeException(createRuntimeExceptionMsg("Not xposed environment!"));
         return createXspIfNeed(prefsName);
     }
 
@@ -101,13 +100,13 @@ public final class PrefsTool {
      */
     public static void asyncPrefs(String prefsName, IAsyncPrefs asyncPrefs) {
         if (!HCData.isXposed())
-            throw new RuntimeException(createRuntimeExceptionLog("Not xposed environment!"));
+            throw new RuntimeException(createRuntimeExceptionMsg("Not xposed environment!"));
 
         ContextTool.getAsyncContext(new IContextGetter() {
             @Override
             public void onContext(@androidx.annotation.Nullable Context context) {
                 if (context == null)
-                    throw new RuntimeException(createRuntimeExceptionLog("Async prefs context is null!"));
+                    throw new RuntimeException(createRuntimeExceptionMsg("Async prefs context is null!"));
 
                 asyncPrefs.async(createSpIfNeed(context, prefsName));
             }
@@ -122,7 +121,7 @@ public final class PrefsTool {
 
     private static IPrefsApply createXspIfNeed(String prefsName) {
         if (HCData.getModulePackageName() == null || HCData.getModulePackageName().isEmpty())
-            throw new RuntimeException(createRuntimeExceptionLog("Module package name is null, Please set module package name!"));
+            throw new RuntimeException(createRuntimeExceptionMsg("Module package name is null, Please set module package name!"));
 
         prefsName = initPrefsName(prefsName);
         if (xPrefsMap.get(HCData.getModulePackageName() + prefsName) == null) {
@@ -144,7 +143,7 @@ public final class PrefsTool {
     @SuppressLint("WorldReadableFiles")
     private static IPrefsApply createSpIfNeed(Context context, String prefsName) {
         if (context == null)
-            throw new RuntimeException(createRuntimeExceptionLog("Context is null, can't create sprefs!"));
+            throw new RuntimeException(createRuntimeExceptionMsg("Context is null, can't create sprefs!"));
 
         prefsName = initPrefsName(prefsName);
         if (sPrefsMap.get(context.getPackageName() + prefsName) == null) {
@@ -166,12 +165,12 @@ public final class PrefsTool {
 
     private static String initPrefsName(String name) {
         if (name == null)
-            throw new RuntimeException(createRuntimeExceptionLog("prefs name can't is null!!"));
+            throw new RuntimeException(createRuntimeExceptionMsg("prefs name can't is null!!"));
 
         if (name.isEmpty()) {
             if (HCData.getPrefsName() == null || HCData.getPrefsName().isEmpty()) {
                 if (HCData.getModulePackageName() == null || HCData.getModulePackageName().isEmpty())
-                    throw new RuntimeException(createRuntimeExceptionLog("What prefs name you want use??"));
+                    throw new RuntimeException(createRuntimeExceptionMsg("What prefs name you want use??"));
 
                 return HCData.getModulePackageName() + "_preferences";
             }

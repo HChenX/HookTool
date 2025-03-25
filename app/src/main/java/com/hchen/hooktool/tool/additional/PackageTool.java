@@ -165,11 +165,11 @@ public final class PackageTool {
      * @see #createAppData(Parcelable, PackageManager)
      */
     public static AppData[] getPackagesByCode(Context context, IPackageInfoGetter infoGetter) {
-        List<AppData> appDataList = new ArrayList<>();
         if (context == null) {
             logW(getTag(), "Context is null, can't get packages by code!", getStackTrace());
             return new AppData[0];
         }
+
         PackageManager packageManager = context.getPackageManager();
         Parcelable[] parcelables;
         try {
@@ -178,6 +178,8 @@ public final class PackageTool {
             logE(getTag(), "Failed to get package!", e);
             return new AppData[0];
         }
+
+        List<AppData> appDataList = new ArrayList<>();
         if (parcelables != null) {
             for (Parcelable parcelable : parcelables) {
                 try {
@@ -222,7 +224,7 @@ public final class PackageTool {
             appData.versionName = packageInfo.versionName;
             appData.versionCode = Long.toString(packageInfo.getLongVersionCode());
             appData.isSystemApp = isSystem(packageInfo.applicationInfo);
-            appData.enabled = packageInfo.applicationInfo.enabled;
+            appData.isEnabled = packageInfo.applicationInfo.enabled;
             appData.user = getUserId(packageInfo.applicationInfo.uid);
             appData.uid = packageInfo.applicationInfo.uid;
         } else if (parcelable instanceof ResolveInfo resolveInfo) {
@@ -230,7 +232,7 @@ public final class PackageTool {
             appData.label = aboutResolveInfo(resolveInfo).applicationInfo.loadLabel(pm).toString();
             appData.packageName = aboutResolveInfo(resolveInfo).applicationInfo.packageName;
             appData.isSystemApp = isSystem(aboutResolveInfo(resolveInfo).applicationInfo);
-            appData.enabled = aboutResolveInfo(resolveInfo).applicationInfo.enabled;
+            appData.isEnabled = aboutResolveInfo(resolveInfo).applicationInfo.enabled;
             appData.user = getUserId(aboutResolveInfo(resolveInfo).applicationInfo.uid);
             appData.uid = aboutResolveInfo(resolveInfo).applicationInfo.uid;
         } else if (parcelable instanceof ActivityInfo activityInfo) {
@@ -238,7 +240,7 @@ public final class PackageTool {
             appData.label = activityInfo.applicationInfo.loadLabel(pm).toString();
             appData.packageName = activityInfo.applicationInfo.packageName;
             appData.isSystemApp = isSystem(activityInfo.applicationInfo);
-            appData.enabled = activityInfo.applicationInfo.enabled;
+            appData.isEnabled = activityInfo.applicationInfo.enabled;
             appData.user = getUserId(activityInfo.applicationInfo.uid);
             appData.uid = activityInfo.applicationInfo.uid;
         } else if (parcelable instanceof ApplicationInfo applicationInfo) {
@@ -246,7 +248,7 @@ public final class PackageTool {
             appData.label = applicationInfo.loadLabel(pm).toString();
             appData.packageName = applicationInfo.packageName;
             appData.isSystemApp = isSystem(applicationInfo);
-            appData.enabled = applicationInfo.enabled;
+            appData.isEnabled = applicationInfo.enabled;
             appData.user = getUserId(applicationInfo.uid);
             appData.uid = applicationInfo.uid;
         } else if (parcelable instanceof ProviderInfo providerInfo) {
@@ -254,7 +256,7 @@ public final class PackageTool {
             appData.label = providerInfo.applicationInfo.loadLabel(pm).toString();
             appData.packageName = providerInfo.applicationInfo.packageName;
             appData.isSystemApp = isSystem(providerInfo.applicationInfo);
-            appData.enabled = providerInfo.applicationInfo.enabled;
+            appData.isEnabled = providerInfo.applicationInfo.enabled;
             appData.user = getUserId(providerInfo.applicationInfo.uid);
             appData.uid = providerInfo.applicationInfo.uid;
         }
@@ -269,6 +271,6 @@ public final class PackageTool {
     }
 
     private static Context getContext() {
-        return ContextTool.getContextNoLog(ContextTool.FLAG_ALL);
+        return ContextTool.getContext(ContextTool.FLAG_ALL);
     }
 }

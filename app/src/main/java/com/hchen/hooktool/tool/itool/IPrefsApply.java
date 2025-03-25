@@ -18,14 +18,14 @@
  */
 package com.hchen.hooktool.tool.itool;
 
-import com.hchen.hooktool.tool.PrefsTool;
+import com.hchen.hooktool.tool.additional.PrefsTool;
 
 import java.util.Map;
 import java.util.Set;
 
 /**
  * prefs 工具接口，方法具体介绍请看实现类 >>
- * {@link com.hchen.hooktool.tool.PrefsTool}
+ * {@link PrefsTool}
  *
  * @author 焕晨HChen
  */

@@ -25,6 +25,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 
 import androidx.annotation.IntDef;
+import androidx.annotation.Nullable;
 
 import com.hchen.hooktool.tool.itool.IContextGetter;
 
@@ -42,7 +43,7 @@ public final class ContextTool {
     @IntDef(value = {
         FLAG_ALL,
         FLAG_CURRENT_APP,
-        FlAG_ONLY_ANDROID
+        FLAG_ONLY_ANDROID
     })
     @Retention(RetentionPolicy.SOURCE)
     private @interface Duration {
@@ -53,8 +54,9 @@ public final class ContextTool {
     // 仅获取当前应用
     public static final int FLAG_CURRENT_APP = 1;
     // 获取 Android 系统
-    public static final int FlAG_ONLY_ANDROID = 2;
+    public static final int FLAG_ONLY_ANDROID = 2;
 
+    @Nullable
     public static Context getContext(@Duration int flag) {
         try {
             return invokeMethod(flag);
@@ -64,7 +66,8 @@ public final class ContextTool {
         }
     }
 
-    public static Context getContextNoLog(@Duration int flag) {
+    @Nullable
+    private static Context getContextNoLog(@Duration int flag) {
         try {
             return invokeMethod(flag);
         } catch (Throwable ignore) {

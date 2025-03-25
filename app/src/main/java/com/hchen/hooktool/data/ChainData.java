@@ -30,15 +30,15 @@ import java.util.List;
  * @author 焕晨HChen
  */
 public final class ChainData {
-    public List<ChainData> mMembers = new ArrayList<>(); /* 目标成员组 */
+    public List<ChainData> mMemberList = new ArrayList<>(); /* 目标成员组 */
     public Member mMember; /* 查找到的成员 */
     public IHook mIHook; /* hook 动作 */
     public HookState mHookState; /* 状态 */
     public String UUID = "UNKNOWN"; /* 唯一标识符 */
 
     // 数据存储
-    public ChainData(List<ChainData> members, IHook iHook, HookState hookState, String uuid) {
-        this.mMembers = members;
+    public ChainData(List<ChainData> memberList, IHook iHook, HookState hookState, String uuid) {
+        this.mMemberList = memberList;
         this.mIHook = iHook;
         this.mHookState = hookState;
         this.UUID = uuid;
@@ -69,10 +69,6 @@ public final class ChainData {
         mParams = params;
     }
 
-    public void setCheckExist(boolean check) {
-        mCheckExist = check;
-    }
-
     // 方法信息
     public ChainData(String name) {
         mName = name;
@@ -92,5 +88,9 @@ public final class ChainData {
         mName = "";
         mType = TYPE_ANY_CONSTRUCTOR;
         mParams = new Object[]{};
+    }
+
+    public void setCheckExist(boolean check) {
+        mCheckExist = check;
     }
 }

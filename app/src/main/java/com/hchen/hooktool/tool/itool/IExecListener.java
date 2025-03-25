@@ -51,7 +51,7 @@ public interface IExecListener {
     }
 
     /**
-     * 管道破裂时的回调，代码 Shell 流非正常终止。
+     * 管道破裂时的回调，代表 Shell 流非正常终止。
      *
      * @param command 输入的命令
      * @param errors  报错内容

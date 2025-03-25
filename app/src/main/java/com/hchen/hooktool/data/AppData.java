@@ -38,7 +38,7 @@ public final class AppData implements Parcelable {
     public String versionName; /* 版本名 */
     public String versionCode; /* 版本号 */
     public boolean isSystemApp; /* 是否为系统应用 */
-    public boolean enabled; /* 是否启用 */
+    public boolean isEnabled; /* 是否启用 */
 
     public AppData() {
     }
@@ -52,7 +52,7 @@ public final class AppData implements Parcelable {
         versionName = in.readString();
         versionCode = in.readString();
         isSystemApp = in.readByte() != 0;
-        enabled = in.readByte() != 0;
+        isEnabled = in.readByte() != 0;
     }
 
     public static final Creator<AppData> CREATOR = new Creator<>() {
@@ -77,11 +77,19 @@ public final class AppData implements Parcelable {
         dest.writeString(versionName);
         dest.writeString(versionCode);
         dest.writeByte((byte) (isSystemApp ? 1 : 0));
-        dest.writeByte((byte) (enabled ? 1 : 0));
+        dest.writeByte((byte) (isEnabled ? 1 : 0));
     }
 
     @Override
     public int describeContents() {
         return 0;
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return "AppData[label=" + label + ", packageName=" + packageName +
+            ", versionName=" + versionName + ", versionCode=" + versionCode +
+            ", user=" + user + ", uid=" + uid + ", isSystemApp=" + isSystemApp + ", isEnabled=" + isEnabled + ", icon=" + icon + "]";
     }
 }

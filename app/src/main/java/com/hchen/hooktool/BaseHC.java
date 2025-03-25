@@ -25,7 +25,7 @@ import android.content.res.Resources;
 import com.hchen.hooktool.hook.IHook;
 import com.hchen.hooktool.tool.ChainTool;
 import com.hchen.hooktool.tool.CoreTool;
-import com.hchen.hooktool.tool.PrefsTool;
+import com.hchen.hooktool.tool.additional.PrefsTool;
 import com.hchen.hooktool.tool.additional.ResInjectTool;
 import com.hchen.hooktool.tool.itool.IAsyncPrefs;
 import com.hchen.hooktool.tool.itool.IPrefsApply;

@@ -30,14 +30,14 @@ public final class TryHelper {
     /*
      * 执行并返回执行的结果或抛错。
      * */
-    public static <V> Result<V> run(Run<V> supplier) {
+    public static <V> Result<V> run(IRun<V> supplier) {
         return new Result<>(supplier);
     }
 
     /*
      * 简单的执行代码并获取返回值，与此同时主动抛出可能的异常。
      */
-    public interface Run<V> {
+    public interface IRun<V> {
         V run() throws Throwable;
     }
 
@@ -46,9 +46,9 @@ public final class TryHelper {
         private boolean isSuccess;
         private Throwable mThrowable;
 
-        public Result(Run<V> supplier) {
+        public Result(IRun<V> iRun) {
             try {
-                mResult = supplier.run();
+                mResult = iRun.run();
                 isSuccess = true;
                 mThrowable = null;
             } catch (Throwable throwable) {

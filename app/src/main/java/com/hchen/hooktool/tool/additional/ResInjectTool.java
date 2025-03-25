@@ -18,7 +18,7 @@
  */
 package com.hchen.hooktool.tool.additional;
 
-import static com.hchen.hooktool.log.LogExpand.createRuntimeExceptionLog;
+import static com.hchen.hooktool.log.LogExpand.createRuntimeExceptionMsg;
 import static com.hchen.hooktool.log.LogExpand.getStackTrace;
 import static com.hchen.hooktool.log.LogExpand.getTag;
 import static com.hchen.hooktool.log.XposedLog.logE;
@@ -39,6 +39,7 @@ import android.os.ParcelFileDescriptor;
 import android.util.Pair;
 import android.util.TypedValue;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
 import com.hchen.hooktool.HCData;
@@ -71,7 +72,7 @@ public final class ResInjectTool {
      *
      * @param modulePath startupParam.modulePath 即可
      */
-    public static void initResInjectTool(String modulePath) {
+    public static void init(String modulePath) {
         mModulePath = modulePath;
     }
 
@@ -90,62 +91,68 @@ public final class ResInjectTool {
      * }<br/>
      * Tip: `0x64` is the resource id, you can change it to any value you want.(recommended [0x30 to 0x6F])
      */
-    public static Resources loadModuleRes(Resources resources, boolean doOnMainLooper) {
-        boolean load;
-        if (resources == null) {
-            logW(getTag(), "Context can't is null!", getStackTrace());
-            return null;
-        }
+    @NonNull
+    public static Resources injectModuleRes(Resources resources, boolean doOnMainLooper) {
+        if (resources == null)
+            throw new RuntimeException(createRuntimeExceptionMsg("Resources can't is null! inject res failed!"));
+
         if (mModulePath == null) {
             mModulePath = HCData.getModulePath() != null ? HCData.getModulePath() : null;
-            if (mModulePath == null) {
-                logW(getTag(), "Module path is null, can't load module res!", getStackTrace());
-                return null;
-            }
+            if (mModulePath == null)
+                throw new RuntimeException(createRuntimeExceptionMsg("Module path is null, Please set module path!"));
         }
+
+        if (mResourcesArrayList.contains(resources))
+            return resources;
+
+        boolean load;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            load = loadResAboveApi30(resources, doOnMainLooper);
+            load = injectResAboveApi30(resources, doOnMainLooper);
         } else {
-            load = loadResBelowApi30(resources);
+            load = injectResBelowApi30(resources);
         }
-        if (!load) {
-            /*try {
-                return getModuleRes(context);
-            } catch (PackageManager.NameNotFoundException e) {
-                logE(tag(), "failed to load resource! critical error!! scope may crash!!", e);
-            }*/
-        }
+        // if (!load) {
+        //     try {
+        //         return getModuleRes(context);
+        //     } catch (PackageManager.NameNotFoundException e) {
+        //         logE(tag(), "failed to load resource! critical error!! scope may crash!!", e);
+        //     }
+        // }
         if (!mResourcesArrayList.contains(resources))
             mResourcesArrayList.add(resources);
         return resources;
     }
 
-    public static Resources loadModuleRes(Resources resources) {
-        return loadModuleRes(resources, false);
+    @NonNull
+    public static Resources injectModuleRes(Resources resources) {
+        return injectModuleRes(resources, false);
     }
 
-    public static Resources loadModuleRes(Context context, boolean doOnMainLooper) {
-        return loadModuleRes(context.getResources(), doOnMainLooper);
+    @NonNull
+    public static Resources injectModuleRes(Context context) {
+        return injectModuleRes(context, false);
     }
 
-    public static Resources loadModuleRes(Context context) {
-        return loadModuleRes(context, false);
+    @NonNull
+    public static Resources injectModuleRes(Context context, boolean doOnMainLooper) {
+        return injectModuleRes(context.getResources(), doOnMainLooper);
     }
 
     /**
      * 来自 QA 的方法
      */
     @RequiresApi(api = Build.VERSION_CODES.R)
-    private static boolean loadResAboveApi30(Resources resources, boolean doOnMainLooper) {
+    private static boolean injectResAboveApi30(Resources resources, boolean doOnMainLooper) {
         if (mResourcesLoader == null) {
-            try (ParcelFileDescriptor pfd = ParcelFileDescriptor.open(new File(mModulePath),
-                ParcelFileDescriptor.MODE_READ_ONLY)) {
+            try (ParcelFileDescriptor pfd =
+                     ParcelFileDescriptor.open(new File(mModulePath), ParcelFileDescriptor.MODE_READ_ONLY)
+            ) {
                 ResourcesProvider provider = ResourcesProvider.loadFromApk(pfd);
                 ResourcesLoader loader = new ResourcesLoader();
                 loader.addProvider(provider);
                 mResourcesLoader = loader;
             } catch (IOException e) {
-                logE(getTag(), "Failed to add resource! debug: above api 30.", e);
+                logE(getTag(), "Failed to inject res! debug: above api 30.", e);
                 return false;
             }
         }
@@ -168,10 +175,10 @@ public final class ResInjectTool {
         try {
             resources.addLoaders(mResourcesLoader);
         } catch (IllegalArgumentException e) {
-            String expected1 = "Cannot modify resource loaders of ResourcesImpl not registered with ResourcesManager";
-            if (expected1.equals(e.getMessage())) {
+            String expected = "Cannot modify resource loaders of ResourcesImpl not registered with ResourcesManager";
+            if (expected.equals(e.getMessage())) {
                 // fallback to below API 30
-                return loadResBelowApi30(resources);
+                return injectResBelowApi30(resources);
             } else {
                 logE(getTag(), "Failed to add loaders!", e);
                 return false;
@@ -184,18 +191,18 @@ public final class ResInjectTool {
      * @noinspection JavaReflectionMemberAccess
      */
     @SuppressLint("DiscouragedPrivateApi")
-    private static boolean loadResBelowApi30(Resources resources) {
+    private static boolean injectResBelowApi30(Resources resources) {
         try {
             AssetManager assets = resources.getAssets();
             Method addAssetPath = AssetManager.class.getDeclaredMethod("addAssetPath", String.class);
             addAssetPath.setAccessible(true);
             Integer cookie = (Integer) addAssetPath.invoke(assets, mModulePath);
             if (cookie == null || cookie == 0) {
-                logW(getTag(), "Method 'addAssetPath' result 0, maybe load res failed!", getStackTrace());
+                logW(getTag(), "Method 'addAssetPath' result 0, maybe inject res failed!", getStackTrace());
                 return false;
             }
         } catch (Throwable e) {
-            logE(getTag(), "Failed to add resource! debug: below api 30.", e);
+            logE(getTag(), "Failed to inject res! debug: below api 30.", e);
             return false;
         }
         return true;
@@ -267,13 +274,7 @@ public final class ResInjectTool {
 
     private static void applyHooks() {
         if (isHooked) return;
-        if (mModulePath == null) {
-            mModulePath = HCData.getModulePath() != null ? HCData.getModulePath() : null;
-            if (mModulePath == null) {
-                unHookRes();
-                throw new RuntimeException(createRuntimeExceptionLog("Module path is null, Please init this in initStartupParam()!"));
-            }
-        }
+
         Method[] resMethods = Resources.class.getDeclaredMethods();
         for (Method method : resMethods) {
             String name = method.getName();
@@ -281,8 +282,7 @@ public final class ResInjectTool {
                 case "getInteger", "getLayout", "getBoolean", "getDimension",
                      "getDimensionPixelOffset", "getDimensionPixelSize", "getText", "getFloat",
                      "getIntArray", "getStringArray", "getTextArray", "getAnimation" -> {
-                    if (method.getParameterTypes().length == 1
-                        && method.getParameterTypes()[0].equals(int.class)) {
+                    if (method.getParameterTypes().length == 1 && method.getParameterTypes()[0].equals(int.class)) {
                         hookResMethod(method.getName(), int.class, hookResBefore);
                     }
                 }
@@ -336,8 +336,11 @@ public final class ResInjectTool {
     private static final IHook hookTypedBefore = new IHook() {
         @Override
         public void before() {
-            int index = (int) getArgs(0);
+            Integer index = (Integer) getArgs(0);
+            if (index == null) return;
+
             int[] mData = (int[]) CoreTool.getField(thisObject(), "mData");
+            assert mData != null;
             int type = mData[index];
             int id = mData[index + 3];
 
@@ -354,19 +357,20 @@ public final class ResInjectTool {
     private static final IHook hookResBefore = new IHook() {
         @Override
         public void before() {
-            if (mResourcesArrayList.isEmpty()) {
-                mResourcesArrayList.add(loadModuleRes(ContextTool.getContext(FLAG_ALL)));
-            }
-            if (Boolean.TRUE.equals(mResMap.get((int) getArgs(0)))) {
-                return;
-            }
+            if (mResourcesArrayList.isEmpty())
+                mResourcesArrayList.add(injectModuleRes(ContextTool.getContext(FLAG_ALL)));
+
+            Integer key = (Integer) getArgs(0);
+            if (key == null) return;
+            if (Boolean.TRUE.equals(mResMap.get(key))) return;
+
             for (Resources resources : mResourcesArrayList) {
                 if (resources == null) return;
                 String method = mMember.getName();
                 Object value;
                 try {
                     value = getResourceReplacement(resources, (Resources) thisObject(), method, mArgs);
-                } catch (Resources.NotFoundException e) {
+                } catch (Resources.NotFoundException ignore) {
                     continue;
                 }
                 if (value != null) {
@@ -382,6 +386,7 @@ public final class ResInjectTool {
 
     private static Object getResourceReplacement(Resources resources, Resources res, String method, Object[] args) throws Resources.NotFoundException {
         if (resources == null) return null;
+
         String pkgName = null;
         String resType = null;
         String resName = null;
@@ -417,10 +422,12 @@ public final class ResInjectTool {
                     if (modResId == 0) return null;
                     try {
                         resources.getResourceName(modResId);
-                    } catch (Resources.NotFoundException n) {
-                        throw n;
+                    } catch (Resources.NotFoundException ignore) {
+                        injectModuleRes(resources);
+                        resources.getResourceName(modResId);
                     }
                     if (method == null) return null;
+
                     mResMap.put(modResId, true);
                     if ("getDrawable".equals(method))
                         value = CoreTool.callMethod(resources, method, modResId, args[1]);
@@ -449,21 +456,17 @@ public final class ResInjectTool {
             }
             if (pkgName == null || resType == null || resName == null) return null;
 
-            try {
-                String resFullName = pkgName + ":" + resType + "/" + resName;
-                String resAnyPkgName = "*:" + resType + "/" + resName;
+            String resFullName = pkgName + ":" + resType + "/" + resName;
+            String resAnyPkgName = "*:" + resType + "/" + resName;
 
-                Pair<ReplacementType, Object> replacement = null;
-                if (mReplacements.containsKey(resFullName)) {
-                    replacement = mReplacements.get(resFullName);
-                } else if (mReplacements.containsKey(resAnyPkgName)) {
-                    replacement = mReplacements.get(resAnyPkgName);
-                }
-                if (replacement != null && (Objects.requireNonNull(replacement.first) == ReplacementType.OBJECT)) {
-                    return replacement.second;
-                }
-            } catch (Throwable e) {
-                logE(getTag(), e);
+            Pair<ReplacementType, Object> replacement = null;
+            if (mReplacements.containsKey(resFullName)) {
+                replacement = mReplacements.get(resFullName);
+            } else if (mReplacements.containsKey(resAnyPkgName)) {
+                replacement = mReplacements.get(resAnyPkgName);
+            }
+            if (replacement != null && (Objects.requireNonNull(replacement.first) == ReplacementType.OBJECT)) {
+                return replacement.second;
             }
         }
         return null;

@@ -25,5 +25,5 @@ package com.hchen.hooktool.data;
  */
 public enum HookState {
     NONE, /* 未 hook */
-    HOOKED, /* 已经 hook */
+    HOOKED, /* 已 hook */
 }

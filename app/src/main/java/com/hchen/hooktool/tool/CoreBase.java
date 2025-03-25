@@ -120,7 +120,7 @@ final class CoreBase {
             + "#" + method + "#" + Arrays.toString(params);
 
         if (params == null || params.length == 0 || !(params[params.length - 1] instanceof IHook iHook)) {
-            logW(tag, "Hook params is null or length is 0 or last param not is IHook object! \ndebug: " + debug, getStackTrace());
+            logW(tag, "Hook params is null or length is 0 or last param not is IHook! \ndebug: " + debug, getStackTrace());
             return null;
         }
 

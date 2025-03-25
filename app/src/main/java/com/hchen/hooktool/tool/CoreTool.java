@@ -103,7 +103,7 @@ public class CoreTool extends XposedLog {
     }
 
     public static boolean existsMethod(Class<?> clazz, String name, Object... objs) {
-        if (clazz == null || name == null || name.isEmpty() || objs == null) return false;
+        if (clazz == null || name == null || name.isEmpty()) return false;
         return baseFindMethod(new SingleMember<>(clazz), name, objs).isSuccess();
     }
 
@@ -158,7 +158,7 @@ public class CoreTool extends XposedLog {
     }
 
     public static boolean existsConstructor(Class<?> clazz, Object... objs) {
-        if (clazz == null || objs == null) return false;
+        if (clazz == null) return false;
         return baseFindConstructor(new SingleMember<>(clazz), objs).isSuccess();
     }
 
@@ -222,14 +222,17 @@ public class CoreTool extends XposedLog {
 
     // --------- 执行 hook -----------
     // --------- 普通方法 -------------
+    @Nullable
     public static XC_MethodHook.Unhook hookMethod(String clazz, String method, Object... params) {
         return baseHook(baseFindClass(clazz), method, params);
     }
 
+    @Nullable
     public static XC_MethodHook.Unhook hookMethod(String clazz, ClassLoader classLoader, String method, Object... params) {
         return baseHook(baseFindClass(clazz, classLoader), method, params);
     }
 
+    @Nullable
     public static XC_MethodHook.Unhook hookMethod(Class<?> clazz, String method, Object... params) {
         return baseHook(new SingleMember<>(clazz), method, params);
     }
@@ -247,14 +250,17 @@ public class CoreTool extends XposedLog {
     }
 
     // --------- 构造函数 ------------
+    @Nullable
     public static XC_MethodHook.Unhook hookConstructor(String clazz, Object... params) {
         return baseHook(baseFindClass(clazz), null, params);
     }
 
+    @Nullable
     public static XC_MethodHook.Unhook hookConstructor(String clazz, ClassLoader classLoader, Object... params) {
         return baseHook(baseFindClass(clazz, classLoader), null, params);
     }
 
+    @Nullable
     public static XC_MethodHook.Unhook hookConstructor(Class<?> clazz, Object... params) {
         return baseHook(new SingleMember<>(clazz), null, params);
     }
@@ -385,16 +391,19 @@ public class CoreTool extends XposedLog {
         return baseSetField(instance, field, value);
     }
 
+    @Nullable
     public static Object setAdditionalInstanceField(Object instance, String key, Object value) {
         return run(() -> XposedHelpers.setAdditionalInstanceField(instance, key, value))
             .orErrorMsg(null, "Failed to set additional instance!");
     }
 
+    @Nullable
     public static Object getAdditionalInstanceField(Object instance, String key) {
         return run(() -> XposedHelpers.getAdditionalInstanceField(instance, key))
             .orErrorMsg(null, "Failed to get additional instance!");
     }
 
+    @Nullable
     public static Object removeAdditionalInstanceField(Object instance, String key) {
         return run(() -> XposedHelpers.removeAdditionalInstanceField(instance, key))
             .orErrorMsg(null, "Failed to remove additional instance!");
@@ -487,38 +496,47 @@ public class CoreTool extends XposedLog {
         return baseSetStaticField(field, value);
     }
 
+    @Nullable
     public static Object setAdditionalStaticField(Class<?> clz, String key, Object value) {
         return baseSetAdditionalStaticField(new SingleMember<>(clz), key, value);
     }
 
+    @Nullable
     public static Object setAdditionalStaticField(String clz, String key, Object value) {
         return baseSetAdditionalStaticField(baseFindClass(clz), key, value);
     }
 
+    @Nullable
     public static Object setAdditionalStaticField(String clz, ClassLoader classLoader, String key, Object value) {
         return baseSetAdditionalStaticField(baseFindClass(clz, classLoader), key, value);
     }
 
+    @Nullable
     public static Object getAdditionalStaticField(Class<?> clz, String key) {
         return baseGetAdditionalStaticField(new SingleMember<>(clz), key);
     }
 
+    @Nullable
     public static Object getAdditionalStaticField(String clz, String key) {
         return baseGetAdditionalStaticField(baseFindClass(clz), key);
     }
 
+    @Nullable
     public static Object getAdditionalStaticField(String clz, ClassLoader classLoader, String key) {
         return baseGetAdditionalStaticField(baseFindClass(key, classLoader), key);
     }
 
+    @Nullable
     public static Object removeAdditionalStaticField(Class<?> clz, String key) {
         return baseRemoveAdditionalStaticField(new SingleMember<>(clz), key);
     }
 
+    @Nullable
     public static Object removeAdditionalStaticField(String clz, String key) {
         return baseRemoveAdditionalStaticField(baseFindClass(clz), key);
     }
 
+    @Nullable
     public static Object removeAdditionalStaticField(String clz, ClassLoader classLoader, String key) {
         return baseRemoveAdditionalStaticField(baseFindClass(clz, classLoader), key);
     }

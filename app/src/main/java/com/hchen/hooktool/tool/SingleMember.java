@@ -92,7 +92,7 @@ final class SingleMember<V> {
             logE(LogExpand.getTag(), mErrorMsg, mThrowable);
     }
 
-    static <V> SingleMember<V> createSingleMember(TryHelper.Run<V> supplier) {
+    static <V> SingleMember<V> createSingleMember(TryHelper.IRun<V> supplier) {
         TryHelper.Result<V> result = new TryHelper.Result<>(supplier);
         return new SingleMember<>(result.get(), result.getThrowable());
     }

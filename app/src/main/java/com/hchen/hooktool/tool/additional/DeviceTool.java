@@ -200,7 +200,9 @@ public class DeviceTool {
         try {
             Object osBrand = InvokeTool.callStaticMethod(
                 "com.huawei.system.BuildEx",
-                "getOsBrand", new Class[]{});
+                "getOsBrand",
+                new Class[]{}
+            );
             return "Harmony".equalsIgnoreCase(String.valueOf(osBrand));
         } catch (Throwable throwable) {
             logE(getTag(), throwable);
@@ -221,8 +223,9 @@ public class DeviceTool {
     public static boolean isRightRom(final String... names) {
         if (names == null) return false;
         for (String name : names) {
-            if (Build.BRAND.toLowerCase().contains(name.toLowerCase())
-                || Build.MANUFACTURER.toLowerCase().contains(name.toLowerCase())) {
+            if (Build.BRAND.toLowerCase().contains(name.toLowerCase()) ||
+                Build.MANUFACTURER.toLowerCase().contains(name.toLowerCase())
+            ) {
                 return true;
             }
         }
@@ -237,6 +240,7 @@ public class DeviceTool {
             String versionName = getProp(property);
             if (TextUtils.isEmpty(versionName))
                 continue;
+
             return versionName;
         }
         return "";

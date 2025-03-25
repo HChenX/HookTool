@@ -42,8 +42,8 @@ dependencyResolutionManagement {
 dependencies {
     // 二选一即可，推荐使用 jitpack，maven 可能不会同步更新！
     // Tip: v.*.*.* 填写当前最新发行版版本号即可！
-    implementation 'com.github.HChenX:HookTool:v.1.2.5' // jitpack
-    // implementation 'io.github.hchenx:hooktool:v.1.2.5' // maven Tip: 几乎废弃，请不要使用！
+    implementation 'com.github.HChenX:HookTool:v.1.2.6' // jitpack
+    // implementation 'io.github.hchenx:hooktool:v.1.2.6' // maven Tip: 几乎废弃，请不要使用！
 }
 ```
 
