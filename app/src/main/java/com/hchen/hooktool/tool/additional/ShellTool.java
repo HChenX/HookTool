@@ -385,8 +385,10 @@ public class ShellTool {
         private synchronized boolean isActive() {
             if (mStreamThread == null || mProcess == null) return false;
             boolean state = isActive && mStreamThread.isActive() && mProcess.isAlive();
-            if (!state && isActive)
+            if (!state && isActive) {
+                AndroidLog.logW(TAG, "Shell stream has been closed!");
                 close();
+            }
 
             return state;
         }

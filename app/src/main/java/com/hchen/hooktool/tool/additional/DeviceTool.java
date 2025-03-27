@@ -164,9 +164,9 @@ public class DeviceTool {
     }
 
     /**
-     * 判断当前厂商系统是否为 Miui/HyperOS。
+     * 判断当前厂商系统是否为 Xiaomi。
      */
-    public static boolean isMiui() {
+    public static boolean isXiaomi() {
         return !getRomVersion(VERSION_PROPERTY_XIAOMI).isEmpty();
     }
 

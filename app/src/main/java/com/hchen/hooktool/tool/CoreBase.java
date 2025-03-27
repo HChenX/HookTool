@@ -24,7 +24,6 @@ import static com.hchen.hooktool.log.LogExpand.getTag;
 import static com.hchen.hooktool.log.XposedLog.logE;
 import static com.hchen.hooktool.log.XposedLog.logI;
 import static com.hchen.hooktool.log.XposedLog.logW;
-import static com.hchen.hooktool.tool.CoreBase.ConvertHelper.arrayToClass;
 import static com.hchen.hooktool.tool.SingleMember.createSingleMember;
 
 import androidx.annotation.Nullable;
@@ -68,7 +67,11 @@ final class CoreBase {
         return clazz.exec(new SingleMember<>(),
             member ->
                 createSingleMember(
-                    () -> XposedHelpers.findMethodExact(member, name, arrayToClass(member.getClassLoader(), objs))
+                    () -> {
+                        Class<?>[] classes = arrayToClass(member.getClassLoader(), objs);
+                        if (classes == null) return null;
+                        return XposedHelpers.findMethodExact(member, name, classes);
+                    }
                 ).setErrorMsg("Failed to find method!")
         );
     }
@@ -89,7 +92,11 @@ final class CoreBase {
         return clazz.exec(new SingleMember<>(),
             member ->
                 SingleMember.<Constructor<?>>createSingleMember(
-                    () -> XposedHelpers.findConstructorExact(member, arrayToClass(member.getClassLoader(), objs))
+                    () -> {
+                        Class<?>[] classes = arrayToClass(member.getClassLoader(), objs);
+                        if (classes == null) return null;
+                        return XposedHelpers.findConstructorExact(member, classes);
+                    }
                 ).setErrorMsg("Failed to find constructor!")
         );
     }
@@ -124,6 +131,10 @@ final class CoreBase {
             return null;
         }
 
+        if (clazz.getNotReport() == null) {
+            logE(tag, "Failed to hook! Class is null! \ndebug: " + debug);
+            return null;
+        }
         if (clazz.getThrowable() != null) {
             logE(tag, "Failed to hook! \ndebug: " + debug, clazz.getThrowable());
             return null;
@@ -134,6 +145,11 @@ final class CoreBase {
             member = (SingleMember<Member>) (SingleMember<?>) baseFindMethod(new SingleMember<>(clazz.getNotReport()), method, params);
         else
             member = (SingleMember<Member>) (SingleMember<?>) baseFindConstructor(new SingleMember<>(clazz.getNotReport()), params);
+
+        if (member.getNotReport() == null) {
+            logE(tag, "Failed to hook! Member is null! \ndebug: " + debug);
+            return null;
+        }
         if (member.getThrowable() != null) {
             logE(tag, "Failed to hook! \ndebug: " + debug, member.getThrowable());
             return null;
@@ -395,44 +411,29 @@ final class CoreBase {
         return xcMethodHook;
     }
 
-    static final class ConvertHelper {
-        /**
-         * 泛型转换为数组。
-         */
-        public static <T> Object[] genericToArray(T ts) {
-            if (ts instanceof Object[] objects) return objects;
-            return new Object[]{ts};
-        }
+    /**
+     * 数组参数转为类。
+     */
+    @Nullable
+    private static Class<?>[] arrayToClass(ClassLoader classLoader, Object... objs) {
+        if (classLoader == null || objs == null) return null;
+        if (objs.length == 0) return new Class<?>[]{};
 
-        @Nullable
-        public static Class<?>[] arrayToClass(Object... objs) {
-            return arrayToClass(HCData.getClassLoader(), objs);
-        }
-
-        /**
-         * 数组参数转为类。
-         */
-        @Nullable
-        public static Class<?>[] arrayToClass(ClassLoader classLoader, Object... objs) {
-            if (classLoader == null || objs == null) return null;
-            if (objs.length == 0) return new Class<?>[]{};
-
-            List<Class<?>> classes = new ArrayList<>();
-            for (Object o : objs) {
-                if (o instanceof Class<?> c) {
-                    classes.add(c);
-                } else if (o instanceof String s) {
-                    Class<?> ct = CoreTool.findClass(s, classLoader);
-                    if (ct == null) return null;
-                    classes.add(ct);
-                } else if (o instanceof IHook) {
-                    break; // 一定为最后一个参数
-                } else {
-                    logW(LogExpand.getTag(), "Unknown type: " + o, getStackTrace());
-                    return null;
-                }
+        List<Class<?>> classes = new ArrayList<>();
+        for (Object o : objs) {
+            if (o instanceof Class<?> c) {
+                classes.add(c);
+            } else if (o instanceof String s) {
+                Class<?> ct = CoreTool.findClass(s, classLoader);
+                if (ct == null) return null;
+                classes.add(ct);
+            } else if (o instanceof IHook) {
+                break; // 一定为最后一个参数
+            } else {
+                logW(LogExpand.getTag(), "Unknown type: " + o, getStackTrace());
+                return null;
             }
-            return classes.toArray(new Class<?>[0]);
         }
+        return classes.toArray(new Class<?>[0]);
     }
 }

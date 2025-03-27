@@ -24,6 +24,8 @@ import android.os.Parcelable;
 
 import androidx.annotation.NonNull;
 
+import java.util.Objects;
+
 /**
  * App 数据
  *
@@ -55,6 +57,29 @@ public final class AppData implements Parcelable {
         isEnabled = in.readByte() != 0;
     }
 
+    @NonNull
+    @Override
+    public String toString() {
+        return "AppData[label=" + label + ", packageName=" + packageName +
+            ", versionName=" + versionName + ", versionCode=" + versionCode +
+            ", user=" + user + ", uid=" + uid + ", isSystemApp=" + isSystemApp + ", isEnabled=" + isEnabled + ", icon=" + icon + "]";
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) return true;
+        if (!(object instanceof AppData appData)) return false;
+        return user == appData.user && uid == appData.uid && isSystemApp == appData.isSystemApp
+            && isEnabled == appData.isEnabled && Objects.equals(icon, appData.icon) && Objects.equals(label, appData.label)
+            && Objects.equals(packageName, appData.packageName) && Objects.equals(versionName, appData.versionName)
+            && Objects.equals(versionCode, appData.versionCode);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(user, uid, icon, label, packageName, versionName, versionCode, isSystemApp, isEnabled);
+    }
+
     public static final Creator<AppData> CREATOR = new Creator<>() {
         @Override
         public AppData createFromParcel(Parcel in) {
@@ -83,13 +108,5 @@ public final class AppData implements Parcelable {
     @Override
     public int describeContents() {
         return 0;
-    }
-
-    @NonNull
-    @Override
-    public String toString() {
-        return "AppData[label=" + label + ", packageName=" + packageName +
-            ", versionName=" + versionName + ", versionCode=" + versionCode +
-            ", user=" + user + ", uid=" + uid + ", isSystemApp=" + isSystemApp + ", isEnabled=" + isEnabled + ", icon=" + icon + "]";
     }
 }

@@ -51,6 +51,12 @@ public abstract class HCEntrance implements IXposedHookLoadPackage, IXposedHookZ
     }
 
     /**
+     * 模块被加载。
+     */
+    public void onModuleLoad(XC_LoadPackage.LoadPackageParam lpparam) {
+    }
+
+    /**
      * 忽略的包名。
      * <p>
      * Tip: 因为传入的 lpparam 偶尔会被其他系统应用干扰，所以可以配置排除名单。
@@ -67,9 +73,13 @@ public abstract class HCEntrance implements IXposedHookLoadPackage, IXposedHookZ
         }
 
         if (HCData.getModulePackageName() != null && Objects.equals(HCData.getModulePackageName(), lpparam.packageName)) {
+            HCInit.initLoadPackageParam(lpparam);
             initHCState();
+            onModuleLoad(lpparam);
+            return;
         }
 
+        HCInit.initLoadPackageParam(lpparam);
         onLoadPackage(lpparam);
     }
 
@@ -81,10 +91,12 @@ public abstract class HCEntrance implements IXposedHookLoadPackage, IXposedHookZ
     }
 
     private void initHCState() {
-        CoreTool.setStaticField(HCState.class, "isEnabled", true);
-        CoreTool.setStaticField(HCState.class, "mVersion", XposedBridge.getXposedVersion());
+        CoreTool.setStaticField("com.hchen.hooktool.HCState", "isEnabled", true);
+        CoreTool.setStaticField("com.hchen.hooktool.HCState", "mVersion", XposedBridge.getXposedVersion());
 
         String bridgeTag = (String) CoreTool.getStaticField(XposedBridge.class, "TAG");
+        if (bridgeTag == null) return;
+
         if (bridgeTag.startsWith("LSPosed")) {
             bridgeTag = "LSPosed";
         } else if (bridgeTag.startsWith("EdXposed")) {
@@ -93,6 +105,6 @@ public abstract class HCEntrance implements IXposedHookLoadPackage, IXposedHookZ
             bridgeTag = "Xposed";
         } else
             bridgeTag = "Unknown";
-        CoreTool.setStaticField(HCState.class, "mFramework", bridgeTag);
+        CoreTool.setStaticField("com.hchen.hooktool.HCState", "mFramework", bridgeTag);
     }
 }
