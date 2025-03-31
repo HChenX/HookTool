@@ -67,11 +67,7 @@ final class CoreBase {
         return clazz.exec(new SingleMember<>(),
             member ->
                 createSingleMember(
-                    () -> {
-                        Class<?>[] classes = arrayToClass(member.getClassLoader(), objs);
-                        if (classes == null) return null;
-                        return XposedHelpers.findMethodExact(member, name, classes);
-                    }
+                    () -> XposedHelpers.findMethodExact(member, name, arrayToClass(member.getClassLoader(), objs))
                 ).setErrorMsg("Failed to find method!")
         );
     }
@@ -92,11 +88,7 @@ final class CoreBase {
         return clazz.exec(new SingleMember<>(),
             member ->
                 SingleMember.<Constructor<?>>createSingleMember(
-                    () -> {
-                        Class<?>[] classes = arrayToClass(member.getClassLoader(), objs);
-                        if (classes == null) return null;
-                        return XposedHelpers.findConstructorExact(member, classes);
-                    }
+                    () -> XposedHelpers.findConstructorExact(member, arrayToClass(member.getClassLoader(), objs))
                 ).setErrorMsg("Failed to find constructor!")
         );
     }
@@ -385,7 +377,7 @@ final class CoreBase {
     }
 
     static XC_MethodHook createHook(String tag, IHook iHook) {
-        iHook.PRIVATETAG = tag;
+        iHook.TAG = tag;
         XC_MethodHook xcMethodHook = new XC_MethodHook(iHook.PRIORITY) {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
@@ -393,7 +385,7 @@ final class CoreBase {
                     iHook.MethodHookParam(param);
                     iHook.before();
                 } catch (Throwable e) {
-                    logE(iHook.PRIVATETAG + ":before", e);
+                    logE(iHook.TAG + ":before", e);
                 }
             }
 
@@ -403,7 +395,7 @@ final class CoreBase {
                     iHook.MethodHookParam(param);
                     iHook.after();
                 } catch (Throwable e) {
-                    logE(iHook.PRIVATETAG + ":after", e);
+                    logE(iHook.TAG + ":after", e);
                 }
             }
         };

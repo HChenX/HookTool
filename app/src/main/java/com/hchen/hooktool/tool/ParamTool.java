@@ -27,6 +27,7 @@ import static com.hchen.hooktool.tool.CoreTool.removeAdditionalInstanceField;
 import static com.hchen.hooktool.tool.CoreTool.setAdditionalInstanceField;
 import static com.hchen.hooktool.tool.CoreTool.setField;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.hchen.hooktool.log.LogExpand;
@@ -44,10 +45,10 @@ import de.robv.android.xposed.XposedBridge;
  * @author 焕晨HChen
  */
 public class ParamTool {
-    public XC_MethodHook.MethodHookParam mParam;
+    protected String TAG;
     private XC_MethodHook xcMethodHook;
     private LogExpand logExpand;
-    public String PRIVATETAG;
+    public XC_MethodHook.MethodHookParam mParam;
     public Class<?> mClass;
     public Member mMember;
     public Object[] mArgs;
@@ -74,10 +75,10 @@ public class ParamTool {
     }
 
     final public void MethodHookParam(XC_MethodHook.MethodHookParam param) {
-        mParam = param;
         mClass = param.method.getDeclaringClass();
         mMember = param.method;
         mArgs = param.args;
+        mParam = param;
     }
 
     final public void XCMethodHook(XC_MethodHook xcMethodHook) {
@@ -91,7 +92,15 @@ public class ParamTool {
      */
     @Nullable
     final public Object getArgs(int index) {
-        return checkIndex(index) ? mParam.args[index] : null;
+        return checkIndex(index) ? mArgs[index] : null;
+    }
+
+    /**
+     * 获取不为空的参数。
+     */
+    @NonNull
+    final public Object getArgsNonNull(int index, @NonNull Object def) {
+        return checkIndex(index) ? (mArgs[index] == null ? def : mArgs[index]) : def;
     }
 
     /**
@@ -99,19 +108,19 @@ public class ParamTool {
      */
     final public void setArgs(int index, Object value) {
         if (checkIndex(index))
-            mParam.args[index] = value;
+            mArgs[index] = value;
     }
 
     /**
      * 获取方法参数列表长度。
      */
-    final public int argsLength() {
-        return mParam.args.length;
+    final public int length() {
+        return mArgs.length;
     }
 
     private boolean checkIndex(int index) {
-        if (argsLength() < index + 1) {
-            logE(PRIVATETAG, "Args available index length is: [" + (argsLength() - 1) + "]" +
+        if (length() < index + 1) {
+            logE(TAG, "Args available index length is: [" + (length() - 1) + "]" +
                 " but index is : [" + index + "] , Exceeding!!", getStackTrace());
             return false;
         }
@@ -192,7 +201,7 @@ public class ParamTool {
      */
     final public void observeCall() {
         if (logExpand == null)
-            logExpand = new LogExpand(mParam, PRIVATETAG);
+            logExpand = new LogExpand(mParam, TAG);
         logExpand.update(mParam);
         logExpand.observeCall();
     }
