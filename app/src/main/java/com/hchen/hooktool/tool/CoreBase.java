@@ -123,10 +123,6 @@ final class CoreBase {
             return null;
         }
 
-        if (clazz.getNotReport() == null) {
-            logE(tag, "Failed to hook! Class is null! \ndebug: " + debug);
-            return null;
-        }
         if (clazz.getThrowable() != null) {
             logE(tag, "Failed to hook! \ndebug: " + debug, clazz.getThrowable());
             return null;
@@ -138,10 +134,6 @@ final class CoreBase {
         else
             member = (SingleMember<Member>) (SingleMember<?>) baseFindConstructor(new SingleMember<>(clazz.getNotReport()), params);
 
-        if (member.getNotReport() == null) {
-            logE(tag, "Failed to hook! Member is null! \ndebug: " + debug);
-            return null;
-        }
         if (member.getThrowable() != null) {
             logE(tag, "Failed to hook! \ndebug: " + debug, member.getThrowable());
             return null;

@@ -128,6 +128,13 @@ public final class HCInit {
         HCData.setLogExpandPath(basicData.logExpandPath);
     }
 
+    /**
+     * 更换全局 ClassLoader。
+     */
+    public static void setClassLoader(ClassLoader classLoader) {
+        HCData.setClassLoader(classLoader);
+    }
+
     // ---------- END！----------
     public final static class BasicData {
         String tag = null;
@@ -166,7 +173,7 @@ public final class HCInit {
          * <p>
          * 工具默认开启，但可能会增加耗时。
          */
-        public BasicData xPrefsAutoReload(boolean auto) {
+        public BasicData setXPrefsAutoReload(boolean auto) {
             this.isAutoReload = auto;
             return this;
         }
@@ -174,7 +181,7 @@ public final class HCInit {
         /**
          * 是否使用日志增强功能，path 填写模块的 hook 文件所在目录，否则默认按照包名搜索。
          * <pre>{@code
-         *      HCInit.initLogExpand(new String[]{"com.hchen.demo.hook"});
+         *      HCInit.setLogExpandPath(new String[]{"com.hchen.demo.hook"});
          *      // 填写 new String[]{} 则默认使用包名查找。
          * }<br/>
          * 同时加入混淆规则:
@@ -185,7 +192,7 @@ public final class HCInit {
          *
          * Tip: 建议设置。
          */
-        public BasicData initLogExpand(@NonNull String[] path) {
+        public BasicData setLogExpandPath(@NonNull String[] path) {
             this.logExpandPath = path;
             return this;
         }

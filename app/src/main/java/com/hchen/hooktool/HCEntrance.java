@@ -79,7 +79,6 @@ public abstract class HCEntrance implements IXposedHookLoadPackage, IXposedHookZ
             return;
         }
 
-        HCInit.initLoadPackageParam(lpparam);
         onLoadPackage(lpparam);
     }
 

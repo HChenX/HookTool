@@ -44,6 +44,7 @@ import static com.hchen.hooktool.tool.CoreBase.baseSetAdditionalStaticField;
 import static com.hchen.hooktool.tool.CoreBase.baseSetField;
 import static com.hchen.hooktool.tool.CoreBase.baseSetStaticField;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.hchen.hooktool.HCData;
@@ -59,6 +60,7 @@ import java.lang.reflect.Method;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.Optional;
 
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedBridge;
@@ -355,6 +357,12 @@ public class CoreTool extends XposedLog {
             Instant end = Instant.now();
             return Duration.between(start, end).toMillis();
         }).orErrorMsg(-1L, "Failed to check code time consumption!");
+    }
+
+    // ---------- NonNull ---------
+    @NonNull
+    public static Object getNonNull(Object value, Object def) {
+        return Optional.ofNullable(value).orElse(def);
     }
 
     // ---------- 非静态 -----------

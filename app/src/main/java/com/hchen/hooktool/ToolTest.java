@@ -206,8 +206,8 @@ final class ToolTest extends BaseHC {
                 .setLogLevel(HCInit.LOG_D)
                 .setModulePackageName("com.hchen.demo")
                 .setPrefsName("myprefs") // 可选
-                .xPrefsAutoReload(true) // 可选
-                .initLogExpand(new String[]{
+                .setXPrefsAutoReload(true) // 可选
+                .setLogExpandPath(new String[]{
                     "com.hchen.demo.hook"
                 });
         }

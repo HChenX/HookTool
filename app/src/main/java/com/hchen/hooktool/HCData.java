@@ -85,6 +85,7 @@ public final class HCData {
     /**
      * 获取日志增强 path。
      */
+    @Nullable
     public static String[] getLogExpandPath() {
         return mLogExpandPath;
     }
@@ -113,6 +114,7 @@ public final class HCData {
     /**
      * 获取当前的 LoadPackageParam。
      */
+    @Nullable
     public static XC_LoadPackage.LoadPackageParam getLoadPackageParam() {
         return mLpparam;
     }
@@ -120,6 +122,7 @@ public final class HCData {
     /**
      * 获取当前的 StartupParam。
      */
+    @Nullable
     public static IXposedHookZygoteInit.StartupParam getStartupParam() {
         return mStartupParam;
     }
