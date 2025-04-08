@@ -19,6 +19,7 @@
 package com.hchen.hooktool;
 
 import com.hchen.hooktool.tool.CoreTool;
+import com.hchen.hooktool.tool.additional.ResInjectTool;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -86,6 +87,7 @@ public abstract class HCEntrance implements IXposedHookLoadPackage, IXposedHookZ
     public final void initZygote(StartupParam startupParam) throws Throwable {
         HCInit.initBasicData(initHC(new HCInit.BasicData()));
         HCInit.initStartupParam(startupParam);
+        ResInjectTool.init(startupParam.modulePath);
         onInitZygote(startupParam);
     }
 

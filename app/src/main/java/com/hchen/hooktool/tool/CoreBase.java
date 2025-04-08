@@ -26,11 +26,10 @@ import static com.hchen.hooktool.log.XposedLog.logI;
 import static com.hchen.hooktool.log.XposedLog.logW;
 import static com.hchen.hooktool.tool.SingleMember.createSingleMember;
 
-import androidx.annotation.Nullable;
+import androidx.annotation.NonNull;
 
 import com.hchen.hooktool.HCData;
 import com.hchen.hooktool.hook.IHook;
-import com.hchen.hooktool.log.LogExpand;
 import com.hchen.hooktool.tool.itool.IMemberFilter;
 
 import java.lang.reflect.Constructor;
@@ -77,7 +76,7 @@ final class CoreBase {
             member ->
                 createSingleMember(
                     () -> Arrays.stream(member.getDeclaredMethods())
-                        .filter(method -> name.equals(method.getName()))
+                        .filter(method -> Objects.equals(name, method.getName()))
                         .toArray(Method[]::new)
                 ).setErrorMsg("Failed to find all method!")
                     .or(new Method[0])
@@ -398,9 +397,10 @@ final class CoreBase {
     /**
      * 数组参数转为类。
      */
-    @Nullable
-    private static Class<?>[] arrayToClass(ClassLoader classLoader, Object... objs) {
-        if (classLoader == null || objs == null) return null;
+    @NonNull
+    private static Class<?>[] arrayToClass(ClassLoader classLoader, Object... objs) throws Throwable {
+        if (classLoader == null || objs == null)
+            throw new RuntimeException("ClassLoader: " + classLoader + ", or objs: " + Arrays.toString(objs) + ", is null!!");
         if (objs.length == 0) return new Class<?>[]{};
 
         List<Class<?>> classes = new ArrayList<>();
@@ -408,14 +408,13 @@ final class CoreBase {
             if (o instanceof Class<?> c) {
                 classes.add(c);
             } else if (o instanceof String s) {
-                Class<?> ct = CoreTool.findClass(s, classLoader);
-                if (ct == null) return null;
-                classes.add(ct);
+                SingleMember<Class<?>> ct = baseFindClass(s, classLoader);
+                if (ct.getThrowable() != null) throw ct.getThrowable();
+                classes.add(ct.get());
             } else if (o instanceof IHook) {
                 break; // 一定为最后一个参数
             } else {
-                logW(LogExpand.getTag(), "Unknown type: " + o, getStackTrace());
-                return null;
+                throw new RuntimeException("Unknown type: " + o);
             }
         }
         return classes.toArray(new Class<?>[0]);

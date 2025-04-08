@@ -110,8 +110,8 @@ public final class HCInit {
      *              .setTag("HChenDemo")
      *              .setLogLevel(LOG_D)
      *              .setPrefsName("hchen_prefs")
-     *              .xPrefsAutoReload(true)
-     *              .initLogExpand(new String[]{
+     *              .setAutoReload(true)
+     *              .setLogExpandPath(new String[]{
      *                  "com.hchen.demo.hook"
      *              })
      *      );
@@ -173,7 +173,7 @@ public final class HCInit {
          * <p>
          * 工具默认开启，但可能会增加耗时。
          */
-        public BasicData setXPrefsAutoReload(boolean auto) {
+        public BasicData setAutoReload(boolean auto) {
             this.isAutoReload = auto;
             return this;
         }

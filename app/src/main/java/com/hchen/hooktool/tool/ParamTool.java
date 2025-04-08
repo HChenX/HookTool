@@ -28,12 +28,10 @@ import static com.hchen.hooktool.tool.CoreTool.setAdditionalInstanceField;
 import static com.hchen.hooktool.tool.CoreTool.setField;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.hchen.hooktool.log.LogExpand;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 
 import de.robv.android.xposed.XC_MethodHook;
@@ -48,37 +46,31 @@ public class ParamTool {
     protected String TAG;
     private XC_MethodHook xcMethodHook;
     private LogExpand logExpand;
-    public XC_MethodHook.MethodHookParam mParam;
-    public Class<?> mClass;
-    public Member mMember;
-    public Object[] mArgs;
+    public XC_MethodHook.MethodHookParam param;
 
     /**
      * 被 hook 类的实例。
      */
     final public Object thisObject() {
-        return mParam.thisObject;
+        return param.thisObject;
     }
 
     /**
      * 移除 hook 自身。
      */
     final public void removeSelf() {
-        XposedBridge.unhookMethod(mMember, xcMethodHook);
+        XposedBridge.unhookMethod(param.method, xcMethodHook);
     }
 
     /**
      * 返回被 hook 实例的类加载器。
      */
     final public ClassLoader thisClassLoader() {
-        return mParam.thisObject.getClass().getClassLoader();
+        return param.thisObject.getClass().getClassLoader();
     }
 
     final public void MethodHookParam(XC_MethodHook.MethodHookParam param) {
-        mClass = param.method.getDeclaringClass();
-        mMember = param.method;
-        mArgs = param.args;
-        mParam = param;
+        this.param = param;
     }
 
     final public void XCMethodHook(XC_MethodHook xcMethodHook) {
@@ -90,17 +82,15 @@ public class ParamTool {
     /**
      * 获取方法的指定参数。
      */
-    @Nullable
     final public Object getArgs(int index) {
-        return checkIndex(index) ? mArgs[index] : null;
+        return checkIndex(index) ? param.args[index] : null;
     }
 
     /**
      * 获取不为空的参数。
      */
-    @NonNull
     final public Object getArgsNonNull(int index, @NonNull Object def) {
-        return checkIndex(index) ? (mArgs[index] == null ? def : mArgs[index]) : def;
+        return checkIndex(index) ? (param.args[index] == null ? def : param.args[index]) : def;
     }
 
     /**
@@ -108,14 +98,14 @@ public class ParamTool {
      */
     final public void setArgs(int index, Object value) {
         if (checkIndex(index))
-            mArgs[index] = value;
+            param.args[index] = value;
     }
 
     /**
      * 获取方法参数列表长度。
      */
     final public int length() {
-        return mArgs.length;
+        return param.args.length;
     }
 
     private boolean checkIndex(int index) {
@@ -133,7 +123,7 @@ public class ParamTool {
      * 获取方法执行完毕后的返回值。
      */
     final public Object getResult() {
-        return mParam.getResult();
+        return param.getResult();
     }
 
     /**
@@ -141,7 +131,7 @@ public class ParamTool {
      * after 中使用修改返回结果。
      */
     final public void setResult(Object value) {
-        mParam.setResult(value);
+        param.setResult(value);
     }
 
     /**
@@ -149,49 +139,49 @@ public class ParamTool {
      * after 中使用修改返回结果为 null。
      */
     final public void returnNull() {
-        mParam.setResult(null);
+        param.setResult(null);
     }
 
     /**
      * 使方法返回指定的布尔值 true。
      */
     final public void returnTure() {
-        mParam.setResult(true);
+        param.setResult(true);
     }
 
     /**
      * 使方法返回指定布尔值 false。
      */
     final public void returnFalse() {
-        mParam.setResult(false);
+        param.setResult(false);
     }
 
     /**
      * 如果方法引发了异常，则返回 true。
      */
     final public boolean hasThrowable() {
-        return mParam.hasThrowable();
+        return param.hasThrowable();
     }
 
     /**
      * 返回该方法抛出的异常，若没有则返回 null。
      */
     final public Throwable getThrowable() {
-        return mParam.getThrowable();
+        return param.getThrowable();
     }
 
     /**
      * 引发异常，在 before 中使用可阻止方法执行。
      */
     final public void setThrowable(Throwable t) {
-        mParam.setThrowable(t);
+        param.setThrowable(t);
     }
 
     /**
      * 返回方法调用的结果，或获取该方法的异常。
      */
     final public Object getResultOrThrowable() throws Throwable {
-        return mParam.getResultOrThrowable();
+        return param.getResultOrThrowable();
     }
 
     // --------- 观察调用 --------------
@@ -201,54 +191,47 @@ public class ParamTool {
      */
     final public void observeCall() {
         if (logExpand == null)
-            logExpand = new LogExpand(mParam, TAG);
-        logExpand.update(mParam);
+            logExpand = new LogExpand(TAG);
+        logExpand.update(param);
         logExpand.observeCall();
     }
 
     // --------- 调用方法 --------------
-    @Nullable
     final public Object callThisMethod(String name, Object... objs) {
-        return callMethod(mParam.thisObject, name, objs);
+        return callMethod(param.thisObject, name, objs);
     }
 
-    @Nullable
     final public Object callThisMethod(Method method, Object... objs) {
-        return callMethod(mParam.thisObject, method, objs);
+        return callMethod(param.thisObject, method, objs);
     }
 
     // ----------- 获取/修改 字段 -------------
-    @Nullable
     final public Object getThisField(String name) {
-        return getField(mParam.thisObject, name);
+        return getField(param.thisObject, name);
     }
 
-    @Nullable
     final public Object getThisField(Field field) {
-        return getField(mParam.thisObject, field);
+        return getField(param.thisObject, field);
     }
 
     final public boolean setThisField(String name, Object value) {
-        return setField(mParam.thisObject, name, value);
+        return setField(param.thisObject, name, value);
     }
 
     final public boolean setThisField(Field field, Object value) {
-        return setField(mParam.thisObject, field, value);
+        return setField(param.thisObject, field, value);
     }
 
     // ---------- 设置自定义字段 --------------
-    @Nullable
     final public Object setThisAdditionalInstanceField(String key, Object value) {
-        return setAdditionalInstanceField(mParam.thisObject, key, value);
+        return setAdditionalInstanceField(param.thisObject, key, value);
     }
 
-    @Nullable
     final public Object getThisAdditionalInstanceField(String key) {
-        return getAdditionalInstanceField(mParam.thisObject, key);
+        return getAdditionalInstanceField(param.thisObject, key);
     }
 
-    @Nullable
     final public Object removeThisAdditionalInstanceField(String key) {
-        return removeAdditionalInstanceField(mParam.thisObject, key);
+        return removeAdditionalInstanceField(param.thisObject, key);
     }
 }

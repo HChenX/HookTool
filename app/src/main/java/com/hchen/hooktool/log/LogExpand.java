@@ -18,8 +18,8 @@
  */
 package com.hchen.hooktool.log;
 
-import static com.hchen.hooktool.log.AndroidLog.logE;
 import static com.hchen.hooktool.log.AndroidLog.logI;
+import static com.hchen.hooktool.log.AndroidLog.logW;
 
 import com.hchen.hooktool.HCData;
 
@@ -38,24 +38,14 @@ import de.robv.android.xposed.XC_MethodHook;
  * @author 焕晨HChen
  */
 public final class LogExpand {
-    private XC_MethodHook.MethodHookParam mParam;
+    private XC_MethodHook.MethodHookParam param;
     private final String TAG;
-    private String mMethodName;
-    private String mClassName;
+    private String methodName;
+    private String className;
 
-    public LogExpand(XC_MethodHook.MethodHookParam param, String tag) {
+    // 不要自己实例化
+    public LogExpand(String tag) {
         this.TAG = tag;
-        this.mParam = param;
-
-        if (param.method instanceof Method method) {
-            mMethodName = method.getName();
-            mClassName = method.getDeclaringClass().getName();
-        } else if (param.method instanceof Constructor<?> constructor) {
-            mMethodName = "<init>";
-            mClassName = constructor.getDeclaringClass().getName();
-        } else {
-            logE(TAG, "Unknown type! member: " + param.method, getStackTrace());
-        }
     }
 
     /**
@@ -129,22 +119,46 @@ public final class LogExpand {
     }
 
     public void update(XC_MethodHook.MethodHookParam param) {
-        this.mParam = param;
+        this.param = param;
+
+        if (param.method instanceof Method method) {
+            methodName = method.getName();
+            className = method.getDeclaringClass().getName();
+        } else if (param.method instanceof Constructor<?> constructor) {
+            methodName = "<init>";
+            className = constructor.getDeclaringClass().getName();
+        } else {
+            logW(TAG, "Unknown type! member: " + param.method, getStackTrace());
+        }
     }
 
     public void observeCall() {
-        if (mParam.args == null || mParam.args.length == 0) {
-            logI(TAG, "Method called! Class=[" + mClassName + "], Method=[" + mMethodName + "], Param={ }");
+        if (param.args == null || param.args.length == 0) {
+            logI(TAG, "→ Called Method\n"
+                + "├─ Class:  " + className + "\n"
+                + "├─ Method: " + methodName + "\n"
+                + "├─ Params: { }\n"
+                + "├─ Return: " + param.getResult()
+                + "└─ Throwable: " + param.getThrowable());
             return;
         }
 
         StringBuilder log = new StringBuilder();
-        for (int i = 0; i < mParam.args.length; i++) {
-            log.append("    ").append(mParam.args[i] == null ? "null" : mParam.args[i].getClass().getSimpleName())
-                .append("=").append(paramToString(mParam.args[i])).append("\n");
+        for (int i = 0; i < param.args.length; i++) {
+            Object arg = param.args[i];
+            log.append("    [").append(i).append("] ");
+            log.append(arg == null ? "(null)" : arg.getClass().getSimpleName());
+            log.append(" = ").append(paramToString(arg)).append("\n");
         }
 
-        logI(TAG, "Called!\nClass=[" + mClassName + "]\nMethod=[" + mMethodName + "]\nParam={\n" + log + "}");
+        logI(TAG, "→ Called Method\n"
+            + "├─ Class:  " + className + "\n"
+            + "├─ Method: " + methodName + "\n"
+            + "├─ Params: {\n" + log
+            + "├─ }\n"
+            + "├─ Return: " + param.getResult()
+            + "└─ Throwable: " + param.getThrowable()
+        );
     }
 
     private String paramToString(Object param) {

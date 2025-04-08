@@ -308,6 +308,15 @@ public class CoreTool extends XposedLog {
         };
     }
 
+    public static IHook setArgs(int index, Object value) {
+        return new IHook() {
+            @Override
+            public void before() {
+                setArgs(index, value);
+            }
+        };
+    }
+
     // --------- 解除 hook ---------
     public static void unHook(Member member, XC_MethodHook xcMethodHook) {
         XposedBridge.unhookMethod(member, xcMethodHook);
@@ -366,27 +375,22 @@ public class CoreTool extends XposedLog {
     }
 
     // ---------- 非静态 -----------
-    @Nullable
     public static Object callMethod(Object instance, String name, Object... objs) {
         return baseCallMethod(instance, name, objs);
     }
 
-    @Nullable
     public static Object callMethod(Object instance, Method method, Object... objs) {
         return baseCallMethod(instance, method, objs);
     }
 
-    @Nullable
     public static Object callSuperPrivateMethod(Object instance, String name, Object... objs) {
         return baseCallSuperPrivateMethod(instance, name, objs);
     }
 
-    @Nullable
     public static Object getField(Object instance, String name) {
         return baseGetField(instance, name);
     }
 
-    @Nullable
     public static Object getField(Object instance, Field field) {
         return baseGetField(instance, field);
     }
@@ -399,19 +403,16 @@ public class CoreTool extends XposedLog {
         return baseSetField(instance, field, value);
     }
 
-    @Nullable
     public static Object setAdditionalInstanceField(Object instance, String key, Object value) {
         return run(() -> XposedHelpers.setAdditionalInstanceField(instance, key, value))
             .orErrorMsg(null, "Failed to set additional instance!");
     }
 
-    @Nullable
     public static Object getAdditionalInstanceField(Object instance, String key) {
         return run(() -> XposedHelpers.getAdditionalInstanceField(instance, key))
             .orErrorMsg(null, "Failed to get additional instance!");
     }
 
-    @Nullable
     public static Object removeAdditionalInstanceField(Object instance, String key) {
         return run(() -> XposedHelpers.removeAdditionalInstanceField(instance, key))
             .orErrorMsg(null, "Failed to remove additional instance!");
@@ -433,57 +434,46 @@ public class CoreTool extends XposedLog {
         return baseNewInstance(baseFindClass(clz, classLoader), objs);
     }
 
-    @Nullable
     public static Object callStaticMethod(Class<?> clz, String name, Object... objs) {
         return baseCallStaticMethod(new SingleMember<>(clz), name, objs);
     }
 
-    @Nullable
     public static Object callStaticMethod(String clz, String name, Object... objs) {
         return baseCallStaticMethod(baseFindClass(clz), name, objs);
     }
 
-    @Nullable
     public static Object callStaticMethod(String clz, ClassLoader classLoader, String name, Object... objs) {
         return baseCallStaticMethod(baseFindClass(clz, classLoader), name, objs);
     }
 
-    @Nullable
     public static Object callStaticMethod(Method method, Object... objs) {
         return baseCallStaticMethod(method, objs);
     }
 
-    @Nullable
     public static Object callSuperStaticPrivateMethod(String clz, String name, Object... objs) {
         return baseCallSuperStaticPrivateMethod(baseFindClass(clz), name, objs);
     }
 
-    @Nullable
     public static Object callSuperStaticPrivateMethod(String clz, ClassLoader classLoader, String name, Object... objs) {
         return baseCallSuperStaticPrivateMethod(baseFindClass(clz, classLoader), name, objs);
     }
 
-    @Nullable
     public static Object callSuperStaticPrivateMethod(Class<?> clz, String name, Object... objs) {
         return baseCallSuperStaticPrivateMethod(new SingleMember<>(clz), name, objs);
     }
 
-    @Nullable
     public static Object getStaticField(Class<?> clz, String name) {
         return baseGetStaticField(new SingleMember<>(clz), name);
     }
 
-    @Nullable
     public static Object getStaticField(String clz, String name) {
         return baseGetStaticField(baseFindClass(clz), name);
     }
 
-    @Nullable
     public static Object getStaticField(String clz, ClassLoader classLoader, String name) {
         return baseGetStaticField(baseFindClass(clz, classLoader), name);
     }
 
-    @Nullable
     public static Object getStaticField(Field field) {
         return baseGetStaticField(field);
     }
@@ -504,47 +494,38 @@ public class CoreTool extends XposedLog {
         return baseSetStaticField(field, value);
     }
 
-    @Nullable
     public static Object setAdditionalStaticField(Class<?> clz, String key, Object value) {
         return baseSetAdditionalStaticField(new SingleMember<>(clz), key, value);
     }
 
-    @Nullable
     public static Object setAdditionalStaticField(String clz, String key, Object value) {
         return baseSetAdditionalStaticField(baseFindClass(clz), key, value);
     }
 
-    @Nullable
     public static Object setAdditionalStaticField(String clz, ClassLoader classLoader, String key, Object value) {
         return baseSetAdditionalStaticField(baseFindClass(clz, classLoader), key, value);
     }
 
-    @Nullable
     public static Object getAdditionalStaticField(Class<?> clz, String key) {
         return baseGetAdditionalStaticField(new SingleMember<>(clz), key);
     }
 
-    @Nullable
     public static Object getAdditionalStaticField(String clz, String key) {
         return baseGetAdditionalStaticField(baseFindClass(clz), key);
     }
 
-    @Nullable
     public static Object getAdditionalStaticField(String clz, ClassLoader classLoader, String key) {
         return baseGetAdditionalStaticField(baseFindClass(key, classLoader), key);
     }
 
-    @Nullable
     public static Object removeAdditionalStaticField(Class<?> clz, String key) {
         return baseRemoveAdditionalStaticField(new SingleMember<>(clz), key);
     }
 
-    @Nullable
     public static Object removeAdditionalStaticField(String clz, String key) {
         return baseRemoveAdditionalStaticField(baseFindClass(clz), key);
     }
 
-    @Nullable
     public static Object removeAdditionalStaticField(String clz, ClassLoader classLoader, String key) {
         return baseRemoveAdditionalStaticField(baseFindClass(clz, classLoader), key);
     }
