@@ -366,10 +366,10 @@ public final class ResInjectTool {
 
             for (Resources resources : mResourcesArrayList) {
                 if (resources == null) return;
-                String method = mMember.getName();
+                String method = param.method.getName();
                 Object value;
                 try {
-                    value = getResourceReplacement(resources, (Resources) thisObject(), method, mArgs);
+                    value = getResourceReplacement(resources, (Resources) thisObject(), method, param.args);
                 } catch (Resources.NotFoundException ignore) {
                     continue;
                 }

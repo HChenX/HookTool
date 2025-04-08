@@ -87,7 +87,7 @@ final class ToolTest extends BaseHC {
             @Override
             public void before() {
                 // hook 方法所属的类
-                Class<?> c = mClass;
+                Class<?> c = param.method.getDeclaringClass();
                 Context context = (Context) thisObject();
                 String string = (String) getArgs(0); // 获取第一个参数值
                 setArgs(1, 1); // 设置第二个参数值

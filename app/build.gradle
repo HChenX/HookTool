@@ -14,7 +14,7 @@ android {
     compileSdk 34
 
     defaultConfig {
-        minSdk 29
+        minSdk 26
         //noinspection OldTargetApi
         targetSdk 34
         // noinspection HighAppVersionCode
@@ -22,7 +22,7 @@ android {
         versionName defVersion
 
         aarMetadata {
-            minCompileSdk = 29
+            minCompileSdk = 26
         }
     }
 

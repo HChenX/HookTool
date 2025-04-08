@@ -31,6 +31,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ProviderInfo;
 import android.content.pm.ResolveInfo;
+import android.os.Build;
 import android.os.Parcelable;
 import android.os.UserHandle;
 
@@ -222,7 +223,10 @@ public final class PackageTool {
             appData.label = packageInfo.applicationInfo.loadLabel(pm).toString();
             appData.packageName = packageInfo.applicationInfo.packageName;
             appData.versionName = packageInfo.versionName;
-            appData.versionCode = Long.toString(packageInfo.getLongVersionCode());
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
+                appData.versionCode = Long.toString(packageInfo.getLongVersionCode());
+            else
+                appData.versionCode = Integer.toString(packageInfo.versionCode);
             appData.isSystemApp = isSystem(packageInfo.applicationInfo);
             appData.isEnabled = packageInfo.applicationInfo.enabled;
             appData.user = getUserId(packageInfo.applicationInfo.uid);
