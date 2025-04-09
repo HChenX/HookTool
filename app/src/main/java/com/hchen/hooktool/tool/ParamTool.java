@@ -18,8 +18,6 @@
  */
 package com.hchen.hooktool.tool;
 
-import static com.hchen.hooktool.log.LogExpand.getStackTrace;
-import static com.hchen.hooktool.log.XposedLog.logE;
 import static com.hchen.hooktool.tool.CoreTool.callMethod;
 import static com.hchen.hooktool.tool.CoreTool.getAdditionalInstanceField;
 import static com.hchen.hooktool.tool.CoreTool.getField;
@@ -32,6 +30,7 @@ import androidx.annotation.NonNull;
 import com.hchen.hooktool.log.LogExpand;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 
 import de.robv.android.xposed.XC_MethodHook;
@@ -46,7 +45,7 @@ public class ParamTool {
     protected String TAG;
     private XC_MethodHook xcMethodHook;
     private LogExpand logExpand;
-    public XC_MethodHook.MethodHookParam param;
+    public volatile XC_MethodHook.MethodHookParam param;
 
     /**
      * 被 hook 类的实例。
@@ -58,7 +57,7 @@ public class ParamTool {
     /**
      * 移除 hook 自身。
      */
-    final public void removeSelf() {
+    final public void unHookSelf() {
         XposedBridge.unhookMethod(param.method, xcMethodHook);
     }
 
@@ -69,36 +68,43 @@ public class ParamTool {
         return param.thisObject.getClass().getClassLoader();
     }
 
-    final public void MethodHookParam(XC_MethodHook.MethodHookParam param) {
+    final public Member getMember() {
+        return param.method;
+    }
+
+    final protected void setMethodHookParam(XC_MethodHook.MethodHookParam param) {
         this.param = param;
     }
 
-    final public void XCMethodHook(XC_MethodHook xcMethodHook) {
+    final protected void setXCMethodHook(XC_MethodHook xcMethodHook) {
         this.xcMethodHook = xcMethodHook;
     }
 
     // ---------------- 设置和获取参数 --------------------
 
+    final public Object[] getArgs() {
+        return param.args;
+    }
+
     /**
      * 获取方法的指定参数。
      */
     final public Object getArgs(int index) {
-        return checkIndex(index) ? param.args[index] : null;
+        return param.args[index];
     }
 
     /**
      * 获取不为空的参数。
      */
     final public Object getArgsNonNull(int index, @NonNull Object def) {
-        return checkIndex(index) ? (param.args[index] == null ? def : param.args[index]) : def;
+        return param.args[index] != null ? param.args[index] : def;
     }
 
     /**
      * 设置方法的指定参数。
      */
     final public void setArgs(int index, Object value) {
-        if (checkIndex(index))
-            param.args[index] = value;
+        param.args[index] = value;
     }
 
     /**
@@ -106,15 +112,6 @@ public class ParamTool {
      */
     final public int length() {
         return param.args.length;
-    }
-
-    private boolean checkIndex(int index) {
-        if (length() < index + 1) {
-            logE(TAG, "Args available index length is: [" + (length() - 1) + "]" +
-                " but index is : [" + index + "] , Exceeding!!", getStackTrace());
-            return false;
-        }
-        return true;
     }
 
     // ------------ 各种动作 --------------------

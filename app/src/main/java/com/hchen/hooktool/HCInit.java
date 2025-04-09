@@ -133,6 +133,7 @@ public final class HCInit {
      */
     public static void setClassLoader(ClassLoader classLoader) {
         HCData.setClassLoader(classLoader);
+        BaseHC.classLoader = classLoader;
     }
 
     // ---------- END！----------

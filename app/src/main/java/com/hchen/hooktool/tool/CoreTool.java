@@ -32,7 +32,6 @@ import static com.hchen.hooktool.tool.CoreBase.baseFindClass;
 import static com.hchen.hooktool.tool.CoreBase.baseFindConstructor;
 import static com.hchen.hooktool.tool.CoreBase.baseFindField;
 import static com.hchen.hooktool.tool.CoreBase.baseFindMethod;
-import static com.hchen.hooktool.tool.CoreBase.baseFirstUnhook;
 import static com.hchen.hooktool.tool.CoreBase.baseGetAdditionalStaticField;
 import static com.hchen.hooktool.tool.CoreBase.baseGetField;
 import static com.hchen.hooktool.tool.CoreBase.baseGetStaticField;
@@ -105,7 +104,7 @@ public class CoreTool extends XposedLog {
     }
 
     public static boolean existsMethod(Class<?> clazz, String name, Object... objs) {
-        if (clazz == null || name == null || name.isEmpty()) return false;
+        if (clazz == null || name == null || name.isEmpty() || objs == null) return false;
         return baseFindMethod(new SingleMember<>(clazz), name, objs).isSuccess();
     }
 
@@ -160,7 +159,7 @@ public class CoreTool extends XposedLog {
     }
 
     public static boolean existsConstructor(Class<?> clazz, Object... objs) {
-        if (clazz == null) return false;
+        if (clazz == null || objs == null) return false;
         return baseFindConstructor(new SingleMember<>(clazz), objs).isSuccess();
     }
 
@@ -280,9 +279,8 @@ public class CoreTool extends XposedLog {
     }
 
     // --------------- Member -----------
-    @Nullable
     public static XC_MethodHook.Unhook hook(Member member, IHook iHook) {
-        return baseFirstUnhook(baseHookAll(new Member[]{member}, iHook));
+        return baseHookAll(new Member[]{member}, iHook)[0];
     }
 
     public static <T extends Member> XC_MethodHook.Unhook[] hookAll(T[] members, IHook iHook) {

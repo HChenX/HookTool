@@ -336,11 +336,9 @@ public final class ResInjectTool {
     private static final IHook hookTypedBefore = new IHook() {
         @Override
         public void before() {
-            Integer index = (Integer) getArgs(0);
-            if (index == null) return;
+            int index = (int) getArgs(0);
 
             int[] mData = (int[]) CoreTool.getField(thisObject(), "mData");
-            assert mData != null;
             int type = mData[index];
             int id = mData[index + 3];
 
@@ -360,16 +358,15 @@ public final class ResInjectTool {
             if (mResourcesArrayList.isEmpty())
                 mResourcesArrayList.add(injectModuleRes(ContextTool.getContext(FLAG_ALL)));
 
-            Integer key = (Integer) getArgs(0);
-            if (key == null) return;
+            int key = (int) getArgs(0);
             if (Boolean.TRUE.equals(mResMap.get(key))) return;
 
             for (Resources resources : mResourcesArrayList) {
                 if (resources == null) return;
-                String method = param.method.getName();
+                String method = getMember().getName();
                 Object value;
                 try {
-                    value = getResourceReplacement(resources, (Resources) thisObject(), method, param.args);
+                    value = getResourceReplacement(resources, (Resources) thisObject(), method, getArgs());
                 } catch (Resources.NotFoundException ignore) {
                     continue;
                 }

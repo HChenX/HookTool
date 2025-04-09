@@ -50,15 +50,15 @@ public final class BitmapTool {
         return bitmap;
     }
 
-    public static byte[] BitmapToBytes(Bitmap bm) {
+    public static byte[] bitmapToBytes(Bitmap bitmap) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bm.compress(Bitmap.CompressFormat.PNG, 100, baos);
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
         return baos.toByteArray();
     }
 
-    public static Bitmap BytesToBimap(byte[] b) {
-        if (b.length != 0) {
-            return BitmapFactory.decodeByteArray(b, 0, b.length);
+    public static Bitmap bytesToBimap(byte[] bytes) {
+        if (bytes.length != 0) {
+            return BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
         } else {
             return null;
         }

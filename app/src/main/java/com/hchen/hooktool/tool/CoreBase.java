@@ -146,7 +146,6 @@ final class CoreBase {
     }
 
     static XC_MethodHook.Unhook[] baseHookAll(Member[] members, IHook iHook) {
-        if (members == null || members.length == 0) return new XC_MethodHook.Unhook[0];
         String tag = getTag();
 
         return Arrays.stream(members).map(member ->
@@ -159,11 +158,6 @@ final class CoreBase {
             )
             .filter(Objects::nonNull)
             .toArray(XC_MethodHook.Unhook[]::new);
-    }
-
-    static XC_MethodHook.Unhook baseFirstUnhook(XC_MethodHook.Unhook[] unhooks) {
-        if (unhooks == null || unhooks.length == 0) return null;
-        return unhooks[0];
     }
 
     static Method[] baseFilterMethod(SingleMember<Class<?>> clazz, IMemberFilter<Method> iMemberFilter) {
@@ -270,7 +264,8 @@ final class CoreBase {
     static Object baseCallSuperStaticPrivateMethod(SingleMember<Class<?>> clz, String name, Object... objs) {
         return clz.exec(null,
             member ->
-                createSingleMember(() -> {
+                createSingleMember(
+                    () -> {
                         Method method = baseGetSuperPrivateMethod(member, name, objs);
                         if (method == null) return null;
 
@@ -373,7 +368,7 @@ final class CoreBase {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                 try {
-                    iHook.MethodHookParam(param);
+                    iHook.setMethodHookParam(param);
                     iHook.before();
                 } catch (Throwable e) {
                     logE(iHook.TAG + ":before", e);
@@ -383,14 +378,14 @@ final class CoreBase {
             @Override
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                 try {
-                    iHook.MethodHookParam(param);
+                    iHook.setMethodHookParam(param);
                     iHook.after();
                 } catch (Throwable e) {
                     logE(iHook.TAG + ":after", e);
                 }
             }
         };
-        iHook.XCMethodHook(xcMethodHook);
+        iHook.setXCMethodHook(xcMethodHook);
         return xcMethodHook;
     }
 

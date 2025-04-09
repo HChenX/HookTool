@@ -83,10 +83,6 @@ final class SingleMember<V> {
         return this;
     }
 
-    String getErrorMsg() {
-        return mErrorMsg;
-    }
-
     void report() {
         if (mThrowable != null)
             logE(LogExpand.getTag(), mErrorMsg, mThrowable);

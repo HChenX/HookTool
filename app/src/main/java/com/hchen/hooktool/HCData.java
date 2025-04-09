@@ -195,7 +195,6 @@ public final class HCData {
 
     static void setClassLoader(ClassLoader classLoader) {
         HCData.mClassLoader = classLoader;
-        BaseHC.classLoader = classLoader;
     }
 
     static void setLoadPackageParam(XC_LoadPackage.LoadPackageParam mLpparam) {

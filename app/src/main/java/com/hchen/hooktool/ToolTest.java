@@ -110,7 +110,7 @@ final class ToolTest extends BaseHC {
                 setStaticField("com.demo.Main", "test", true); // 设置静态字段 test
 
 
-                removeSelf(); // 移除自身
+                unHookSelf(); // 移除自身
                 observeCall(); // 观察调用
                 getStackTrace(); // 获取堆栈
             }

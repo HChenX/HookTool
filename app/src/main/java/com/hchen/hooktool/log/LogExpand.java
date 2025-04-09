@@ -38,7 +38,7 @@ import de.robv.android.xposed.XC_MethodHook;
  * @author 焕晨HChen
  */
 public final class LogExpand {
-    private XC_MethodHook.MethodHookParam param;
+    private volatile XC_MethodHook.MethodHookParam param;
     private final String TAG;
     private String methodName;
     private String className;
@@ -157,8 +157,7 @@ public final class LogExpand {
             + "├─ Params: {\n" + log
             + "├─ }\n"
             + "├─ Return: " + param.getResult()
-            + "└─ Throwable: " + param.getThrowable()
-        );
+            + "└─ Throwable: " + param.getThrowable());
     }
 
     private String paramToString(Object param) {
