@@ -32,7 +32,7 @@ import com.hchen.hooktool.log.LogExpand;
  */
 final class SingleMember<V> {
     private final V mMember;
-    private final Throwable mThrowable;
+    private Throwable mThrowable;
     private String mErrorMsg = "Unknown";
 
     SingleMember() {
@@ -95,6 +95,10 @@ final class SingleMember<V> {
 
     <R> R exec(R def, Exec<V, R> exec) {
         if (mThrowable != null) {
+            if (def instanceof SingleMember<?> singleMember) {
+                singleMember.mThrowable = mThrowable;
+                return (R) singleMember;
+            }
             report();
             return def;
         }

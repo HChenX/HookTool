@@ -225,8 +225,7 @@ public final class PackageTool {
             appData.versionName = packageInfo.versionName;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
                 appData.versionCode = Long.toString(packageInfo.getLongVersionCode());
-            else
-                appData.versionCode = Integer.toString(packageInfo.versionCode);
+            else appData.versionCode = Integer.toString(packageInfo.versionCode);
             appData.isSystemApp = isSystem(packageInfo.applicationInfo);
             appData.isEnabled = packageInfo.applicationInfo.enabled;
             appData.user = getUserId(packageInfo.applicationInfo.uid);

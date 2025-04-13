@@ -156,7 +156,6 @@ final class CoreBase {
                     }
                 ).orErrorMsg(null, "Failed to hook: " + member)
             )
-            .filter(Objects::nonNull)
             .toArray(XC_MethodHook.Unhook[]::new);
     }
 

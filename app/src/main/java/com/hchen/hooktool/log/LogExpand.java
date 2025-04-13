@@ -138,7 +138,7 @@ public final class LogExpand {
                 + "├─ Class:  " + className + "\n"
                 + "├─ Method: " + methodName + "\n"
                 + "├─ Params: { }\n"
-                + "├─ Return: " + param.getResult()
+                + "├─ Return: " + param.getResult() + "\n"
                 + "└─ Throwable: " + param.getThrowable());
             return;
         }
@@ -156,7 +156,7 @@ public final class LogExpand {
             + "├─ Method: " + methodName + "\n"
             + "├─ Params: {\n" + log
             + "├─ }\n"
-            + "├─ Return: " + param.getResult()
+            + "├─ Return: " + param.getResult() + "\n"
             + "└─ Throwable: " + param.getThrowable());
     }
 
