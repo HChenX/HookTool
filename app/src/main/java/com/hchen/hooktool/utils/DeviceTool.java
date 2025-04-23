@@ -1,27 +1,9 @@
-/*
- * This file is part of HookTool.
-
- * HookTool is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License.
-
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
-
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <https://www.gnu.org/licenses/>.
-
- * Copyright (C) 2023-2025 HChenX
- */
-package com.hchen.hooktool.tool.additional;
+package com.hchen.hooktool.utils;
 
 import static com.hchen.hooktool.log.AndroidLog.logE;
 import static com.hchen.hooktool.log.LogExpand.getTag;
-import static com.hchen.hooktool.tool.additional.InvokeTool.getStaticField;
-import static com.hchen.hooktool.tool.additional.SystemPropTool.getProp;
+import static com.hchen.hooktool.utils.InvokeTool.getStaticField;
+import static com.hchen.hooktool.utils.SystemPropTool.getProp;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -35,9 +17,6 @@ import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.WindowManager;
 
-/**
- * 此类用于获取设备基本信息
- */
 public class DeviceTool {
     /**
      * 获取安卓设备版本。
@@ -119,14 +98,14 @@ public class DeviceTool {
      * 判断 miui 优化开关是否开启。
      */
     public static boolean isMiuiOptimization() {
-        return SystemPropTool.getProp("persist.sys.miui_optimization", false);
+        return getProp("persist.sys.miui_optimization", false);
     }
 
     /**
      * 获取系统是否已经启动完成。
      */
     public static boolean isBootCompleted() {
-        return SystemPropTool.getProp("sys.boot_completed", false);
+        return getProp("sys.boot_completed", false);
     }
 
     // ----------------------------------- 手机品牌 -------------------------------------

@@ -1,27 +1,8 @@
-/*
- * This file is part of HookTool.
+package com.hchen.hooktool.utils;
 
- * HookTool is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License.
+import androidx.annotation.NonNull;
 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
-
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <https://www.gnu.org/licenses/>.
-
- * Copyright (C) 2023-2025 HChenX
- */
-package com.hchen.hooktool.tool.additional;
-
-import static com.hchen.hooktool.log.LogExpand.getStackTrace;
-import static com.hchen.hooktool.log.LogExpand.getTag;
-
-import com.hchen.hooktool.log.AndroidLog;
+import com.hchen.hooktool.exception.UnexpectedException;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -29,12 +10,8 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashMap;
 
-/**
- * 反射工具，提供简易的反射功能
- *
- * @author 焕晨HChen
- */
-public final class InvokeTool {
+public class InvokeTool {
+    private static final String TAG = "InvokeTool";
     private static final HashMap<String, Method> mMethodCache = new HashMap<>();
     private static final HashMap<String, Field> mFieldCache = new HashMap<>();
 
@@ -95,8 +72,7 @@ public final class InvokeTool {
                                           Class<?>[] param /* 方法参数 */, Object... value /* 值 */) {
         Method declaredMethod;
         if (clz == null && instance == null) {
-            AndroidLog.logW(getTag(), "Class and instance is null, can't invoke method: " + method, getStackTrace());
-            return null;
+            throw new NullPointerException("[InvokeTool]: Class or instance must not is null, can't invoke method: " + method);
         } else if (clz == null) {
             clz = instance.getClass();
         }
@@ -110,8 +86,7 @@ public final class InvokeTool {
             declaredMethod.setAccessible(true);
             return (T) declaredMethod.invoke(instance, value);
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-            AndroidLog.logE(getTag(), e);
-            return null;
+            throw new UnexpectedException(e);
         }
     }
 
@@ -122,8 +97,7 @@ public final class InvokeTool {
                                          boolean set /* 是否为 set 模式 */, Object value /* 指定值 */) {
         Field declaredField = null;
         if (clz == null && instance == null) {
-            AndroidLog.logW(getTag(), "Class and instance is null, can't invoke field: " + field, getStackTrace());
-            return null;
+            throw new NullPointerException("[InvokeTool]: Class or instance must not is null, can't invoke field: " + field);
         } else if (clz == null) {
             clz = instance.getClass();
         }
@@ -156,15 +130,16 @@ public final class InvokeTool {
             } else
                 return (T) declaredField.get(instance);
         } catch (NoSuchFieldException | IllegalAccessException e) {
-            AndroidLog.logE(getTag(), e);
-            return null;
+            throw new UnexpectedException(e);
         }
     }
 
+    @NonNull
     public static Class<?> findClass(String className) {
         return findClass(className, null);
     }
 
+    @NonNull
     public static Class<?> findClass(String className, ClassLoader classLoader) {
         try {
             if (classLoader == null)
@@ -172,8 +147,7 @@ public final class InvokeTool {
 
             return classLoader.loadClass(className);
         } catch (ClassNotFoundException e) {
-            AndroidLog.logE(getTag(), e);
+            throw new RuntimeException(e);
         }
-        return null;
     }
 }

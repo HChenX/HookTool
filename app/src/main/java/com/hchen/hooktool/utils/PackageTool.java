@@ -1,27 +1,6 @@
-/*
- * This file is part of HookTool.
-
- * HookTool is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License.
-
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
-
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <https://www.gnu.org/licenses/>.
-
- * Copyright (C) 2023-2025 HChenX
- */
-package com.hchen.hooktool.tool.additional;
+package com.hchen.hooktool.utils;
 
 import static com.hchen.hooktool.log.AndroidLog.logE;
-import static com.hchen.hooktool.log.AndroidLog.logW;
-import static com.hchen.hooktool.log.LogExpand.getStackTrace;
-import static com.hchen.hooktool.log.LogExpand.getTag;
 
 import android.content.Context;
 import android.content.pm.ActivityInfo;
@@ -35,38 +14,25 @@ import android.os.Build;
 import android.os.Parcelable;
 import android.os.UserHandle;
 
-import androidx.annotation.Nullable;
-
+import com.hchen.hooktool.callback.IPackageInfoGetter;
 import com.hchen.hooktool.data.AppData;
 import com.hchen.hooktool.log.AndroidLog;
-import com.hchen.hooktool.tool.itool.IPackageInfoGetter;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-/**
- * 软件包实用程序
- *
- * @author 焕晨HChen
- */
-public final class PackageTool {
-
-    public static boolean isUninstall(String pkg) {
-        return isUninstall(getContext(), pkg);
-    }
+public class PackageTool {
+    private static final String TAG = "PackageTool";
 
     /**
      * 判断目标包名应用是否已经被卸载。
      */
     public static boolean isUninstall(Context context, String pkg) {
-        if (context == null) {
-            logW(getTag(), "Context is null, can't check if the app is uninstalled!", getStackTrace());
-            return false;
-        }
-        PackageManager packageManager = context.getPackageManager();
         try {
+            Objects.requireNonNull(context, "[PackageTool]: Context must not is null!");
+            PackageManager packageManager = context.getPackageManager();
             packageManager.getPackageInfo(pkg, PackageManager.MATCH_ALL);
             return false;
         } catch (PackageManager.NameNotFoundException e) {
@@ -74,20 +40,13 @@ public final class PackageTool {
         }
     }
 
-    public static boolean isDisable(String pkg) {
-        return isDisable(getContext(), pkg);
-    }
-
     /**
      * 获取包名应用是否被禁用。
      */
     public static boolean isDisable(Context context, String pkg) {
-        if (context == null) {
-            logW(getTag(), "Context is null, can't check if an app is disabled!", getStackTrace());
-            return false;
-        }
-        PackageManager packageManager = context.getPackageManager();
         try {
+            Objects.requireNonNull(context, "[PackageTool]: Context must not is null!");
+            PackageManager packageManager = context.getPackageManager();
             ApplicationInfo result = packageManager.getApplicationInfo(pkg, 0);
             if (!result.enabled) {
                 return true;
@@ -98,19 +57,12 @@ public final class PackageTool {
         return false;
     }
 
-    public static boolean isHidden(String pkg) {
-        return isHidden(getContext(), pkg);
-    }
-
     /**
      * 获取包名应用是否被 Hidden，一般来说被隐藏视为未安装，可以使用 isUninstall() 来判断。
      */
     public static boolean isHidden(Context context, String pkg) {
         try {
-            if (context == null) {
-                logW(getTag(), "Context is null, can't check if an app is hidden!", getStackTrace());
-                return false;
-            }
+            Objects.requireNonNull(context, "[PackageTool]: Context must not is null!");
             PackageManager packageManager = context.getPackageManager();
             packageManager.getApplicationInfo(pkg, 0);
             return false;
@@ -130,13 +82,9 @@ public final class PackageTool {
 
     /**
      * 可用于判断是否是系统应用。
-     * 如果 app 为 null 则固定返回 false，请注意检查 app 是否为 null。
      */
     public static boolean isSystem(ApplicationInfo app) {
-        if (Objects.isNull(app)) {
-            AndroidLog.logE(getTag(), "ApplicationInfo is null, can't check if it's a system app!", getStackTrace());
-            return false;
-        }
+        Objects.requireNonNull(app, "[PackageTool]: ApplicationInfo must not is null!");
         if (app.uid < 10000) {
             return true;
         }
@@ -166,17 +114,14 @@ public final class PackageTool {
      * @see #createAppData(Parcelable, PackageManager)
      */
     public static AppData[] getPackagesByCode(Context context, IPackageInfoGetter infoGetter) {
-        if (context == null) {
-            logW(getTag(), "Context is null, can't get packages by code!", getStackTrace());
-            return new AppData[0];
-        }
+        Objects.requireNonNull(context, "[PackageTool]: Context must not is null!");
 
         PackageManager packageManager = context.getPackageManager();
         Parcelable[] parcelables;
         try {
             parcelables = infoGetter.packageInfoGetter(packageManager);
         } catch (PackageManager.NameNotFoundException e) {
-            logE(getTag(), "Failed to get package!", e);
+            logE(TAG, e);
             return new AppData[0];
         }
 
@@ -186,34 +131,19 @@ public final class PackageTool {
                 try {
                     appDataList.add(createAppData(parcelable, packageManager));
                 } catch (Throwable e) {
-                    AndroidLog.logE(getTag(), "Failed to create app data!", e);
+                    AndroidLog.logE(TAG, "Failed to create app data!", e);
                 }
             }
         }
         return appDataList.toArray(new AppData[0]);
     }
 
-    public static AppData[] getPackagesByCode(IPackageInfoGetter iCode) {
-        return getPackagesByCode(getContext(), iCode);
-    }
-
     /**
      * 获取指定包名的 APP 信息。
      */
-    @Nullable
-    public static AppData getTargetPackage(Context context, String packageName) {
+    public static AppData getTargetPackage(Context context, String packageName) throws PackageManager.NameNotFoundException {
         PackageManager packageManager = context.getPackageManager();
-        try {
-            return createAppData(packageManager.getPackageInfo(packageName, PackageManager.GET_ACTIVITIES), packageManager);
-        } catch (PackageManager.NameNotFoundException e) {
-            logE(getTag(), "Failed to get package info!", e);
-            return null;
-        }
-    }
-
-    @Nullable
-    public static AppData getTargetPackage(String packageName) {
-        return getTargetPackage(getContext(), packageName);
+        return createAppData(packageManager.getPackageInfo(packageName, PackageManager.GET_ACTIVITIES), packageManager);
     }
 
     private static AppData createAppData(Parcelable parcelable, PackageManager pm) {
@@ -271,9 +201,5 @@ public final class PackageTool {
         if (resolveInfo.serviceInfo != null) return resolveInfo.serviceInfo;
         if (resolveInfo.providerInfo != null) return resolveInfo.providerInfo;
         return null;
-    }
-
-    private static Context getContext() {
-        return ContextTool.getContext(ContextTool.FLAG_ALL);
     }
 }

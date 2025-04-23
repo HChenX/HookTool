@@ -1,0 +1,194 @@
+package com.hchen.hooktool.helper;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import com.hchen.hooktool.exception.NonSingletonException;
+
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+import java.util.function.Supplier;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+public class MethodHelper {
+    private final Class<?> clazz;
+    private String methodName = null;
+    private String substring = null;
+    private Pattern pattern = null;
+    private int paramCount = -1;
+    private Class<?>[] paramTypes = null;
+    private Class<?> returnType = null;
+    private Class<?> superReturnType = null;
+    private int mods = -1;
+    private Class<? extends Annotation> annotation = null;
+    private Type genericReturnType = null;
+    private Type[] genericParamTypes = null;
+    private Class<? extends Throwable> exceptionType = null;
+    private boolean withSuper = false;
+
+    public MethodHelper(Class<?> clazz) {
+        Objects.requireNonNull(clazz, "[MethodHelper]: class must not is null!");
+        this.clazz = clazz;
+    }
+
+    public MethodHelper withMethodName(@NonNull String methodName) {
+        this.methodName = methodName;
+        return this;
+    }
+
+    public MethodHelper withSubstring(@NonNull String substring) {
+        this.substring = substring;
+        return this;
+    }
+
+    public MethodHelper withPattern(@NonNull Pattern pattern) {
+        this.pattern = pattern;
+        return this;
+    }
+
+    public MethodHelper withParamCount(int paramCount) {
+        this.paramCount = paramCount;
+        return this;
+    }
+
+    public MethodHelper withParamTypes(@NonNull Class<?>... paramTypes) {
+        this.paramTypes = paramTypes;
+        return this;
+    }
+
+    public MethodHelper withReturnType(@NonNull Class<?> returnType) {
+        this.returnType = returnType;
+        return this;
+    }
+
+    public MethodHelper withSuperReturnType(@NonNull Class<?> superReturnType) {
+        this.superReturnType = superReturnType;
+        return this;
+    }
+
+    public MethodHelper withMods(int mods) {
+        this.mods = mods;
+        return this;
+    }
+
+    public MethodHelper withAnnotation(@NonNull Class<? extends Annotation> annotation) {
+        this.annotation = annotation;
+        return this;
+    }
+
+    public MethodHelper withGenericReturnType(@NonNull Type genericReturnType) {
+        this.genericReturnType = genericReturnType;
+        return this;
+    }
+
+    public MethodHelper withGenericParamTypes(@NonNull Type... genericParamTypes) {
+        this.genericParamTypes = genericParamTypes;
+        return this;
+    }
+
+    public MethodHelper withExceptionType(@NonNull Class<? extends Throwable> exceptionType) {
+        this.exceptionType = exceptionType;
+        return this;
+    }
+
+    public MethodHelper withSuper(boolean withSuper) {
+        this.withSuper = withSuper;
+        return this;
+    }
+
+    public Method single() {
+        List<Method> methods = matches();
+        if (methods.isEmpty())
+            throw new NonSingletonException("[MethodHelper]: No result found for query!");
+
+        if (methods.size() > 1)
+            throw new NonSingletonException("[MethodHelper]: Query did not return a unique result: " + methods.size());
+
+        return methods.get(0);
+    }
+
+    @Nullable
+    public Method singleOrNull() {
+        List<Method> methods = matches();
+        if (methods.isEmpty()) return null;
+        if (methods.size() > 1) return null;
+
+        return methods.get(0);
+    }
+
+    public Method singleOrThrow(Supplier<RuntimeException> throwableSupplier) {
+        List<Method> methods = matches();
+        if (methods.isEmpty()) throw throwableSupplier.get();
+        if (methods.size() > 1) throw throwableSupplier.get();
+
+        return methods.get(0);
+    }
+
+    private List<Method> matches() {
+        ArrayList<Method> methods = new ArrayList<>(Arrays.asList(clazz.getDeclaredMethods()));
+        if (withSuper) {
+            Class<?> clazzWithSuper = clazz.getSuperclass();
+            do {
+                if (clazzWithSuper == null) break;
+                methods.addAll(Arrays.asList(clazzWithSuper.getDeclaredMethods()));
+            } while ((clazzWithSuper = clazzWithSuper.getSuperclass()) != null);
+        }
+
+        return methods.stream().filter(method -> {
+            boolean matches = false;
+            if (methodName != null) {
+                matches = Objects.equals(methodName, method.getName());
+            } else if (pattern != null) {
+                matches = pattern.matcher(method.getName()).matches();
+            } else if (substring != null) {
+                matches = method.getName().contains(substring);
+            }
+            if (paramCount != -1) {
+                matches = method.getParameterCount() == paramCount;
+            }
+            if (paramTypes != null) {
+                if (paramTypes.length == method.getParameterCount()) {
+                    boolean equals = true;
+                    for (int i = 0; i < method.getParameterCount(); i++) {
+                        Class<?> actual = method.getParameterTypes()[i];
+                        Class<?> want = paramTypes[i];
+                        if (Objects.equals(want, Any.class)) continue;
+                        if (!Objects.equals(actual, want)) {
+                            equals = false;
+                            break;
+                        }
+                    }
+                    matches = equals;
+                } else matches = false;
+            }
+            if (returnType != null) {
+                matches = Objects.equals(method.getReturnType(), returnType);
+            }
+            if (superReturnType != null) {
+                matches = superReturnType.isAssignableFrom(method.getReturnType());
+            }
+            if (mods != -1) {
+                matches = (method.getModifiers() & mods) != 0;
+            }
+            if (annotation != null) {
+                matches = method.isAnnotationPresent(annotation);
+            }
+            if (genericReturnType != null) {
+                matches = Objects.equals(method.getGenericReturnType(), genericReturnType);
+            }
+            if (genericParamTypes != null) {
+                matches = Arrays.equals(method.getGenericParameterTypes(), genericParamTypes);
+            }
+            if (exceptionType != null) {
+                matches = Arrays.asList(method.getExceptionTypes()).contains(exceptionType);
+            }
+            return matches;
+        }).collect(Collectors.toList());
+    }
+}

@@ -1,45 +1,21 @@
-/*
- * This file is part of HookTool.
-
- * HookTool is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License.
-
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
-
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <https://www.gnu.org/licenses/>.
-
- * Copyright (C) 2023-2025 HChenX
- */
-package com.hchen.hooktool.tool.additional;
-
-import static com.hchen.hooktool.log.AndroidLog.logE;
-import static com.hchen.hooktool.log.LogExpand.getTag;
+package com.hchen.hooktool.utils;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
 
 import androidx.annotation.IntDef;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.hchen.hooktool.tool.itool.IContextGetter;
+import com.hchen.hooktool.callback.IContextGetter;
+import com.hchen.hooktool.exception.UnexpectedException;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.concurrent.Executors;
 
-/**
- * 上下文获取工具
- *
- * @author 焕晨HChen
- */
 @SuppressLint({"PrivateApi", "SoonBlockedPrivateApi", "DiscouragedPrivateApi"})
-public final class ContextTool {
+public class ContextTool {
     @IntDef(value = {
         FLAG_ALL,
         FLAG_CURRENT_APP,
@@ -49,25 +25,20 @@ public final class ContextTool {
     private @interface Duration {
     }
 
-    // 尝试全部
     public static final int FLAG_ALL = 0;
-    // 仅获取当前应用
     public static final int FLAG_CURRENT_APP = 1;
-    // 获取 Android 系统
     public static final int FLAG_ONLY_ANDROID = 2;
 
-    @Nullable
     public static Context getContext(@Duration int flag) {
         try {
             return invokeMethod(flag);
         } catch (Throwable e) {
-            logE(getTag(), e);
-            return null;
+            throw new UnexpectedException(e);
         }
     }
 
     @Nullable
-    private static Context getContextNoLog(@Duration int flag) {
+    private static Context getContextNonThrow(@Duration int flag) {
         try {
             return invokeMethod(flag);
         } catch (Throwable ignore) {
@@ -102,12 +73,12 @@ public final class ContextTool {
      */
     public static void getAsyncContext(IContextGetter iContextGetter, @Duration int flag, int timeout) {
         Executors.newSingleThreadExecutor().submit(() -> {
-            Context context = getContextNoLog(flag);
+            Context context = getContextNonThrow(flag);
             if (context == null) {
                 long time = System.currentTimeMillis();
                 while (true) {
                     long nowTime = System.currentTimeMillis();
-                    context = getContextNoLog(flag);
+                    context = getContextNonThrow(flag);
                     if (context != null || nowTime - time > timeout) {
                         break;
                     }
@@ -117,6 +88,7 @@ public final class ContextTool {
         });
     }
 
+    @NonNull
     private static Context invokeMethod(int flag) throws Throwable {
         Context context;
         Class<?> clz = Class.forName("android.app.ActivityThread");
@@ -133,20 +105,19 @@ public final class ContextTool {
                 context = android(clz);
             }
             default -> {
-                throw new Throwable("Unexpected flag!");
+                throw new UnexpectedException("[ContextTool]: Unexpected flag: " + flag);
             }
         }
-        if (context == null) throw new Throwable("Context is null!");
+        if (context == null)
+            throw new UnexpectedException("[ContextTool]: Failed to get context!");
         return context;
     }
 
     private static Context currentApp(Class<?> clz) {
-        // 获取当前界面应用 Context
         return InvokeTool.callStaticMethod(clz, "currentApplication", new Class[]{});
     }
 
     private static Context android(Class<?> clz) {
-        // 获取 Android
         Context context;
         Object o = InvokeTool.callStaticMethod(clz, "currentActivityThread", new Class[]{});
         context = InvokeTool.callMethod(o, "getSystemContext", new Class[]{});

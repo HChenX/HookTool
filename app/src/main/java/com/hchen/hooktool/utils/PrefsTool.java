@@ -1,26 +1,6 @@
-/*
- * This file is part of HookTool.
+package com.hchen.hooktool.utils;
 
- * HookTool is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License.
-
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
-
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <https://www.gnu.org/licenses/>.
-
- * Copyright (C) 2023-2025 HChenX
- */
-package com.hchen.hooktool.tool.additional;
-
-import static com.hchen.hooktool.log.LogExpand.createRuntimeExceptionMsg;
 import static com.hchen.hooktool.log.LogExpand.getStackTrace;
-import static com.hchen.hooktool.log.LogExpand.getTag;
 import static com.hchen.hooktool.log.XposedLog.logE;
 import static com.hchen.hooktool.log.XposedLog.logW;
 
@@ -31,25 +11,24 @@ import android.content.SharedPreferences;
 import androidx.annotation.NonNull;
 
 import com.hchen.hooktool.HCData;
+import com.hchen.hooktool.callback.IAsyncPrefs;
+import com.hchen.hooktool.callback.IContextGetter;
+import com.hchen.hooktool.callback.IPrefsApply;
+import com.hchen.hooktool.exception.NonXposedException;
+import com.hchen.hooktool.exception.UnexpectedException;
 import com.hchen.hooktool.log.AndroidLog;
-import com.hchen.hooktool.tool.itool.IAsyncPrefs;
-import com.hchen.hooktool.tool.itool.IContextGetter;
-import com.hchen.hooktool.tool.itool.IPrefsApply;
 
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import de.robv.android.xposed.XSharedPreferences;
 
-/**
- * prefs 工具
- *
- * @author 焕晨HChen
- */
-public final class PrefsTool {
+public class PrefsTool {
+    private static final String TAG = "PrefsTool";
     private final static HashMap<String, Xprefs> xPrefsMap = new HashMap<>();
     private final static HashMap<String, Sprefs> sPrefsMap = new HashMap<>();
 
@@ -74,7 +53,7 @@ public final class PrefsTool {
      */
     public static IPrefsApply prefs() {
         if (!HCData.isXposed())
-            throw new RuntimeException(createRuntimeExceptionMsg("Not xposed environment!"));
+            throw new NonXposedException("[PrefsTool]: Not xposed environment!");
         return prefs("");
     }
 
@@ -85,7 +64,7 @@ public final class PrefsTool {
      */
     public static IPrefsApply prefs(@NonNull String prefsName) {
         if (!HCData.isXposed())
-            throw new RuntimeException(createRuntimeExceptionMsg("Not xposed environment!"));
+            throw new NonXposedException("[PrefsTool]: Not xposed environment!");
         return createXspIfNeed(prefsName);
     }
 
@@ -100,14 +79,12 @@ public final class PrefsTool {
      */
     public static void asyncPrefs(String prefsName, IAsyncPrefs asyncPrefs) {
         if (!HCData.isXposed())
-            throw new RuntimeException(createRuntimeExceptionMsg("Not xposed environment!"));
+            throw new NonXposedException("[PrefsTool]: Not xposed environment!");
 
         ContextTool.getAsyncContext(new IContextGetter() {
             @Override
-            public void onContext(@androidx.annotation.Nullable Context context) {
-                if (context == null)
-                    throw new RuntimeException(createRuntimeExceptionMsg("Async prefs context is null!"));
-
+            public void onContext(@Nullable Context context) {
+                Objects.requireNonNull(context, "[PrefsTool]: Context must not is null!");
                 asyncPrefs.async(createSpIfNeed(context, prefsName));
             }
         }, ContextTool.FLAG_CURRENT_APP);
@@ -120,8 +97,8 @@ public final class PrefsTool {
     }
 
     private static IPrefsApply createXspIfNeed(String prefsName) {
-        if (HCData.getModulePackageName() == null || HCData.getModulePackageName().isEmpty())
-            throw new RuntimeException(createRuntimeExceptionMsg("Module package name is null, Please set module package name!"));
+        if (HCData.getModulePackageName().isEmpty())
+            throw new UnexpectedException("[PrefsTool]: Module package name is empty, Please set module package name!");
 
         prefsName = initPrefsName(prefsName);
         if (xPrefsMap.get(HCData.getModulePackageName() + prefsName) == null) {
@@ -143,7 +120,7 @@ public final class PrefsTool {
     @SuppressLint("WorldReadableFiles")
     private static IPrefsApply createSpIfNeed(Context context, String prefsName) {
         if (context == null)
-            throw new RuntimeException(createRuntimeExceptionMsg("Context is null, can't create sprefs!"));
+            throw new NullPointerException("[PrefsTool]: Context is null, can't create sprefs!");
 
         prefsName = initPrefsName(prefsName);
         if (sPrefsMap.get(context.getPackageName() + prefsName) == null) {
@@ -152,7 +129,7 @@ public final class PrefsTool {
                 s = context.getSharedPreferences(prefsName, Context.MODE_WORLD_READABLE);
             } catch (Throwable ignored) {
                 s = context.getSharedPreferences(prefsName, Context.MODE_PRIVATE);
-                AndroidLog.logW(getTag(), "Maybe can't use xSharedPreferences!", getStackTrace());
+                AndroidLog.logW(TAG, "Maybe can't use xSharedPreferences!", getStackTrace());
             }
 
             Sprefs sprefs = new Sprefs(s);
@@ -165,12 +142,12 @@ public final class PrefsTool {
 
     private static String initPrefsName(String name) {
         if (name == null)
-            throw new RuntimeException(createRuntimeExceptionMsg("prefs name can't is null!!"));
+            throw new NullPointerException("[PrefsTool]: prefs name can't is null!");
 
         if (name.isEmpty()) {
-            if (HCData.getPrefsName() == null || HCData.getPrefsName().isEmpty()) {
-                if (HCData.getModulePackageName() == null || HCData.getModulePackageName().isEmpty())
-                    throw new RuntimeException(createRuntimeExceptionMsg("What prefs name you want use??"));
+            if (HCData.getPrefsName().isEmpty()) {
+                if (HCData.getModulePackageName().isEmpty())
+                    throw new UnexpectedException("[PrefsTool]: What prefs name you want use?");
 
                 return HCData.getModulePackageName() + "_preferences";
             }
@@ -238,7 +215,7 @@ public final class PrefsTool {
                     return getLong(key, l);
                 }
             } catch (Throwable e) {
-                logE(getTag(), "Unknown error!", e);
+                logE(TAG, "Unknown error!", e);
             }
             return null;
         }
@@ -261,7 +238,7 @@ public final class PrefsTool {
         @Override
         @Nullable
         public Editor editor() {
-            logW(getTag(), "Xposed can't edit prefs!", getStackTrace());
+            logW(TAG, "Xposed can't edit prefs!", getStackTrace());
             return null;
         }
 
@@ -328,7 +305,7 @@ public final class PrefsTool {
                     return getLong(key, l);
                 }
             } catch (Throwable e) {
-                AndroidLog.logE(getTag(), "Unknown error!", e);
+                AndroidLog.logE(TAG, "Unknown error!", e);
             }
             return null;
         }
@@ -402,7 +379,7 @@ public final class PrefsTool {
                     return putLong(key, l);
                 }
             } catch (Throwable e) {
-                AndroidLog.logE(getTag(), "Unknown error!", e);
+                AndroidLog.logE(TAG, "Unknown error!", e);
             }
             return this;
         }

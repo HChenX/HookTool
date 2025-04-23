@@ -1,29 +1,9 @@
-/*
- * This file is part of HookTool.
+package com.hchen.hooktool.utils;
 
- * HookTool is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License.
-
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
-
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <https://www.gnu.org/licenses/>.
-
- * Copyright (C) 2023-2025 HChenX
- */
-package com.hchen.hooktool.tool.additional;
-
-import static com.hchen.hooktool.log.LogExpand.createRuntimeExceptionMsg;
 import static com.hchen.hooktool.log.LogExpand.getStackTrace;
-import static com.hchen.hooktool.log.LogExpand.getTag;
 import static com.hchen.hooktool.log.XposedLog.logE;
 import static com.hchen.hooktool.log.XposedLog.logW;
-import static com.hchen.hooktool.tool.additional.ContextTool.FLAG_ALL;
+import static com.hchen.hooktool.utils.ContextTool.FLAG_ALL;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -43,8 +23,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
 import com.hchen.hooktool.HCData;
+import com.hchen.hooktool.core.CoreTool;
 import com.hchen.hooktool.hook.IHook;
-import com.hchen.hooktool.tool.CoreTool;
 
 import java.io.File;
 import java.io.IOException;
@@ -57,12 +37,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import de.robv.android.xposed.IXposedHookZygoteInit;
 import de.robv.android.xposed.XC_MethodHook;
 
-/**
- * 资源注入工具
- *
- * @author 焕晨HChen
- */
-public final class ResInjectTool {
+public class ResInjectTool {
+    private static final String TAG = "ResInjectTool";
     private static ResourcesLoader mResourcesLoader = null;
     private static String mModulePath = null;
     private static Handler mHandler = null;
@@ -94,12 +70,12 @@ public final class ResInjectTool {
     @NonNull
     public static Resources injectModuleRes(Resources resources, boolean doOnMainLooper) {
         if (resources == null)
-            throw new RuntimeException(createRuntimeExceptionMsg("Resources can't is null! inject res failed!"));
+            throw new NullPointerException("[ResInjectTool]: Resources can't is null! inject res failed!");
 
         if (mModulePath == null) {
             mModulePath = HCData.getModulePath() != null ? HCData.getModulePath() : null;
             if (mModulePath == null)
-                throw new RuntimeException(createRuntimeExceptionMsg("Module path is null, Please set module path!"));
+                throw new NullPointerException("[ResInjectTool]: Module path is null, Please set module path!");
         }
 
         if (mResourcesArrayList.contains(resources))
@@ -152,7 +128,7 @@ public final class ResInjectTool {
                 loader.addProvider(provider);
                 mResourcesLoader = loader;
             } catch (IOException e) {
-                logE(getTag(), "Failed to inject res! debug: above api 30.", e);
+                logE(TAG, "Failed to inject res! debug: above api 30.", e);
                 return false;
             }
         }
@@ -180,7 +156,7 @@ public final class ResInjectTool {
                 // fallback to below API 30
                 return injectResBelowApi30(resources);
             } else {
-                logE(getTag(), "Failed to add loaders!", e);
+                logE(TAG, "Failed to add loaders!", e);
                 return false;
             }
         }
@@ -198,11 +174,11 @@ public final class ResInjectTool {
             addAssetPath.setAccessible(true);
             Integer cookie = (Integer) addAssetPath.invoke(assets, mModulePath);
             if (cookie == null || cookie == 0) {
-                logW(getTag(), "Method 'addAssetPath' result 0, maybe inject res failed!", getStackTrace());
+                logW(TAG, "Method 'addAssetPath' result 0, maybe inject res failed!", getStackTrace());
                 return false;
             }
         } catch (Throwable e) {
-            logE(getTag(), "Failed to inject res! debug: below api 30.", e);
+            logE(TAG, "Failed to inject res! debug: below api 30.", e);
             return false;
         }
         return true;
@@ -244,7 +220,7 @@ public final class ResInjectTool {
             applyHooks();
             mReplacements.put(pkg + ":" + type + "/" + name, new Pair<>(ReplacementType.ID, replacementResId));
         } catch (Throwable t) {
-            logE(getTag(), "Failed to set res replacement!", t);
+            logE(TAG, "Failed to set res replacement!", t);
         }
     }
 
@@ -256,7 +232,7 @@ public final class ResInjectTool {
             applyHooks();
             mReplacements.put(pkg + ":" + type + "/" + name, new Pair<>(ReplacementType.DENSITY, replacementResValue));
         } catch (Throwable t) {
-            logE(getTag(), "Failed to set density res replacement!", t);
+            logE(TAG, "Failed to set density res replacement!", t);
         }
     }
 
@@ -268,7 +244,7 @@ public final class ResInjectTool {
             applyHooks();
             mReplacements.put(pkg + ":" + type + "/" + name, new Pair<>(ReplacementType.OBJECT, replacementResValue));
         } catch (Throwable t) {
-            logE(getTag(), "Failed to set object res replacement!", t);
+            logE(TAG, "Failed to set object res replacement!", t);
         }
     }
 
@@ -336,7 +312,7 @@ public final class ResInjectTool {
     private static final IHook hookTypedBefore = new IHook() {
         @Override
         public void before() {
-            int index = (int) getArgs(0);
+            int index = (int) getArg(0);
 
             int[] mData = (int[]) CoreTool.getField(thisObject(), "mData");
             int type = mData[index];
@@ -358,7 +334,7 @@ public final class ResInjectTool {
             if (mResourcesArrayList.isEmpty())
                 mResourcesArrayList.add(injectModuleRes(ContextTool.getContext(FLAG_ALL)));
 
-            int key = (int) getArgs(0);
+            int key = (int) getArg(0);
             if (Boolean.TRUE.equals(mResMap.get(key))) return;
 
             for (Resources resources : mResourcesArrayList) {

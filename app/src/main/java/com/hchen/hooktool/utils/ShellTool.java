@@ -1,24 +1,4 @@
-/*
- * This file is part of HookTool.
-
- * HookTool is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License.
-
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
-
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <https://www.gnu.org/licenses/>.
-
- * Copyright (C) 2023-2025 HChenX
- */
-package com.hchen.hooktool.tool.additional;
-
-import static com.hchen.hooktool.log.LogExpand.createRuntimeExceptionMsg;
+package com.hchen.hooktool.utils;
 
 import android.util.Pair;
 
@@ -26,9 +6,10 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.Size;
 
+import com.hchen.hooktool.callback.IExecListener;
 import com.hchen.hooktool.data.ShellResult;
+import com.hchen.hooktool.exception.UnexpectedException;
 import com.hchen.hooktool.log.AndroidLog;
-import com.hchen.hooktool.tool.itool.IExecListener;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
@@ -46,58 +27,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-/**
- * 简易的 Shell 工具，可执行简易的 Shell 命令
- * <p>
- * 使用方法:
- * <p>
- * <pre>{@code
- *         ShellTool shellTool = ShellTool.builder().isRoot(true).create();
- *         shellTool = ShellTool.obtain();
- *         ShellResult shellResult = shellTool.cmd("ls").exec();
- *         if (shellResult != null) {
- *             boolean result = shellResult.isSuccess();
- *         }
- *         shellTool.cmd("""
- *             if [[ 1 == 1 ]]; then
- *                 echo hello;
- *             elif [[ 1 == 2 ]]; then
- *                 echo world;
- *             fi
- *             """).exec();
- *         shellTool.cmd("echo hello").async();
- *         shellTool.cmd("echo world").async(new IExecListener() {
- *             @Override
- *             public void output(String command, String[] outputs, String exitCode) {
- *                 IExecListener.super.output(command, outputs, exitCode);
- *             }
- *         });
- *         shellTool.addExecListener(new IExecListener() {
- *             @Override
- *             public void output(String command, String[] outputs, String exitCode) {
- *                 IExecListener.super.output(command, outputs, exitCode);
- *             }
- *
- *             @Override
- *             public void error(String command, String[] errors, String exitCode) {
- *                 IExecListener.super.error(command, errors, exitCode);
- *             }
- *
- *             @Override
- *             public void notRoot(String exitCode) {
- *                 IExecListener.super.notRoot(exitCode);
- *             }
- *
- *             @Override
- *             public void brokenPip(String command, String[] errors, String reason) {
- *                 IExecListener.super.brokenPip(command, errors, reason);
- *             }
- *         });
- *         shellTool.close();
- * }
- *
- * @author 焕晨HChen
- */
 public class ShellTool {
     private static final String TAG = "ShellTool";
     private static final String END_UUID = UUID.randomUUID().toString();
@@ -652,11 +581,7 @@ public class ShellTool {
             if (mShell.isActive())
                 return mShell;
             else {
-                throw new RuntimeException(
-                    createRuntimeExceptionMsg(
-                        "The shell tool has not been initialized, please use it after initialization!"
-                    )
-                );
+                throw new UnexpectedException("[ShellTool]: The shell tool has not been initialized, please use it after initialization!");
             }
         }
 
