@@ -1,7 +1,27 @@
+/*
+ * This file is part of HookTool.
+
+ * HookTool is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License.
+
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+ * Copyright (C) 2023-2025 HChenX
+ */
 package com.hchen.hooktool.core;
 
 import static com.hchen.hooktool.helper.TryHelper.doTry;
 import static com.hchen.hooktool.log.LogExpand.getTag;
+
+import android.content.res.Resources;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -17,6 +37,7 @@ import com.hchen.hooktool.hook.IHook;
 import com.hchen.hooktool.log.AndroidLog;
 import com.hchen.hooktool.log.LogExpand;
 import com.hchen.hooktool.log.XposedLog;
+import com.hchen.hooktool.utils.ResInjectTool;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -736,6 +757,28 @@ public class CoreTool {
         return Arrays.stream(clazz.getDeclaredConstructors())
             .filter(iMemberFilter::test)
             .toArray(Constructor[]::new);
+    }
+
+    // -------------------------- ResTool ------------------------------
+
+    public static int createFakeResId(String resName) {
+        return ResInjectTool.createFakeResId(resName);
+    }
+
+    public static int createFakeResId(Resources res, int id) {
+        return ResInjectTool.createFakeResId(res, id);
+    }
+
+    public static void setResReplacement(String pkg, String type, String name, int replacementResId) {
+        ResInjectTool.setResReplacement(pkg, type, name, replacementResId);
+    }
+
+    public static void setDensityReplacement(String pkg, String type, String name, float replacementResValue) {
+        ResInjectTool.setDensityReplacement(pkg, type, name, replacementResValue);
+    }
+
+    public static void setObjectReplacement(String pkg, String type, String name, Object replacementResValue) {
+        ResInjectTool.setObjectReplacement(pkg, type, name, replacementResValue);
     }
 
     // -------------------------- Other ------------------------------
