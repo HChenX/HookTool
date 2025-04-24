@@ -18,6 +18,11 @@
  */
 package com.hchen.hooktool.exception;
 
+/**
+ * 非单例异常
+ *
+ * @author 焕晨HChen
+ */
 public class NonSingletonException extends RuntimeException {
     public NonSingletonException() {
     }

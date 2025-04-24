@@ -28,81 +28,89 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashMap;
 
+/**
+ * 反射工具
+ *
+ * @author 焕晨HChen
+ */
 public class InvokeTool {
     private static final String TAG = "InvokeTool";
     private static final HashMap<String, Method> mMethodCache = new HashMap<>();
     private static final HashMap<String, Field> mFieldCache = new HashMap<>();
 
-    // ----------------------------反射调用方法--------------------------------
-    public static <T> T callMethod(Object instance, String method, Class<?>[] param, Object... value) {
-        return baseInvokeMethod(null, instance, method, param, value);
+    private InvokeTool() {
     }
 
-    public static <T> T callStaticMethod(Class<?> clz, String method, Class<?>[] param, Object... value) {
-        return baseInvokeMethod(clz, null, method, param, value);
+    // ---------------------------- 调用方法 --------------------------------
+    public static <T> T callMethod(Object instance, String methodName, Class<?>[] classes, Object... params) {
+        return baseInvokeMethod(null, instance, methodName, classes, params);
     }
 
-    public static <T> T callStaticMethod(String clz, String method, Class<?>[] param, Object... value) {
-        return baseInvokeMethod(findClass(clz), null, method, param, value);
+    public static <T> T callStaticMethod(Class<?> clazz, String methodName, Class<?>[] classes, Object... params) {
+        return baseInvokeMethod(clazz, null, methodName, classes, params);
     }
 
-    public static <T> T callStaticMethod(String clz, ClassLoader classLoader, String method, Class<?>[] param, Object... value) {
-        return baseInvokeMethod(findClass(clz, classLoader), null, method, param, value);
+    public static <T> T callStaticMethod(String clazz, String methodName, Class<?>[] classes, Object... params) {
+        return baseInvokeMethod(findClass(clazz), null, methodName, classes, params);
     }
 
-    // ----------------------------设置字段--------------------------------
-    public static <T> T setField(Object instance, String field, Object value) {
-        return baseInvokeField(null, instance, field, true, value);
+    public static <T> T callStaticMethod(String clazz, ClassLoader classLoader, String methodName, Class<?>[] classes, Object... params) {
+        return baseInvokeMethod(findClass(clazz, classLoader), null, methodName, classes, params);
     }
 
-    public static <T> T setStaticField(Class<?> clz, String field, Object value) {
-        return baseInvokeField(clz, null, field, true, value);
+    // ---------------------------- 设置字段 --------------------------------
+    public static <T> T setField(Object instance, String fieldName, Object value) {
+        return baseInvokeField(null, instance, fieldName, true, value);
     }
 
-    public static <T> T setStaticField(String clz, String field, Object value) {
-        return baseInvokeField(findClass(clz), null, field, true, value);
+    public static <T> T setStaticField(Class<?> clazz, String fieldName, Object value) {
+        return baseInvokeField(clazz, null, fieldName, true, value);
     }
 
-    public static <T> T setStaticField(String clz, ClassLoader classLoader, String field, Object value) {
-        return baseInvokeField(findClass(clz, classLoader), null, field, true, value);
+    public static <T> T setStaticField(String clazz, String fieldName, Object value) {
+        return baseInvokeField(findClass(clazz), null, fieldName, true, value);
     }
 
-    public static <T> T getField(Object instance, String field) {
-        return baseInvokeField(null, instance, field, false, null);
+    public static <T> T setStaticField(String clazz, ClassLoader classLoader, String fieldName, Object value) {
+        return baseInvokeField(findClass(clazz, classLoader), null, fieldName, true, value);
     }
 
-    public static <T> T getStaticField(Class<?> clz, String field) {
-        return baseInvokeField(clz, null, field, false, null);
+    public static <T> T getField(Object instance, String fieldName) {
+        return baseInvokeField(null, instance, fieldName, false, null);
     }
 
-    public static <T> T getStaticField(String clz, String field) {
-        return baseInvokeField(findClass(clz), null, field, false, null);
+    public static <T> T getStaticField(Class<?> clazz, String fieldName) {
+        return baseInvokeField(clazz, null, fieldName, false, null);
     }
 
-    public static <T> T getStaticField(String clz, ClassLoader classLoader, String field) {
-        return baseInvokeField(findClass(clz, classLoader), null, field, false, null);
+    public static <T> T getStaticField(String clazz, String fieldName) {
+        return baseInvokeField(findClass(clazz), null, fieldName, false, null);
+    }
+
+    public static <T> T getStaticField(String clazz, ClassLoader classLoader, String fieldName) {
+        return baseInvokeField(findClass(clazz, classLoader), null, fieldName, false, null);
     }
 
     /**
      * @noinspection unchecked
      */
-    private static <T> T baseInvokeMethod(Class<?> clz /* 类 */, Object instance /* 实例 */, String method /* 方法名 */,
-                                          Class<?>[] param /* 方法参数 */, Object... value /* 值 */) {
+    private static <T> T baseInvokeMethod(Class<?> clazz /* 类 */, Object instance /* 实例 */, String methodName /* 方法名 */,
+                                          Class<?>[] classes /* 方法参数 */, Object... params /* 值 */) {
         Method declaredMethod;
-        if (clz == null && instance == null) {
-            throw new NullPointerException("[InvokeTool]: Class or instance must not is null, can't invoke method: " + method);
-        } else if (clz == null) {
-            clz = instance.getClass();
+        if (clazz == null && instance == null) {
+            throw new NullPointerException("[InvokeTool]: Class or instance must not is null, can't invoke method: " + methodName);
+        } else if (clazz == null) {
+            clazz = instance.getClass();
         }
         try {
-            String methodTag = clz.getName() + "#" + method + "#" + Arrays.toString(param);
+            String methodTag = clazz.getName() + "#" + methodName + "#" + Arrays.toString(classes);
             declaredMethod = mMethodCache.get(methodTag);
             if (declaredMethod == null) {
-                declaredMethod = clz.getDeclaredMethod(method, param);
+                declaredMethod = clazz.getDeclaredMethod(methodName, classes);
                 mMethodCache.put(methodTag, declaredMethod);
             }
             declaredMethod.setAccessible(true);
-            return (T) declaredMethod.invoke(instance, value);
+            return (T) declaredMethod.invoke(instance, params);
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
             throw new UnexpectedException(e);
         }
@@ -111,28 +119,28 @@ public class InvokeTool {
     /**
      * @noinspection unchecked
      */
-    private static <T> T baseInvokeField(Class<?> clz /* 类 */, Object instance /* 实例 */, String field /* 字段名 */,
-                                         boolean set /* 是否为 set 模式 */, Object value /* 指定值 */) {
+    private static <T> T baseInvokeField(Class<?> clazz /* 类 */, Object instance /* 实例 */, String fieldName /* 字段名 */,
+                                         boolean isSetMode /* 是否为 set 模式 */, Object value /* 指定值 */) {
         Field declaredField = null;
-        if (clz == null && instance == null) {
-            throw new NullPointerException("[InvokeTool]: Class or instance must not is null, can't invoke field: " + field);
-        } else if (clz == null) {
-            clz = instance.getClass();
+        if (clazz == null && instance == null) {
+            throw new NullPointerException("[InvokeTool]: Class or instance must not is null, can't invoke field: " + fieldName);
+        } else if (clazz == null) {
+            clazz = instance.getClass();
         }
         try {
-            String fieldTag = clz.getName() + "#" + field;
+            String fieldTag = clazz.getName() + "#" + fieldName;
             declaredField = mFieldCache.get(fieldTag);
             if (declaredField == null) {
                 try {
-                    declaredField = clz.getDeclaredField(field);
+                    declaredField = clazz.getDeclaredField(fieldName);
                 } catch (NoSuchFieldException e) {
                     while (true) {
-                        clz = clz.getSuperclass();
-                        if (clz == null || clz.equals(Object.class))
+                        clazz = clazz.getSuperclass();
+                        if (clazz == null || clazz.equals(Object.class))
                             break;
 
                         try {
-                            declaredField = clz.getDeclaredField(field);
+                            declaredField = clazz.getDeclaredField(fieldName);
                             break;
                         } catch (NoSuchFieldException ignored) {
                         }
@@ -142,7 +150,7 @@ public class InvokeTool {
                 mFieldCache.put(fieldTag, declaredField);
             }
             declaredField.setAccessible(true);
-            if (set) {
+            if (isSetMode) {
                 declaredField.set(instance, value);
                 return null;
             } else

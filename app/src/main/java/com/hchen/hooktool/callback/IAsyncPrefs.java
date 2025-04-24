@@ -18,6 +18,18 @@
  */
 package com.hchen.hooktool.callback;
 
+import androidx.annotation.NonNull;
+
+/**
+ * 异步 Prefs 接口
+ *
+ * @author 焕晨HChen
+ */
 public interface IAsyncPrefs {
-    void async(IPrefsApply sp);
+    /**
+     * 获取寄生应用的共享首选项实例，你可以在此处读取/写入值
+     *
+     * @param sp 共享首选项实例
+     */
+    void async(@NonNull IPrefsApply sp);
 }

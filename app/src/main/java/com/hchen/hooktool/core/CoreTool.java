@@ -28,6 +28,7 @@ import androidx.annotation.Nullable;
 
 import com.hchen.hooktool.HCData;
 import com.hchen.hooktool.callback.IMemberFilter;
+import com.hchen.hooktool.exception.HookException;
 import com.hchen.hooktool.exception.MissingParameterException;
 import com.hchen.hooktool.exception.UnexpectedException;
 import com.hchen.hooktool.helper.ConstructorHelper;
@@ -55,9 +56,12 @@ import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.XposedHelpers;
 
 /**
+ * 核心工具
+ *
+ * @author 焕晨HChen
  * @noinspection DataFlowIssue
  */
-public class CoreTool {
+public class CoreTool extends XposedLog {
     // -------------------------- Class ------------------------------
     public static boolean existsClass(String classPath) {
         return existsClass(classPath, HCData.getClassLoader());
@@ -301,17 +305,14 @@ public class CoreTool {
     }
 
     // -------------------------- Hook ------------------------------
-    @Nullable
     public static XC_MethodHook.Unhook hookMethod(String classPath, String methodName, @NonNull Object... params) {
         return hookMethod(classPath, HCData.getClassLoader(), methodName, params);
     }
 
-    @Nullable
     public static XC_MethodHook.Unhook hookMethod(String classPath, ClassLoader classLoader, String methodName, @NonNull Object... params) {
         return hookMethod(findClass(classPath, classLoader), methodName, params);
     }
 
-    @Nullable
     public static XC_MethodHook.Unhook hookMethod(@NonNull Class<?> clazz, String methodName, @NonNull Object... params) {
         return hook(findMethod(clazz, methodName, filterParams(params)), filterIHook(params));
     }
@@ -347,17 +348,14 @@ public class CoreTool {
         return hookAll(findAllMethod(clazz, methodName), iHook);
     }
 
-    @Nullable
     public static XC_MethodHook.Unhook hookConstructor(String classPath, @NonNull Object... params) {
         return hookConstructor(classPath, HCData.getClassLoader(), params);
     }
 
-    @Nullable
     public static XC_MethodHook.Unhook hookConstructor(String classPath, ClassLoader classLoader, @NonNull Object... params) {
         return hookConstructor(findClass(classPath, classLoader), params);
     }
 
-    @Nullable
     public static XC_MethodHook.Unhook hookConstructor(@NonNull Class<?> clazz, @NonNull Object... params) {
         return hook(findConstructor(clazz, filterParams(params)), filterIHook(params));
     }
@@ -393,22 +391,21 @@ public class CoreTool {
         return hookAll(findAllConstructor(clazz), iHook);
     }
 
-    @Nullable
     public static XC_MethodHook.Unhook hook(@NonNull Member member, @NonNull IHook iHook) {
         return hookAll(new Member[]{member}, iHook)[0];
     }
 
     public static XC_MethodHook.Unhook[] hookAll(@NonNull Member[] members, @NonNull IHook iHook) {
+        String tag = getTag();
         return Arrays.stream(members).map(new Function<Member, XC_MethodHook.Unhook>() {
             @Override
             public XC_MethodHook.Unhook apply(Member member) {
                 try {
-                    XC_MethodHook.Unhook unhook = XposedBridge.hookMethod(member, HookFactory.createHook(iHook));
-                    XposedLog.logI("Hook", "Success to hook: " + member);
+                    XC_MethodHook.Unhook unhook = XposedBridge.hookMethod(member, HookFactory.createHook(tag, iHook));
+                    XposedLog.logI(tag, "Success to hook: " + member);
                     return unhook;
                 } catch (Throwable e) {
-                    XposedLog.logE("Hook", "Failed to hook: " + member, e);
-                    return null;
+                    throw new HookException("Failed to hook: " + member, e);
                 }
             }
         }).toArray(XC_MethodHook.Unhook[]::new);
@@ -447,14 +444,14 @@ public class CoreTool {
 
     private static Object[] filterParams(@NonNull Object... params) {
         if (params.length == 0 || !(params[params.length - 1] instanceof IHook))
-            throw new MissingParameterException("[CoreTool]: Missing IHook parameter!");
+            throw new MissingParameterException("Missing IHook parameter!");
 
         return Arrays.copyOf(params, params.length - 1);
     }
 
     private static IHook filterIHook(@NonNull Object... params) {
         if (params.length == 0 || !(params[params.length - 1] instanceof IHook iHook))
-            throw new MissingParameterException("[CoreTool]: Missing IHook parameter!");
+            throw new MissingParameterException("Missing IHook parameter!");
 
         return iHook;
     }
@@ -765,27 +762,28 @@ public class CoreTool {
         return ResInjectTool.createFakeResId(resName);
     }
 
-    public static int createFakeResId(Resources res, int id) {
+    public static int createFakeResId(@NonNull Resources res, int id) {
         return ResInjectTool.createFakeResId(res, id);
     }
 
-    public static void setResReplacement(String pkg, String type, String name, int replacementResId) {
-        ResInjectTool.setResReplacement(pkg, type, name, replacementResId);
+    public static void setResReplacement(String packageName, String type, String name, int replacementResId) {
+        ResInjectTool.setResReplacement(packageName, type, name, replacementResId);
     }
 
-    public static void setDensityReplacement(String pkg, String type, String name, float replacementResValue) {
-        ResInjectTool.setDensityReplacement(pkg, type, name, replacementResValue);
+    public static void setDensityReplacement(String packageName, String type, String name, float replacementResValue) {
+        ResInjectTool.setDensityReplacement(packageName, type, name, replacementResValue);
     }
 
-    public static void setObjectReplacement(String pkg, String type, String name, Object replacementResValue) {
-        ResInjectTool.setObjectReplacement(pkg, type, name, replacementResValue);
+    public static void setObjectReplacement(String packageName, String type, String name, Object replacementResValue) {
+        ResInjectTool.setObjectReplacement(packageName, type, name, replacementResValue);
     }
 
     // -------------------------- Other ------------------------------
 
-    public static String getStackTrace(boolean autoLog) {
+    public static String getStackTrace(boolean print) {
         String task = getStackTrace();
-        if (autoLog) AndroidLog.logD(getTag(), task);
+        if (print)
+            AndroidLog.logD(getTag(), task);
         return task;
     }
 

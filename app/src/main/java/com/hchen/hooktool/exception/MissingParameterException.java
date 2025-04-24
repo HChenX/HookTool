@@ -18,6 +18,11 @@
  */
 package com.hchen.hooktool.exception;
 
+/**
+ * 缺少参数异常
+ *
+ * @author 焕晨HChen
+ */
 public class MissingParameterException extends RuntimeException {
     public MissingParameterException() {
     }

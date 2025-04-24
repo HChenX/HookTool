@@ -55,14 +55,22 @@ import java.util.concurrent.ConcurrentHashMap;
 import de.robv.android.xposed.IXposedHookZygoteInit;
 import de.robv.android.xposed.XC_MethodHook;
 
+/**
+ * 资源注入工具
+ *
+ * @author 焕晨HChen
+ */
 public class ResInjectTool {
     private static final String TAG = "ResInjectTool";
     private static ResourcesLoader mResourcesLoader = null;
     private static String mModulePath = null;
     private static Handler mHandler = null;
 
+    private ResInjectTool() {
+    }
+
     /**
-     * 请在 {@link  com.hchen.hooktool.HCInit#initStartupParam(IXposedHookZygoteInit.StartupParam)} 处调用。
+     * 请在 {@link  com.hchen.hooktool.HCInit#initStartupParam(IXposedHookZygoteInit.StartupParam)} 处调用
      *
      * @param modulePath startupParam.modulePath 即可
      */
@@ -71,7 +79,7 @@ public class ResInjectTool {
     }
 
     /**
-     * 把本项目资源注入目标作用域上下文。一般调用本方法即可。<br/>
+     * 把本项目资源注入目标作用域上下文。一般调用本方法即可<br/>
      * 请在项目 app 下的 build.gradle 中添加如下代码：
      * <pre> {@code
      * Kotlin Gradle DSL:
@@ -86,7 +94,7 @@ public class ResInjectTool {
      * Tip: `0x64` is the resource id, you can change it to any value you want.(recommended [0x30 to 0x6F])
      */
     @NonNull
-    public static Resources injectModuleRes(Resources resources, boolean doOnMainLooper) {
+    public static Resources injectModuleRes(@NonNull Resources resources, boolean mainLooper) {
         if (resources == null)
             throw new NullPointerException("[ResInjectTool]: Resources can't is null! inject res failed!");
 
@@ -101,7 +109,7 @@ public class ResInjectTool {
 
         boolean load;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            load = injectResAboveApi30(resources, doOnMainLooper);
+            load = injectResAboveApi30(resources, mainLooper);
         } else {
             load = injectResBelowApi30(resources);
         }
@@ -118,25 +126,25 @@ public class ResInjectTool {
     }
 
     @NonNull
-    public static Resources injectModuleRes(Resources resources) {
+    public static Resources injectModuleRes(@NonNull Resources resources) {
         return injectModuleRes(resources, false);
     }
 
     @NonNull
-    public static Resources injectModuleRes(Context context) {
+    public static Resources injectModuleRes(@NonNull Context context) {
         return injectModuleRes(context, false);
     }
 
     @NonNull
-    public static Resources injectModuleRes(Context context, boolean doOnMainLooper) {
-        return injectModuleRes(context.getResources(), doOnMainLooper);
+    public static Resources injectModuleRes(@NonNull Context context, boolean mainLooper) {
+        return injectModuleRes(context.getResources(), mainLooper);
     }
 
     /**
      * 来自 QA 的方法
      */
     @RequiresApi(api = Build.VERSION_CODES.R)
-    private static boolean injectResAboveApi30(Resources resources, boolean doOnMainLooper) {
+    private static boolean injectResAboveApi30(@NonNull Resources resources, boolean mainLooper) {
         if (mResourcesLoader == null) {
             try (ParcelFileDescriptor pfd =
                      ParcelFileDescriptor.open(new File(mModulePath), ParcelFileDescriptor.MODE_READ_ONLY)
@@ -150,7 +158,7 @@ public class ResInjectTool {
                 return false;
             }
         }
-        if (doOnMainLooper)
+        if (mainLooper)
             if (Looper.myLooper() == Looper.getMainLooper()) {
                 return addLoaders(resources);
             } else {
@@ -165,7 +173,7 @@ public class ResInjectTool {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.R)
-    private static boolean addLoaders(Resources resources) {
+    private static boolean addLoaders(@NonNull Resources resources) {
         try {
             resources.addLoaders(mResourcesLoader);
         } catch (IllegalArgumentException e) {
@@ -185,7 +193,7 @@ public class ResInjectTool {
      * @noinspection JavaReflectionMemberAccess
      */
     @SuppressLint("DiscouragedPrivateApi")
-    private static boolean injectResBelowApi30(Resources resources) {
+    private static boolean injectResBelowApi30(@NonNull Resources resources) {
         try {
             AssetManager assets = resources.getAssets();
             Method addAssetPath = AssetManager.class.getDeclaredMethod("addAssetPath", String.class);
@@ -206,15 +214,7 @@ public class ResInjectTool {
     private static final ConcurrentHashMap<Integer, Boolean> mResMap = new ConcurrentHashMap<>();
     private static final List<XC_MethodHook.Unhook> mUnhooks = new ArrayList<>();
     private static final ConcurrentHashMap<String, Pair<ReplacementType, Object>> mReplacements = new ConcurrentHashMap<>();
-    private static boolean isHooked;
-
-    private ResInjectTool() {
-        isHooked = false;
-        mResourcesArrayList.clear();
-        mResMap.clear();
-        mUnhooks.clear();
-        mReplacements.clear();
-    }
+    private static boolean isHooked = false;
 
     private enum ReplacementType {
         ID,

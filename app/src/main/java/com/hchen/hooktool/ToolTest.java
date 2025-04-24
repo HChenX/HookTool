@@ -21,6 +21,9 @@ package com.hchen.hooktool;
 import com.hchen.hooktool.hook.IHook;
 
 public class ToolTest extends BaseHC {
+    private ToolTest() {
+    }
+
     @Override
     protected void init() {
         new IHook() {
@@ -29,6 +32,8 @@ public class ToolTest extends BaseHC {
             }
         };
 
-        buildChain("").findMethod("").doNothing();
+        buildChain("")
+            .findMethod("")
+            .doNothing();
     }
 }

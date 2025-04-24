@@ -18,6 +18,11 @@
  */
 package com.hchen.hooktool.data;
 
+/**
+ * 链式类型
+ *
+ * @author 焕晨HChen
+ */
 public enum ChainType {
     METHOD,
     FIND_METHOD,

@@ -18,6 +18,11 @@
  */
 package com.hchen.hooktool.exception;
 
+/**
+ * 非 Xposed 环境异常
+ *
+ * @author 焕晨HChen
+ */
 public class NonXposedException extends RuntimeException {
     public NonXposedException() {
     }

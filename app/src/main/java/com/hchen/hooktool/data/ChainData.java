@@ -29,6 +29,11 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArraySet;
 
+/**
+ * 链式数据
+ *
+ * @author 焕晨HChen
+ */
 public class ChainData {
     // -------------------------- Data ------------------------------
     public ChainType chainType;

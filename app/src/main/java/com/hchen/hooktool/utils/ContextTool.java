@@ -32,6 +32,11 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.concurrent.Executors;
 
+/**
+ * 上下文获取工具
+ *
+ * @author 焕晨HChen
+ */
 @SuppressLint({"PrivateApi", "SoonBlockedPrivateApi", "DiscouragedPrivateApi"})
 public class ContextTool {
     @IntDef(value = {
@@ -46,6 +51,9 @@ public class ContextTool {
     public static final int FLAG_ALL = 0;
     public static final int FLAG_CURRENT_APP = 1;
     public static final int FLAG_ONLY_ANDROID = 2;
+
+    private ContextTool() {
+    }
 
     public static Context getContext(@Duration int flag) {
         try {
@@ -69,7 +77,7 @@ public class ContextTool {
     }
 
     /**
-     * 异步获取当前应用的 Context，为了防止过早获取导致的 null。
+     * 异步获取当前应用的 Context，为了防止过早获取导致的 null，
      * 使用方法:
      * <pre> {@code
      * handler = new Handler();
@@ -85,9 +93,8 @@ public class ContextTool {
      *   }
      * }, FLAG_ALL, 15000);
      * }
-     * 当然 Handler 是可选项, 适用于 Toast 显示等场景。
+     * 当然 Handler 是可选项, 适用于 Toast 显示等场景
      * @param iContextGetter 回调获取 Context
-     * @author 焕晨HChen
      */
     public static void getAsyncContext(IContextGetter iContextGetter, @Duration int flag, int timeout) {
         Executors.newSingleThreadExecutor().submit(() -> {

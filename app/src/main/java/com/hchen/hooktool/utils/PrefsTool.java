@@ -19,8 +19,6 @@
 package com.hchen.hooktool.utils;
 
 import static com.hchen.hooktool.log.LogExpand.getStackTrace;
-import static com.hchen.hooktool.log.XposedLog.logE;
-import static com.hchen.hooktool.log.XposedLog.logW;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -45,29 +43,35 @@ import java.util.Set;
 
 import de.robv.android.xposed.XSharedPreferences;
 
+/**
+ * 共享首选项工具
+ *
+ * @author 焕晨HChen
+ */
 public class PrefsTool {
     private static final String TAG = "PrefsTool";
     private final static HashMap<String, Xprefs> xPrefsMap = new HashMap<>();
     private final static HashMap<String, Sprefs> sPrefsMap = new HashMap<>();
 
+    private PrefsTool() {
+    }
+
     /**
-     * 共享首选项储存至应用私有目录内/从私有目录读取，模块如果设置 xposedsharedprefs 为 true 则由 xposed 统一管理。
+     * 从应用私有目录读取/写入共享首选项数据
      */
     public static IPrefsApply prefs(Context context) {
         return prefs(context, "");
     }
 
     /**
-     * 共享首选项储存至应用私有目录内/从私有目录读取，并使用指定的 prefsName 命名文件，模块如果设置 xposedsharedprefs 为 true 则由 xposed 统一管理。
+     * 从应用私有目录读取/写入共享首选项数据
      */
     public static IPrefsApply prefs(Context context, @NonNull String prefsName) {
         return createSpIfNeed(context, prefsName);
     }
 
     /**
-     * 模块内不可使用，否则触发崩溃！
-     * <p>
-     * 将读取模块的共享首选项并供寄生应用使用。此状态下仅可读取，不可修改。
+     * Xposed 环境中读取模块的共享首选项，非 Xposed 环境中使用会引发异常
      */
     public static IPrefsApply prefs() {
         if (!HCData.isXposed())
@@ -76,9 +80,7 @@ public class PrefsTool {
     }
 
     /**
-     * 模块内不可使用，否则触发崩溃！
-     * <p>
-     * 将读取指定 prefsName 名的模块共享首选项文件并供寄生应用使用。此状态下仅可读取，不可修改。
+     * Xposed 环境中读取模块的共享首选项，非 Xposed 环境中使用会引发异常
      */
     public static IPrefsApply prefs(@NonNull String prefsName) {
         if (!HCData.isXposed())
@@ -86,14 +88,15 @@ public class PrefsTool {
         return createXspIfNeed(prefsName);
     }
 
+    /**
+     * Xposed 环境中异步获取寄生应用的共享首选项，非 Xposed 环境中使用会引发异常
+     */
     public static void asyncPrefs(IAsyncPrefs asyncPrefs) {
         asyncPrefs("", asyncPrefs);
     }
 
     /**
-     * 异步设置配置。
-     * <p>
-     * 仅限寄生应用内调用，适用于不方便获取 context 的情况。
+     * Xposed 环境中异步获取寄生应用的共享首选项，非 Xposed 环境中使用会引发异常
      */
     public static void asyncPrefs(String prefsName, IAsyncPrefs asyncPrefs) {
         if (!HCData.isXposed())
@@ -108,10 +111,10 @@ public class PrefsTool {
         }, ContextTool.FLAG_CURRENT_APP);
     }
 
-    public static boolean clear() {
+    @Deprecated
+    public static void clear() {
         sPrefsMap.clear();
         xPrefsMap.clear();
-        return true;
     }
 
     private static IPrefsApply createXspIfNeed(String prefsName) {
@@ -147,7 +150,7 @@ public class PrefsTool {
                 s = context.getSharedPreferences(prefsName, Context.MODE_WORLD_READABLE);
             } catch (Throwable ignored) {
                 s = context.getSharedPreferences(prefsName, Context.MODE_PRIVATE);
-                AndroidLog.logW(TAG, "Maybe can't use xSharedPreferences!", getStackTrace());
+                AndroidLog.logW(TAG, "Maybe unsupported xSharedPreferences!", getStackTrace());
             }
 
             Sprefs sprefs = new Sprefs(s);
@@ -167,19 +170,13 @@ public class PrefsTool {
                 if (HCData.getModulePackageName().isEmpty())
                     throw new UnexpectedException("[PrefsTool]: What prefs name you want use?");
 
-                return HCData.getModulePackageName() + "_preferences";
+                return HCData.getModulePackageName() + "_prefs";
             }
             return HCData.getPrefsName();
         } else return name;
     }
 
-    private static class Xprefs implements IPrefsApply {
-        private final XSharedPreferences xSharedPreferences;
-
-        private Xprefs(XSharedPreferences xSharedPreferences) {
-            this.xSharedPreferences = xSharedPreferences;
-        }
-
+    private record Xprefs(XSharedPreferences xSharedPreferences) implements IPrefsApply {
         @Override
         public String getString(String key, String def) {
             reload();
@@ -218,24 +215,20 @@ public class PrefsTool {
 
         @Override
         public Object get(String key, Object def) {
-            try {
-                if (def instanceof String s) {
-                    return getString(key, s);
-                } else if (def instanceof Set<?> set) {
-                    return getStringSet(key, (Set<String>) set);
-                } else if (def instanceof Integer i) {
-                    return getInt(key, i);
-                } else if (def instanceof Boolean b) {
-                    return getBoolean(key, b);
-                } else if (def instanceof Float f) {
-                    return getFloat(key, f);
-                } else if (def instanceof Long l) {
-                    return getLong(key, l);
-                }
-            } catch (Throwable e) {
-                logE(TAG, "Unknown error!", e);
+            if (def instanceof String s) {
+                return getString(key, s);
+            } else if (def instanceof Set<?> set) {
+                return getStringSet(key, (Set<String>) set);
+            } else if (def instanceof Integer i) {
+                return getInt(key, i);
+            } else if (def instanceof Boolean b) {
+                return getBoolean(key, b);
+            } else if (def instanceof Float f) {
+                return getFloat(key, f);
+            } else if (def instanceof Long l) {
+                return getLong(key, l);
             }
-            return null;
+            throw new UnexpectedException("[PrefsTool]: Unknown type value: " + def);
         }
 
         @Override
@@ -254,10 +247,8 @@ public class PrefsTool {
          * Xprefs 不支持修改！
          */
         @Override
-        @Nullable
         public Editor editor() {
-            logW(TAG, "Xposed can't edit prefs!", getStackTrace());
-            return null;
+            throw new UnsupportedOperationException("[PrefsTool]: Xposed unsupported edit prefs!");
         }
 
         private void reload() {
@@ -269,13 +260,7 @@ public class PrefsTool {
         }
     }
 
-    private static class Sprefs implements IPrefsApply {
-        private final SharedPreferences preferences;
-
-        private Sprefs(SharedPreferences preferences) {
-            this.preferences = preferences;
-        }
-
+    private record Sprefs(SharedPreferences preferences) implements IPrefsApply {
         @Override
         public String getString(String key, String def) {
             return preferences.getString(key, def);
@@ -308,24 +293,20 @@ public class PrefsTool {
 
         @Override
         public Object get(String key, Object def) {
-            try {
-                if (def instanceof String s) {
-                    return getString(key, s);
-                } else if (def instanceof Set<?> set) {
-                    return getStringSet(key, (Set<String>) set);
-                } else if (def instanceof Integer i) {
-                    return getInt(key, i);
-                } else if (def instanceof Boolean b) {
-                    return getBoolean(key, b);
-                } else if (def instanceof Float f) {
-                    return getFloat(key, f);
-                } else if (def instanceof Long l) {
-                    return getLong(key, l);
-                }
-            } catch (Throwable e) {
-                AndroidLog.logE(TAG, "Unknown error!", e);
+            if (def instanceof String s) {
+                return getString(key, s);
+            } else if (def instanceof Set<?> set) {
+                return getStringSet(key, (Set<String>) set);
+            } else if (def instanceof Integer i) {
+                return getInt(key, i);
+            } else if (def instanceof Boolean b) {
+                return getBoolean(key, b);
+            } else if (def instanceof Float f) {
+                return getFloat(key, f);
+            } else if (def instanceof Long l) {
+                return getLong(key, l);
             }
-            return null;
+            throw new UnexpectedException("[PrefsTool]: Unknown type value: " + def);
         }
 
         @Override
@@ -382,24 +363,20 @@ public class PrefsTool {
         }
 
         public Editor put(String key, Object value) {
-            try {
-                if (value instanceof String s) {
-                    return putString(key, s);
-                } else if (value instanceof Set<?> set) {
-                    return putStringSet(key, (Set<String>) set);
-                } else if (value instanceof Integer i) {
-                    return putInt(key, i);
-                } else if (value instanceof Boolean b) {
-                    return putBoolean(key, b);
-                } else if (value instanceof Float f) {
-                    return putFloat(key, f);
-                } else if (value instanceof Long l) {
-                    return putLong(key, l);
-                }
-            } catch (Throwable e) {
-                AndroidLog.logE(TAG, "Unknown error!", e);
+            if (value instanceof String s) {
+                return putString(key, s);
+            } else if (value instanceof Set<?> set) {
+                return putStringSet(key, (Set<String>) set);
+            } else if (value instanceof Integer i) {
+                return putInt(key, i);
+            } else if (value instanceof Boolean b) {
+                return putBoolean(key, b);
+            } else if (value instanceof Float f) {
+                return putFloat(key, f);
+            } else if (value instanceof Long l) {
+                return putLong(key, l);
             }
-            return this;
+            throw new UnexpectedException("[PrefsTool]: Unknown type value: " + value);
         }
 
         public Editor remove(String key) {

@@ -18,9 +18,14 @@
  */
 package com.hchen.hooktool.callback;
 
+/**
+ * Shell 执行监听
+ *
+ * @author 焕晨HChen
+ */
 public interface IExecListener {
     /**
-     * 标准输出。
+     * 标准输出
      *
      * @param command  输入的命令
      * @param outputs  执行后输出的内容
@@ -30,7 +35,7 @@ public interface IExecListener {
     }
 
     /**
-     * 标准错误。
+     * 标准错误
      *
      * @param command  输入的命令
      * @param errors   报错内容
@@ -40,13 +45,13 @@ public interface IExecListener {
     }
 
     /**
-     * 无 Root 时会执行的回调。
+     * 无 Root 时会执行的回调
      */
     default void notRoot(String exitCode) {
     }
 
     /**
-     * 管道破裂时的回调，代表 Shell 流非正常终止。
+     * 管道破裂时的回调，代表 Shell 流非正常终止
      *
      * @param command 输入的命令
      * @param errors  报错内容

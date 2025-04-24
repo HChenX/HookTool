@@ -33,6 +33,11 @@ import java.util.Objects;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+/**
+ * 构造函数查找
+ *
+ * @author 焕晨HChen
+ */
 public class ConstructorHelper {
     private final Class<?> clazz;
     private int paramCount = -1;
@@ -48,36 +53,57 @@ public class ConstructorHelper {
         this.clazz = clazz;
     }
 
+    /**
+     * 构造函数的参数数量
+     */
     public ConstructorHelper withParamCount(int paramCount) {
         this.paramCount = paramCount;
         return this;
     }
 
+    /**
+     * 构造函数的参数类型，可使用 Any.class 占位，表示任意类型
+     */
     public ConstructorHelper withParamTypes(@NonNull Class<?>... paramTypes) {
         this.paramTypes = paramTypes;
         return this;
     }
 
+    /**
+     * 构造函数的修饰符
+     */
     public ConstructorHelper withMods(int mods) {
         this.mods = mods;
         return this;
     }
 
+    /**
+     * 构造函数的注释
+     */
     public ConstructorHelper withAnnotation(@NonNull Class<? extends Annotation> annotation) {
         this.annotation = annotation;
         return this;
     }
 
+    /**
+     * 构造函数的泛型参数
+     */
     public ConstructorHelper withGenericParamTypes(@NonNull Type... genericParamTypes) {
         this.genericParamTypes = genericParamTypes;
         return this;
     }
 
+    /**
+     * 构造函数抛出的异常
+     */
     public ConstructorHelper withExceptionType(@NonNull Class<? extends Throwable> exceptionType) {
         this.exceptionType = exceptionType;
         return this;
     }
 
+    /**
+     * 是否查找 Super 类
+     */
     public ConstructorHelper withSuper(boolean withSuper) {
         this.withSuper = withSuper;
         return this;

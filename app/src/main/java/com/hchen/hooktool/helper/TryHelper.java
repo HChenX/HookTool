@@ -20,20 +20,28 @@ package com.hchen.hooktool.helper;
 
 import java.util.Objects;
 
+/**
+ * TryHelper
+ *
+ * @author 焕晨HChen
+ */
 public class TryHelper {
-    public static <V> Result<V> doTry(IRun<V> supplier) {
-        return new Result<>(supplier);
+    private TryHelper() {
+    }
+    
+    public static <R> Result<R> doTry(IRun<R> supplier) {
+        return new Result<R>(supplier);
     }
 
-    public interface IRun<V> {
-        V run() throws Throwable;
+    public interface IRun<R> {
+        R run() throws Throwable;
     }
 
-    public static final class Result<V> {
-        private V result;
+    public static final class Result<R> {
+        private R result;
         private Throwable throwable;
 
-        public Result(IRun<V> iRun) {
+        private Result(IRun<R> iRun) {
             try {
                 result = iRun.run();
                 throwable = null;
@@ -43,11 +51,11 @@ public class TryHelper {
             }
         }
 
-        public V get() {
+        public R get() {
             return result;
         }
 
-        public V orElse(V or) {
+        public R orElse(R or) {
             if (Objects.isNull(throwable))
                 return result;
             return or;

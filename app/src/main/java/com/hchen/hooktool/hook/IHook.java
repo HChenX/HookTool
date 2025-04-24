@@ -28,6 +28,11 @@ import java.lang.annotation.RetentionPolicy;
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedBridge;
 
+/**
+ * IHook
+ *
+ * @author 焕晨HChen
+ */
 public abstract class IHook extends ParamTool {
     protected XC_MethodHook xcMethodHook;
     public final int PRIORITY;
@@ -46,20 +51,41 @@ public abstract class IHook extends ParamTool {
         this.PRIORITY = Priority.DEFAULT;
     }
 
+    /**
+     * IHook
+     *
+     * @param priority 优先级
+     */
     public IHook(int priority) {
         this.PRIORITY = priority;
     }
 
+    /**
+     * 方法执行之前
+     */
     public void before() {
     }
 
+    /**
+     * 方法执行后
+     */
     public void after() {
     }
 
+    /**
+     * Hook 代码抛出异常时调用
+     *
+     * @param flag 抛出异常的时机
+     * @param e    异常
+     * @return 是否被处理
+     */
     public boolean onThrow(@ActionFlag int flag, Throwable e) {
         return false;
     }
 
+    /**
+     * 解除 Hook
+     */
     final public void unHookSelf() {
         XposedBridge.unhookMethod(param.method, xcMethodHook);
     }

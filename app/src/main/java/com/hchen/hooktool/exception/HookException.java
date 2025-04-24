@@ -18,7 +18,11 @@
  */
 package com.hchen.hooktool.exception;
 
-@Deprecated
+/**
+ * Hook 异常
+ *
+ * @author 焕晨HChen
+ */
 public class HookException extends RuntimeException {
     public HookException() {
     }

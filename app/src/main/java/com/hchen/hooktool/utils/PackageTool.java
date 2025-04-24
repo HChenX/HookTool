@@ -18,8 +18,6 @@
  */
 package com.hchen.hooktool.utils;
 
-import static com.hchen.hooktool.log.AndroidLog.logE;
-
 import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
@@ -34,6 +32,7 @@ import android.os.UserHandle;
 
 import com.hchen.hooktool.callback.IPackageInfoGetter;
 import com.hchen.hooktool.data.AppData;
+import com.hchen.hooktool.exception.UnexpectedException;
 import com.hchen.hooktool.log.AndroidLog;
 
 import java.util.ArrayList;
@@ -41,17 +40,25 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+/**
+ * 包工具
+ *
+ * @author 焕晨HChen
+ */
 public class PackageTool {
     private static final String TAG = "PackageTool";
 
+    private PackageTool() {
+    }
+
     /**
-     * 判断目标包名应用是否已经被卸载。
+     * 判断应用是否已被卸载
      */
-    public static boolean isUninstall(Context context, String pkg) {
+    public static boolean isUninstall(Context context, String packageName) {
         try {
             Objects.requireNonNull(context, "[PackageTool]: Context must not is null!");
             PackageManager packageManager = context.getPackageManager();
-            packageManager.getPackageInfo(pkg, PackageManager.MATCH_ALL);
+            packageManager.getPackageInfo(packageName, PackageManager.MATCH_ALL);
             return false;
         } catch (PackageManager.NameNotFoundException e) {
             return true;
@@ -59,16 +66,15 @@ public class PackageTool {
     }
 
     /**
-     * 获取包名应用是否被禁用。
+     * 判断应用是否被禁用
      */
-    public static boolean isDisable(Context context, String pkg) {
+    public static boolean isDisable(Context context, String packageName) {
         try {
             Objects.requireNonNull(context, "[PackageTool]: Context must not is null!");
             PackageManager packageManager = context.getPackageManager();
-            ApplicationInfo result = packageManager.getApplicationInfo(pkg, 0);
-            if (!result.enabled) {
+            ApplicationInfo result = packageManager.getApplicationInfo(packageName, 0);
+            if (!result.enabled)
                 return true;
-            }
         } catch (PackageManager.NameNotFoundException e) {
             return false;
         }
@@ -76,13 +82,13 @@ public class PackageTool {
     }
 
     /**
-     * 获取包名应用是否被 Hidden，一般来说被隐藏视为未安装，可以使用 isUninstall() 来判断。
+     * 判断应用是否被隐藏
      */
-    public static boolean isHidden(Context context, String pkg) {
+    public static boolean isHidden(Context context, String packageName) {
         try {
             Objects.requireNonNull(context, "[PackageTool]: Context must not is null!");
             PackageManager packageManager = context.getPackageManager();
-            packageManager.getApplicationInfo(pkg, 0);
+            packageManager.getApplicationInfo(packageName, 0);
             return false;
         } catch (PackageManager.NameNotFoundException e) {
             return true;
@@ -99,7 +105,7 @@ public class PackageTool {
     }
 
     /**
-     * 可用于判断是否是系统应用。
+     * 判断是否是系统应用
      */
     public static boolean isSystem(ApplicationInfo app) {
         Objects.requireNonNull(app, "[PackageTool]: ApplicationInfo must not is null!");
@@ -110,8 +116,9 @@ public class PackageTool {
     }
 
     /**
-     * 通过自定义代码获取 Package 信息，
-     * 支持: PackageInfo, ResolveInfo, ActivityInfo, ApplicationInfo, ProviderInfo. 类型的返回值.
+     * 通过自定义代码获取 Package 信息
+     * <p>
+     * 支持: PackageInfo, ResolveInfo, ActivityInfo, ApplicationInfo, ProviderInfo. 类型的返回值
      * <p>
      * 示例：
      * <p>
@@ -127,8 +134,7 @@ public class PackageTool {
      *         })[0];
      * }
      *
-     * @param infoGetter 需要执行的代码
-     * @return AppData[] 包含各种应用详细信息
+     * @return AppData[] 应用详细信息
      * @see #createAppData(Parcelable, PackageManager)
      */
     public static AppData[] getPackagesByCode(Context context, IPackageInfoGetter infoGetter) {
@@ -139,8 +145,7 @@ public class PackageTool {
         try {
             parcelables = infoGetter.packageInfoGetter(packageManager);
         } catch (PackageManager.NameNotFoundException e) {
-            logE(TAG, e);
-            return new AppData[0];
+            throw new UnexpectedException(e);
         }
 
         List<AppData> appDataList = new ArrayList<>();
@@ -149,7 +154,7 @@ public class PackageTool {
                 try {
                     appDataList.add(createAppData(parcelable, packageManager));
                 } catch (Throwable e) {
-                    AndroidLog.logE(TAG, "Failed to create app data!", e);
+                    AndroidLog.logW(TAG, "Failed to create app data!", e);
                 }
             }
         }
@@ -157,7 +162,7 @@ public class PackageTool {
     }
 
     /**
-     * 获取指定包名的 APP 信息。
+     * 获取指定包名的应用信息
      */
     public static AppData getTargetPackage(Context context, String packageName) throws PackageManager.NameNotFoundException {
         PackageManager packageManager = context.getPackageManager();

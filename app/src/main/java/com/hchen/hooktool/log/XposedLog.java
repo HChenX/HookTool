@@ -23,6 +23,11 @@ import com.hchen.hooktool.HCInit;
 
 import de.robv.android.xposed.XposedBridge;
 
+/**
+ * Xposed 日志
+ *
+ * @author 焕晨HChen
+ */
 public class XposedLog {
     // -------- logE -------------
     public static void logE(String tag, String log) {

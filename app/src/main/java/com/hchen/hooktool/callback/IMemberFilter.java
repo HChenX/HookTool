@@ -18,6 +18,14 @@
  */
 package com.hchen.hooktool.callback;
 
+/**
+ * Member 过滤
+ *
+ * @author 焕晨HChen
+ */
 public interface IMemberFilter<T> {
+    /**
+     * 过滤成员，返回 true 则保留，false 则摈弃
+     */
     boolean test(T member);
 }

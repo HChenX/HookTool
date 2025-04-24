@@ -20,8 +20,16 @@ package com.hchen.hooktool.utils;
 
 import java.util.Optional;
 
+/**
+ * Prop 工具
+ *
+ * @author 焕晨HChen
+ */
 public class SystemPropTool {
     private static final Class<?> clazz = InvokeTool.findClass("android.os.SystemProperties");
+
+    private SystemPropTool() {
+    }
 
     public static String getProp(String name, ClassLoader classLoader) {
         return classLoaderMethod(name, classLoader);
@@ -58,7 +66,7 @@ public class SystemPropTool {
     }
 
     /**
-     * 只有系统框架才可能可以调用。
+     * 只有系统框架才可能可以调用
      */
     public static void setProp(String key, String vale) {
         invokeMethod("set", new Class[]{String.class, String.class}, key, vale);

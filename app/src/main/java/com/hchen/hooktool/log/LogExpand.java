@@ -25,7 +25,15 @@ import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.function.Consumer;
 
+/**
+ * 日志扩展
+ *
+ * @author 焕晨HChen
+ */
 public class LogExpand {
+    private LogExpand() {
+    }
+
     public static String printStackTrace(Throwable e) {
         StringWriter stringWriter = new StringWriter();
         PrintWriter printWriter = new PrintWriter(stringWriter);

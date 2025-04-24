@@ -45,6 +45,11 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Shell 工具
+ *
+ * @author 焕晨HChen
+ */
 public class ShellTool {
     private static final String TAG = "ShellTool";
     private static final String END_UUID = UUID.randomUUID().toString();
@@ -59,28 +64,28 @@ public class ShellTool {
     }
 
     /**
-     * 构建 Shell。
+     * 构建 Shell
      */
     public static Builder builder() {
         return mBuilder;
     }
 
     /**
-     * 获取已经构建的 Shell，不存在会报错。
+     * 获取已经构建的 Shell，不存在会报错
      */
     public static ShellTool obtain() {
         return mBuilder.obtain();
     }
 
     /**
-     * 输入命令。
+     * 输入命令
      */
     public ShellTool cmd(@NonNull String cmd) {
         return mShellImpl.cmd(cmd);
     }
 
     /**
-     * 同步执行命令，并获取返回值。
+     * 同步执行命令，并获取返回值
      */
     @Nullable
     public ShellResult exec() {
@@ -88,7 +93,7 @@ public class ShellTool {
     }
 
     /**
-     * 异步执行命令。
+     * 异步执行命令
      */
     public void async() {
         mShellImpl.async(null);
@@ -99,7 +104,7 @@ public class ShellTool {
     }
 
     /**
-     * 添加回调，传入 null 则删除全部回调。
+     * 添加回调，传入 null 则删除全部回调
      */
     public void addExecListener(@Nullable IExecListener execListener) {
         if (execListener == null) {
@@ -110,21 +115,21 @@ public class ShellTool {
     }
 
     /**
-     * 移除指定回调。
+     * 移除指定回调
      */
     public void removeExecListener(@NonNull IExecListener execListener) {
         mIExecListeners.remove(execListener);
     }
 
     /**
-     * Shell 是否处于活动状态。
+     * Shell 是否处于活动状态
      */
     public boolean isActive() {
         return mShellImpl.isActive();
     }
 
     /**
-     * 关闭 Shell 流。
+     * 关闭 Shell 流
      */
     public void close() {
         mShellImpl.close();
@@ -135,14 +140,14 @@ public class ShellTool {
     }
 
     /**
-     * 检查是否支持 Root。
+     * 检查是否支持 Root
      */
     public static boolean isRootAvailable() {
         return isRootAvailable(true, null);
     }
 
     /**
-     * 检查是否支持 Root。
+     * 检查是否支持 Root
      */
     public static boolean isRootAvailable(boolean sync, IExecListener execListener) {
         Callable<Integer> callable = () -> {
@@ -604,7 +609,7 @@ public class ShellTool {
         }
 
         /**
-         * 是否使用 Root 模式。
+         * 是否使用 Root 模式
          */
         public Builder isRoot(boolean isRoot) {
             mShell.isRoot = isRoot;
@@ -621,7 +626,7 @@ public class ShellTool {
         }
 
         /**
-         * 设置 Shell 执行监听。
+         * 设置 Shell 执行监听
          */
         public Builder addExecListener(@Nullable IExecListener execListener) {
             mShell.addExecListener(execListener);
@@ -629,7 +634,7 @@ public class ShellTool {
         }
 
         /**
-         * 移除指定的监听。
+         * 移除指定的监听
          */
         public Builder removeExecListener(IExecListener execListener) {
             mShell.removeExecListener(execListener);

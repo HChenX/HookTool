@@ -19,18 +19,24 @@
 package com.hchen.hooktool.hook;
 
 import com.hchen.hooktool.core.CoreTool;
-import com.hchen.hooktool.log.LogExpand;
 import com.hchen.hooktool.log.XposedLog;
 
 import java.lang.reflect.InvocationTargetException;
 
 import de.robv.android.xposed.XC_MethodHook;
 
+/**
+ * Hook 构建工厂
+ *
+ * @author 焕晨HChen
+ */
 public class HookFactory {
-    public static XC_MethodHook createHook(IHook iHook) {
-        String tag = LogExpand.getTag();
+    private HookFactory() {
+    }
+
+    public static XC_MethodHook createHook(String tag, IHook iHook) {
         iHook.INNER_TAG = tag;
-        XC_MethodHook xcMethodHook = new XC_MethodHook() {
+        XC_MethodHook xcMethodHook = new XC_MethodHook(iHook.PRIORITY) {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                 try {

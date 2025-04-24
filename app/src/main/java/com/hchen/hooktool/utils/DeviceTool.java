@@ -36,15 +36,18 @@ import android.view.Display;
 import android.view.WindowManager;
 
 public class DeviceTool {
+    private DeviceTool() {
+    }
+
     /**
-     * 获取安卓设备版本。
+     * 获取安卓设备版本
      */
     public static int getAndroidVersion() {
         return Build.VERSION.SDK_INT;
     }
 
     /**
-     * 获取小米设备 MIUI 版本。
+     * 获取小米设备 MIUI 版本
      */
     public static float getMiuiVersion() {
         return switch (getProp("ro.miui.ui.version.name").trim()) {
@@ -60,7 +63,7 @@ public class DeviceTool {
     }
 
     /**
-     * 获取小米设备 HyperOS 版本。
+     * 获取小米设备 HyperOS 版本
      */
     public static float getHyperOSVersion() {
         return switch (getProp("ro.mi.os.version.name").trim()) {
@@ -71,62 +74,62 @@ public class DeviceTool {
     }
 
     /**
-     * 判断是否为指定某个 Android 版本。
+     * 判断是否为指定某个 Android 版本
      */
     public static boolean isAndroidVersion(int version) {
         return getAndroidVersion() == version;
     }
 
     /**
-     * 判断是否大于等于某个 Android 版本。
+     * 判断是否大于等于某个 Android 版本
      */
     public static boolean isMoreAndroidVersion(int version) {
         return getAndroidVersion() >= version;
     }
 
     /**
-     * 判断是否为指定某个 MIUI 版本。
+     * 判断是否为指定某个 MIUI 版本
      */
     public static boolean isMiuiVersion(float version) {
         return getMiuiVersion() == version;
     }
 
     /**
-     * 判断是否大于等于某个 MIUI 版本。
+     * 判断是否大于等于某个 MIUI 版本
      */
     public static boolean isMoreMiuiVersion(float version) {
         return getMiuiVersion() >= version;
     }
 
     /**
-     * 判断是否为指定某个 HyperOS 版本。
+     * 判断是否为指定某个 HyperOS 版本
      */
     public static boolean isHyperOSVersion(float version) {
         return getHyperOSVersion() == version;
     }
 
     /**
-     * 判断是否大于等于某个 HyperOS 版本。
+     * 判断是否大于等于某个 HyperOS 版本
      */
     public static boolean isMoreHyperOSVersion(float version) {
         return getHyperOSVersion() >= version;
     }
 
     /**
-     * 判断 miui 优化开关是否开启。
+     * 判断 miui 优化开关是否开启
      */
     public static boolean isMiuiOptimization() {
         return getProp("persist.sys.miui_optimization", false);
     }
 
     /**
-     * 获取系统是否已经启动完成。
+     * 获取系统是否已经启动完成
      */
     public static boolean isBootCompleted() {
         return getProp("sys.boot_completed", false);
     }
 
-    // ----------------------------------- 手机品牌 -------------------------------------
+    // -------------------------------- 手机品牌 -------------------------------------
     public static final String[] ROM_HUAWEI = {"huawei"};
     public static final String[] ROM_VIVO = {"vivo"};
     public static final String[] ROM_XIAOMI = {"xiaomi", "redmi"};
@@ -140,7 +143,7 @@ public class DeviceTool {
     public static final String[] ROM_HONOR = {"honor"};
 
     /*
-     * 可能可以使用的获取各系统版本号的 prop 条目。
+     * 可能可以使用的获取各系统版本号的 prop 条目
      * */
     private static final String VERSION_PROPERTY_HUAWEI = "ro.build.version.emui";
     private static final String VERSION_PROPERTY_VIVO = "ro.vivo.os.build.display.id";
@@ -154,42 +157,42 @@ public class DeviceTool {
     private static final String[] VERSION_PROPERTY_MAGIC = {"msc.config.magic.version", "ro.build.version.magic"};
 
     /**
-     * 判断当前厂商系统是否为 Emui。
+     * 判断当前厂商系统是否为 Emui
      */
     public static boolean isEmui() {
         return !getRomVersion(VERSION_PROPERTY_HUAWEI).isEmpty();
     }
 
     /**
-     * 判断当前厂商系统是否为 Xiaomi。
+     * 判断当前厂商系统是否为 Xiaomi
      */
     public static boolean isXiaomi() {
         return !getRomVersion(VERSION_PROPERTY_XIAOMI).isEmpty();
     }
 
     /**
-     * 判断当前厂商系统是否为 ColorOS。
+     * 判断当前厂商系统是否为 ColorOS
      */
     public static boolean isColorOS() {
         return !getRomVersion(VERSION_PROPERTY_OPPO).isEmpty();
     }
 
     /**
-     * 判断当前厂商系统是否为 OriginOS。
+     * 判断当前厂商系统是否为 OriginOS
      */
     public static boolean isOriginOS() {
         return !getRomVersion(VERSION_PROPERTY_VIVO).isEmpty();
     }
 
     /**
-     * 判断当前厂商系统是否为 OneUI。
+     * 判断当前厂商系统是否为 OneUI
      */
     public static boolean isOneUi() {
         return isRightRom(ROM_SAMSUNG);
     }
 
     /**
-     * 判断当前是否为鸿蒙系统。
+     * 判断当前是否为鸿蒙系统
      */
     public static boolean isHarmonyOS() {
         // 鸿蒙系统没有 Android 10 以下的
@@ -208,14 +211,14 @@ public class DeviceTool {
     }
 
     /**
-     * 判断当前是否为 MagicOS 系统（荣耀）。
+     * 判断当前是否为 MagicOS 系统（荣耀）
      */
     public static boolean isMagicOS() {
         return isRightRom(ROM_HONOR);
     }
 
     /**
-     * 判断是否是指定的 rom。
+     * 判断是否是指定的 ROM
      */
     public static boolean isRightRom(final String... names) {
         if (names == null) return false;
@@ -230,7 +233,7 @@ public class DeviceTool {
     }
 
     /**
-     * 通过 prop 获取系统版本号。
+     * 通过 prop 获取系统版本号
      */
     public static String getRomVersion(String... props) {
         for (String property : props) {
@@ -244,7 +247,7 @@ public class DeviceTool {
     }
 
     /**
-     * 是否为国际版小米系统。
+     * 是否为国际版小米系统
      */
     public static boolean isMiuiInternational() {
         return Boolean.TRUE.equals(getStaticField("miui.os.Build", "IS_INTERNATIONAL_BUILD"));
@@ -346,7 +349,7 @@ public class DeviceTool {
     }
 
     /**
-     * 是否是平板。
+     * 是否是平板
      */
     public static boolean isPad(Context context) {
         int flag = 0;
@@ -358,7 +361,7 @@ public class DeviceTool {
     }
 
     /**
-     * 是否是小米平板。
+     * 是否是小米平板
      */
     public static boolean isMiuiPad() {
         return Boolean.TRUE.equals(getStaticField("miui.os.Build", "IS_TABLET"));

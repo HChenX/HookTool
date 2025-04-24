@@ -40,26 +40,46 @@ import java.util.Optional;
 
 import de.robv.android.xposed.XC_MethodHook;
 
+/**
+ * 参数工具
+ *
+ * @author 焕晨HChen
+ */
 public class ParamTool {
-    public String INNER_TAG;
+    public String INNER_TAG; // 内部 TAG，请勿使用
     public volatile XC_MethodHook.MethodHookParam param;
 
+    /**
+     * 实例，静态则为 null
+     */
     final public Object thisObject() {
         return param.thisObject;
     }
 
+    /**
+     * 当前的类加载器
+     */
     final public ClassLoader thisClassLoader() {
         return param.thisObject.getClass().getClassLoader();
     }
 
+    /**
+     * 获取当前的方法
+     */
     final public Member getMember() {
         return param.method;
     }
 
+    /**
+     * 获取方法的参数
+     */
     final public Object[] getArgs() {
         return param.args;
     }
 
+    /**
+     * 获取方法的指定参数
+     */
     final public Object getArg(int index) {
         return param.args[index];
     }
@@ -69,18 +89,30 @@ public class ParamTool {
         return Optional.ofNullable(param.args[index]).orElse(def);
     }
 
+    /**
+     * 设置指定参数的值
+     */
     final public void setArg(int index, Object value) {
         param.args[index] = value;
     }
 
+    /**
+     * 方法参数列表长度
+     */
     final public int length() {
         return param.args.length;
     }
 
+    /**
+     * 获取方法的返回值
+     */
     final public Object getResult() {
         return param.getResult();
     }
 
+    /**
+     * 设置方法的返回值，before 中设置可拦截方法执行
+     */
     final public void setResult(Object value) {
         param.setResult(value);
     }
@@ -97,70 +129,121 @@ public class ParamTool {
         param.setResult(false);
     }
 
+    /**
+     * 方法抛出异常则为 true
+     */
     final public boolean hasThrowable() {
         return param.hasThrowable();
     }
 
+    /**
+     * 获取方法抛出的异常
+     */
     final public Throwable getThrowable() {
         return param.getThrowable();
     }
 
+    /**
+     * 设置异常
+     */
     final public void setThrowable(Throwable t) {
         param.setThrowable(t);
     }
 
+    /**
+     * 获取方法返回值或抛出异常
+     */
     final public Object getResultOrThrowable() throws Throwable {
         return param.getResultOrThrowable();
     }
 
+    /**
+     * 调用本实例的方法
+     */
     final public Object callThisMethod(String methodName, @NonNull Object... params) {
         return callMethod(param.thisObject, methodName, params);
     }
 
+    /**
+     * 调用本实例方法，如果存在
+     */
     final public Object callThisMethodIfExists(String methodName, @NonNull Object... params) {
         return callMethodIfExists(param.thisObject, methodName, params);
     }
 
+    /**
+     * 调用本实例的方法
+     */
     final public Object callThisMethod(@NonNull Method method, @NonNull Object... params) {
         return callMethod(param.thisObject, method, params);
     }
 
+    /**
+     * 获取本实例的字段
+     */
     final public Object getThisField(String fieldName) {
         return getField(param.thisObject, fieldName);
     }
 
+    /**
+     * 获取本实例的字段，如果存在
+     */
     final public Object getThisFieldIfExists(String fieldName) {
         return getFieldIfExists(param.thisObject, fieldName);
     }
 
+    /**
+     * 获取本实例的字段
+     */
     final public Object getThisField(@NonNull Field field) {
         return getField(param.thisObject, field);
     }
 
+    /**
+     * 设置本实例的字段
+     */
     final public void setThisField(String fieldName, Object value) {
         setField(param.thisObject, fieldName, value);
     }
 
+    /**
+     * 设置本实例的字段，如果存在
+     */
     final public void setThisFieldIfExists(String fieldName, Object value) {
         setFieldIfExists(param.thisObject, fieldName, value);
     }
 
+    /**
+     * 设置本实例的字段
+     */
     final public void setThisField(@NonNull Field field, Object value) {
         setField(param.thisObject, field, value);
     }
 
+    /**
+     * 将字段附加到本实例
+     */
     final public Object setThisAdditionalInstanceField(String key, Object value) {
         return setAdditionalInstanceField(param.thisObject, key, value);
     }
 
+    /**
+     * 获取附加的字段值
+     */
     final public Object getThisAdditionalInstanceField(String key) {
         return getAdditionalInstanceField(param.thisObject, key);
     }
 
+    /**
+     * 删除附加的字段
+     */
     final public Object removeThisAdditionalInstanceField(String key) {
         return removeAdditionalInstanceField(param.thisObject, key);
     }
 
+    /**
+     * 观察方法调用
+     */
     final public void observeCall() {
         if (param.args == null || param.args.length == 0) {
             AndroidLog.logI(INNER_TAG, "→ Called Method\n"

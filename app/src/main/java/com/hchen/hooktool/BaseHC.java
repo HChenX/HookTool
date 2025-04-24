@@ -18,11 +18,10 @@
  */
 package com.hchen.hooktool;
 
-import static com.hchen.hooktool.log.XposedLog.logE;
-import static com.hchen.hooktool.log.XposedLog.logI;
-
 import android.app.Application;
 import android.content.Context;
+
+import androidx.annotation.NonNull;
 
 import com.hchen.hooktool.core.CoreTool;
 import com.hchen.hooktool.hook.IHook;
@@ -33,6 +32,13 @@ import java.util.List;
 import de.robv.android.xposed.IXposedHookZygoteInit;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
+/**
+ * BaseHC
+ * <p>
+ * 继承此类即可使用
+ *
+ * @author 焕晨HChen
+ */
 public abstract class BaseHC extends CoreTool {
     public String TAG = getClass().getSimpleName();
     public static ClassLoader classLoader;
@@ -41,22 +47,25 @@ public abstract class BaseHC extends CoreTool {
     private static boolean isHookedApplication = false;
     private static final List<BaseHC> mIApplications = new ArrayList<>();
 
+    /**
+     * 是否启用
+     */
     protected boolean isEnabled() {
         return true;
     }
 
     protected abstract void init();
 
-    protected void init(ClassLoader classLoader) {
+    protected void init(@NonNull ClassLoader classLoader) {
     }
 
-    protected void initZygote(IXposedHookZygoteInit.StartupParam startupParam) {
+    protected void initZygote(@NonNull IXposedHookZygoteInit.StartupParam startupParam) {
     }
 
-    protected void onApplication(Context context) {
+    protected void onApplication(@NonNull Context context) {
     }
 
-    protected void onThrowable(Throwable e) {
+    protected void onThrowable(@NonNull Throwable e) {
     }
 
     final public void onLoadPackage() {
@@ -96,6 +105,8 @@ public abstract class BaseHC extends CoreTool {
     final public void onZygote() {
         try {
             if (!isEnabled()) return;
+
+            assert HCData.getStartupParam() != null;
             initZygote(HCData.getStartupParam());
         } catch (Throwable e) {
             onThrowable(e);

@@ -34,10 +34,18 @@ import java.util.HashMap;
 
 import kotlin.text.Charsets;
 
+/**
+ * 工具状态
+ *
+ * @author 焕晨HChen
+ */
 public class HCState {
     static boolean isEnabled = false;
     static String mFramework = "Unknown";
     static int mVersion = -1;
+
+    private HCState() {
+    }
 
     public static boolean isEnabled() {
         return isEnabled;

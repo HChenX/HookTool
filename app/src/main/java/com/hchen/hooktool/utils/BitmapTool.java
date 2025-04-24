@@ -24,14 +24,27 @@ import android.graphics.Canvas;
 import android.graphics.PixelFormat;
 import android.graphics.drawable.Drawable;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import java.io.ByteArrayOutputStream;
 
+/**
+ * Bitmap 工具
+ *
+ * @author 焕晨HChen
+ */
 public class BitmapTool {
-    public static Bitmap drawableToBitmap(Drawable drawable) {
+    private BitmapTool() {
+    }
+
+    @NonNull
+    public static Bitmap drawableToBitmap(@NonNull Drawable drawable) {
         return drawableToBitmap(drawable, drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight());
     }
 
-    public static Bitmap drawableToBitmap(Drawable drawable, int width, int height) {
+    @NonNull
+    public static Bitmap drawableToBitmap(@NonNull Drawable drawable, int width, int height) {
         if (width <= 0 || height <= 0) {
             width = drawable.getIntrinsicWidth();
             height = drawable.getIntrinsicHeight();
@@ -45,12 +58,13 @@ public class BitmapTool {
         return bitmap;
     }
 
-    public static byte[] bitmapToBytes(Bitmap bitmap) {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
-        return baos.toByteArray();
+    public static byte[] bitmapToBytes(@NonNull Bitmap bitmap) {
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+        return stream.toByteArray();
     }
 
+    @Nullable
     public static Bitmap bytesToBimap(byte[] bytes) {
         if (bytes.length != 0) {
             return BitmapFactory.decodeByteArray(bytes, 0, bytes.length);

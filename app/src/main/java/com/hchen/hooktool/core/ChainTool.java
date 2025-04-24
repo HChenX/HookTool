@@ -32,6 +32,24 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.Objects;
 
+/**
+ * 链式调用工具
+ * <p>
+ * 使用方法：
+ * <pre>{@code
+ * ChainTool.buildChain("com.hchen.demo.Test")
+ *  .findMethod("test")
+ *  .hook(new IHook() {
+ *      // TODO
+ *  })
+ *  .findMethod("test1")
+ *  .hook(new IHook() {
+ *       // TODO
+ *  });
+ * }
+ *
+ * @author 焕晨HChen
+ */
 public class ChainTool {
     private final Class<?> clazz;
     private final ChainHook chainHook;
@@ -42,56 +60,96 @@ public class ChainTool {
         this.clazz = clazz;
     }
 
+    /**
+     * 构建链式
+     *
+     * @param classPath 类
+     */
     public static ChainTool buildChain(String classPath) {
         return new ChainTool(findClass(classPath));
     }
 
+    /**
+     * 构建链式
+     *
+     * @param classPath   类
+     * @param classLoader 类加载器
+     */
     public static ChainTool buildChain(String classPath, ClassLoader classLoader) {
         return new ChainTool(findClass(classPath, classLoader));
     }
 
+    /**
+     * 构建链式
+     *
+     * @param clazz 类
+     */
     public static ChainTool buildChain(@NonNull Class<?> clazz) {
         Objects.requireNonNull(clazz, "[ChainTool]: clazz must not is null!");
         return new ChainTool(clazz);
     }
 
+    /**
+     * 查找方法
+     */
     public ChainHook findMethod(String methodName, @NonNull Object... params) {
         chainData = new ChainData(methodName, params);
         return chainHook;
     }
 
+    /**
+     * 查找方法，如果存在
+     */
     public ChainHook findMethodIfExist(String methodName, @NonNull Object... params) {
         chainData = new ChainData(methodName, params);
         chainData.setIfExist(true);
         return chainHook;
     }
 
+    /**
+     * 查找全部指定名称的方法
+     */
     public ChainHook findAllMethod(String methodName) {
         chainData = new ChainData(methodName);
         return chainHook;
     }
 
+    /**
+     * 传入指定方法
+     */
     public ChainHook withMethod(@NonNull Method method) {
         chainData = new ChainData(method);
         return chainHook;
     }
 
+    /**
+     * 查找构造函数
+     */
     public ChainHook findConstructor(@NonNull Object... params) {
         chainData = new ChainData(params);
         return chainHook;
     }
 
+    /**
+     * 查找构造方法，如果存在
+     */
     public ChainHook findConstructorIfExist(@NonNull Object... params) {
         chainData = new ChainData(params);
         chainData.setIfExist(true);
         return chainHook;
     }
 
+    /**
+     * 查找全部构造函数
+     */
     public ChainHook findAllConstructor() {
         chainData = new ChainData();
         return chainHook;
     }
 
+    /**
+     * 传入指定构造函数
+     */
     public ChainHook withConstructor(@NonNull Constructor<?> constructor) {
         chainData = new ChainData(constructor);
         return chainHook;
@@ -151,20 +209,32 @@ public class ChainTool {
         private ChainHook() {
         }
 
+        /**
+         * Hook
+         */
         public ChainTool hook(IHook iHook) {
             chainData.iHook = iHook;
             runChain();
             return ChainTool.this;
         }
 
+        /**
+         * Hook 并返回值
+         */
         public ChainTool returnResult(final Object result) {
             return hook(CoreTool.returnResult(result));
         }
 
+        /**
+         * 拦截方法执行
+         */
         public ChainTool doNothing() {
             return hook(CoreTool.doNothing());
         }
 
+        /**
+         * 修改指定参数
+         */
         public ChainTool setArg(int index, Object value) {
             return hook(CoreTool.setArg(index, value));
         }

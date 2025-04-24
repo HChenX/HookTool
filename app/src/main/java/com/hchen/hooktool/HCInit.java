@@ -21,12 +21,21 @@ package com.hchen.hooktool;
 import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
 
+import com.hchen.hooktool.exception.UnexpectedException;
+import com.hchen.hooktool.log.XposedLog;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.Optional;
 
 import de.robv.android.xposed.IXposedHookZygoteInit;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
+/**
+ * 初始化工具
+ *
+ * @author 焕晨HChen
+ */
 public class HCInit {
     // ------- 可选日志等级 ------
     public static final int LOG_E = 1;
@@ -44,12 +53,30 @@ public class HCInit {
     private @interface LogLevel {
     }
 
-    public static void initLoadPackageParam(XC_LoadPackage.LoadPackageParam loadPackageParam) {
+    private HCInit() {
+    }
 
+    public static void initLoadPackageParam(XC_LoadPackage.LoadPackageParam loadPackageParam) {
+        if (loadPackageParam == null)
+            throw new UnexpectedException("loadPackageParam must not is null!");
+
+        HCData.setIsXposed(true);
+        HCData.setLoadPackageParam(loadPackageParam);
+        HCData.setClassLoader(loadPackageParam.classLoader);
+        XposedLog.logI("Init classloader: [" + loadPackageParam.classLoader + "], packageName: " + loadPackageParam.packageName);
     }
 
     public static void initStartupParam(IXposedHookZygoteInit.StartupParam startupParam) {
+        if (startupParam == null)
+            throw new UnexpectedException("startupParam must not is null!");
 
+        HCData.setIsXposed(true);
+        HCData.setStartupParam(startupParam);
+        HCData.setClassLoader(
+            Optional.ofNullable(
+                startupParam.getClass().getClassLoader()
+            ).orElse(ClassLoader.getSystemClassLoader())
+        );
     }
 
     public static void initBasicData(BasicData basicData) {

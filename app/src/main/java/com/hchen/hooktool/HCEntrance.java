@@ -28,6 +28,11 @@ import de.robv.android.xposed.IXposedHookZygoteInit;
 import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
+/**
+ * Hook 入口
+ *
+ * @author 焕晨HChen
+ */
 public abstract class HCEntrance implements IXposedHookLoadPackage, IXposedHookZygoteInit {
     public abstract HCInit.BasicData initHC(HCInit.BasicData basicData);
 

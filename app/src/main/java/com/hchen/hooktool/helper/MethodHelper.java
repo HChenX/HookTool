@@ -34,6 +34,11 @@ import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+/**
+ * 方法查找
+ *
+ * @author 焕晨HChen
+ */
 public class MethodHelper {
     private final Class<?> clazz;
     private String methodName = null;
@@ -55,66 +60,105 @@ public class MethodHelper {
         this.clazz = clazz;
     }
 
+    /**
+     * 方法名
+     */
     public MethodHelper withMethodName(@NonNull String methodName) {
         this.methodName = methodName;
         return this;
     }
 
+    /**
+     * 方法名包含的字段
+     */
     public MethodHelper withSubstring(@NonNull String substring) {
         this.substring = substring;
         return this;
     }
 
+    /**
+     * 匹配方法名
+     */
     public MethodHelper withPattern(@NonNull Pattern pattern) {
         this.pattern = pattern;
         return this;
     }
 
+    /**
+     * 方法参数数量
+     */
     public MethodHelper withParamCount(int paramCount) {
         this.paramCount = paramCount;
         return this;
     }
 
+    /**
+     * 方法参数类型，可使用 Any.class 占位，表示任意类型
+     */
     public MethodHelper withParamTypes(@NonNull Class<?>... paramTypes) {
         this.paramTypes = paramTypes;
         return this;
     }
 
+    /**
+     * 方法返回类型
+     */
     public MethodHelper withReturnType(@NonNull Class<?> returnType) {
         this.returnType = returnType;
         return this;
     }
 
+    /**
+     * 方法返回类型的超类
+     */
     public MethodHelper withSuperReturnType(@NonNull Class<?> superReturnType) {
         this.superReturnType = superReturnType;
         return this;
     }
 
+    /**
+     * 方法的修饰符
+     */
     public MethodHelper withMods(int mods) {
         this.mods = mods;
         return this;
     }
 
+    /**
+     * 方法的注解
+     */
     public MethodHelper withAnnotation(@NonNull Class<? extends Annotation> annotation) {
         this.annotation = annotation;
         return this;
     }
 
+    /**
+     * 方法的泛型返回类型
+     */
     public MethodHelper withGenericReturnType(@NonNull Type genericReturnType) {
         this.genericReturnType = genericReturnType;
         return this;
     }
 
+    /**
+     * 方法的泛型参数
+     */
     public MethodHelper withGenericParamTypes(@NonNull Type... genericParamTypes) {
         this.genericParamTypes = genericParamTypes;
         return this;
     }
 
+    /**
+     * 方法抛出的异常类型
+     */
     public MethodHelper withExceptionType(@NonNull Class<? extends Throwable> exceptionType) {
         this.exceptionType = exceptionType;
         return this;
     }
 
+    /**
+     * 是否查找 Super 类的方法
+     */
     public MethodHelper withSuper(boolean withSuper) {
         this.withSuper = withSuper;
         return this;

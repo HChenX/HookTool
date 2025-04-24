@@ -18,6 +18,11 @@
  */
 package com.hchen.hooktool.helper;
 
+/**
+ * 占位类，表示任何参数
+ *
+ * @author 焕晨HChen
+ */
 public class Any {
     private Any() {
     }

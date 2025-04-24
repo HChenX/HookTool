@@ -21,6 +21,18 @@ package com.hchen.hooktool.callback;
 import android.content.pm.PackageManager;
 import android.os.Parcelable;
 
+/**
+ * 包信息获取器
+ *
+ * @author 焕晨HChen
+ */
 public interface IPackageInfoGetter {
+    /**
+     * 需要获取信息的包列表
+     *
+     * @param pm 包管理器
+     * @return 包列表
+     * @throws PackageManager.NameNotFoundException 未找到指定包
+     */
     Parcelable[] packageInfoGetter(PackageManager pm) throws PackageManager.NameNotFoundException;
 }

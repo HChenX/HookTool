@@ -23,7 +23,15 @@ import android.util.Log;
 import com.hchen.hooktool.HCData;
 import com.hchen.hooktool.HCInit;
 
+/**
+ * 安卓日志
+ *
+ * @author 焕晨HChen
+ */
 public class AndroidLog {
+    private AndroidLog() {
+    }
+
     // ----------- logE ----------
     public static void logE(String tag, String log) {
         if (HCData.getLogLevel() < HCInit.LOG_E) return;

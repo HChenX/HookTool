@@ -24,6 +24,11 @@ import androidx.annotation.Nullable;
 import de.robv.android.xposed.IXposedHookZygoteInit;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
+/**
+ * 工具数据
+ *
+ * @author 焕晨HChen
+ */
 public class HCData {
     @NonNull
     private static String TAG = "Unknown";
@@ -44,6 +49,9 @@ public class HCData {
     private static XC_LoadPackage.LoadPackageParam loadPackageParam;
     @Nullable
     private static IXposedHookZygoteInit.StartupParam startupParam;
+
+    private HCData() {
+    }
 
     @NonNull
     public static String getTag() {
@@ -141,6 +149,7 @@ public class HCData {
     protected static void setLoadPackageParam(@NonNull XC_LoadPackage.LoadPackageParam loadPackageParam) {
         HCData.loadPackageParam = loadPackageParam;
         HCData.targetPackageName = loadPackageParam.packageName;
+        BaseHC.loadPackageParam = loadPackageParam;
     }
 
     protected static void setStartupParam(@NonNull IXposedHookZygoteInit.StartupParam startupParam) {
