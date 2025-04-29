@@ -30,13 +30,13 @@ import android.os.Build;
 import android.os.Parcelable;
 import android.os.UserHandle;
 
+import androidx.annotation.NonNull;
+
 import com.hchen.hooktool.callback.IPackageInfoGetter;
 import com.hchen.hooktool.data.AppData;
 import com.hchen.hooktool.exception.UnexpectedException;
-import com.hchen.hooktool.log.AndroidLog;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -96,7 +96,7 @@ public class PackageTool {
     }
 
     /**
-     * 根据 uid 获取 user id。
+     * 根据 uid 获取 user id
      */
     public static int getUserId(int uid) {
         return (int) Optional.ofNullable(
@@ -109,9 +109,8 @@ public class PackageTool {
      */
     public static boolean isSystem(ApplicationInfo app) {
         Objects.requireNonNull(app, "[PackageTool]: ApplicationInfo must not is null!");
-        if (app.uid < 10000) {
-            return true;
-        }
+
+        if (app.uid < 10000) return true;
         return (app.flags & (ApplicationInfo.FLAG_SYSTEM | ApplicationInfo.FLAG_UPDATED_SYSTEM_APP)) != 0;
     }
 
@@ -125,7 +124,8 @@ public class PackageTool {
      * <pre>{@code
      * AppData appData = PackageTool.getPackagesByCode(new IPackageInfoGetter() {
      *             @Override
-     *             public Parcelable[] packageInfoGetter(PackageManager pm) throws PackageManager.NameNotFoundException {
+     *             @NonNull
+     *             public Parcelable[] packageInfoGetter(@NonNull PackageManager pm) throws PackageManager.NameNotFoundException {
      *                 PackageInfo packageInfo = null;
      *                 ArrayList<PackageInfo> arrayList = new ArrayList<>();
      *                 arrayList.add(packageInfo);
@@ -144,21 +144,13 @@ public class PackageTool {
         Parcelable[] parcelables;
         try {
             parcelables = infoGetter.packageInfoGetter(packageManager);
+
+            return Arrays.stream(parcelables)
+                .map(parcelable -> createAppData(parcelable, packageManager))
+                .toArray(AppData[]::new);
         } catch (PackageManager.NameNotFoundException e) {
             throw new UnexpectedException(e);
         }
-
-        List<AppData> appDataList = new ArrayList<>();
-        if (parcelables != null) {
-            for (Parcelable parcelable : parcelables) {
-                try {
-                    appDataList.add(createAppData(parcelable, packageManager));
-                } catch (Throwable e) {
-                    AndroidLog.logW(TAG, "Failed to create app data!", e);
-                }
-            }
-        }
-        return appDataList.toArray(new AppData[0]);
     }
 
     /**
@@ -169,7 +161,8 @@ public class PackageTool {
         return createAppData(packageManager.getPackageInfo(packageName, PackageManager.GET_ACTIVITIES), packageManager);
     }
 
-    private static AppData createAppData(Parcelable parcelable, PackageManager pm) {
+    @NonNull
+    private static AppData createAppData(@NonNull Parcelable parcelable, @NonNull PackageManager pm) {
         AppData appData = new AppData();
         if (parcelable instanceof PackageInfo packageInfo) {
             appData.icon = BitmapTool.drawableToBitmap(packageInfo.applicationInfo.loadIcon(pm));
@@ -219,10 +212,11 @@ public class PackageTool {
         return appData;
     }
 
+    @NonNull
     private static ComponentInfo aboutResolveInfo(ResolveInfo resolveInfo) {
         if (resolveInfo.activityInfo != null) return resolveInfo.activityInfo;
         if (resolveInfo.serviceInfo != null) return resolveInfo.serviceInfo;
         if (resolveInfo.providerInfo != null) return resolveInfo.providerInfo;
-        return null;
+        throw new UnexpectedException("[PackageTool]: Unable to obtain application information!");
     }
 }

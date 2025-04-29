@@ -85,7 +85,7 @@ public class ChainTool {
      * @param clazz 类
      */
     public static ChainTool buildChain(@NonNull Class<?> clazz) {
-        Objects.requireNonNull(clazz, "[ChainTool]: clazz must not is null!");
+        Objects.requireNonNull(clazz, "[ChainTool]: Clazz must not is null!");
         return new ChainTool(clazz);
     }
 
@@ -156,7 +156,7 @@ public class ChainTool {
     }
 
     private void runChain() {
-        Objects.requireNonNull(chainData, "[ChainTool]: chain data must not is null!");
+        Objects.requireNonNull(chainData, "[ChainTool]: Chain data must not is null!");
 
         if (ChainData.chainDataSet.isEmpty()) {
             runFind();

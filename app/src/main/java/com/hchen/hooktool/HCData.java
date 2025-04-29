@@ -43,6 +43,8 @@ public class HCData {
     private static boolean isXposed = false;
     @Nullable
     private static String[] logExpandPath = null;
+    @Nullable
+    private static String[] logExpandIgnoreClassNames = null;
     @NonNull
     private static ClassLoader classLoader = ClassLoader.getSystemClassLoader();
     @Nullable
@@ -88,6 +90,11 @@ public class HCData {
     @Nullable
     public static String[] getLogExpandPath() {
         return logExpandPath;
+    }
+
+    @Nullable
+    public static String[] getLogExpandIgnoreClassNames() {
+        return logExpandIgnoreClassNames;
     }
 
     @Nullable
@@ -142,8 +149,13 @@ public class HCData {
         HCData.logExpandPath = logExpandPath;
     }
 
+    protected static void setLogExpandIgnoreClassNames(@NonNull String... logExpandIgnoreClassNames) {
+        HCData.logExpandIgnoreClassNames = logExpandIgnoreClassNames;
+    }
+
     protected static void setClassLoader(@NonNull ClassLoader classLoader) {
         HCData.classLoader = classLoader;
+        BaseHC.classLoader = classLoader;
     }
 
     protected static void setLoadPackageParam(@NonNull XC_LoadPackage.LoadPackageParam loadPackageParam) {

@@ -35,6 +35,8 @@ import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.WindowManager;
 
+import androidx.annotation.NonNull;
+
 public class DeviceTool {
     private DeviceTool() {
     }
@@ -235,7 +237,7 @@ public class DeviceTool {
     /**
      * 通过 prop 获取系统版本号
      */
-    public static String getRomVersion(String... props) {
+    public static String getRomVersion(@NonNull String... props) {
         for (String property : props) {
             String versionName = getProp(property);
             if (TextUtils.isEmpty(versionName))
@@ -258,12 +260,12 @@ public class DeviceTool {
     private static final Point mScreenSizePoint = new Point();
 
     // --------------- 获取窗口参数 --------------
-    public static WindowManager getWindowManager(Context context) {
+    public static WindowManager getWindowManager(@NonNull Context context) {
         return (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
     }
 
     @SuppressLint("NewApi")
-    public static Display getDisplay(Context context) {
+    public static Display getDisplay(@NonNull Context context) {
         try {
             return context.getDisplay();
         } catch (UnsupportedOperationException unused) {
@@ -272,77 +274,77 @@ public class DeviceTool {
         }
     }
 
-    public static void getWindowSize(Context context, Point point) {
+    public static void getWindowSize(@NonNull Context context, @NonNull Point point) {
         getWindowSize(getWindowManager(context), point);
     }
 
     @SuppressLint("NewApi")
-    public static void getWindowSize(WindowManager windowManager, Point point) {
+    public static void getWindowSize(@NonNull WindowManager windowManager, @NonNull Point point) {
         Rect bounds = windowManager.getCurrentWindowMetrics().getBounds();
         point.x = bounds.width();
         point.y = bounds.height();
     }
 
-    public static Point getWindowSize(Context context) {
+    public static Point getWindowSize(@NonNull Context context) {
         getWindowSize(context, mWindowSizePoint);
         return mWindowSizePoint;
     }
 
     @Deprecated
-    public static int getWindowHeight(Context context) {
+    public static int getWindowHeight(@NonNull Context context) {
         return getWindowSize(context).y;
     }
 
-    public static void getScreenSize(Context context, Point point) {
+    public static void getScreenSize(@NonNull Context context, @NonNull Point point) {
         getScreenSize(getWindowManager(context), point);
     }
 
-    public static Point getScreenSize(Context context) {
+    public static Point getScreenSize(@NonNull Context context) {
         getScreenSize(getWindowManager(context), mScreenSizePoint);
         return mScreenSizePoint;
     }
 
     @SuppressLint("NewApi")
-    public static void getScreenSize(WindowManager windowManager, Point point) {
+    public static void getScreenSize(@NonNull WindowManager windowManager, @NonNull Point point) {
         Rect bounds = windowManager.getMaximumWindowMetrics().getBounds();
         point.x = bounds.width();
         point.y = bounds.height();
     }
 
-    public static boolean isHorizontalScreen(Context context) {
+    public static boolean isHorizontalScreen(@NonNull Context context) {
         return context.getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE;
     }
 
-    public static boolean isVerticalScreen(Context context) {
+    public static boolean isVerticalScreen(@NonNull Context context) {
         return context.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT;
     }
 
     /**
      * 是否是深色模式。
      */
-    public static boolean isDarkMode(Resources resources) {
+    public static boolean isDarkMode(@NonNull Resources resources) {
         return (resources.getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
     }
 
-    public static int px2dp(Context context, float pxValue) {
+    public static int px2dp(@NonNull Context context, float pxValue) {
         // 获取屏幕密度（每英寸多少个像素点）
         float scale = context.getResources().getDisplayMetrics().density;
         return (int) (pxValue / scale + 0.5f);
     }
 
-    public static int px2sp(Context context, float pxValue) {
+    public static int px2sp(@NonNull Context context, float pxValue) {
         // 获取字体的缩放密度
         float fontScale = context.getResources().getDisplayMetrics().scaledDensity;
         return (int) (pxValue / fontScale + 0.5f);
     }
 
-    public static int dp2px(Context context, float dpValue) {
+    public static int dp2px(@NonNull Context context, float dpValue) {
         // 获取屏幕密度
         float scale = context.getResources().getDisplayMetrics().density;
         return (int) (dpValue * scale + 0.5f);
     }
 
-    public static int sp2px(Context context, float spValue) {
+    public static int sp2px(@NonNull Context context, float spValue) {
         // 获取字体的缩放密度
         float fontScale = context.getResources().getDisplayMetrics().scaledDensity;
         return (int) (spValue * fontScale + 0.5f);
@@ -351,7 +353,7 @@ public class DeviceTool {
     /**
      * 是否是平板
      */
-    public static boolean isPad(Context context) {
+    public static boolean isPad(@NonNull Context context) {
         int flag = 0;
         if (isMiuiPad()) return true;
         if (isPadByProp()) ++flag;
@@ -373,7 +375,7 @@ public class DeviceTool {
             || getProp("persist.sys.muiltdisplay_type", 0) == 2;
     }
 
-    private static boolean isPadBySize(Context context) {
+    private static boolean isPadBySize(@NonNull Context context) {
         Display display = ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
         DisplayMetrics dm = new DisplayMetrics();
         display.getMetrics(dm);
@@ -382,7 +384,7 @@ public class DeviceTool {
         return Math.sqrt(x + y) >= 7.0;
     }
 
-    private static boolean isPadByApi(Context context) {
+    private static boolean isPadByApi(@NonNull Context context) {
         return (context.getResources().getConfiguration().screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK) >= Configuration.SCREENLAYOUT_SIZE_LARGE;
     }
 }

@@ -16,26 +16,26 @@
 
  * Copyright (C) 2023-2025 HChenX
  */
-package com.hchen.hooktool.callback;
-
-import android.content.pm.PackageManager;
-import android.os.Parcelable;
-
-import androidx.annotation.NonNull;
+package com.hchen.hooktool.exception;
 
 /**
- * 包信息获取器
+ * 资源注入失败异常
  *
  * @author 焕晨HChen
  */
-public interface IPackageInfoGetter {
-    /**
-     * 需要获取信息的包列表
-     *
-     * @param pm 包管理器
-     * @return 包列表
-     * @throws PackageManager.NameNotFoundException 未找到指定包
-     */
-    @NonNull
-    Parcelable[] packageInfoGetter(@NonNull PackageManager pm) throws PackageManager.NameNotFoundException;
+public class InjectResourcesException extends RuntimeException {
+    public InjectResourcesException() {
+    }
+
+    public InjectResourcesException(String message) {
+        super(message);
+    }
+
+    public InjectResourcesException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public InjectResourcesException(Throwable cause) {
+        super(cause);
+    }
 }

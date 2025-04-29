@@ -58,6 +58,7 @@ public class BitmapTool {
         return bitmap;
     }
 
+    @NonNull
     public static byte[] bitmapToBytes(@NonNull Bitmap bitmap) {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
@@ -65,7 +66,7 @@ public class BitmapTool {
     }
 
     @Nullable
-    public static Bitmap bytesToBimap(byte[] bytes) {
+    public static Bitmap bytesToBimap(@NonNull byte[] bytes) {
         if (bytes.length != 0) {
             return BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
         } else {

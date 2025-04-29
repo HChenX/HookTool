@@ -117,7 +117,7 @@ public class ChainData {
 
     @Override
     public int hashCode() {
-        return Objects.hash(chainType, /* iHook ignore*/ ifExist,
+        return Objects.hash(chainType, /* iHook ignore */ ifExist,
             /* Arrays.hashCode(members) ignore */ methodName, Arrays.hashCode(methodParams),
             method, Arrays.hashCode(constructorParams), constructor);
     }

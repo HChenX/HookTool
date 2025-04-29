@@ -20,13 +20,22 @@ package com.hchen.hooktool.core;
 
 import static com.hchen.hooktool.core.CoreTool.callMethod;
 import static com.hchen.hooktool.core.CoreTool.callMethodIfExists;
+import static com.hchen.hooktool.core.CoreTool.callStaticMethod;
+import static com.hchen.hooktool.core.CoreTool.callStaticMethodIfExists;
 import static com.hchen.hooktool.core.CoreTool.getAdditionalInstanceField;
+import static com.hchen.hooktool.core.CoreTool.getAdditionalStaticField;
 import static com.hchen.hooktool.core.CoreTool.getField;
 import static com.hchen.hooktool.core.CoreTool.getFieldIfExists;
+import static com.hchen.hooktool.core.CoreTool.getStaticField;
+import static com.hchen.hooktool.core.CoreTool.getStaticFieldIfExists;
 import static com.hchen.hooktool.core.CoreTool.removeAdditionalInstanceField;
+import static com.hchen.hooktool.core.CoreTool.removeAdditionalStaticField;
 import static com.hchen.hooktool.core.CoreTool.setAdditionalInstanceField;
+import static com.hchen.hooktool.core.CoreTool.setAdditionalStaticField;
 import static com.hchen.hooktool.core.CoreTool.setField;
 import static com.hchen.hooktool.core.CoreTool.setFieldIfExists;
+import static com.hchen.hooktool.core.CoreTool.setStaticField;
+import static com.hchen.hooktool.core.CoreTool.setStaticFieldIfExists;
 
 import androidx.annotation.NonNull;
 
@@ -165,7 +174,7 @@ public class ParamTool {
     }
 
     /**
-     * 调用本实例方法，如果存在
+     * 调用本实例的方法，如果存在
      */
     final public Object callThisMethodIfExists(String methodName, @NonNull Object... params) {
         return callMethodIfExists(param.thisObject, methodName, params);
@@ -242,9 +251,94 @@ public class ParamTool {
     }
 
     /**
+     * 调用本实例的静态方法
+     */
+    final public Object callThisStaticMethod(String methodName, @NonNull Object... params) {
+        return callStaticMethod(param.method.getDeclaringClass(), methodName, params);
+    }
+
+    /**
+     * 调用本实例的静态方法，如果存在
+     */
+    final public Object callThisStaticMethodIfExists(String methodName, @NonNull Object... params) {
+        return callStaticMethodIfExists(param.method.getDeclaringClass(), methodName, params);
+    }
+
+    /**
+     * 调用本实例的静态方法
+     */
+    final public Object callThisStaticMethod(@NonNull Method method, @NonNull Object... params) {
+        return callStaticMethod(method, params);
+    }
+
+    /**
+     * 获取本实例的静态字段
+     */
+    final public Object getThisStaticField(String fieldName) {
+        return getStaticField(param.method.getDeclaringClass(), fieldName);
+    }
+
+    /**
+     * 获取本实例的静态字段，如果存在
+     */
+    final public Object getThisStaticFieldIfExists(String fieldName) {
+        return getStaticFieldIfExists(param.method.getDeclaringClass(), fieldName);
+    }
+
+    /**
+     * 获取本实例的静态字段
+     */
+    final public Object getThisStaticField(@NonNull Field field) {
+        return getStaticField(field);
+    }
+
+    /**
+     * 设置本实例的静态字段
+     */
+    final public void setThisStaticField(String fieldName, Object value) {
+        setStaticField(param.method.getDeclaringClass(), fieldName, value);
+    }
+
+    /**
+     * 设置本实例的静态字段，如果存在
+     */
+    final public void setThisStaticFieldIfExists(String fieldName, Object value) {
+        setStaticFieldIfExists(param.method.getDeclaringClass(), fieldName, value);
+    }
+
+    /**
+     * 设置本实例的静态字段
+     */
+    final public void setThisStaticField(@NonNull Field field, Object value) {
+        setStaticField(field, value);
+    }
+
+    /**
+     * 将静态字段附加到本实例
+     */
+    final public Object setThisStaticAdditionalInstanceField(String key, Object value) {
+        return setAdditionalStaticField(param.method.getDeclaringClass(), key, value);
+    }
+
+    /**
+     * 获取附加的静态字段值
+     */
+    final public Object getThisStaticAdditionalInstanceField(String key) {
+        return getAdditionalStaticField(param.method.getDeclaringClass(), key);
+    }
+
+    /**
+     * 删除附加的静态字段
+     */
+    final public Object removeThisStaticAdditionalInstanceField(String key) {
+        return removeAdditionalStaticField(param.method.getDeclaringClass(), key);
+    }
+
+    /**
      * 观察方法调用
      */
     final public void observeCall() {
+        if (param == null) return;
         if (param.args == null || param.args.length == 0) {
             AndroidLog.logI(INNER_TAG, "→ Called Method\n"
                 + "├─ Class:  " + param.method.getDeclaringClass().getName() + "\n"

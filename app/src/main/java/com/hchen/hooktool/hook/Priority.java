@@ -18,6 +18,13 @@
  */
 package com.hchen.hooktool.hook;
 
+/**
+ * Hook 优先级
+ * <p>
+ * 范围 [ -10000, 10000 ]
+ *
+ * @author 焕晨HChen
+ */
 public class Priority {
     public static final int DEFAULT = 50;
     public static final int LOWEST = -10000;

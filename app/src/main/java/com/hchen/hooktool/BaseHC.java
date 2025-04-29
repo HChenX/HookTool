@@ -21,11 +21,14 @@ package com.hchen.hooktool;
 import android.app.Application;
 import android.content.Context;
 
+import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
 
 import com.hchen.hooktool.core.CoreTool;
 import com.hchen.hooktool.hook.IHook;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,6 +49,18 @@ public abstract class BaseHC extends CoreTool {
     public static ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
     private static boolean isHookedApplication = false;
     private static final List<BaseHC> mIApplications = new ArrayList<>();
+    public static final int ON_LOAD_PACKAGE = 1;
+    public static final int ON_ZYGOTE = 2;
+    public static final int ON_APPLICATION = 3;
+
+    @IntDef(value = {
+        ON_LOAD_PACKAGE,
+        ON_ZYGOTE,
+        ON_APPLICATION
+    })
+    @Retention(RetentionPolicy.SOURCE)
+    private @interface BaseFlag {
+    }
 
     /**
      * 是否启用
@@ -54,18 +69,39 @@ public abstract class BaseHC extends CoreTool {
         return true;
     }
 
+    /**
+     * onLoadPackage 阶段调用
+     */
     protected abstract void init();
 
+    /**
+     * onLoadPackage 阶段调用
+     * <p>
+     * 支持自定义类加载器
+     */
     protected void init(@NonNull ClassLoader classLoader) {
     }
 
+    /**
+     * onZygote 阶段调用
+     */
     protected void initZygote(@NonNull IXposedHookZygoteInit.StartupParam startupParam) {
     }
 
+    /**
+     * Application 创建时调用
+     */
     protected void onApplication(@NonNull Context context) {
     }
 
-    protected void onThrowable(@NonNull Throwable e) {
+    /**
+     * Hook 流程抛错时调用
+     * <p>
+     * 在这里进行抛错清理操作
+     *
+     * @param flag 报错的时机
+     */
+    protected void onThrowable(@BaseFlag int flag, @NonNull Throwable e) {
     }
 
     final public void onLoadPackage() {
@@ -73,7 +109,7 @@ public abstract class BaseHC extends CoreTool {
             if (!isEnabled()) return;
             init();
         } catch (Throwable e) {
-            onThrowable(e);
+            onThrowable(ON_LOAD_PACKAGE, e);
             logE(TAG, "Waring! will stop hook process!!", e);
         }
     }
@@ -83,7 +119,7 @@ public abstract class BaseHC extends CoreTool {
             if (!isEnabled()) return;
             init(classLoader);
         } catch (Throwable e) {
-            onThrowable(e);
+            onThrowable(ON_LOAD_PACKAGE, e);
             logE(TAG, "Waring! will stop hook process!!", e);
         }
     }
@@ -96,7 +132,7 @@ public abstract class BaseHC extends CoreTool {
                 mIApplications.add(this);
             initApplicationHook();
         } catch (Throwable e) {
-            onThrowable(e);
+            onThrowable(ON_APPLICATION, e);
             logE(TAG, "Waring! can't hook application!!", e);
         }
         return this;
@@ -109,7 +145,7 @@ public abstract class BaseHC extends CoreTool {
             assert HCData.getStartupParam() != null;
             initZygote(HCData.getStartupParam());
         } catch (Throwable e) {
-            onThrowable(e);
+            onThrowable(ON_ZYGOTE, e);
             logE(TAG, "Waring! will stop hook process!!", e);
         }
     }

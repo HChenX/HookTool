@@ -38,10 +38,12 @@ public record ShellResult(String command, String[] outputs, String exitCode) {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof ShellResult that)) return false;
-        return Objects.equals(command, that.command) &&
-            Objects.equals(exitCode, that.exitCode) &&
-            Objects.deepEquals(outputs, that.outputs);
+        if (!(o instanceof ShellResult(String command1, String[] outputs1, String code)))
+            return false;
+
+        return Objects.equals(command, command1) &&
+            Objects.equals(exitCode, code) &&
+            Objects.deepEquals(outputs, outputs1);
     }
 
     @Override

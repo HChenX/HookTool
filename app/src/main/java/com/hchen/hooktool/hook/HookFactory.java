@@ -39,13 +39,15 @@ public class HookFactory {
         XC_MethodHook xcMethodHook = new XC_MethodHook(iHook.PRIORITY) {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                Object[] lastArgs = param.args;
+
                 try {
                     iHook.param = param;
                     iHook.before();
                 } catch (Throwable e) {
                     if (!iHook.onThrow(IHook.BEFORE, e)) {
                         try {
-                            param.setResult(CoreTool.invokeOriginalMethod(param.method, param.thisObject, param.args));
+                            param.setResult(CoreTool.invokeOriginalMethod(param.method, param.thisObject, lastArgs));
                         } catch (InvocationTargetException exception) {
                             param.setThrowable(exception.getCause());
                         } catch (Throwable ignore) {

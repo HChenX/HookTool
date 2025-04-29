@@ -22,6 +22,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.hchen.hooktool.exception.NonSingletonException;
+import com.hchen.hooktool.exception.UnexpectedException;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
@@ -47,9 +48,10 @@ public class ConstructorHelper {
     private Type[] genericParamTypes = null;
     private Class<? extends Throwable> exceptionType = null;
     private boolean withSuper = false;
+    private Constructor<?> constructorCache = null;
 
     public ConstructorHelper(Class<?> clazz) {
-        Objects.requireNonNull(clazz, "[ConstructorHelper]: class must not is null!");
+        Objects.requireNonNull(clazz, "[ConstructorHelper]: Class must not is null!");
         this.clazz = clazz;
     }
 
@@ -116,14 +118,14 @@ public class ConstructorHelper {
         if (constructors.size() > 1)
             throw new NonSingletonException("[ConstructorHelper]: Query did not return a unique result: " + constructors.size());
 
-        return constructors.get(0);
+        return constructorCache = constructors.get(0);
     }
 
     @Nullable
     public Constructor<?> singleOrNull() {
         List<Constructor<?>> constructors = matches();
         if (constructors.size() == 1)
-            return constructors.get(0);
+            return constructorCache = constructors.get(0);
 
         return null;
     }
@@ -133,13 +135,17 @@ public class ConstructorHelper {
         if (constructors.size() != 1)
             throw throwableSupplier.get();
 
-        return constructors.get(0);
+        return constructorCache = constructors.get(0);
     }
 
     /**
      * 核心过滤逻辑
      */
     private List<Constructor<?>> matches() {
+        if (constructorCache != null) {
+            throw new UnexpectedException("[ConstructorHelper]: Do not reuse!");
+        }
+
         List<Constructor<?>> constructors = new ArrayList<>(Arrays.asList(clazz.getDeclaredConstructors()));
         if (withSuper) {
             Class<?> sup = clazz.getSuperclass();

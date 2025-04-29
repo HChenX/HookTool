@@ -56,6 +56,9 @@ public class HCInit {
     private HCInit() {
     }
 
+    /**
+     * 初始化 loadPackageParam
+     */
     public static void initLoadPackageParam(XC_LoadPackage.LoadPackageParam loadPackageParam) {
         if (loadPackageParam == null)
             throw new UnexpectedException("loadPackageParam must not is null!");
@@ -66,6 +69,9 @@ public class HCInit {
         XposedLog.logI("Init classloader: [" + loadPackageParam.classLoader + "], packageName: " + loadPackageParam.packageName);
     }
 
+    /**
+     * 初始化 startupParam
+     */
     public static void initStartupParam(IXposedHookZygoteInit.StartupParam startupParam) {
         if (startupParam == null)
             throw new UnexpectedException("startupParam must not is null!");
@@ -79,18 +85,24 @@ public class HCInit {
         );
     }
 
-    public static void initBasicData(BasicData basicData) {
+    /**
+     * 初始化模块基本设置
+     */
+    public static void initBasicData(@NonNull BasicData basicData) {
         HCData.setTag(basicData.tag);
         HCData.setLogLevel(basicData.logLevel);
         HCData.setModulePackageName(basicData.packageName);
         HCData.setPrefsName(basicData.prefsName);
         HCData.setAutoReload(basicData.isAutoReload);
         HCData.setLogExpandPath(basicData.logExpandPath);
+        HCData.setLogExpandIgnoreClassNames(basicData.logExpandIgnoreClassNames);
     }
 
+    /**
+     * 更换工具类加载器
+     */
     public static void setClassLoader(ClassLoader classLoader) {
         HCData.setClassLoader(classLoader);
-        BaseHC.classLoader = classLoader;
     }
 
     public final static class BasicData {
@@ -100,34 +112,63 @@ public class HCInit {
         String prefsName = null;
         boolean isAutoReload = true;
         String[] logExpandPath = null;
+        String[] logExpandIgnoreClassNames = null;
 
+        /**
+         * 设置本模块包名
+         */
         public BasicData setModulePackageName(@NonNull String modulePackageName) {
             packageName = modulePackageName;
             return this;
         }
 
+        /**
+         * 设置日志 TAG
+         */
         public BasicData setTag(@NonNull String tag) {
             this.tag = tag;
             return this;
         }
 
+        /**
+         * 设置日志等级
+         */
         public BasicData setLogLevel(@LogLevel int level) {
             logLevel = level;
             return this;
         }
 
+        /**
+         * 设置共享首选项文件名
+         */
         public BasicData setPrefsName(@NonNull String prefsName) {
             this.prefsName = prefsName;
             return this;
         }
 
+        /**
+         * 是否自动更新 Xprefs 值
+         * <p>
+         * 默认开启
+         */
         public BasicData setAutoReload(boolean auto) {
             this.isAutoReload = auto;
             return this;
         }
 
+        /**
+         * 设置日志增强的路径
+         */
         public BasicData setLogExpandPath(@NonNull String... logExpandPath) {
             this.logExpandPath = logExpandPath;
+            return this;
+        }
+
+        /**
+         * 设置日志增强时应忽略的类名
+         */
+        public BasicData setLogExpandIgnoreClassNames(@NonNull String... logExpandIgnoreClassNames) {
+            this.logExpandIgnoreClassNames = logExpandIgnoreClassNames;
             return this;
         }
     }

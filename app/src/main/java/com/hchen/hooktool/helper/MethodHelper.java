@@ -22,6 +22,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.hchen.hooktool.exception.NonSingletonException;
+import com.hchen.hooktool.exception.UnexpectedException;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -54,6 +55,7 @@ public class MethodHelper {
     private Type[] genericParamTypes = null;
     private Class<? extends Throwable> exceptionType = null;
     private boolean withSuper = false;
+    private Method methodCache = null;
 
     public MethodHelper(Class<?> clazz) {
         Objects.requireNonNull(clazz, "[MethodHelper]: class must not is null!");
@@ -172,7 +174,7 @@ public class MethodHelper {
         if (methods.size() > 1)
             throw new NonSingletonException("[MethodHelper]: Query did not return a unique result: " + methods.size());
 
-        return methods.get(0);
+        return methodCache = methods.get(0);
     }
 
     @Nullable
@@ -181,7 +183,7 @@ public class MethodHelper {
         if (methods.isEmpty()) return null;
         if (methods.size() > 1) return null;
 
-        return methods.get(0);
+        return methodCache = methods.get(0);
     }
 
     public Method singleOrThrow(Supplier<RuntimeException> throwableSupplier) {
@@ -189,10 +191,14 @@ public class MethodHelper {
         if (methods.isEmpty()) throw throwableSupplier.get();
         if (methods.size() > 1) throw throwableSupplier.get();
 
-        return methods.get(0);
+        return methodCache = methods.get(0);
     }
 
     private List<Method> matches() {
+        if (methodCache != null) {
+            throw new UnexpectedException("[MethodHelper]: Do not reuse!");
+        }
+
         ArrayList<Method> methods = new ArrayList<>(Arrays.asList(clazz.getDeclaredMethods()));
         if (withSuper) {
             Class<?> clazzWithSuper = clazz.getSuperclass();

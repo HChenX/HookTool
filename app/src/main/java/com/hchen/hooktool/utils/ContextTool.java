@@ -39,6 +39,10 @@ import java.util.concurrent.Executors;
  */
 @SuppressLint({"PrivateApi", "SoonBlockedPrivateApi", "DiscouragedPrivateApi"})
 public class ContextTool {
+    public static final int FLAG_ALL = 0;
+    public static final int FLAG_CURRENT_APP = 1;
+    public static final int FLAG_ONLY_ANDROID = 2;
+
     @IntDef(value = {
         FLAG_ALL,
         FLAG_CURRENT_APP,
@@ -47,10 +51,6 @@ public class ContextTool {
     @Retention(RetentionPolicy.SOURCE)
     private @interface Duration {
     }
-
-    public static final int FLAG_ALL = 0;
-    public static final int FLAG_CURRENT_APP = 1;
-    public static final int FLAG_ONLY_ANDROID = 2;
 
     private ContextTool() {
     }

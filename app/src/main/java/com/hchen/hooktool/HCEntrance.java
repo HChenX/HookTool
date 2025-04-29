@@ -18,6 +18,8 @@
  */
 package com.hchen.hooktool;
 
+import androidx.annotation.NonNull;
+
 import com.hchen.hooktool.core.CoreTool;
 
 import java.util.Arrays;
@@ -34,23 +36,40 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
  * @author 焕晨HChen
  */
 public abstract class HCEntrance implements IXposedHookLoadPackage, IXposedHookZygoteInit {
-    public abstract HCInit.BasicData initHC(HCInit.BasicData basicData);
+    /**
+     * 初始化工具
+     */
+    @NonNull
+    public abstract HCInit.BasicData initHC(@NonNull HCInit.BasicData basicData);
 
-    public abstract void onLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) throws Throwable;
+    /**
+     * onLoadPackage 阶段
+     */
+    public abstract void onLoadPackage(@NonNull XC_LoadPackage.LoadPackageParam lpparam) throws Throwable;
 
-    public void onInitZygote(StartupParam startupParam) throws Throwable {
+    /**
+     * onInitZygote 阶段
+     */
+    public void onInitZygote(@NonNull StartupParam startupParam) throws Throwable {
     }
 
-    public void onModuleLoad(XC_LoadPackage.LoadPackageParam lpparam) {
+    /**
+     * 模块自身加载阶段
+     */
+    public void onModuleLoad(@NonNull XC_LoadPackage.LoadPackageParam lpparam) {
     }
 
+    /**
+     * 忽略的包名列表
+     */
+    @NonNull
     public String[] ignorePackageNameList() {
-        return null;
+        return new String[]{};
     }
 
     @Override
     public final void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) throws Throwable {
-        if (ignorePackageNameList() != null) {
+        if (ignorePackageNameList().length != 0) {
             if (Arrays.stream(ignorePackageNameList()).anyMatch(s -> Objects.equals(s, lpparam.packageName)))
                 return;
         }

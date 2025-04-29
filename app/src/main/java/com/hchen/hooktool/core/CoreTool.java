@@ -69,7 +69,7 @@ public class CoreTool extends XposedLog {
 
     public static boolean existsClass(String classPath, ClassLoader classLoader) {
         return doTry(
-            () -> !Objects.isNull(XposedHelpers.findClassIfExists(classPath, classLoader))
+            () -> Objects.nonNull(XposedHelpers.findClassIfExists(classPath, classLoader))
         ).orElse(false);
     }
 
@@ -100,13 +100,13 @@ public class CoreTool extends XposedLog {
 
     public static boolean existsMethod(String classPath, ClassLoader classLoader, String methodName, @NonNull Object... params) {
         return doTry(
-            () -> !Objects.isNull(XposedHelpers.findMethodExactIfExists(classPath, classLoader, methodName, params))
+            () -> Objects.nonNull(XposedHelpers.findMethodExactIfExists(classPath, classLoader, methodName, params))
         ).orElse(false);
     }
 
     public static boolean existsMethod(@NonNull Class<?> clazz, String methodName, @NonNull Object... params) {
         return doTry(
-            () -> !Objects.isNull(XposedHelpers.findMethodExactIfExists(clazz, methodName, params))
+            () -> Objects.nonNull(XposedHelpers.findMethodExactIfExists(clazz, methodName, params))
         ).orElse(false);
     }
 
@@ -190,13 +190,13 @@ public class CoreTool extends XposedLog {
 
     public static boolean existsConstructor(String classPath, ClassLoader classLoader, @NonNull Object... params) {
         return doTry(
-            () -> !Objects.isNull(XposedHelpers.findConstructorExactIfExists(classPath, classLoader, params))
+            () -> Objects.nonNull(XposedHelpers.findConstructorExactIfExists(classPath, classLoader, params))
         ).orElse(false);
     }
 
     public static boolean existsConstructor(@NonNull Class<?> clazz, @NonNull Object... params) {
         return doTry(
-            () -> !Objects.isNull(XposedHelpers.findConstructorExactIfExists(clazz, params))
+            () -> Objects.nonNull(XposedHelpers.findConstructorExactIfExists(clazz, params))
         ).orElse(false);
     }
 
@@ -269,7 +269,7 @@ public class CoreTool extends XposedLog {
 
     public static boolean existsField(@NonNull Class<?> clazz, String fieldName) {
         return doTry(
-            () -> !Objects.isNull(XposedHelpers.findFieldIfExists(clazz, fieldName))
+            () -> Objects.nonNull(XposedHelpers.findFieldIfExists(clazz, fieldName))
         ).orElse(false);
     }
 
@@ -405,7 +405,7 @@ public class CoreTool extends XposedLog {
                     XposedLog.logI(tag, "Success to hook: " + member);
                     return unhook;
                 } catch (Throwable e) {
-                    throw new HookException("Failed to hook: " + member, e);
+                    throw new HookException("[CoreTool]: Failed to hook: " + member, e);
                 }
             }
         }).toArray(XC_MethodHook.Unhook[]::new);
@@ -444,14 +444,14 @@ public class CoreTool extends XposedLog {
 
     private static Object[] filterParams(@NonNull Object... params) {
         if (params.length == 0 || !(params[params.length - 1] instanceof IHook))
-            throw new MissingParameterException("Missing IHook parameter!");
+            throw new MissingParameterException("[CoreTool]: Missing IHook parameter!");
 
         return Arrays.copyOf(params, params.length - 1);
     }
 
     private static IHook filterIHook(@NonNull Object... params) {
         if (params.length == 0 || !(params[params.length - 1] instanceof IHook iHook))
-            throw new MissingParameterException("Missing IHook parameter!");
+            throw new MissingParameterException("[CoreTool]: Missing IHook parameter!");
 
         return iHook;
     }
@@ -766,16 +766,16 @@ public class CoreTool extends XposedLog {
         return ResInjectTool.createFakeResId(res, id);
     }
 
-    public static void setResReplacement(String packageName, String type, String name, int replacementResId) {
-        ResInjectTool.setResReplacement(packageName, type, name, replacementResId);
+    public static void setResReplacement(String packageName, String type, String resName, int replacementResId) {
+        ResInjectTool.setResReplacement(packageName, type, resName, replacementResId);
     }
 
-    public static void setDensityReplacement(String packageName, String type, String name, float replacementResValue) {
-        ResInjectTool.setDensityReplacement(packageName, type, name, replacementResValue);
+    public static void setDensityReplacement(String packageName, String type, String resName, float replacementResValue) {
+        ResInjectTool.setDensityReplacement(packageName, type, resName, replacementResValue);
     }
 
-    public static void setObjectReplacement(String packageName, String type, String name, Object replacementResValue) {
-        ResInjectTool.setObjectReplacement(packageName, type, name, replacementResValue);
+    public static void setObjectReplacement(String packageName, String type, String resName, Object replacementResValue) {
+        ResInjectTool.setObjectReplacement(packageName, type, resName, replacementResValue);
     }
 
     // -------------------------- Other ------------------------------

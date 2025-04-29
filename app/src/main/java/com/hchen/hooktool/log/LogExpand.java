@@ -62,12 +62,17 @@ public class LogExpand {
 
     public static String getTag() {
         String[] logExpandPath = HCData.getLogExpandPath();
+        String[] logExpandIgnoreClassNames = HCData.getLogExpandIgnoreClassNames();
         if (logExpandPath == null || logExpandPath.length == 0) return "HookTool";
+
         String tag = null;
         StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
         for (StackTraceElement stackTraceElement : stackTraceElements) {
             if (tag != null) break;
             String className = stackTraceElement.getClassName();
+            if (logExpandIgnoreClassNames != null && Arrays.stream(logExpandIgnoreClassNames).anyMatch(className::contains))
+                continue;
+
             if (Arrays.stream(logExpandPath).anyMatch(className::contains)) {
                 int index = className.lastIndexOf(".");
                 int index2 = className.lastIndexOf("$");

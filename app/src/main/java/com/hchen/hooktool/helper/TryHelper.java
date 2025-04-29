@@ -28,7 +28,7 @@ import java.util.Objects;
 public class TryHelper {
     private TryHelper() {
     }
-    
+
     public static <R> Result<R> doTry(IRun<R> supplier) {
         return new Result<R>(supplier);
     }
@@ -43,11 +43,11 @@ public class TryHelper {
 
         private Result(IRun<R> iRun) {
             try {
-                result = iRun.run();
-                throwable = null;
+                this.result = iRun.run();
+                this.throwable = null;
             } catch (Throwable throwable) {
+                this.result = null;
                 this.throwable = throwable;
-                result = null;
             }
         }
 
@@ -56,8 +56,7 @@ public class TryHelper {
         }
 
         public R orElse(R or) {
-            if (Objects.isNull(throwable))
-                return result;
+            if (!isSuccess()) return result;
             return or;
         }
 

@@ -27,6 +27,8 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.util.Base64;
 
+import androidx.annotation.NonNull;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -47,19 +49,31 @@ public class HCState {
     private HCState() {
     }
 
+    /**
+     * 模块是否被激活
+     */
     public static boolean isEnabled() {
         return isEnabled;
     }
 
+    /**
+     * 获取框架类型
+     */
     public static String getFramework() {
         return mFramework;
     }
 
+    /**
+     * 获取框架版本
+     */
     public static int getVersion() {
         return mVersion;
     }
 
-    public static boolean isExpActive(Context context) {
+    /**
+     * 是否是太极环境
+     */
+    public static boolean isExpActive(@NonNull Context context) {
         try {
             context.getPackageManager().getPackageInfo("me.weishu.exp", PackageManager.GET_ACTIVITIES);
 
@@ -87,7 +101,10 @@ public class HCState {
         }
     }
 
-    public static HashMap<String, String> isLSPatchActive(ApplicationInfo appInfo) {
+    /**
+     * 是否是 LSPath 环境
+     */
+    public static HashMap<String, String> isLSPatchActive(@NonNull ApplicationInfo appInfo) {
         String config = appInfo.metaData.getString("lspatch");
         if (config == null) return new HashMap<>();
 
