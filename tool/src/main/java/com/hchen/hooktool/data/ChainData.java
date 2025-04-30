@@ -39,7 +39,7 @@ public class ChainData {
     public ChainType chainType;
     public IHook iHook;
     public boolean ifExist;
-    public Member[] members;
+    public Member[] members = new Member[1];
     public static final CopyOnWriteArraySet<ChainData> chainDataSet = new CopyOnWriteArraySet<>();
 
     // -------------------------- Method ------------------------------
