@@ -56,7 +56,8 @@ public class TryHelper {
         }
 
         public R orElse(R or) {
-            if (!isSuccess()) return result;
+            if (isSuccess())
+                return result;
             return or;
         }
 
