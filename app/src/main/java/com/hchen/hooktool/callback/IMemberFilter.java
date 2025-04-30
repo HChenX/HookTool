@@ -16,37 +16,18 @@
 
  * Copyright (C) 2023-2025 HChenX
  */
-package com.hchen.hooktool.tool.itool;
+package com.hchen.hooktool.callback;
 
-import com.hchen.hooktool.tool.additional.PrefsTool;
-
-import java.util.Map;
-import java.util.Set;
+import androidx.annotation.NonNull;
 
 /**
- * prefs 工具接口，方法具体介绍请看实现类 >>
- * {@link PrefsTool}
+ * Member 过滤
  *
  * @author 焕晨HChen
  */
-public interface IPrefsApply {
-    String getString(String key, String def);
-
-    Set<String> getStringSet(String key, Set<String> def);
-
-    boolean getBoolean(String key, boolean def);
-
-    int getInt(String key, int def);
-
-    float getFloat(String key, float def);
-
-    long getLong(String key, long def);
-
-    Object get(String key, Object def);
-
-    boolean contains(String key);
-
-    Map<String, ?> getAll();
-
-    PrefsTool.Editor editor();
+public interface IMemberFilter<T> {
+    /**
+     * 过滤成员，返回 true 则保留，false 则摈弃
+     */
+    boolean test(@NonNull T member);
 }

@@ -18,8 +18,9 @@
  */
 package com.hchen.hooktool;
 
-import com.hchen.hooktool.tool.CoreTool;
-import com.hchen.hooktool.tool.additional.ResInjectTool;
+import androidx.annotation.NonNull;
+
+import com.hchen.hooktool.core.CoreTool;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -30,70 +31,69 @@ import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 /**
- * Hook 入口，正常来说继承本类即可
+ * Hook 入口
  *
  * @author 焕晨HChen
  */
 public abstract class HCEntrance implements IXposedHookLoadPackage, IXposedHookZygoteInit {
     /**
-     * 配置工具基本信息。请务必设置！
+     * 初始化工具
      */
-    public abstract HCInit.BasicData initHC(HCInit.BasicData basicData);
+    @NonNull
+    public abstract HCInit.BasicData initHC(@NonNull HCInit.BasicData basicData);
 
     /**
-     * 详见 {@link IXposedHookLoadPackage#handleLoadPackage(XC_LoadPackage.LoadPackageParam)}
+     * onLoadPackage 阶段
      */
-    public abstract void onLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) throws Throwable;
+    public abstract void onLoadPackage(@NonNull XC_LoadPackage.LoadPackageParam loadPackageParam) throws Throwable;
 
     /**
-     * 详见 {@link IXposedHookZygoteInit#initZygote(StartupParam)}
+     * onInitZygote 阶段
      */
-    public void onInitZygote(StartupParam startupParam) throws Throwable {
+    public void onInitZygote(@NonNull StartupParam startupParam) throws Throwable {
     }
 
     /**
-     * 模块被加载。
+     * 模块自身加载阶段
      */
-    public void onModuleLoad(XC_LoadPackage.LoadPackageParam lpparam) {
+    public void onModuleLoad(@NonNull XC_LoadPackage.LoadPackageParam loadPackageParam) {
     }
 
     /**
-     * 忽略的包名。
-     * <p>
-     * Tip: 因为传入的 lpparam 偶尔会被其他系统应用干扰，所以可以配置排除名单。
+     * 忽略的包名列表
      */
+    @NonNull
     public String[] ignorePackageNameList() {
-        return null;
+        return new String[]{};
     }
 
     @Override
-    public final void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) throws Throwable {
-        if (ignorePackageNameList() != null) {
-            if (Arrays.stream(ignorePackageNameList()).anyMatch(s -> Objects.equals(s, lpparam.packageName)))
+    public final void handleLoadPackage(XC_LoadPackage.LoadPackageParam loadPackageParam) throws Throwable {
+        if (ignorePackageNameList().length != 0) {
+            if (Arrays.stream(ignorePackageNameList()).anyMatch(s -> Objects.equals(s, loadPackageParam.packageName)))
                 return;
         }
 
-        if (HCData.getModulePackageName() != null && Objects.equals(HCData.getModulePackageName(), lpparam.packageName)) {
-            HCInit.initLoadPackageParam(lpparam);
+        if (Objects.equals(HCData.getModulePackageName(), loadPackageParam.packageName)) {
+            HCInit.initLoadPackageParam(loadPackageParam);
             initHCState();
-            onModuleLoad(lpparam);
+            onModuleLoad(loadPackageParam);
             return;
         }
 
-        onLoadPackage(lpparam);
+        onLoadPackage(loadPackageParam);
     }
 
     @Override
     public final void initZygote(StartupParam startupParam) throws Throwable {
         HCInit.initBasicData(initHC(new HCInit.BasicData()));
         HCInit.initStartupParam(startupParam);
-        ResInjectTool.init(startupParam.modulePath);
         onInitZygote(startupParam);
     }
 
     private void initHCState() {
-        CoreTool.setStaticField("com.hchen.hooktool.HCState", "isEnabled", true);
-        CoreTool.setStaticField("com.hchen.hooktool.HCState", "mVersion", XposedBridge.getXposedVersion());
+        CoreTool.setStaticField("com.hchen.hooktool.HCState", "isXposedEnabled", true);
+        CoreTool.setStaticField("com.hchen.hooktool.HCState", "version", XposedBridge.getXposedVersion());
 
         String bridgeTag = (String) CoreTool.getStaticField(XposedBridge.class, "TAG");
         if (bridgeTag == null) return;
@@ -106,6 +106,6 @@ public abstract class HCEntrance implements IXposedHookLoadPackage, IXposedHookZ
             bridgeTag = "Xposed";
         } else
             bridgeTag = "Unknown";
-        CoreTool.setStaticField("com.hchen.hooktool.HCState", "mFramework", bridgeTag);
+        CoreTool.setStaticField("com.hchen.hooktool.HCState", "framework", bridgeTag);
     }
 }

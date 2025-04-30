@@ -16,13 +16,22 @@
 
  * Copyright (C) 2023-2025 HChenX
  */
-package com.hchen.hooktool.tool.itool;
+package com.hchen.hooktool.callback;
+
+import android.content.Context;
+
+import androidx.annotation.Nullable;
 
 /**
- * 过滤接口
+ * Context 获取器
  *
  * @author 焕晨HChen
  */
-public interface IMemberFilter<T> {
-    boolean test(T member);
+public interface IContextGetter {
+    /**
+     * 获取 context，未获取到则返回 null
+     *
+     * @param context 上下文
+     */
+    void onContext(@Nullable Context context);
 }

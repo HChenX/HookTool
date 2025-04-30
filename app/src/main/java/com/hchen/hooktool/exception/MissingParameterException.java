@@ -16,17 +16,26 @@
 
  * Copyright (C) 2023-2025 HChenX
  */
-package com.hchen.hooktool.data;
+package com.hchen.hooktool.exception;
 
 /**
- * 示例优先级
+ * 缺少参数异常
  *
  * @author 焕晨HChen
  */
-public final class Priority {
-    // 可以直接使用这些示例优先级，也可以自定义。
-    // 但注意范围是：LOWEST <= CUSTOM <= HIGHEST。
-    public static final int DEFAULT = 50;
-    public static final int LOWEST = -10000;/* 低优先级 */
-    public static final int HIGHEST = 10000; /* 高优先级 */
+public class MissingParameterException extends RuntimeException {
+    public MissingParameterException() {
+    }
+
+    public MissingParameterException(String message) {
+        super(message);
+    }
+
+    public MissingParameterException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public MissingParameterException(Throwable cause) {
+        super(cause);
+    }
 }

@@ -27,20 +27,20 @@ import androidx.annotation.NonNull;
 import java.util.Objects;
 
 /**
- * App 数据
+ * 应用数据
  *
  * @author 焕晨HChen
  */
-public final class AppData implements Parcelable {
-    public int user = 0; /* user id */
-    public int uid = -1; /* uid */
-    public Bitmap icon; /* 图标 */
-    public String label; /* 应用名 */
-    public String packageName; /* 包名 */
-    public String versionName; /* 版本名 */
-    public String versionCode; /* 版本号 */
-    public boolean isSystemApp; /* 是否为系统应用 */
-    public boolean isEnabled; /* 是否启用 */
+public class AppData implements Parcelable {
+    public int user = 0;
+    public int uid = -1;
+    public Bitmap icon;
+    public String label;
+    public String packageName;
+    public String versionName;
+    public String versionCode;
+    public boolean isSystemApp;
+    public boolean isEnabled;
 
     public AppData() {
     }
@@ -58,42 +58,20 @@ public final class AppData implements Parcelable {
     }
 
     @NonNull
-    @Override
-    public String toString() {
-        return "AppData[label=" + label + ", packageName=" + packageName +
-            ", versionName=" + versionName + ", versionCode=" + versionCode +
-            ", user=" + user + ", uid=" + uid + ", isSystemApp=" + isSystemApp + ", isEnabled=" + isEnabled + ", icon=" + icon + "]";
+    public Parcel marshall() {
+        Parcel parcel = Parcel.obtain();
+        writeToParcel(parcel, 0);
+        return parcel;
+    }
+
+    @NonNull
+    public static AppData unmarshall(@NonNull Parcel parcel) {
+        parcel.setDataPosition(0);
+        return new AppData(parcel);
     }
 
     @Override
-    public boolean equals(Object object) {
-        if (this == object) return true;
-        if (!(object instanceof AppData appData)) return false;
-        return user == appData.user && uid == appData.uid && isSystemApp == appData.isSystemApp
-            && isEnabled == appData.isEnabled && Objects.equals(icon, appData.icon) && Objects.equals(label, appData.label)
-            && Objects.equals(packageName, appData.packageName) && Objects.equals(versionName, appData.versionName)
-            && Objects.equals(versionCode, appData.versionCode);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(user, uid, icon, label, packageName, versionName, versionCode, isSystemApp, isEnabled);
-    }
-
-    public static final Creator<AppData> CREATOR = new Creator<>() {
-        @Override
-        public AppData createFromParcel(Parcel in) {
-            return new AppData(in);
-        }
-
-        @Override
-        public AppData[] newArray(int size) {
-            return new AppData[size];
-        }
-    };
-
-    @Override
-    public void writeToParcel(@NonNull Parcel dest, int flags) {
+    public void writeToParcel(Parcel dest, int flags) {
         dest.writeInt(user);
         dest.writeInt(uid);
         dest.writeParcelable(icon, flags);
@@ -108,5 +86,52 @@ public final class AppData implements Parcelable {
     @Override
     public int describeContents() {
         return 0;
+    }
+
+    public static final Creator<AppData> CREATOR = new Creator<AppData>() {
+        @Override
+        public AppData createFromParcel(Parcel in) {
+            return new AppData(in);
+        }
+
+        @Override
+        public AppData[] newArray(int size) {
+            return new AppData[size];
+        }
+    };
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof AppData appData)) return false;
+        return user == appData.user &&
+            uid == appData.uid &&
+            isSystemApp == appData.isSystemApp &&
+            isEnabled == appData.isEnabled &&
+            Objects.equals(icon, appData.icon) &&
+            Objects.equals(label, appData.label) &&
+            Objects.equals(packageName, appData.packageName) &&
+            Objects.equals(versionName, appData.versionName) &&
+            Objects.equals(versionCode, appData.versionCode);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(user, uid, icon, label, packageName, versionName, versionCode, isSystemApp, isEnabled);
+    }
+
+    @Override
+    @NonNull
+    public String toString() {
+        return "AppData{" +
+            "user=" + user +
+            ", uid=" + uid +
+            ", icon=" + icon +
+            ", label='" + label + '\'' +
+            ", packageName='" + packageName + '\'' +
+            ", versionName='" + versionName + '\'' +
+            ", versionCode='" + versionCode + '\'' +
+            ", isSystemApp=" + isSystemApp +
+            ", isEnabled=" + isEnabled +
+            '}';
     }
 }

@@ -27,6 +27,8 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.util.Base64;
 
+import androidx.annotation.NonNull;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -35,50 +37,53 @@ import java.util.HashMap;
 import kotlin.text.Charsets;
 
 /**
- * 基本状态信息
+ * 工具状态
  * <p>
  * 记得配置混淆，否则不可用:
  * <p>
  * <pre>{@code
  * -keep class  com.hchen.hooktool.HCState {
- *         static boolean isEnabled;
- *         static java.lang.String mFramework;
- *         static int  mVersion;
+ *         static boolean isXposedEnabled;
+ *         static java.lang.String framework;
+ *         static int  version;
  * }
  * }
  *
  * @author 焕晨HChen
  */
-public final class HCState {
-    static boolean isEnabled = false;
-    static String mFramework = "Unknown";
-    static int mVersion = -1;
+public class HCState {
+    static boolean isXposedEnabled = false;
+    static String framework = "Unknown";
+    static int version = -1;
 
-    /**
-     * 判断模块是否被启用。
-     */
-    public static boolean isEnabled() {
-        return isEnabled;
+    private HCState() {
     }
 
     /**
-     * 获取框架类型。
+     * 模块是否被激活
+     */
+    public static boolean isXposedEnabled() {
+        return isXposedEnabled;
+    }
+
+    /**
+     * 获取框架类型
      */
     public static String getFramework() {
-        return mFramework;
+        return framework;
     }
 
     /**
-     * 获取框架的版本。
+     * 获取框架版本
      */
     public static int getVersion() {
-        return mVersion;
+        return version;
     }
 
     /**
-     * 判断是否处于太极环境。
+     * 是否是太极环境
      */
-    public static boolean isExpActive(Context context) {
+    public static boolean isExpActive(@NonNull Context context) {
         try {
             context.getPackageManager().getPackageInfo("me.weishu.exp", PackageManager.GET_ACTIVITIES);
 
@@ -107,9 +112,9 @@ public final class HCState {
     }
 
     /**
-     * 判断模块是否由 LSPatch 内置进 App 内。
+     * 是否是 LSPath 环境
      */
-    public static HashMap<String, String> isLSPatchActive(ApplicationInfo appInfo) {
+    public static HashMap<String, String> isLSPatchActive(@NonNull ApplicationInfo appInfo) {
         String config = appInfo.metaData.getString("lspatch");
         if (config == null) return new HashMap<>();
 

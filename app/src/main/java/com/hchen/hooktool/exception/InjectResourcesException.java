@@ -16,13 +16,26 @@
 
  * Copyright (C) 2023-2025 HChenX
  */
-package com.hchen.hooktool.tool.itool;
+package com.hchen.hooktool.exception;
 
 /**
- * 异步 prefs 接口
+ * 资源注入失败异常
  *
  * @author 焕晨HChen
  */
-public interface IAsyncPrefs {
-    void async(IPrefsApply sp);
+public class InjectResourcesException extends RuntimeException {
+    public InjectResourcesException() {
+    }
+
+    public InjectResourcesException(String message) {
+        super(message);
+    }
+
+    public InjectResourcesException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public InjectResourcesException(Throwable cause) {
+        super(cause);
+    }
 }

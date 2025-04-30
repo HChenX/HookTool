@@ -24,56 +24,52 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.os.Parcelable;
 
+import androidx.annotation.NonNull;
+
+import com.hchen.hooktool.callback.IAsyncPrefs;
+import com.hchen.hooktool.callback.IExecListener;
+import com.hchen.hooktool.callback.IPackageInfoGetter;
+import com.hchen.hooktool.callback.IPrefsApply;
 import com.hchen.hooktool.data.AppData;
 import com.hchen.hooktool.data.ShellResult;
 import com.hchen.hooktool.hook.IHook;
-import com.hchen.hooktool.tool.additional.PackageTool;
-import com.hchen.hooktool.tool.additional.PrefsTool;
-import com.hchen.hooktool.tool.additional.ShellTool;
-import com.hchen.hooktool.tool.itool.IAsyncPrefs;
-import com.hchen.hooktool.tool.itool.IExecListener;
-import com.hchen.hooktool.tool.itool.IPackageInfoGetter;
-import com.hchen.hooktool.tool.itool.IPrefsApply;
+import com.hchen.hooktool.utils.PackageTool;
+import com.hchen.hooktool.utils.PrefsTool;
+import com.hchen.hooktool.utils.ShellTool;
 
 import java.util.ArrayList;
 
-import de.robv.android.xposed.IXposedHookZygoteInit;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 /**
- * 测试和示例类
+ * 测试类
  *
  * @author 焕晨HChen
  */
-@Deprecated
-final class ToolTest extends BaseHC {
-    @Override
-    public void initZygote(IXposedHookZygoteInit.StartupParam startupParam) {
-        super.initZygote(startupParam);
+class ToolTest extends HCBase {
+    private ToolTest() {
     }
 
     @Override
-    public void init() {
+    protected void init() {
         // 链式
-        chain("com.hchen.demo", method("test")
+        buildChain("com.hchen.demo")
+            .findMethod("test")
             .hook(new IHook() {
                 @Override
                 public void before() {
                     super.before();
                 }
             })
-
-            .method("test1", String.class)
+            .findMethod("test1", String.class)
             .hook(new IHook() {
                 @Override
                 public void after() {
                     super.after();
                 }
             })
-
-            .constructor()
-            .returnResult(false)
-        );
+            .findConstructor()
+            .returnResult(false);
 
         hookMethod("com.hchen.demo", "test", new IHook() {
             @Override
@@ -87,16 +83,16 @@ final class ToolTest extends BaseHC {
             @Override
             public void before() {
                 // hook 方法所属的类
-                Class<?> c = param.method.getDeclaringClass();
+                Class<?> c = getMember().getDeclaringClass();
                 Context context = (Context) thisObject();
-                String string = (String) getArgs(0); // 获取第一个参数值
-                setArgs(1, 1); // 设置第二个参数值
+                String string = (String) getArg(0); // 获取第一个参数值
+                setArg(1, 1); // 设置第二个参数值
 
                 // 非静态本类内
                 setThisField("demo", 1); // 设置本类内 demo 字段值
                 callThisMethod("method"); // 调用本类内 method 方法
                 getThisField("test");
-                String result = (String) callThisMethod("call", thisObject(), getArgs(0));
+                String result = (String) callThisMethod("call", getArg(0));
 
                 // 非静态本类外
                 Object o = null;
@@ -105,10 +101,11 @@ final class ToolTest extends BaseHC {
                 getField(o, "test");
 
                 // 静态需要 class
-                callStaticMethod("com.demo.Main", "callStatic", thisObject(), getArgs(1)); // 调用静态方法 callStatic
+                callThisStaticMethod("thisCall", getArg(0));
+
+                callStaticMethod("com.demo.Main", "callStatic", getArg(1)); // 调用静态方法 callStatic
                 int i = (int) getStaticField("com.demo.Main", "field");
                 setStaticField("com.demo.Main", "test", true); // 设置静态字段 test
-
 
                 unHookSelf(); // 移除自身
                 observeCall(); // 观察调用
@@ -132,36 +129,38 @@ final class ToolTest extends BaseHC {
         shellTool.cmd("echo hello").async();
         shellTool.cmd("echo world").async(new IExecListener() {
             @Override
-            public void output(String command, String[] outputs, String exitCode) {
+            public void output(String command, @NonNull String[] outputs, String exitCode) {
                 IExecListener.super.output(command, outputs, exitCode);
             }
         });
         shellTool.addExecListener(new IExecListener() {
             @Override
-            public void output(String command, String[] outputs, String exitCode) {
+            public void output(String command, @NonNull String[] outputs, String exitCode) {
                 IExecListener.super.output(command, outputs, exitCode);
             }
 
             @Override
-            public void error(String command, String[] errors, String exitCode) {
+            public void error(String command, @NonNull String[] errors, String exitCode) {
                 IExecListener.super.error(command, errors, exitCode);
             }
 
             @Override
-            public void notRoot(String exitCode) {
-                IExecListener.super.notRoot(exitCode);
+            public void rootResult(String exitCode) {
+                IExecListener.super.rootResult(exitCode);
             }
 
             @Override
-            public void brokenPip(String command, String[] errors, String reason) {
+            public void brokenPip(String command, @NonNull String[] errors, String reason) {
                 IExecListener.super.brokenPip(command, errors, reason);
             }
         });
         shellTool.close();
 
-        AppData appData = PackageTool.getPackagesByCode(new IPackageInfoGetter() {
+        Context context = null;
+        AppData appData = PackageTool.getPackagesByCode(context, new IPackageInfoGetter() {
+            @NonNull
             @Override
-            public Parcelable[] packageInfoGetter(PackageManager pm) throws PackageManager.NameNotFoundException {
+            public Parcelable[] packageInfoGetter(@NonNull PackageManager pm) throws PackageManager.NameNotFoundException {
                 PackageInfo packageInfo = null;
                 ArrayList<PackageInfo> arrayList = new ArrayList<>();
                 arrayList.add(packageInfo);
@@ -170,14 +169,13 @@ final class ToolTest extends BaseHC {
         })[0];
         Bitmap bitmap = appData.icon;
 
-        prefs().get("test_key", "0"); // 获取 prefs test_key 的值
-        prefs().getBoolean("test_key_bool", false); // 获取 prefs test_key_bool 的值
-
         createFakeResId("test_res"); // 获取 test_res 的虚拟资源 id
         // 设置 pkg 的 string 资源 test_res_str 值为 HC!
         setObjectReplacement("com.hchen.demo", "string", "test_res_str", "HC!");
 
-        Context context = null;
+        prefs().get("test_key", "0"); // 获取 prefs test_key 的值
+        prefs().getBoolean("test_key_bool", false); // 获取 prefs test_key_bool 的值
+
         // xprefs 模式：
         // 注意 xprefs 模式，寄生应用不能修改配置只能读取。
         String s = prefs().getString("test", "1");  // 即可读取
@@ -193,27 +191,27 @@ final class ToolTest extends BaseHC {
         // 如果不方便获取 context 可用使用此方法，异步获取寄生应用上下文后再设置。
         asyncPrefs(new IAsyncPrefs() {
             @Override
-            public void async(IPrefsApply sp) {
-                sp.editor().put("test", "1").commit();
+            public void async(@NonNull IPrefsApply sPrefs) {
+                sPrefs.editor().put("test", "1").commit();
             }
         });
     }
 
     private static class InitHook extends HCEntrance {
         @Override
-        public HCInit.BasicData initHC(HCInit.BasicData basicData) {
-            return basicData.setTag("HookTool")
+        @NonNull
+        public HCInit.BasicData initHC(@NonNull HCInit.BasicData basicData) {
+            return basicData
+                .setTag("HookTool")
                 .setLogLevel(HCInit.LOG_D)
                 .setModulePackageName("com.hchen.demo")
                 .setPrefsName("myprefs") // 可选
                 .setAutoReload(true) // 可选
-                .setLogExpandPath(new String[]{
-                    "com.hchen.demo.hook"
-                });
+                .setLogExpandPath("com.hchen.demo.hook"); // 可选
         }
 
         @Override
-        public void onLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) throws Throwable {
+        public void onLoadPackage(@NonNull XC_LoadPackage.LoadPackageParam loadPackageParam) throws Throwable {
             new ToolTest().onLoadPackage();
         }
     }

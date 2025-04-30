@@ -16,14 +16,26 @@
 
  * Copyright (C) 2023-2025 HChenX
  */
-package com.hchen.hooktool.data;
+package com.hchen.hooktool.exception;
 
 /**
- * 状态枚举
+ * 非单例异常
  *
  * @author 焕晨HChen
  */
-public enum HookState {
-    NONE, /* 未 hook */
-    HOOKED, /* 已 hook */
+public class NonSingletonException extends RuntimeException {
+    public NonSingletonException() {
+    }
+
+    public NonSingletonException(String message) {
+        super(message);
+    }
+
+    public NonSingletonException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public NonSingletonException(Throwable cause) {
+        super(cause);
+    }
 }

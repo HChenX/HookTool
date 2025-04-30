@@ -16,18 +16,17 @@
 
  * Copyright (C) 2023-2025 HChenX
  */
-package com.hchen.hooktool.tool.additional;
-
-import static com.hchen.hooktool.log.AndroidLog.logE;
-import static com.hchen.hooktool.log.LogExpand.getTag;
+package com.hchen.hooktool.utils;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
 
 import androidx.annotation.IntDef;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.hchen.hooktool.tool.itool.IContextGetter;
+import com.hchen.hooktool.callback.IContextGetter;
+import com.hchen.hooktool.exception.UnexpectedException;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -39,7 +38,11 @@ import java.util.concurrent.Executors;
  * @author 焕晨HChen
  */
 @SuppressLint({"PrivateApi", "SoonBlockedPrivateApi", "DiscouragedPrivateApi"})
-public final class ContextTool {
+public class ContextTool {
+    public static final int FLAG_ALL = 0;
+    public static final int FLAG_CURRENT_APP = 1;
+    public static final int FLAG_ONLY_ANDROID = 2;
+
     @IntDef(value = {
         FLAG_ALL,
         FLAG_CURRENT_APP,
@@ -49,25 +52,18 @@ public final class ContextTool {
     private @interface Duration {
     }
 
-    // 尝试全部
-    public static final int FLAG_ALL = 0;
-    // 仅获取当前应用
-    public static final int FLAG_CURRENT_APP = 1;
-    // 获取 Android 系统
-    public static final int FLAG_ONLY_ANDROID = 2;
+    private ContextTool() {
+    }
 
-    @Nullable
     public static Context getContext(@Duration int flag) {
-        try {
-            return invokeMethod(flag);
-        } catch (Throwable e) {
-            logE(getTag(), e);
-            return null;
-        }
+        Context context = invokeMethod(flag);
+        if (context == null)
+            throw new NullPointerException("[ContextTool]: Failed to get context!");
+        return context;
     }
 
     @Nullable
-    private static Context getContextNoLog(@Duration int flag) {
+    private static Context getContextNonThrow(@Duration int flag) {
         try {
             return invokeMethod(flag);
         } catch (Throwable ignore) {
@@ -75,12 +71,12 @@ public final class ContextTool {
         }
     }
 
-    public static void getAsyncContext(IContextGetter iContextGetter, @Duration int flag) {
+    public static void getAsyncContext(@NonNull IContextGetter iContextGetter, @Duration int flag) {
         getAsyncContext(iContextGetter, flag, 15000);
     }
 
     /**
-     * 异步获取当前应用的 Context，为了防止过早获取导致的 null。
+     * 异步获取当前应用的 Context，为了防止过早获取导致的 null，
      * 使用方法:
      * <pre> {@code
      * handler = new Handler();
@@ -96,18 +92,17 @@ public final class ContextTool {
      *   }
      * }, FLAG_ALL, 15000);
      * }
-     * 当然 Handler 是可选项, 适用于 Toast 显示等场景。
+     * 当然 Handler 是可选项, 适用于 Toast 显示等场景
      * @param iContextGetter 回调获取 Context
-     * @author 焕晨HChen
      */
-    public static void getAsyncContext(IContextGetter iContextGetter, @Duration int flag, int timeout) {
+    public static void getAsyncContext(@NonNull IContextGetter iContextGetter, @Duration int flag, int timeout) {
         Executors.newSingleThreadExecutor().submit(() -> {
-            Context context = getContextNoLog(flag);
+            Context context = getContextNonThrow(flag);
             if (context == null) {
                 long time = System.currentTimeMillis();
                 while (true) {
                     long nowTime = System.currentTimeMillis();
-                    context = getContextNoLog(flag);
+                    context = getContextNonThrow(flag);
                     if (context != null || nowTime - time > timeout) {
                         break;
                     }
@@ -117,41 +112,39 @@ public final class ContextTool {
         });
     }
 
-    private static Context invokeMethod(int flag) throws Throwable {
+    @Nullable
+    private static Context invokeMethod(int flag) {
         Context context;
-        Class<?> clz = Class.forName("android.app.ActivityThread");
+        Class<?> clazz = InvokeTool.findClass("android.app.ActivityThread");
         switch (flag) {
-            case 0 -> {
-                if ((context = currentApp(clz)) == null) {
-                    context = android(clz);
+            case FLAG_ALL -> {
+                if ((context = getCurrentAppContext(clazz)) == null) {
+                    context = getAndroidContext(clazz);
                 }
             }
-            case 1 -> {
-                context = currentApp(clz);
+            case FLAG_CURRENT_APP -> {
+                context = getCurrentAppContext(clazz);
             }
-            case 2 -> {
-                context = android(clz);
+            case FLAG_ONLY_ANDROID -> {
+                context = getAndroidContext(clazz);
             }
             default -> {
-                throw new Throwable("Unexpected flag!");
+                throw new UnexpectedException("[ContextTool]: Unexpected flag: " + flag);
             }
         }
-        if (context == null) throw new Throwable("Context is null!");
         return context;
     }
 
-    private static Context currentApp(Class<?> clz) {
-        // 获取当前界面应用 Context
-        return InvokeTool.callStaticMethod(clz, "currentApplication", new Class[]{});
+    private static Context getCurrentAppContext(Class<?> clazz) {
+        return InvokeTool.callStaticMethod(clazz, "currentApplication", new Class[]{});
     }
 
-    private static Context android(Class<?> clz) {
-        // 获取 Android
+    private static Context getAndroidContext(Class<?> clazz) {
         Context context;
-        Object o = InvokeTool.callStaticMethod(clz, "currentActivityThread", new Class[]{});
+        Object o = InvokeTool.callStaticMethod(clazz, "currentActivityThread", new Class[]{});
         context = InvokeTool.callMethod(o, "getSystemContext", new Class[]{});
         if (context == null) {
-            o = InvokeTool.callStaticMethod(clz, "systemMain", new Class[]{});
+            o = InvokeTool.callStaticMethod(clazz, "systemMain", new Class[]{});
             context = InvokeTool.callMethod(o, "getSystemContext", new Class[]{});
             // 这里获取的 context 可能存在问题。
             // 所以暂时注释。

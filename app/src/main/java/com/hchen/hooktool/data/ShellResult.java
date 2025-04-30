@@ -24,22 +24,26 @@ import java.util.Arrays;
 import java.util.Objects;
 
 /**
- * Shell 工具返回的数据
+ * Shell 返回数据
  *
  * @author 焕晨HChen
  */
-public record ShellResult(String command, String[] outputs, String exitCode) {
-    @NonNull
-    @Override
-    public String toString() {
-        return "ShellResult[command=" + command + ", outputs=" + Arrays.toString(outputs) + ", exitCode=" + exitCode + "]";
+public record ShellResult(String command, @NonNull String[] outputs, String exitCode) {
+    /**
+     * 是否成功执行
+     */
+    public boolean isSuccess() {
+        return "0".equals(exitCode);
     }
 
     @Override
-    public boolean equals(Object object) {
-        if (this == object) return true;
-        if (!(object instanceof ShellResult that)) return false;
-        return Objects.equals(command, that.command) && Objects.equals(exitCode, that.exitCode) && Objects.deepEquals(outputs, that.outputs);
+    public boolean equals(Object o) {
+        if (!(o instanceof ShellResult(String command1, String[] outputs1, String code)))
+            return false;
+
+        return Objects.equals(command, command1) &&
+            Objects.equals(exitCode, code) &&
+            Objects.deepEquals(outputs, outputs1);
     }
 
     @Override
@@ -47,10 +51,13 @@ public record ShellResult(String command, String[] outputs, String exitCode) {
         return Objects.hash(command, Arrays.hashCode(outputs), exitCode);
     }
 
-    /**
-     * 是否成功执行。
-     */
-    public boolean isSuccess() {
-        return "0".equals(exitCode);
+    @Override
+    @NonNull
+    public String toString() {
+        return "ShellResult{" +
+            "command='" + command + '\'' +
+            ", outputs=" + Arrays.toString(outputs) +
+            ", exitCode='" + exitCode + '\'' +
+            '}';
     }
 }

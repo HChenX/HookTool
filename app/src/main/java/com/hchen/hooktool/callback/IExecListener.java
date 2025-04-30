@@ -16,47 +16,51 @@
 
  * Copyright (C) 2023-2025 HChenX
  */
-package com.hchen.hooktool.tool.itool;
+package com.hchen.hooktool.callback;
+
+import androidx.annotation.NonNull;
 
 /**
- * Shell 命令执行回调
+ * Shell 执行监听
  *
  * @author 焕晨HChen
  */
 public interface IExecListener {
     /**
-     * 标准输出。
+     * 标准输出
      *
      * @param command  输入的命令
      * @param outputs  执行后输出的内容
      * @param exitCode 退出码
      */
-    default void output(String command, String[] outputs, String exitCode) {
+    default void output(String command, @NonNull String[] outputs, String exitCode) {
     }
 
     /**
-     * 标准错误。
+     * 标准错误
      *
      * @param command  输入的命令
      * @param errors   报错内容
      * @param exitCode 退出码
      */
-    default void error(String command, String[] errors, String exitCode) {
+    default void error(String command, @NonNull String[] errors, String exitCode) {
     }
 
     /**
-     * 无 Root 时会执行的回调。
+     * 返回尝试 Root 的结果
+     *
+     * @param exitCode 退出码，非零码表尝试 Root 失败
      */
-    default void notRoot(String exitCode) {
+    default void rootResult(String exitCode) {
     }
 
     /**
-     * 管道破裂时的回调，代表 Shell 流非正常终止。
+     * 管道破裂时的回调，代表 Shell 流非正常终止
      *
      * @param command 输入的命令
      * @param errors  报错内容
      * @param reason  崩溃原因
      */
-    default void brokenPip(String command, String[] errors, String reason) {
+    default void brokenPip(String command, @NonNull String[] errors, String reason) {
     }
 }

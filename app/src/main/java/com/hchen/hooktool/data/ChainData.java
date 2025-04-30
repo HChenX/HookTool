@@ -18,79 +18,107 @@
  */
 package com.hchen.hooktool.data;
 
+import androidx.annotation.NonNull;
+
 import com.hchen.hooktool.hook.IHook;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Member;
-import java.util.ArrayList;
-import java.util.List;
+import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.Objects;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
- * 链式调用数据
+ * 链式数据
  *
  * @author 焕晨HChen
  */
-public final class ChainData {
-    public List<ChainData> mMemberList = new ArrayList<>(); /* 目标成员组 */
-    public Member mMember; /* 查找到的成员 */
-    public IHook mIHook; /* hook 动作 */
-    public HookState mHookState; /* 状态 */
-    public String UUID = "UNKNOWN"; /* 唯一标识符 */
+public class ChainData {
+    // -------------------------- Data ------------------------------
+    public ChainType chainType;
+    public IHook iHook;
+    public boolean ifExist;
+    public Member[] members;
+    public static final CopyOnWriteArraySet<ChainData> chainDataSet = new CopyOnWriteArraySet<>();
 
-    // 数据存储
-    public ChainData(List<ChainData> memberList, IHook iHook, HookState hookState, String uuid) {
-        this.mMemberList = memberList;
-        this.mIHook = iHook;
-        this.mHookState = hookState;
-        this.UUID = uuid;
+    // -------------------------- Method ------------------------------
+    public String methodName;
+    public Object[] methodParams;
+    public Method method;
+
+    public ChainData(String methodName, Object... methodParams) {
+        this.methodName = methodName;
+        this.methodParams = methodParams;
+        this.chainType = ChainType.FIND_METHOD;
     }
 
-    // members 内数据
-    public ChainData(Member member) {
-        this.mMember = member;
+    public ChainData(String methodName) {
+        this.methodName = methodName;
+        this.chainType = ChainType.FIND_ALL_METHOD;
     }
 
-    //################################
-
-    public static final String TYPE_METHOD = "METHOD";
-    public static final String TYPE_ANY_METHOD = "ANY_METHOD";
-    public static final String TYPE_CONSTRUCTOR = "CONSTRUCTOR";
-    public static final String TYPE_ANY_CONSTRUCTOR = "ANY_CONSTRUCTOR";
-
-    public String mName; /* 方法名 */
-    public String mType; /* 类型 */
-    public Object[] mParams; /* 参数 */
-
-    public boolean mCheckExist = false;
-
-    // 方法信息
-    public ChainData(String name, Object... params) {
-        mName = name;
-        mType = TYPE_METHOD;
-        mParams = params;
+    public ChainData(Method method) {
+        this.method = method;
+        this.chainType = ChainType.METHOD;
     }
 
-    // 方法信息
-    public ChainData(String name) {
-        mName = name;
-        mType = TYPE_ANY_METHOD;
-        mParams = new Object[]{};
-    }
+    // -------------------------- Constructor ------------------------------
+    public Object[] constructorParams;
+    public Constructor<?> constructor;
 
-    // 构造函数信息
-    public ChainData(Object... params) {
-        mName = "";
-        mType = TYPE_CONSTRUCTOR;
-        mParams = params;
-    }
-
-    // 构造函数信息
     public ChainData() {
-        mName = "";
-        mType = TYPE_ANY_CONSTRUCTOR;
-        mParams = new Object[]{};
+        this.chainType = ChainType.FIND_ALL_CONSTRUCTOR;
     }
 
-    public void setCheckExist(boolean check) {
-        mCheckExist = check;
+    public ChainData(Object... constructorParams) {
+        this.constructorParams = constructorParams;
+        this.chainType = ChainType.FIND_CONSTRUCTOR;
+    }
+
+    public ChainData(Constructor<?> constructor) {
+        this.constructor = constructor;
+        this.chainType = ChainType.CONSTRUCTOR;
+    }
+
+    public void setIfExist(boolean ifExist) {
+        this.ifExist = ifExist;
+    }
+
+    @Override
+    @NonNull
+    public String toString() {
+        return "ChainData{" +
+            "chainType=" + chainType +
+            ", iHook=" + iHook +
+            ", ifExist=" + ifExist +
+            ", members=" + Arrays.toString(members) +
+            ", methodName='" + methodName + '\'' +
+            ", methodParams=" + Arrays.toString(methodParams) +
+            ", method=" + method +
+            ", constructorParams=" + Arrays.toString(constructorParams) +
+            ", constructor=" + constructor +
+            '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof ChainData chainData)) return false;
+        return ifExist == chainData.ifExist &&
+            chainType == chainData.chainType &&
+            // Objects.equals(iHook, chainData.iHook) && ignore
+            // Objects.deepEquals(members, chainData.members) && ignore
+            Objects.equals(methodName, chainData.methodName) &&
+            Objects.deepEquals(methodParams, chainData.methodParams) &&
+            Objects.equals(method, chainData.method) &&
+            Objects.deepEquals(constructorParams, chainData.constructorParams) &&
+            Objects.equals(constructor, chainData.constructor);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(chainType, /* iHook ignore */ ifExist,
+            /* Arrays.hashCode(members) ignore */ methodName, Arrays.hashCode(methodParams),
+            method, Arrays.hashCode(constructorParams), constructor);
     }
 }

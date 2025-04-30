@@ -16,17 +16,20 @@
 
  * Copyright (C) 2023-2025 HChenX
  */
-package com.hchen.hooktool.tool.itool;
+package com.hchen.hooktool.callback;
 
-import android.content.Context;
-
-import androidx.annotation.Nullable;
+import androidx.annotation.NonNull;
 
 /**
- * 上下文获取工具接口
+ * 异步 Prefs 接口
  *
  * @author 焕晨HChen
  */
-public interface IContextGetter {
-    void onContext(@Nullable Context context);
+public interface IAsyncPrefs {
+    /**
+     * 获取寄生应用的共享首选项实例，你可以在此处读取/写入值
+     *
+     * @param sPrefs 共享首选项实例
+     */
+    void async(@NonNull IPrefsApply sPrefs);
 }

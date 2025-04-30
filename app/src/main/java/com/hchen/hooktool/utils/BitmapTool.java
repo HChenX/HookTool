@@ -16,7 +16,7 @@
 
  * Copyright (C) 2023-2025 HChenX
  */
-package com.hchen.hooktool.tool.additional;
+package com.hchen.hooktool.utils;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -24,19 +24,27 @@ import android.graphics.Canvas;
 import android.graphics.PixelFormat;
 import android.graphics.drawable.Drawable;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import java.io.ByteArrayOutputStream;
 
 /**
- * Drawable 转 Bitmap
+ * Bitmap 工具
  *
  * @author 焕晨HChen
  */
-public final class BitmapTool {
-    public static Bitmap drawableToBitmap(Drawable drawable) {
+public class BitmapTool {
+    private BitmapTool() {
+    }
+
+    @NonNull
+    public static Bitmap drawableToBitmap(@NonNull Drawable drawable) {
         return drawableToBitmap(drawable, drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight());
     }
 
-    public static Bitmap drawableToBitmap(Drawable drawable, int width, int height) {
+    @NonNull
+    public static Bitmap drawableToBitmap(@NonNull Drawable drawable, int width, int height) {
         if (width <= 0 || height <= 0) {
             width = drawable.getIntrinsicWidth();
             height = drawable.getIntrinsicHeight();
@@ -50,13 +58,15 @@ public final class BitmapTool {
         return bitmap;
     }
 
-    public static byte[] bitmapToBytes(Bitmap bitmap) {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
-        return baos.toByteArray();
+    @NonNull
+    public static byte[] bitmapToBytes(@NonNull Bitmap bitmap) {
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+        return stream.toByteArray();
     }
 
-    public static Bitmap bytesToBimap(byte[] bytes) {
+    @Nullable
+    public static Bitmap bytesToBimap(@NonNull byte[] bytes) {
         if (bytes.length != 0) {
             return BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
         } else {

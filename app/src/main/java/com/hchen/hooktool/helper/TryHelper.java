@@ -18,88 +18,54 @@
  */
 package com.hchen.hooktool.helper;
 
-import static com.hchen.hooktool.log.LogExpand.getTag;
-import static com.hchen.hooktool.log.XposedLog.logE;
+import java.util.Objects;
 
 /**
- * 方法执行与异常处理类
+ * TryHelper
  *
  * @author 焕晨HChen
  */
-public final class TryHelper {
-    /*
-     * 执行并返回执行的结果或抛错。
-     * */
-    public static <V> Result<V> run(IRun<V> supplier) {
-        return new Result<>(supplier);
+public class TryHelper {
+    private TryHelper() {
     }
 
-    /*
-     * 简单的执行代码并获取返回值，与此同时主动抛出可能的异常。
-     */
-    public interface IRun<V> {
-        V run() throws Throwable;
+    public static <R> Result<R> doTry(IRun<R> supplier) {
+        return new Result<R>(supplier);
     }
 
-    public static final class Result<V> {
-        private V mResult;
-        private boolean isSuccess;
-        private Throwable mThrowable;
+    public interface IRun<R> {
+        R run() throws Throwable;
+    }
 
-        public Result(IRun<V> iRun) {
+    public static final class Result<R> {
+        private R result;
+        private Throwable throwable;
+
+        private Result(IRun<R> iRun) {
             try {
-                mResult = iRun.run();
-                isSuccess = true;
-                mThrowable = null;
+                this.result = iRun.run();
+                this.throwable = null;
             } catch (Throwable throwable) {
-                mThrowable = throwable;
-                isSuccess = false;
-                mResult = null;
+                this.result = null;
+                this.throwable = throwable;
             }
         }
 
-        // 获取执行结果
-        public V get() {
-            return mResult;
+        public R get() {
+            return result;
         }
 
-        // 失败返回 or 值
-        public V or(V or) {
-            if (isSuccess) return mResult;
+        public R orElse(R or) {
+            if (!isSuccess()) return result;
             return or;
         }
 
-        // 获取抛错
         public Throwable getThrowable() {
-            return mThrowable;
+            return throwable;
         }
 
-        // 如果失败返回指定 or 值，并执行异常回调
-        public V orError(V or, IError iError) {
-            if (isSuccess) return mResult;
-
-            iError.error(mThrowable);
-            return or;
-        }
-
-        public V orErrorMsg(V or, String msg) {
-            if (isSuccess) return mResult;
-
-            logE(getTag(), msg, mThrowable);
-            return or;
-        }
-
-        // 返回代码执行结束状态
         public boolean isSuccess() {
-            return isSuccess;
-        }
-
-        public boolean isFailed() {
-            return !isSuccess;
-        }
-
-        public interface IError {
-            void error(Throwable throwable);
+            return Objects.isNull(throwable);
         }
     }
 }

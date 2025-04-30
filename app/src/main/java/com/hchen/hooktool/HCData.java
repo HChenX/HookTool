@@ -18,190 +18,153 @@
  */
 package com.hchen.hooktool;
 
-import android.content.pm.ApplicationInfo;
-
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import de.robv.android.xposed.IXposedHookZygoteInit;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 /**
- * 核心数据
+ * 工具数据
  *
  * @author 焕晨HChen
  */
-public final class HCData {
-    private static String mInitTag = "[Unknown]";
-    private static String mSpareTag = "Unknown";
-    private static int mInitLogLevel = HCInit.LOG_I;
-    private static String mModulePackageName = "";
-    private static String mPrefsName = "";
-    private static String[] mLogExpandPath = null;
+public class HCData {
+    @NonNull
+    private static String TAG = "Unknown";
+    private static int logLevel = HCInit.LOG_I;
+    @NonNull
+    private static String modulePackageName = "";
+    @NonNull
+    private static String targetPackageName = "UnknownPackage";
+    @NonNull
+    private static String prefsName = "";
     private static boolean isAutoReload = true;
     private static boolean isXposed = false;
-    private static ClassLoader mClassLoader = null;
-    private static XC_LoadPackage.LoadPackageParam mLpparam = null;
-    private static IXposedHookZygoteInit.StartupParam mStartupParam = null;
-
-    // ---------------------------- Getter -----------------------------------
-
-    /**
-     * 带 [] 的 TAG。
-     * <p>
-     * 例如: [HookTool]
-     */
-    public static String getInitTag() {
-        return mInitTag;
-    }
-
-    /**
-     * 原始的 TAG。
-     */
-    public static String getSpareTag() {
-        return mSpareTag;
-    }
-
-    /**
-     * 获取日志等级。
-     */
-    public static int getInitLogLevel() {
-        return mInitLogLevel;
-    }
-
-    /**
-     * 获取模块的包名。
-     */
-    public static String getModulePackageName() {
-        return mModulePackageName;
-    }
-
-    /**
-     * 获取自定义的 prefs 名。
-     */
-    public static String getPrefsName() {
-        return mPrefsName;
-    }
-
-    /**
-     * 获取日志增强 path。
-     */
     @Nullable
-    public static String[] getLogExpandPath() {
-        return mLogExpandPath;
+    private static String[] logExpandPath = null;
+    @Nullable
+    private static String[] logExpandIgnoreClassNames = null;
+    @NonNull
+    private static ClassLoader classLoader = ClassLoader.getSystemClassLoader();
+    @Nullable
+    private static XC_LoadPackage.LoadPackageParam loadPackageParam;
+    @Nullable
+    private static IXposedHookZygoteInit.StartupParam startupParam;
+
+    private HCData() {
     }
 
-    /**
-     * 是否自动更新 prefs。
-     */
+    @NonNull
+    public static String getTag() {
+        return TAG;
+    }
+
+    public static int getLogLevel() {
+        return logLevel;
+    }
+
+    @NonNull
+    public static String getModulePackageName() {
+        return modulePackageName;
+    }
+
+    @NonNull
+    public static String getTargetPackageName() {
+        return targetPackageName;
+    }
+
+    @NonNull
+    public static String getPrefsName() {
+        return prefsName;
+    }
+
     public static boolean isAutoReload() {
         return isAutoReload;
     }
 
-    /**
-     * 是否处于 xposed 环境。
-     */
     public static boolean isXposed() {
         return isXposed;
     }
 
-    /**
-     * 获取当前的 Classloader。
-     */
-    public static ClassLoader getClassLoader() {
-        return mClassLoader;
+    @Nullable
+    public static String[] getLogExpandPath() {
+        return logExpandPath;
     }
 
-    /**
-     * 获取当前的 LoadPackageParam。
-     */
     @Nullable
-    public static XC_LoadPackage.LoadPackageParam getLoadPackageParam() {
-        return mLpparam;
-    }
-
-    /**
-     * 获取当前的 StartupParam。
-     */
-    @Nullable
-    public static IXposedHookZygoteInit.StartupParam getStartupParam() {
-        return mStartupParam;
+    public static String[] getLogExpandIgnoreClassNames() {
+        return logExpandIgnoreClassNames;
     }
 
     @Nullable
     public static String getModulePath() {
-        if (mStartupParam != null)
-            return mStartupParam.modulePath;
+        if (startupParam != null) {
+            return startupParam.modulePath;
+        }
         return null;
     }
 
-    public static String getPackageName() {
-        if (mLpparam != null)
-            return mLpparam.packageName;
-        return "Unknown";
+    @NonNull
+    public static ClassLoader getClassLoader() {
+        return classLoader;
     }
 
     @Nullable
-    public static ApplicationInfo getAppInfo() {
-        if (mLpparam != null)
-            return mLpparam.appInfo;
-        return null;
+    public static XC_LoadPackage.LoadPackageParam getLoadPackageParam() {
+        return loadPackageParam;
     }
 
-    public static boolean isFirstApplication() {
-        if (mLpparam != null)
-            return mLpparam.isFirstApplication;
-        return false;
+    @Nullable
+    public static IXposedHookZygoteInit.StartupParam getStartupParam() {
+        return startupParam;
     }
 
-    public static String getProcessName() {
-        if (mLpparam != null)
-            return mLpparam.processName;
-        return "Unknown";
+    // ------------------------ 工具内部使用 -------------------------------
+    protected static void setTag(@NonNull String tag) {
+        HCData.TAG = tag;
     }
 
-    // ---------------------------- Setter ----------------------------------
-
-    static void setInitTag(String mInitTag) {
-        HCData.mInitTag = mInitTag;
+    protected static void setLogLevel(int logLevel) {
+        HCData.logLevel = logLevel;
     }
 
-    static void setSpareTag(String mSpareTag) {
-        HCData.mSpareTag = mSpareTag;
+    protected static void setModulePackageName(@NonNull String modulePackageName) {
+        HCData.modulePackageName = modulePackageName;
     }
 
-    static void setInitLogLevel(int mInitLogLevel) {
-        HCData.mInitLogLevel = mInitLogLevel;
+    protected static void setPrefsName(@NonNull String prefsName) {
+        HCData.prefsName = prefsName;
     }
 
-    static void setModulePackageName(String mModulePackageName) {
-        HCData.mModulePackageName = mModulePackageName;
-    }
-
-    static void setPrefsName(String mPrefsName) {
-        HCData.mPrefsName = mPrefsName;
-    }
-
-    static void setLogExpandPath(String[] mLogExpandPath) {
-        HCData.mLogExpandPath = mLogExpandPath;
-    }
-
-    static void setAutoReload(boolean isAutoReload) {
+    protected static void setAutoReload(boolean isAutoReload) {
         HCData.isAutoReload = isAutoReload;
     }
 
-    static void setIsXposed(boolean isXposed) {
+    protected static void setIsXposed(boolean isXposed) {
         HCData.isXposed = isXposed;
     }
 
-    static void setClassLoader(ClassLoader classLoader) {
-        HCData.mClassLoader = classLoader;
+    protected static void setLogExpandPath(@NonNull String... logExpandPath) {
+        HCData.logExpandPath = logExpandPath;
     }
 
-    static void setLoadPackageParam(XC_LoadPackage.LoadPackageParam mLpparam) {
-        HCData.mLpparam = mLpparam;
+    protected static void setLogExpandIgnoreClassNames(@NonNull String... logExpandIgnoreClassNames) {
+        HCData.logExpandIgnoreClassNames = logExpandIgnoreClassNames;
     }
 
-    static void setStartupParam(IXposedHookZygoteInit.StartupParam mStartupParam) {
-        HCData.mStartupParam = mStartupParam;
+    protected static void setClassLoader(@NonNull ClassLoader classLoader) {
+        HCData.classLoader = classLoader;
+        HCBase.classLoader = classLoader;
+    }
+
+    protected static void setLoadPackageParam(@NonNull XC_LoadPackage.LoadPackageParam loadPackageParam) {
+        HCData.loadPackageParam = loadPackageParam;
+        HCData.targetPackageName = loadPackageParam.packageName;
+        HCBase.loadPackageParam = loadPackageParam;
+    }
+
+    protected static void setStartupParam(@NonNull IXposedHookZygoteInit.StartupParam startupParam) {
+        HCData.startupParam = startupParam;
     }
 }

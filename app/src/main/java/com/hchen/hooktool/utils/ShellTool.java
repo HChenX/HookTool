@@ -16,9 +16,7 @@
 
  * Copyright (C) 2023-2025 HChenX
  */
-package com.hchen.hooktool.tool.additional;
-
-import static com.hchen.hooktool.log.LogExpand.createRuntimeExceptionMsg;
+package com.hchen.hooktool.utils;
 
 import android.util.Pair;
 
@@ -26,9 +24,10 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.Size;
 
+import com.hchen.hooktool.callback.IExecListener;
 import com.hchen.hooktool.data.ShellResult;
+import com.hchen.hooktool.exception.UnexpectedException;
 import com.hchen.hooktool.log.AndroidLog;
-import com.hchen.hooktool.tool.itool.IExecListener;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
@@ -47,7 +46,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 /**
- * 简易的 Shell 工具，可执行简易的 Shell 命令
+ * Shell 工具
  * <p>
  * 使用方法:
  * <p>
@@ -68,18 +67,18 @@ import java.util.concurrent.TimeUnit;
  *         shellTool.cmd("echo hello").async();
  *         shellTool.cmd("echo world").async(new IExecListener() {
  *             @Override
- *             public void output(String command, String[] outputs, String exitCode) {
+ *             public void output(String command, @NonNull String[] outputs, String exitCode) {
  *                 IExecListener.super.output(command, outputs, exitCode);
  *             }
  *         });
  *         shellTool.addExecListener(new IExecListener() {
  *             @Override
- *             public void output(String command, String[] outputs, String exitCode) {
+ *             public void output(String command, @NonNull String[] outputs, String exitCode) {
  *                 IExecListener.super.output(command, outputs, exitCode);
  *             }
  *
  *             @Override
- *             public void error(String command, String[] errors, String exitCode) {
+ *             public void error(String command, @NonNull String[] errors, String exitCode) {
  *                 IExecListener.super.error(command, errors, exitCode);
  *             }
  *
@@ -89,13 +88,12 @@ import java.util.concurrent.TimeUnit;
  *             }
  *
  *             @Override
- *             public void brokenPip(String command, String[] errors, String reason) {
+ *             public void brokenPip(String command, @NonNull String[] errors, String reason) {
  *                 IExecListener.super.brokenPip(command, errors, reason);
  *             }
  *         });
  *         shellTool.close();
  * }
- *
  * @author 焕晨HChen
  */
 public class ShellTool {
@@ -112,28 +110,31 @@ public class ShellTool {
     }
 
     /**
-     * 构建 Shell。
+     * 构建 Shell
      */
+    @NonNull
     public static Builder builder() {
         return mBuilder;
     }
 
     /**
-     * 获取已经构建的 Shell，不存在会报错。
+     * 获取已经构建的 Shell，不存在会报错
      */
+    @NonNull
     public static ShellTool obtain() {
         return mBuilder.obtain();
     }
 
     /**
-     * 输入命令。
+     * 输入命令
      */
+    @NonNull
     public ShellTool cmd(@NonNull String cmd) {
         return mShellImpl.cmd(cmd);
     }
 
     /**
-     * 同步执行命令，并获取返回值。
+     * 同步执行命令，并获取返回值
      */
     @Nullable
     public ShellResult exec() {
@@ -141,43 +142,43 @@ public class ShellTool {
     }
 
     /**
-     * 异步执行命令。
+     * 异步执行命令
      */
     public void async() {
         mShellImpl.async(null);
     }
 
-    public void async(IExecListener iExecListener) {
+    public void async(@NonNull IExecListener iExecListener) {
         mShellImpl.async(iExecListener);
     }
 
     /**
-     * 添加回调，传入 null 则删除全部回调。
+     * 添加回调，传入 null 则删除全部回调
      */
-    public void addExecListener(@Nullable IExecListener execListener) {
-        if (execListener == null) {
+    public void addExecListener(@Nullable IExecListener iExecListener) {
+        if (iExecListener == null) {
             mIExecListeners.clear();
             return;
         }
-        mIExecListeners.add(execListener);
+        mIExecListeners.add(iExecListener);
     }
 
     /**
-     * 移除指定回调。
+     * 移除指定回调
      */
-    public void removeExecListener(@NonNull IExecListener execListener) {
-        mIExecListeners.remove(execListener);
+    public void removeExecListener(IExecListener iExecListener) {
+        mIExecListeners.remove(iExecListener);
     }
 
     /**
-     * Shell 是否处于活动状态。
+     * Shell 是否处于活动状态
      */
     public boolean isActive() {
         return mShellImpl.isActive();
     }
 
     /**
-     * 关闭 Shell 流。
+     * 关闭 Shell 流
      */
     public void close() {
         mShellImpl.close();
@@ -188,24 +189,24 @@ public class ShellTool {
     }
 
     /**
-     * 检查是否支持 Root。
+     * 检查是否支持 Root
      */
     public static boolean isRootAvailable() {
         return isRootAvailable(true, null);
     }
 
     /**
-     * 检查是否支持 Root。
+     * 检查是否支持 Root
      */
-    public static boolean isRootAvailable(boolean sync, IExecListener execListener) {
+    public static boolean isRootAvailable(boolean sync, @Nullable IExecListener iExecListener) {
         Callable<Integer> callable = () -> {
             Process process = null;
             try {
                 process = Runtime.getRuntime().exec("su -c true");
                 int exitCode = process.waitFor();
                 if (exitCode != 0 && !sync) {
-                    if (execListener != null) {
-                        execListener.notRoot(String.valueOf(exitCode));
+                    if (iExecListener != null) {
+                        iExecListener.rootResult(String.valueOf(exitCode));
                     }
                 }
                 return exitCode;
@@ -264,7 +265,7 @@ public class ShellTool {
             notify();
         }
 
-        private synchronized ShellTool cmd(@NonNull String cmd) {
+        private synchronized ShellTool cmd(String cmd) {
             if (!isActive()) return mShellTool;
 
             mCommand = cmd;
@@ -652,16 +653,12 @@ public class ShellTool {
             if (mShell.isActive())
                 return mShell;
             else {
-                throw new RuntimeException(
-                    createRuntimeExceptionMsg(
-                        "The shell tool has not been initialized, please use it after initialization!"
-                    )
-                );
+                throw new UnexpectedException("[ShellTool]: The shell tool has not been initialized, please use it after initialization!");
             }
         }
 
         /**
-         * 是否使用 Root 模式。
+         * 是否使用 Root 模式
          */
         public Builder isRoot(boolean isRoot) {
             mShell.isRoot = isRoot;
@@ -678,7 +675,7 @@ public class ShellTool {
         }
 
         /**
-         * 设置 Shell 执行监听。
+         * 设置 Shell 执行监听
          */
         public Builder addExecListener(@Nullable IExecListener execListener) {
             mShell.addExecListener(execListener);
@@ -686,7 +683,7 @@ public class ShellTool {
         }
 
         /**
-         * 移除指定的监听。
+         * 移除指定的监听
          */
         public Builder removeExecListener(IExecListener execListener) {
             mShell.removeExecListener(execListener);

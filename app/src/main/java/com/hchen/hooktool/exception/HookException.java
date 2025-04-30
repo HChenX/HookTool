@@ -16,16 +16,26 @@
 
  * Copyright (C) 2023-2025 HChenX
  */
-package com.hchen.hooktool.tool.itool;
-
-import android.content.pm.PackageManager;
-import android.os.Parcelable;
+package com.hchen.hooktool.exception;
 
 /**
- * 软件包工具接口
+ * Hook 异常
  *
  * @author 焕晨HChen
  */
-public interface IPackageInfoGetter {
-    Parcelable[] packageInfoGetter(PackageManager pm) throws PackageManager.NameNotFoundException;
+public class HookException extends RuntimeException {
+    public HookException() {
+    }
+
+    public HookException(String message) {
+        super(message);
+    }
+
+    public HookException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public HookException(Throwable cause) {
+        super(cause);
+    }
 }
