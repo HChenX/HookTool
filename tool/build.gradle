@@ -1,0 +1,82 @@
+plugins {
+    alias(libs.plugins.androidLibrary)
+    id 'maven-publish'
+}
+
+def defVersion = 'v.2.0.0'
+int defVersionCode = 20250403000
+
+group = 'com.github.HChenX'
+version = defVersion
+
+android {
+    namespace 'com.hchen.hooktool'
+    compileSdk 34
+
+    defaultConfig {
+        minSdk 26
+        // noinspection OldTargetApi
+        targetSdk 34
+        // noinspection HighAppVersionCode
+        versionCode defVersionCode
+        versionName defVersion
+
+        aarMetadata {
+            minCompileSdk = 26
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            consumerProguardFiles 'proguard-rules.pro'
+        }
+
+        debug {
+            minifyEnabled false
+            consumerProguardFiles 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
+    }
+
+    publishing {
+        singleVariant("release") {
+            withSourcesJar()
+            withJavadocJar()
+        }
+    }
+
+    buildFeatures {
+        buildConfig false
+    }
+}
+
+tasks.register('androidSourcesJar', Jar) {
+    from android.sourceSets.main.java.srcDirs
+}
+
+dependencies {
+    compileOnly libs.xposed
+    implementation libs.annotation
+    // implementation 'org.apache.commons:commons-lang3:3.14.0'
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            // Creates a Maven publication called "release".
+            release(MavenPublication) {
+                from components.release
+                groupId = 'com.github.HChenX'
+                artifactId = 'HookTool'
+                version = defVersion
+
+                artifact androidSourcesJar
+            }
+        }
+    }
+}

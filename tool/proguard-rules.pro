@@ -19,3 +19,14 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+-keep class * extends com.hchen.hooktool.HCBase
+-keep class  com.hchen.hooktool.HCState {
+        static boolean isXposedEnabled;
+        static java.lang.String framework;
+        static int  version;
+ }
+-keep class com.hchen.hooktool.data.AppData {*;}
+-keep class * implements android.os.Parcelable {
+        public static ** CREATOR;
+}

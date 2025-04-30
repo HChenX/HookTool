@@ -22,4 +22,5 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "HookTool"
+include ':tool'
 include ':app'

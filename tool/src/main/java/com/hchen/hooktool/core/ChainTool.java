@@ -55,7 +55,7 @@ public class ChainTool {
     private final ChainHook chainHook;
     private ChainData chainData;
 
-    private ChainTool(Class<?> clazz) {
+    private ChainTool(@NonNull Class<?> clazz) {
         chainHook = new ChainHook();
         this.clazz = clazz;
     }

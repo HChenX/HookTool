@@ -8,7 +8,7 @@
 ![last commit](https://img.shields.io/github/last-commit/HChenX/HookTool?style=flat)
 ![language](https://img.shields.io/badge/language-java-purple)
 
-<p><b><a href="README-en.md">English</a> | <a href="README.md">简体中文</a></b></p>
+[//]: # (<p><b><a href="README-en.md">English</a> | <a href="README.md">简体中文</a></b></p>)
 <p>使用 Java 编写的 Hook 工具！帮助你减轻编写 Hook 代码的复杂度！</p>
 </div>
 
@@ -16,11 +16,9 @@
 
 ### 1. **链式调用**
 
-### 2. **安全使用**
+### 2. **全面便利**
 
-### 3. **全面丰富**
-
-#### Tip: 重构声明: v.1.0.0 版本和之前版本有较大不同，新版本工具完成静态化，更符合工具特征，拥有更好的使用体验和性能。
+#### Tip: 重构声明: v.2.0.0 再次重构，使工具更加优雅更加便利。 v.1.0.0 版本和之前版本有较大不同，新版本工具完成静态化，更符合工具特征，拥有更好的使用体验和性能。
 
 # 🔧 使用方法
 
@@ -40,10 +38,7 @@ dependencyResolutionManagement {
 
 ```groovy
 dependencies {
-    // 二选一即可，推荐使用 jitpack，maven 可能不会同步更新！
-    // Tip: v.*.*.* 填写当前最新发行版版本号即可！
-    implementation 'com.github.HChenX:HookTool:v.1.3.2' // jitpack
-    // implementation 'io.github.hchenx:hooktool:v.1.2.8' // maven Tip: 几乎废弃，请不要使用！
+    implementation 'com.github.HChenX:HookTool:v.2.0.0'
 }
 ```
 
@@ -72,10 +67,8 @@ public void initZygote(IXposedHookZygoteInit.StartupParam startupParam) {
         .setTag("HChenDemo") // 日志 tag
         .setLogLevel(LOG_D) // 日志等级
         .setPrefsName("hchen_prefs") // prefs 存储文件名 (可选)
-        .xPrefsAutoReload(true) // 是否自动更新共享首选项，默认开启 (可选)
-        .useLogExpand(new String[]{
-            "com.hchen.demo.hook"
-        }) // 是否使用日志增强功能，具体参见方法注释内容
+        .setAutoReload(true) // 是否自动更新共享首选项，默认开启 (可选)
+        .setLogExpandPath("com.hchen.demo.hook") // 日志增强功能
     ); // Tip: 若有使用 initZygote 建议配置在这里，因为时机很早。
     HCInit.initStartupParam(startupParam); // 在 zygote 阶段初始化工具
 }
@@ -86,7 +79,7 @@ public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) {
 }
 ```
 
-- 如果需要使用 prefs 工具或者在模块内使用本工具的 log 类，那么你还需要在模块主界面初始化。
+- 如果需要使用 prefs 工具或在模块内使用本工具的 log 类，那么你还需要在模块主界面初始化。
 
 ```java
 public static class MainActivity {
@@ -107,16 +100,14 @@ public static class MainActivity {
 ```java
 public class MainTest {
     public void test() {
-        CoreTool.hookMethod(/* 内容 */); // 即可 hook
+        CoreTool.hookMethod(); // 即可 hook
         CoreTool.findClass(); // 查找类
         CoreTool.callMethod(); // 调用方法
-        ChainTool.chain("com.hchen.demo", new ChainTool()
-            .method("method")
+        ChainTool.buildChain("com.hchen.demo")
+            .findMethod("method")
             .hook()
-
-            .method("method")
-            .hook()
-        ); // 即可链式调用
+            .findMethod("method1")
+            .doNothing(); // 即可链式调用
         PrefsTool.prefs().getString(); // 即可读取共享首选项
         // ......
     }
@@ -124,14 +115,14 @@ public class MainTest {
 ```
 
 - 当然你也可以直接继承本工具打包好的类。
-- **强烈建议继承 BaseHC 使用！**
+- **强烈建议继承 HCBase 使用！**
 
 ```java
 // Hook 方
-public class MainTest extends BaseHC {
+public class MainTest extends HCBase {
     @Override
     public void init() {
-        // BaseHC 继承了 CoreTool 工具，直接调用即可。
+        // HCBase 继承了 CoreTool 工具，直接调用即可。
     }
 
     // 可选项。
@@ -139,15 +130,14 @@ public class MainTest extends BaseHC {
     // 请务必在 hook 入口处初始化 HCInit.initStartupParam(startupParam);
     @Override
     public void initZygote(IXposedHookZygoteInit.StartupParam startupParam) {
-        Class<?> c = findClass("com.hchen.demo.Main");
-        hookMethod(c, "test", new IHook() {
-            /* 内容 */
+        hookMethod("com.hchen.demo.Main", "test", new IHook() {
+            // TODO
         });
     }
 }
 
 // 执行方
-public class RunHook implements IXposedHookLoadPackage, IXposedHookZygoteInit {
+public class MainHook implements IXposedHookLoadPackage, IXposedHookZygoteInit {
     @Override
     public void handleLoadPackage(XC_LoadPackage.LoadPackageParam loadPackageParam) {
         new MainTest().onLoadPackage(); // 即可在 loadPackage 阶段执行 Hook。
@@ -164,7 +154,7 @@ public class RunHook implements IXposedHookLoadPackage, IXposedHookZygoteInit {
 - 混淆配置:
 
 ```text
-// 如果你不需要使用日志增强功能，也可以只加入（对于继承 BaseHC 使用的情况）:
+// 如果你不需要使用日志增强功能，也可以只加入（对于继承 HCBase 使用的情况）:
 -keep class * extends com.hchen.hooktool.HCBase
  
 // 如果需要使用日志增强功能，那么建议加入混淆规则:
@@ -173,13 +163,13 @@ public class RunHook implements IXposedHookLoadPackage, IXposedHookZygoteInit {
 -keep class com.hchen.demo.hook.**
 -keep class com.hchen.demo.hook.**$*
 
-// 如果既不继承 BaseHC 使用，也不使用日志增强功能则不需要配置混淆规则。
+// 如果既不继承 HCBase 使用，也不使用日志增强功能则不需要配置混淆规则。
 
 // 其他建议配置:
 -keep class  com.hchen.hooktool.HCState {
-        static boolean isEnabled;
-        static java.lang.String mFramework;
-        static int  mVersion;
+        static boolean isXposedEnabled;
+        static java.lang.String framework;
+        static int  version;
  }
 -keep class * implements android.os.Parcelable {
         public static ** CREATOR;
@@ -190,63 +180,37 @@ public class RunHook implements IXposedHookLoadPackage, IXposedHookZygoteInit {
 
 # 💡 链式调用
 
-- 本工具支持链式调用，使用 chain() 方法创建链式。
+- 本工具支持链式调用，使用 buildChain() 方法创建链式。
 - 这是本工具重构提供的全新链式方案，是否更简洁高效了呢？
 - 代码示例:
 
 ```java
 // 链式调用
-public class MainTest extends BaseHC {
+public class MainTest extends HCBase {
     public void test() {
         // 看！是不是很简洁易懂？
-        chain("com.hchen.demo", method("test")
+        buildChain("com.hchen.demo")
+            .findMethod("test")
             .hook(new IHook() {
                 @Override
                 public void before() {
                     super.before();
                 }
             })
-
-            .anyMethod("test")
+            .findAllMethod("test")
             .hook(new IHook() {
                 @Override
                 public void after() {
                     super.after();
                 }
             })
-
-            .constructor()
-            .returnResult(false)
-        );
+            .findConstructor()
+            .returnResult(false);
     }
 }
 ```
 
-# 📌 安全使用
-
-- 本工具致力于构建全面完善的抛错处理逻辑，尽量不会中断 hook 进程。
-- 例如：
-
-```java
-public class MainTest extends BaseHC {
-    public void init() {
-        Class<?> c = findClass("com.hchen.demo.Demo"); // 如果无法获取 class 则会记录 Error 日志并返回 null。
-        hookMethod(c, "test", new IHook() { // c 为 null 也会记录 Error 日志，并跳过 hook 继续执行后面逻辑。
-            @Override
-            public void before() {
-                ((Object) null).getClass(); // 虽然抛错但会被记录而不会直接抛给寄生应用或者导致 hook 流程中断。
-            }
-        });
-        setStaticField("com.hchen.demo.Demo", "demo", true);
-        callStaticMethod("com.hchen.demo.Demo", "isDemo", false);
-        ((Object) null).getClass(); // 如果在这里抛出，会导致 hook 流程终止，但工具会给出日志提示，请手动避免！
-    }
-}
-```
-
-- 非常适合于在多 hook 点内需要流程持续执行不被中断的场景！
-
-# 📌 全面丰富
+# 📌 全面便利
 
 - 工具提供了全面丰富的方法供你调用。
 - 包括:
@@ -254,7 +218,7 @@ public class MainTest extends BaseHC {
 ----
 
 - ContextTool 类:
-- 更方便的获取 context 。
+- 更方便的获取 context。
 
 ```java
 public class MainTest {
@@ -273,9 +237,8 @@ public class MainTest {
 ```java
 public class MainTest {
     public void test() {
-        // 即可反射调用方法，其他反射操作同理。
-        InvokeTool.callMethod(InvokeTool.findClass("com.hchen.demo.Main",
-            getClass().getClassLoader()), "test", new Class[]{});
+        // 即可反射调用方法，其他反射操作同理
+        InvokeTool.callMethod(InvokeTool.findClass("com.hchen.demo.Main"), "test", new Class[]{});
     }
 }
 ```
@@ -289,9 +252,9 @@ public class MainTest {
 public class MainTest {
     public void test() {
         // 只能在系统框架中调用才能设置 prop
-        SystemPropTool.setProp("ro.test.prop", "1");
+        SystemPropTool.setProp("persist.test.prop", "1");
         // 获取可以随意
-        String result = SystemPropTool.getProp("ro.test.prop");
+        String result = SystemPropTool.getProp("persist.test.prop");
     }
 }
 ```
@@ -303,7 +266,7 @@ public class MainTest {
 
 ```java
 // 寄生应用内
-public class MainTest extends BaseHC {
+public class MainTest extends HCBase {
     @Override
     public void init() {
         // xprefs 模式：
@@ -314,14 +277,14 @@ public class MainTest extends BaseHC {
         // sprefs 模式：
         // 配置会保存到寄生应用的私有目录，读取也会从寄生应用私有目录读取。
         prefs(context).editor().putString("test", "1").commit();
-        // 如果没有继承 BaseHC 可以这样调用。
+        // 如果没有继承 HCBase 可以这样调用。
         PrefsTool.prefs(context).editor().putString("test", "2").commit();
         // 注意 sprefs 模式 是和 xprefs 模式相互独立的，可共同存在。
 
         // 如果不方便获取 context 可用使用此方法，异步获取寄生应用上下文后再设置。
         asyncPrefs(new IAsyncPrefs() {
             @Override
-            public void async(IPrefsApply sp) {
+            public void async(@NonNull IPrefsApply sp) {
                 sp.editor().put("test", "1").commit();
             }
         });
@@ -346,7 +309,7 @@ public static class MainActivity {
 ---
 
 - ShellTool 类：
-- 提供简易的执行 Shell 命令的能力:
+- 提供简易的执行 Shell 命令的能力。
 - 使用方法:
 
 ```java
@@ -368,18 +331,18 @@ public class MainTest {
         shellTool.cmd("echo hello").async();
         shellTool.cmd("echo world").async(new IExecListener() {
             @Override
-            public void output(String command, String[] outputs, String exitCode) {
+            public void output(String command, @NonNull String[] outputs, String exitCode) {
                 IExecListener.super.output(command, outputs, exitCode);
             }
         });
         shellTool.addExecListener(new IExecListener() {
             @Override
-            public void output(String command, String[] outputs, String exitCode) {
+            public void output(String command, @NonNull String[] outputs, String exitCode) {
                 IExecListener.super.output(command, outputs, exitCode);
             }
 
             @Override
-            public void error(String command, String[] errors, String exitCode) {
+            public void error(String command, @NonNull String[] errors, String exitCode) {
                 IExecListener.super.error(command, errors, exitCode);
             }
 
@@ -389,7 +352,7 @@ public class MainTest {
             }
 
             @Override
-            public void brokenPip(String command, String[] errors, String reason) {
+            public void brokenPip(String command, @NonNull String[] errors, String reason) {
                 IExecListener.super.brokenPip(command, errors, reason);
             }
         });

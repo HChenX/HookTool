@@ -20,12 +20,14 @@ package com.hchen.hooktool.callback;
 
 import androidx.annotation.NonNull;
 
+import java.lang.reflect.Member;
+
 /**
  * Member 过滤
  *
  * @author 焕晨HChen
  */
-public interface IMemberFilter<T> {
+public interface IMemberFilter<T extends Member> {
     /**
      * 过滤成员，返回 true 则保留，false 则摈弃
      */
