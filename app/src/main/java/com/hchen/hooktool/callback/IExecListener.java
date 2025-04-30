@@ -47,9 +47,11 @@ public interface IExecListener {
     }
 
     /**
-     * 无 Root 时会执行的回调
+     * 返回尝试 Root 的结果
+     *
+     * @param exitCode 退出码，非零码表尝试 Root 失败
      */
-    default void notRoot(String exitCode) {
+    default void rootResult(String exitCode) {
     }
 
     /**

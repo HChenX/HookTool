@@ -47,7 +47,53 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Shell 工具
+ * <p>
+ * 使用方法:
+ * <p>
+ * <pre>{@code
+ *         ShellTool shellTool = ShellTool.builder().isRoot(true).create();
+ *         shellTool = ShellTool.obtain();
+ *         ShellResult shellResult = shellTool.cmd("ls").exec();
+ *         if (shellResult != null) {
+ *             boolean result = shellResult.isSuccess();
+ *         }
+ *         shellTool.cmd("""
+ *             if [[ 1 == 1 ]]; then
+ *                 echo hello;
+ *             elif [[ 1 == 2 ]]; then
+ *                 echo world;
+ *             fi
+ *             """).exec();
+ *         shellTool.cmd("echo hello").async();
+ *         shellTool.cmd("echo world").async(new IExecListener() {
+ *             @Override
+ *             public void output(String command, @NonNull String[] outputs, String exitCode) {
+ *                 IExecListener.super.output(command, outputs, exitCode);
+ *             }
+ *         });
+ *         shellTool.addExecListener(new IExecListener() {
+ *             @Override
+ *             public void output(String command, @NonNull String[] outputs, String exitCode) {
+ *                 IExecListener.super.output(command, outputs, exitCode);
+ *             }
  *
+ *             @Override
+ *             public void error(String command, @NonNull String[] errors, String exitCode) {
+ *                 IExecListener.super.error(command, errors, exitCode);
+ *             }
+ *
+ *             @Override
+ *             public void notRoot(String exitCode) {
+ *                 IExecListener.super.notRoot(exitCode);
+ *             }
+ *
+ *             @Override
+ *             public void brokenPip(String command, @NonNull String[] errors, String reason) {
+ *                 IExecListener.super.brokenPip(command, errors, reason);
+ *             }
+ *         });
+ *         shellTool.close();
+ * }
  * @author 焕晨HChen
  */
 public class ShellTool {
@@ -66,6 +112,7 @@ public class ShellTool {
     /**
      * 构建 Shell
      */
+    @NonNull
     public static Builder builder() {
         return mBuilder;
     }
@@ -73,6 +120,7 @@ public class ShellTool {
     /**
      * 获取已经构建的 Shell，不存在会报错
      */
+    @NonNull
     public static ShellTool obtain() {
         return mBuilder.obtain();
     }
@@ -80,6 +128,7 @@ public class ShellTool {
     /**
      * 输入命令
      */
+    @NonNull
     public ShellTool cmd(@NonNull String cmd) {
         return mShellImpl.cmd(cmd);
     }
@@ -157,7 +206,7 @@ public class ShellTool {
                 int exitCode = process.waitFor();
                 if (exitCode != 0 && !sync) {
                     if (iExecListener != null) {
-                        iExecListener.notRoot(String.valueOf(exitCode));
+                        iExecListener.rootResult(String.valueOf(exitCode));
                     }
                 }
                 return exitCode;
@@ -216,7 +265,7 @@ public class ShellTool {
             notify();
         }
 
-        private synchronized ShellTool cmd(@NonNull String cmd) {
+        private synchronized ShellTool cmd(String cmd) {
             if (!isActive()) return mShellTool;
 
             mCommand = cmd;

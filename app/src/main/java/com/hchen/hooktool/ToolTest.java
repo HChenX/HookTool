@@ -18,22 +18,201 @@
  */
 package com.hchen.hooktool;
 
-import com.hchen.hooktool.hook.IHook;
+import android.content.Context;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.os.Parcelable;
 
-public class ToolTest extends HCBase {
+import androidx.annotation.NonNull;
+
+import com.hchen.hooktool.callback.IAsyncPrefs;
+import com.hchen.hooktool.callback.IExecListener;
+import com.hchen.hooktool.callback.IPackageInfoGetter;
+import com.hchen.hooktool.callback.IPrefsApply;
+import com.hchen.hooktool.data.AppData;
+import com.hchen.hooktool.data.ShellResult;
+import com.hchen.hooktool.hook.IHook;
+import com.hchen.hooktool.utils.PackageTool;
+import com.hchen.hooktool.utils.PrefsTool;
+import com.hchen.hooktool.utils.ShellTool;
+
+import java.util.ArrayList;
+
+import de.robv.android.xposed.callbacks.XC_LoadPackage;
+
+/**
+ * 测试类
+ *
+ * @author 焕晨HChen
+ */
+class ToolTest extends HCBase {
     private ToolTest() {
     }
 
     @Override
     protected void init() {
+        // 链式
+        buildChain("com.hchen.demo")
+            .findMethod("test")
+            .hook(new IHook() {
+                @Override
+                public void before() {
+                    super.before();
+                }
+            })
+            .findMethod("test1", String.class)
+            .hook(new IHook() {
+                @Override
+                public void after() {
+                    super.after();
+                }
+            })
+            .findConstructor()
+            .returnResult(false);
+
+        hookMethod("com.hchen.demo", "test", new IHook() {
+            @Override
+            public void before() {
+                super.before();
+            }
+        }).unhook();
+
+        // 本工具用法
         new IHook() {
             @Override
             public void before() {
+                // hook 方法所属的类
+                Class<?> c = getMember().getDeclaringClass();
+                Context context = (Context) thisObject();
+                String string = (String) getArg(0); // 获取第一个参数值
+                setArg(1, 1); // 设置第二个参数值
+
+                // 非静态本类内
+                setThisField("demo", 1); // 设置本类内 demo 字段值
+                callThisMethod("method"); // 调用本类内 method 方法
+                getThisField("test");
+                String result = (String) callThisMethod("call", getArg(0));
+
+                // 非静态本类外
+                Object o = null;
+                setField(o, "demo", 1); // 设置实例 o 的 demo 字段
+                callMethod(o, "method");
+                getField(o, "test");
+
+                // 静态需要 class
+                callThisStaticMethod("thisCall", getArg(0));
+
+                callStaticMethod("com.demo.Main", "callStatic", getArg(1)); // 调用静态方法 callStatic
+                int i = (int) getStaticField("com.demo.Main", "field");
+                setStaticField("com.demo.Main", "test", true); // 设置静态字段 test
+
+                unHookSelf(); // 移除自身
+                observeCall(); // 观察调用
+                getStackTrace(); // 获取堆栈
             }
         };
 
-        buildChain("")
-            .findMethod("")
-            .doNothing();
+        ShellTool shellTool = ShellTool.builder().isRoot(true).create();
+        shellTool = ShellTool.obtain();
+        ShellResult shellResult = shellTool.cmd("ls").exec();
+        if (shellResult != null) {
+            boolean result = shellResult.isSuccess();
+        }
+        shellTool.cmd("""
+            if [[ 1 == 1 ]]; then
+                echo hello;
+            elif [[ 1 == 2 ]]; then
+                echo world;
+            fi
+            """).exec();
+        shellTool.cmd("echo hello").async();
+        shellTool.cmd("echo world").async(new IExecListener() {
+            @Override
+            public void output(String command, @NonNull String[] outputs, String exitCode) {
+                IExecListener.super.output(command, outputs, exitCode);
+            }
+        });
+        shellTool.addExecListener(new IExecListener() {
+            @Override
+            public void output(String command, @NonNull String[] outputs, String exitCode) {
+                IExecListener.super.output(command, outputs, exitCode);
+            }
+
+            @Override
+            public void error(String command, @NonNull String[] errors, String exitCode) {
+                IExecListener.super.error(command, errors, exitCode);
+            }
+
+            @Override
+            public void rootResult(String exitCode) {
+                IExecListener.super.rootResult(exitCode);
+            }
+
+            @Override
+            public void brokenPip(String command, @NonNull String[] errors, String reason) {
+                IExecListener.super.brokenPip(command, errors, reason);
+            }
+        });
+        shellTool.close();
+
+        Context context = null;
+        AppData appData = PackageTool.getPackagesByCode(context, new IPackageInfoGetter() {
+            @NonNull
+            @Override
+            public Parcelable[] packageInfoGetter(@NonNull PackageManager pm) throws PackageManager.NameNotFoundException {
+                PackageInfo packageInfo = null;
+                ArrayList<PackageInfo> arrayList = new ArrayList<>();
+                arrayList.add(packageInfo);
+                return arrayList.toArray(new PackageInfo[0]);
+            }
+        })[0];
+        Bitmap bitmap = appData.icon;
+
+        createFakeResId("test_res"); // 获取 test_res 的虚拟资源 id
+        // 设置 pkg 的 string 资源 test_res_str 值为 HC!
+        setObjectReplacement("com.hchen.demo", "string", "test_res_str", "HC!");
+
+        prefs().get("test_key", "0"); // 获取 prefs test_key 的值
+        prefs().getBoolean("test_key_bool", false); // 获取 prefs test_key_bool 的值
+
+        // xprefs 模式：
+        // 注意 xprefs 模式，寄生应用不能修改配置只能读取。
+        String s = prefs().getString("test", "1");  // 即可读取
+        s = prefs("myPrefs").getString("test", "1");  // 可指定读取文件名
+
+        // sprefs 模式：
+        // 配置会保存到寄生应用的私有目录，读取也会从寄生应用私有目录读取。
+        prefs(context).editor().putString("test", "1").commit();
+        // 如果没有继承 BaseHC 可以这样调用。
+        PrefsTool.prefs(context).editor().putString("test", "2").commit();
+        // 注意 sprefs 模式 是和 xprefs 模式相互独立的，可共同存在。
+
+        // 如果不方便获取 context 可用使用此方法，异步获取寄生应用上下文后再设置。
+        asyncPrefs(new IAsyncPrefs() {
+            @Override
+            public void async(@NonNull IPrefsApply sPrefs) {
+                sPrefs.editor().put("test", "1").commit();
+            }
+        });
+    }
+
+    private static class InitHook extends HCEntrance {
+        @Override
+        @NonNull
+        public HCInit.BasicData initHC(@NonNull HCInit.BasicData basicData) {
+            return basicData
+                .setTag("HookTool")
+                .setLogLevel(HCInit.LOG_D)
+                .setModulePackageName("com.hchen.demo")
+                .setPrefsName("myprefs") // 可选
+                .setAutoReload(true) // 可选
+                .setLogExpandPath("com.hchen.demo.hook"); // 可选
+        }
+
+        @Override
+        public void onLoadPackage(@NonNull XC_LoadPackage.LoadPackageParam loadPackageParam) throws Throwable {
+            new ToolTest().onLoadPackage();
+        }
     }
 }

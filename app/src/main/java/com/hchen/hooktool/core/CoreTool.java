@@ -21,13 +21,16 @@ package com.hchen.hooktool.core;
 import static com.hchen.hooktool.helper.TryHelper.doTry;
 import static com.hchen.hooktool.log.LogExpand.getTag;
 
+import android.content.Context;
 import android.content.res.Resources;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.hchen.hooktool.HCData;
+import com.hchen.hooktool.callback.IAsyncPrefs;
 import com.hchen.hooktool.callback.IMemberFilter;
+import com.hchen.hooktool.callback.IPrefsApply;
 import com.hchen.hooktool.exception.HookException;
 import com.hchen.hooktool.exception.MissingParameterException;
 import com.hchen.hooktool.exception.UnexpectedException;
@@ -38,6 +41,7 @@ import com.hchen.hooktool.hook.IHook;
 import com.hchen.hooktool.log.AndroidLog;
 import com.hchen.hooktool.log.LogExpand;
 import com.hchen.hooktool.log.XposedLog;
+import com.hchen.hooktool.utils.PrefsTool;
 import com.hchen.hooktool.utils.ResInjectTool;
 
 import java.lang.reflect.Constructor;
@@ -776,6 +780,36 @@ public class CoreTool extends XposedLog {
 
     public static void setObjectReplacement(String packageName, String type, String resName, Object replacementResValue) {
         ResInjectTool.setObjectReplacement(packageName, type, resName, replacementResValue);
+    }
+
+    // -------------------------- Prefs ------------------------------
+
+    @NonNull
+    public static IPrefsApply prefs(@NonNull Context context) {
+        return PrefsTool.prefs(context);
+    }
+
+    @NonNull
+    public static IPrefsApply prefs(@NonNull Context context, @NonNull String prefsName) {
+        return PrefsTool.prefs(context, prefsName);
+    }
+
+    @NonNull
+    public static IPrefsApply prefs() {
+        return PrefsTool.prefs();
+    }
+
+    @NonNull
+    public static IPrefsApply prefs(@NonNull String prefsName) {
+        return PrefsTool.prefs(prefsName);
+    }
+
+    public static void asyncPrefs(@NonNull IAsyncPrefs asyncPrefs) {
+        PrefsTool.asyncPrefs(asyncPrefs);
+    }
+
+    public static void asyncPrefs(@NonNull String prefsName, @NonNull IAsyncPrefs asyncPrefs) {
+        PrefsTool.asyncPrefs(prefsName, asyncPrefs);
     }
 
     // -------------------------- Other ------------------------------

@@ -157,6 +157,12 @@ public class HCInit {
 
         /**
          * 设置日志增强的路径
+         * <p>
+         * 同时加入类似的混淆规则:
+         * <pre>{@code
+         *     -keep class com.hchen.demo.hook.**
+         *     -keep class com.hchen.demo.hook.**$*
+         * }
          */
         public BasicData setLogExpandPath(@NonNull String... logExpandPath) {
             this.logExpandPath = logExpandPath;

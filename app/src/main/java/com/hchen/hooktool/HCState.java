@@ -38,6 +38,16 @@ import kotlin.text.Charsets;
 
 /**
  * 工具状态
+ * <p>
+ * 记得配置混淆，否则不可用:
+ * <p>
+ * <pre>{@code
+ * -keep class  com.hchen.hooktool.HCState {
+ *         static boolean isXposedEnabled;
+ *         static java.lang.String framework;
+ *         static int  version;
+ * }
+ * }
  *
  * @author 焕晨HChen
  */
