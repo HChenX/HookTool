@@ -158,14 +158,15 @@ public class ChainTool {
     private void runChain() {
         Objects.requireNonNull(chainData, "[ChainTool]: Chain data must not is null!");
 
+        final ChainData tempChainData = chainData;
         if (ChainData.chainDataSet.isEmpty()) {
             runFind();
-            ChainData.chainDataSet.add(chainData);
+            ChainData.chainDataSet.add(tempChainData);
             CoreTool.hookAll(chainData.members, chainData.iHook);
         } else {
-            if (ChainData.chainDataSet.contains(chainData)) {
+            if (!ChainData.chainDataSet.contains(chainData)) {
                 runFind();
-                ChainData.chainDataSet.add(chainData);
+                ChainData.chainDataSet.add(tempChainData);
                 CoreTool.hookAll(chainData.members, chainData.iHook);
             } else {
                 XposedLog.logW(LogExpand.getTag(), "Duplicate content will be skipped: " + chainData);
