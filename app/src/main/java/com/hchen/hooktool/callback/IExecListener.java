@@ -18,6 +18,8 @@
  */
 package com.hchen.hooktool.callback;
 
+import androidx.annotation.NonNull;
+
 /**
  * Shell 执行监听
  *
@@ -31,7 +33,7 @@ public interface IExecListener {
      * @param outputs  执行后输出的内容
      * @param exitCode 退出码
      */
-    default void output(String command, String[] outputs, String exitCode) {
+    default void output(String command, @NonNull String[] outputs, String exitCode) {
     }
 
     /**
@@ -41,7 +43,7 @@ public interface IExecListener {
      * @param errors   报错内容
      * @param exitCode 退出码
      */
-    default void error(String command, String[] errors, String exitCode) {
+    default void error(String command, @NonNull String[] errors, String exitCode) {
     }
 
     /**
@@ -57,6 +59,6 @@ public interface IExecListener {
      * @param errors  报错内容
      * @param reason  崩溃原因
      */
-    default void brokenPip(String command, String[] errors, String reason) {
+    default void brokenPip(String command, @NonNull String[] errors, String reason) {
     }
 }

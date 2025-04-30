@@ -20,6 +20,8 @@ package com.hchen.hooktool.helper;
 
 /**
  * 占位类，表示任何参数
+ * <p>
+ * 不要实例化本类
  *
  * @author 焕晨HChen
  */

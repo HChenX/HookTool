@@ -21,7 +21,6 @@ package com.hchen.hooktool;
 import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
 
-import com.hchen.hooktool.exception.UnexpectedException;
 import com.hchen.hooktool.log.XposedLog;
 
 import java.lang.annotation.Retention;
@@ -61,7 +60,7 @@ public class HCInit {
      */
     public static void initLoadPackageParam(XC_LoadPackage.LoadPackageParam loadPackageParam) {
         if (loadPackageParam == null)
-            throw new UnexpectedException("loadPackageParam must not is null!");
+            throw new NullPointerException("[HCInit]: loadPackageParam must not is null!");
 
         HCData.setIsXposed(true);
         HCData.setLoadPackageParam(loadPackageParam);
@@ -74,7 +73,7 @@ public class HCInit {
      */
     public static void initStartupParam(IXposedHookZygoteInit.StartupParam startupParam) {
         if (startupParam == null)
-            throw new UnexpectedException("startupParam must not is null!");
+            throw new NullPointerException("[HCInit]: startupParam must not is null!");
 
         HCData.setIsXposed(true);
         HCData.setStartupParam(startupParam);
@@ -101,7 +100,7 @@ public class HCInit {
     /**
      * 更换工具类加载器
      */
-    public static void setClassLoader(ClassLoader classLoader) {
+    public static void setClassLoader(@NonNull ClassLoader classLoader) {
         HCData.setClassLoader(classLoader);
     }
 

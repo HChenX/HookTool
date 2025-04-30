@@ -42,9 +42,9 @@ import kotlin.text.Charsets;
  * @author 焕晨HChen
  */
 public class HCState {
-    static boolean isEnabled = false;
-    static String mFramework = "Unknown";
-    static int mVersion = -1;
+    static boolean isXposedEnabled = false;
+    static String framework = "Unknown";
+    static int version = -1;
 
     private HCState() {
     }
@@ -52,22 +52,22 @@ public class HCState {
     /**
      * 模块是否被激活
      */
-    public static boolean isEnabled() {
-        return isEnabled;
+    public static boolean isXposedEnabled() {
+        return isXposedEnabled;
     }
 
     /**
      * 获取框架类型
      */
     public static String getFramework() {
-        return mFramework;
+        return framework;
     }
 
     /**
      * 获取框架版本
      */
     public static int getVersion() {
-        return mVersion;
+        return version;
     }
 
     /**

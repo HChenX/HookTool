@@ -42,13 +42,13 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
  *
  * @author 焕晨HChen
  */
-public abstract class BaseHC extends CoreTool {
+public abstract class HCBase extends CoreTool {
     public String TAG = getClass().getSimpleName();
     public static ClassLoader classLoader;
     public static XC_LoadPackage.LoadPackageParam loadPackageParam;
     public static ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
     private static boolean isHookedApplication = false;
-    private static final List<BaseHC> mIApplications = new ArrayList<>();
+    private static final List<HCBase> mIApplications = new ArrayList<>();
     public static final int ON_LOAD_PACKAGE = 1;
     public static final int ON_ZYGOTE = 2;
     public static final int ON_APPLICATION = 3;
@@ -99,7 +99,7 @@ public abstract class BaseHC extends CoreTool {
      * <p>
      * 在这里进行抛错清理操作
      *
-     * @param flag 报错的时机
+     * @param flag 抛错的时机
      */
     protected void onThrowable(@BaseFlag int flag, @NonNull Throwable e) {
     }
@@ -110,30 +110,31 @@ public abstract class BaseHC extends CoreTool {
             init();
         } catch (Throwable e) {
             onThrowable(ON_LOAD_PACKAGE, e);
-            logE(TAG, "Waring! will stop hook process!!", e);
+            logE(TAG, "[onLoadPackage]: Waring! will stop hook process!", e);
         }
     }
 
-    final public void onClassLoader(ClassLoader classLoader) {
+    final public void onLoadPackage(@NonNull ClassLoader classLoader) {
         try {
             if (!isEnabled()) return;
             init(classLoader);
         } catch (Throwable e) {
             onThrowable(ON_LOAD_PACKAGE, e);
-            logE(TAG, "Waring! will stop hook process!!", e);
+            logE(TAG, "[onLoadPackage/classLoader]: Waring! will stop hook process!", e);
         }
     }
 
-    final public BaseHC onApplicationCreate() {
+    final public HCBase onApplication() {
         try {
-            if (!isEnabled()) return this;
+            if (isEnabled()) {
+                if (!mIApplications.contains(this))
+                    mIApplications.add(this);
 
-            if (!mIApplications.contains(this))
-                mIApplications.add(this);
-            initApplicationHook();
+                initApplicationHook();
+            }
         } catch (Throwable e) {
             onThrowable(ON_APPLICATION, e);
-            logE(TAG, "Waring! can't hook application!!", e);
+            logE(TAG, "[onApplication]: Waring! failed to hook application!", e);
         }
         return this;
     }
@@ -146,7 +147,7 @@ public abstract class BaseHC extends CoreTool {
             initZygote(HCData.getStartupParam());
         } catch (Throwable e) {
             onThrowable(ON_ZYGOTE, e);
-            logE(TAG, "Waring! will stop hook process!!", e);
+            logE(TAG, "[onZygote]: Waring! will stop hook process!", e);
         }
     }
 
@@ -160,7 +161,7 @@ public abstract class BaseHC extends CoreTool {
                     try {
                         iApplication.onApplication(context);
                     } catch (Throwable e) {
-                        logE("Application", "Failed to call iApplication: " + iApplication, e);
+                        logE("Application", e);
                     }
                 });
                 logI("Application", "Application created, package name: " + (context != null ? context.getPackageName() : "unknown"));

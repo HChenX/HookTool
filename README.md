@@ -165,7 +165,7 @@ public class RunHook implements IXposedHookLoadPackage, IXposedHookZygoteInit {
 
 ```text
 // 如果你不需要使用日志增强功能，也可以只加入（对于继承 BaseHC 使用的情况）:
--keep class * extends com.hchen.hooktool.BaseHC
+-keep class * extends com.hchen.hooktool.HCBase
  
 // 如果需要使用日志增强功能，那么建议加入混淆规则:
 // 假设存放 hook 文件的目录为 com.hchen.demo.hook

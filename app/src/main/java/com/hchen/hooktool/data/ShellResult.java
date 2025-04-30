@@ -28,7 +28,7 @@ import java.util.Objects;
  *
  * @author 焕晨HChen
  */
-public record ShellResult(String command, String[] outputs, String exitCode) {
+public record ShellResult(String command, @NonNull String[] outputs, String exitCode) {
     /**
      * 是否成功执行
      */

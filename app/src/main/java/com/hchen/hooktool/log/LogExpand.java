@@ -18,6 +18,8 @@
  */
 package com.hchen.hooktool.log;
 
+import androidx.annotation.NonNull;
+
 import com.hchen.hooktool.HCData;
 
 import java.io.PrintWriter;
@@ -34,7 +36,7 @@ public class LogExpand {
     private LogExpand() {
     }
 
-    public static String printStackTrace(Throwable e) {
+    public static String printStackTrace(@NonNull Throwable e) {
         StringWriter stringWriter = new StringWriter();
         PrintWriter printWriter = new PrintWriter(stringWriter);
         e.printStackTrace(printWriter);

@@ -20,7 +20,7 @@ package com.hchen.hooktool;
 
 import com.hchen.hooktool.hook.IHook;
 
-public class ToolTest extends BaseHC {
+public class ToolTest extends HCBase {
     private ToolTest() {
     }
 

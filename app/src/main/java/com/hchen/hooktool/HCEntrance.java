@@ -45,7 +45,7 @@ public abstract class HCEntrance implements IXposedHookLoadPackage, IXposedHookZ
     /**
      * onLoadPackage 阶段
      */
-    public abstract void onLoadPackage(@NonNull XC_LoadPackage.LoadPackageParam lpparam) throws Throwable;
+    public abstract void onLoadPackage(@NonNull XC_LoadPackage.LoadPackageParam loadPackageParam) throws Throwable;
 
     /**
      * onInitZygote 阶段
@@ -56,7 +56,7 @@ public abstract class HCEntrance implements IXposedHookLoadPackage, IXposedHookZ
     /**
      * 模块自身加载阶段
      */
-    public void onModuleLoad(@NonNull XC_LoadPackage.LoadPackageParam lpparam) {
+    public void onModuleLoad(@NonNull XC_LoadPackage.LoadPackageParam loadPackageParam) {
     }
 
     /**
@@ -68,33 +68,32 @@ public abstract class HCEntrance implements IXposedHookLoadPackage, IXposedHookZ
     }
 
     @Override
-    public final void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) throws Throwable {
+    public final void handleLoadPackage(XC_LoadPackage.LoadPackageParam loadPackageParam) throws Throwable {
         if (ignorePackageNameList().length != 0) {
-            if (Arrays.stream(ignorePackageNameList()).anyMatch(s -> Objects.equals(s, lpparam.packageName)))
+            if (Arrays.stream(ignorePackageNameList()).anyMatch(s -> Objects.equals(s, loadPackageParam.packageName)))
                 return;
         }
 
-        if (Objects.equals(HCData.getModulePackageName(), lpparam.packageName)) {
-            HCInit.initLoadPackageParam(lpparam);
+        if (Objects.equals(HCData.getModulePackageName(), loadPackageParam.packageName)) {
+            HCInit.initLoadPackageParam(loadPackageParam);
             initHCState();
-            onModuleLoad(lpparam);
+            onModuleLoad(loadPackageParam);
             return;
         }
 
-        onLoadPackage(lpparam);
+        onLoadPackage(loadPackageParam);
     }
 
     @Override
     public final void initZygote(StartupParam startupParam) throws Throwable {
         HCInit.initBasicData(initHC(new HCInit.BasicData()));
         HCInit.initStartupParam(startupParam);
-        // ResInjectTool.init(startupParam.modulePath);
         onInitZygote(startupParam);
     }
 
     private void initHCState() {
-        CoreTool.setStaticField("com.hchen.hooktool.HCState", "isEnabled", true);
-        CoreTool.setStaticField("com.hchen.hooktool.HCState", "mVersion", XposedBridge.getXposedVersion());
+        CoreTool.setStaticField("com.hchen.hooktool.HCState", "isXposedEnabled", true);
+        CoreTool.setStaticField("com.hchen.hooktool.HCState", "version", XposedBridge.getXposedVersion());
 
         String bridgeTag = (String) CoreTool.getStaticField(XposedBridge.class, "TAG");
         if (bridgeTag == null) return;
@@ -107,6 +106,6 @@ public abstract class HCEntrance implements IXposedHookLoadPackage, IXposedHookZ
             bridgeTag = "Xposed";
         } else
             bridgeTag = "Unknown";
-        CoreTool.setStaticField("com.hchen.hooktool.HCState", "mFramework", bridgeTag);
+        CoreTool.setStaticField("com.hchen.hooktool.HCState", "framework", bridgeTag);
     }
 }

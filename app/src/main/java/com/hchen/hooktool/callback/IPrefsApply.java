@@ -18,6 +18,9 @@
  */
 package com.hchen.hooktool.callback;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.hchen.hooktool.utils.PrefsTool;
 
 import java.util.Map;
@@ -32,12 +35,14 @@ public interface IPrefsApply {
     /**
      * 根据 key，获取 String
      */
-    String getString(String key, String def);
+    @Nullable
+    String getString(String key, @Nullable String def);
 
     /**
      * 根据 key，获取 Set
      */
-    Set<String> getStringSet(String key, Set<String> def);
+    @Nullable
+    Set<String> getStringSet(String key, @Nullable Set<String> def);
 
     /**
      * 根据 key，获取 Boolean
@@ -77,5 +82,6 @@ public interface IPrefsApply {
     /**
      * 获取共享首选项编辑器
      */
+    @NonNull
     PrefsTool.Editor editor();
 }

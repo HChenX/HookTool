@@ -99,26 +99,26 @@ public class ShellTool {
         mShellImpl.async(null);
     }
 
-    public void async(IExecListener iExecListener) {
+    public void async(@NonNull IExecListener iExecListener) {
         mShellImpl.async(iExecListener);
     }
 
     /**
      * 添加回调，传入 null 则删除全部回调
      */
-    public void addExecListener(@Nullable IExecListener execListener) {
-        if (execListener == null) {
+    public void addExecListener(@Nullable IExecListener iExecListener) {
+        if (iExecListener == null) {
             mIExecListeners.clear();
             return;
         }
-        mIExecListeners.add(execListener);
+        mIExecListeners.add(iExecListener);
     }
 
     /**
      * 移除指定回调
      */
-    public void removeExecListener(@NonNull IExecListener execListener) {
-        mIExecListeners.remove(execListener);
+    public void removeExecListener(IExecListener iExecListener) {
+        mIExecListeners.remove(iExecListener);
     }
 
     /**
@@ -149,15 +149,15 @@ public class ShellTool {
     /**
      * 检查是否支持 Root
      */
-    public static boolean isRootAvailable(boolean sync, IExecListener execListener) {
+    public static boolean isRootAvailable(boolean sync, @Nullable IExecListener iExecListener) {
         Callable<Integer> callable = () -> {
             Process process = null;
             try {
                 process = Runtime.getRuntime().exec("su -c true");
                 int exitCode = process.waitFor();
                 if (exitCode != 0 && !sync) {
-                    if (execListener != null) {
-                        execListener.notRoot(String.valueOf(exitCode));
+                    if (iExecListener != null) {
+                        iExecListener.notRoot(String.valueOf(exitCode));
                     }
                 }
                 return exitCode;

@@ -155,13 +155,13 @@ public class HCData {
 
     protected static void setClassLoader(@NonNull ClassLoader classLoader) {
         HCData.classLoader = classLoader;
-        BaseHC.classLoader = classLoader;
+        HCBase.classLoader = classLoader;
     }
 
     protected static void setLoadPackageParam(@NonNull XC_LoadPackage.LoadPackageParam loadPackageParam) {
         HCData.loadPackageParam = loadPackageParam;
         HCData.targetPackageName = loadPackageParam.packageName;
-        BaseHC.loadPackageParam = loadPackageParam;
+        HCBase.loadPackageParam = loadPackageParam;
     }
 
     protected static void setStartupParam(@NonNull IXposedHookZygoteInit.StartupParam startupParam) {

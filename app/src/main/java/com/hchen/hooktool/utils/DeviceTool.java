@@ -37,6 +37,11 @@ import android.view.WindowManager;
 
 import androidx.annotation.NonNull;
 
+/**
+ * 设备工具
+ *
+ * @author 焕晨HChen
+ */
 public class DeviceTool {
     private DeviceTool() {
     }
@@ -144,9 +149,6 @@ public class DeviceTool {
     public static final String[] ROM_SAMSUNG = {"samsung"};
     public static final String[] ROM_HONOR = {"honor"};
 
-    /*
-     * 可能可以使用的获取各系统版本号的 prop 条目
-     * */
     private static final String VERSION_PROPERTY_HUAWEI = "ro.build.version.emui";
     private static final String VERSION_PROPERTY_VIVO = "ro.vivo.os.build.display.id";
     private static final String VERSION_PROPERTY_XIAOMI = "ro.build.version.incremental";
@@ -320,7 +322,7 @@ public class DeviceTool {
     }
 
     /**
-     * 是否是深色模式。
+     * 是否是深色模式
      */
     public static boolean isDarkMode(@NonNull Resources resources) {
         return (resources.getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;

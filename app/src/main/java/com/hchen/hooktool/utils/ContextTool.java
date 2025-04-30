@@ -56,11 +56,10 @@ public class ContextTool {
     }
 
     public static Context getContext(@Duration int flag) {
-        try {
-            return invokeMethod(flag);
-        } catch (Throwable e) {
-            throw new UnexpectedException(e);
-        }
+        Context context = invokeMethod(flag);
+        if (context == null)
+            throw new NullPointerException("[ContextTool]: Failed to get context!");
+        return context;
     }
 
     @Nullable
@@ -72,7 +71,7 @@ public class ContextTool {
         }
     }
 
-    public static void getAsyncContext(IContextGetter iContextGetter, @Duration int flag) {
+    public static void getAsyncContext(@NonNull IContextGetter iContextGetter, @Duration int flag) {
         getAsyncContext(iContextGetter, flag, 15000);
     }
 
@@ -96,7 +95,7 @@ public class ContextTool {
      * 当然 Handler 是可选项, 适用于 Toast 显示等场景
      * @param iContextGetter 回调获取 Context
      */
-    public static void getAsyncContext(IContextGetter iContextGetter, @Duration int flag, int timeout) {
+    public static void getAsyncContext(@NonNull IContextGetter iContextGetter, @Duration int flag, int timeout) {
         Executors.newSingleThreadExecutor().submit(() -> {
             Context context = getContextNonThrow(flag);
             if (context == null) {
@@ -113,41 +112,39 @@ public class ContextTool {
         });
     }
 
-    @NonNull
-    private static Context invokeMethod(int flag) throws Throwable {
+    @Nullable
+    private static Context invokeMethod(int flag) {
         Context context;
-        Class<?> clz = Class.forName("android.app.ActivityThread");
+        Class<?> clazz = InvokeTool.findClass("android.app.ActivityThread");
         switch (flag) {
-            case 0 -> {
-                if ((context = currentApp(clz)) == null) {
-                    context = android(clz);
+            case FLAG_ALL -> {
+                if ((context = getCurrentAppContext(clazz)) == null) {
+                    context = getAndroidContext(clazz);
                 }
             }
-            case 1 -> {
-                context = currentApp(clz);
+            case FLAG_CURRENT_APP -> {
+                context = getCurrentAppContext(clazz);
             }
-            case 2 -> {
-                context = android(clz);
+            case FLAG_ONLY_ANDROID -> {
+                context = getAndroidContext(clazz);
             }
             default -> {
                 throw new UnexpectedException("[ContextTool]: Unexpected flag: " + flag);
             }
         }
-        if (context == null)
-            throw new UnexpectedException("[ContextTool]: Failed to get context!");
         return context;
     }
 
-    private static Context currentApp(Class<?> clz) {
-        return InvokeTool.callStaticMethod(clz, "currentApplication", new Class[]{});
+    private static Context getCurrentAppContext(Class<?> clazz) {
+        return InvokeTool.callStaticMethod(clazz, "currentApplication", new Class[]{});
     }
 
-    private static Context android(Class<?> clz) {
+    private static Context getAndroidContext(Class<?> clazz) {
         Context context;
-        Object o = InvokeTool.callStaticMethod(clz, "currentActivityThread", new Class[]{});
+        Object o = InvokeTool.callStaticMethod(clazz, "currentActivityThread", new Class[]{});
         context = InvokeTool.callMethod(o, "getSystemContext", new Class[]{});
         if (context == null) {
-            o = InvokeTool.callStaticMethod(clz, "systemMain", new Class[]{});
+            o = InvokeTool.callStaticMethod(clazz, "systemMain", new Class[]{});
             context = InvokeTool.callMethod(o, "getSystemContext", new Class[]{});
             // 这里获取的 context 可能存在问题。
             // 所以暂时注释。

@@ -166,7 +166,7 @@ public class RunHook implements IXposedHookLoadPackage, IXposedHookZygoteInit {
 
 ```text
 // If you do not require log enhancement, add only the following rule (for classes inheriting BaseHC):
--keep class * extends com.hchen.hooktool.BaseHC
+-keep class * extends com.hchen.hooktool.HCBase
  
 // If using log enhancement, add the following rules:
 // Suppose hook files are in the directory com.hchen.demo.hook

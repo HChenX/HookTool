@@ -29,7 +29,7 @@ public interface IAsyncPrefs {
     /**
      * 获取寄生应用的共享首选项实例，你可以在此处读取/写入值
      *
-     * @param sp 共享首选项实例
+     * @param sPrefs 共享首选项实例
      */
-    void async(@NonNull IPrefsApply sp);
+    void async(@NonNull IPrefsApply sPrefs);
 }

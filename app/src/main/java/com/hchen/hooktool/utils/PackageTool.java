@@ -37,7 +37,6 @@ import com.hchen.hooktool.data.AppData;
 import com.hchen.hooktool.exception.UnexpectedException;
 
 import java.util.Arrays;
-import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -54,9 +53,8 @@ public class PackageTool {
     /**
      * 判断应用是否已被卸载
      */
-    public static boolean isUninstall(Context context, String packageName) {
+    public static boolean isUninstall(@NonNull Context context, String packageName) {
         try {
-            Objects.requireNonNull(context, "[PackageTool]: Context must not is null!");
             PackageManager packageManager = context.getPackageManager();
             packageManager.getPackageInfo(packageName, PackageManager.MATCH_ALL);
             return false;
@@ -68,9 +66,8 @@ public class PackageTool {
     /**
      * 判断应用是否被禁用
      */
-    public static boolean isDisable(Context context, String packageName) {
+    public static boolean isDisable(@NonNull Context context, String packageName) {
         try {
-            Objects.requireNonNull(context, "[PackageTool]: Context must not is null!");
             PackageManager packageManager = context.getPackageManager();
             ApplicationInfo result = packageManager.getApplicationInfo(packageName, 0);
             if (!result.enabled)
@@ -84,9 +81,8 @@ public class PackageTool {
     /**
      * 判断应用是否被隐藏
      */
-    public static boolean isHidden(Context context, String packageName) {
+    public static boolean isHidden(@NonNull Context context, String packageName) {
         try {
-            Objects.requireNonNull(context, "[PackageTool]: Context must not is null!");
             PackageManager packageManager = context.getPackageManager();
             packageManager.getApplicationInfo(packageName, 0);
             return false;
@@ -107,9 +103,7 @@ public class PackageTool {
     /**
      * 判断是否是系统应用
      */
-    public static boolean isSystem(ApplicationInfo app) {
-        Objects.requireNonNull(app, "[PackageTool]: ApplicationInfo must not is null!");
-
+    public static boolean isSystem(@NonNull ApplicationInfo app) {
         if (app.uid < 10000) return true;
         return (app.flags & (ApplicationInfo.FLAG_SYSTEM | ApplicationInfo.FLAG_UPDATED_SYSTEM_APP)) != 0;
     }
@@ -137,9 +131,7 @@ public class PackageTool {
      * @return AppData[] 应用详细信息
      * @see #createAppData(Parcelable, PackageManager)
      */
-    public static AppData[] getPackagesByCode(Context context, IPackageInfoGetter infoGetter) {
-        Objects.requireNonNull(context, "[PackageTool]: Context must not is null!");
-
+    public static AppData[] getPackagesByCode(@NonNull Context context, @NonNull IPackageInfoGetter infoGetter) {
         PackageManager packageManager = context.getPackageManager();
         Parcelable[] parcelables;
         try {
@@ -156,7 +148,7 @@ public class PackageTool {
     /**
      * 获取指定包名的应用信息
      */
-    public static AppData getTargetPackage(Context context, String packageName) throws PackageManager.NameNotFoundException {
+    public static AppData getTargetPackage(@NonNull Context context, String packageName) throws PackageManager.NameNotFoundException {
         PackageManager packageManager = context.getPackageManager();
         return createAppData(packageManager.getPackageInfo(packageName, PackageManager.GET_ACTIVITIES), packageManager);
     }

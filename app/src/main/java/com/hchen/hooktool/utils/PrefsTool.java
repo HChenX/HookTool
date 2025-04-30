@@ -25,6 +25,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.hchen.hooktool.HCData;
 import com.hchen.hooktool.callback.IAsyncPrefs;
@@ -34,11 +35,8 @@ import com.hchen.hooktool.exception.NonXposedException;
 import com.hchen.hooktool.exception.UnexpectedException;
 import com.hchen.hooktool.log.AndroidLog;
 
-import org.jetbrains.annotations.Nullable;
-
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 import de.robv.android.xposed.XSharedPreferences;
@@ -59,20 +57,23 @@ public class PrefsTool {
     /**
      * 从应用私有目录读取/写入共享首选项数据
      */
-    public static IPrefsApply prefs(Context context) {
+    @NonNull
+    public static IPrefsApply prefs(@NonNull Context context) {
         return prefs(context, "");
     }
 
     /**
      * 从应用私有目录读取/写入共享首选项数据
      */
-    public static IPrefsApply prefs(Context context, @NonNull String prefsName) {
+    @NonNull
+    public static IPrefsApply prefs(@NonNull Context context, @NonNull String prefsName) {
         return createSpIfNeed(context, prefsName);
     }
 
     /**
      * Xposed 环境中读取模块的共享首选项，非 Xposed 环境中使用会引发异常
      */
+    @NonNull
     public static IPrefsApply prefs() {
         if (!HCData.isXposed())
             throw new NonXposedException("[PrefsTool]: Not xposed environment!");
@@ -82,6 +83,7 @@ public class PrefsTool {
     /**
      * Xposed 环境中读取模块的共享首选项，非 Xposed 环境中使用会引发异常
      */
+    @NonNull
     public static IPrefsApply prefs(@NonNull String prefsName) {
         if (!HCData.isXposed())
             throw new NonXposedException("[PrefsTool]: Not xposed environment!");
@@ -91,21 +93,20 @@ public class PrefsTool {
     /**
      * Xposed 环境中异步获取寄生应用的共享首选项，非 Xposed 环境中使用会引发异常
      */
-    public static void asyncPrefs(IAsyncPrefs asyncPrefs) {
+    public static void asyncPrefs(@NonNull IAsyncPrefs asyncPrefs) {
         asyncPrefs("", asyncPrefs);
     }
 
     /**
      * Xposed 环境中异步获取寄生应用的共享首选项，非 Xposed 环境中使用会引发异常
      */
-    public static void asyncPrefs(String prefsName, IAsyncPrefs asyncPrefs) {
+    public static void asyncPrefs(String prefsName, @NonNull IAsyncPrefs asyncPrefs) {
         if (!HCData.isXposed())
             throw new NonXposedException("[PrefsTool]: Not xposed environment!");
 
         ContextTool.getAsyncContext(new IContextGetter() {
             @Override
             public void onContext(@Nullable Context context) {
-                Objects.requireNonNull(context, "[PrefsTool]: Context must not is null!");
                 asyncPrefs.async(createSpIfNeed(context, prefsName));
             }
         }, ContextTool.FLAG_CURRENT_APP);
@@ -178,13 +179,15 @@ public class PrefsTool {
 
     private record Xprefs(XSharedPreferences xSharedPreferences) implements IPrefsApply {
         @Override
-        public String getString(String key, String def) {
+        @Nullable
+        public String getString(String key, @Nullable String def) {
             reload();
             return xSharedPreferences.getString(key, def);
         }
 
         @Override
-        public Set<String> getStringSet(String key, Set<String> def) {
+        @Nullable
+        public Set<String> getStringSet(String key, @Nullable Set<String> def) {
             reload();
             return xSharedPreferences.getStringSet(key, def);
         }
@@ -247,6 +250,7 @@ public class PrefsTool {
          * Xprefs 不支持修改！
          */
         @Override
+        @NonNull
         public Editor editor() {
             throw new UnsupportedOperationException("[PrefsTool]: Xposed unsupported edit prefs!");
         }
@@ -262,12 +266,14 @@ public class PrefsTool {
 
     private record Sprefs(SharedPreferences preferences) implements IPrefsApply {
         @Override
-        public String getString(String key, String def) {
+        @Nullable
+        public String getString(String key, @Nullable String def) {
             return preferences.getString(key, def);
         }
 
         @Override
-        public Set<String> getStringSet(String key, Set<String> def) {
+        @Nullable
+        public Set<String> getStringSet(String key, @Nullable Set<String> def) {
             return preferences.getStringSet(key, def);
         }
 
@@ -320,6 +326,7 @@ public class PrefsTool {
         }
 
         @Override
+        @NonNull
         public Editor editor() {
             return new Editor(preferences.edit());
         }
@@ -332,12 +339,12 @@ public class PrefsTool {
             this.editor = editor;
         }
 
-        public Editor putString(String key, String value) {
+        public Editor putString(String key, @Nullable String value) {
             editor.putString(key, value);
             return this;
         }
 
-        public Editor putStringSet(String key, Set<String> value) {
+        public Editor putStringSet(String key, @Nullable Set<String> value) {
             editor.putStringSet(key, value);
             return this;
         }

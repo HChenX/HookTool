@@ -4,7 +4,7 @@ plugins {
 }
 
 def defVersion = 'v.2.0.0'
-int defVersionCode = 20250402900
+int defVersionCode = 20250403000
 
 group = 'com.github.HChenX'
 version = defVersion

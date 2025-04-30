@@ -173,7 +173,7 @@ public class InvokeTool {
 
             return classLoader.loadClass(className);
         } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
+            throw new UnexpectedException(e);
         }
     }
 }

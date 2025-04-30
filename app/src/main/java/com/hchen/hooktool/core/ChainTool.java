@@ -212,7 +212,7 @@ public class ChainTool {
         /**
          * Hook
          */
-        public ChainTool hook(IHook iHook) {
+        public ChainTool hook(@NonNull IHook iHook) {
             chainData.iHook = iHook;
             runChain();
             return ChainTool.this;

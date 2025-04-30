@@ -81,7 +81,7 @@ public class ResInjectTool {
      *
      * @param modulePath startupParam.modulePath 即可
      */
-    public static void init(String modulePath) {
+    public static void init(@NonNull String modulePath) {
         ResInjectTool.modulePath = modulePath;
     }
 
@@ -103,7 +103,7 @@ public class ResInjectTool {
     @NonNull
     public static Resources injectModuleRes(@NonNull Resources resources, boolean mainLooper) {
         if (modulePath == null) {
-            modulePath = HCData.getModulePath() != null ? HCData.getModulePath() : null;
+            modulePath = HCData.getModulePath();
             if (modulePath == null)
                 throw new NullPointerException("[ResInjectTool]: Module path is null, Please set module path!");
         }
@@ -213,7 +213,7 @@ public class ResInjectTool {
         return 0x7e000000 | (resName.hashCode() & 0x00ffffff);
     }
 
-    public static int createFakeResId(Resources res, int id) {
+    public static int createFakeResId(@NonNull Resources res, int id) {
         return createFakeResId(res.getResourceName(id));
     }
 
