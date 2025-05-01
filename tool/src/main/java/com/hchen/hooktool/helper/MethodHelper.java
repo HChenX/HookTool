@@ -122,8 +122,12 @@ public class MethodHelper {
     /**
      * 方法的修饰符
      */
-    public MethodHelper withMods(int mods) {
-        this.mods = mods;
+    public MethodHelper withMods(@NonNull int... modsFlags) {
+        int combined = 0;
+        for (int f : modsFlags) {
+            combined |= f;
+        }
+        this.mods = combined;
         return this;
     }
 
@@ -131,56 +135,49 @@ public class MethodHelper {
      * Public
      */
     public MethodHelper withPublic() {
-        this.mods = Modifier.PUBLIC;
-        return this;
+        return withMods(Modifier.PUBLIC);
     }
 
     /**
      * Private
      */
     public MethodHelper withPrivate() {
-        this.mods = Modifier.PRIVATE;
-        return this;
+        return withMods(Modifier.PRIVATE);
     }
 
     /**
      * Protected
      */
     public MethodHelper withProtected() {
-        this.mods = Modifier.PROTECTED;
-        return this;
+        return withMods(Modifier.PROTECTED);
     }
 
     /**
      * Static
      */
     public MethodHelper withStatic() {
-        this.mods = Modifier.STATIC;
-        return this;
+        return withMods(Modifier.STATIC);
     }
 
     /**
      * Synchronized
      */
     public MethodHelper withSynchronized() {
-        this.mods = Modifier.SYNCHRONIZED;
-        return this;
+        return withMods(Modifier.SYNCHRONIZED);
     }
 
     /**
      * Native
      */
     public MethodHelper withNative() {
-        this.mods = Modifier.NATIVE;
-        return this;
+        return withMods(Modifier.NATIVE);
     }
 
     /**
      * Abstract
      */
     public MethodHelper withAbstract() {
-        this.mods = Modifier.ABSTRACT;
-        return this;
+        return withMods(Modifier.ABSTRACT);
     }
 
     /**
@@ -243,7 +240,7 @@ public class MethodHelper {
         return methodCache = methods.get(0);
     }
 
-    public Method singleOrThrow(Supplier<RuntimeException> throwableSupplier) {
+    public Method singleOrThrow(@NonNull Supplier<RuntimeException> throwableSupplier) {
         List<Method> methods = matches();
         if (methods.isEmpty()) throw throwableSupplier.get();
         if (methods.size() > 1) throw throwableSupplier.get();
@@ -253,6 +250,8 @@ public class MethodHelper {
 
     /**
      * 核心过滤逻辑
+     *
+     * @noinspection RedundantIfStatement
      */
     private List<Method> matches() {
         if (methodCache != null) {
@@ -269,54 +268,44 @@ public class MethodHelper {
         }
 
         return methods.stream().filter(method -> {
-            boolean matches = false;
-            if (methodName != null) {
-                matches = Objects.equals(methodName, method.getName());
-            } else if (pattern != null) {
-                matches = pattern.matcher(method.getName()).matches();
-            } else if (substring != null) {
-                matches = method.getName().contains(substring);
-            }
-            if (paramCount != -1) {
-                matches = method.getParameterCount() == paramCount;
-            }
+            if (methodName != null && !Objects.equals(methodName, method.getName()))
+                return false;
+            else if (pattern != null && !pattern.matcher(method.getName()).matches())
+                return false;
+            else if (substring != null && !method.getName().contains(substring))
+                return false;
+
             if (paramTypes != null) {
-                if (paramTypes.length == method.getParameterCount()) {
-                    boolean equals = true;
-                    for (int i = 0; i < method.getParameterCount(); i++) {
-                        Class<?> actual = method.getParameterTypes()[i];
-                        Class<?> want = paramTypes[i];
-                        if (Objects.equals(want, Any.class)) continue;
-                        if (!Objects.equals(actual, want)) {
-                            equals = false;
-                            break;
-                        }
+                if (paramTypes.length != method.getParameterCount()) {
+                    return false;
+                }
+                for (int i = 0; i < method.getParameterCount(); i++) {
+                    Class<?> actual = method.getParameterTypes()[i];
+                    Class<?> want = paramTypes[i];
+                    if (Objects.equals(want, Any.class)) continue;
+                    if (!Objects.equals(actual, want)) {
+                        return false;
                     }
-                    matches = equals;
-                } else matches = false;
+                }
             }
-            if (returnType != null) {
-                matches = Objects.equals(method.getReturnType(), returnType);
-            }
-            if (superReturnType != null) {
-                matches = superReturnType.isAssignableFrom(method.getReturnType());
-            }
-            if (mods != -1) {
-                matches = (method.getModifiers() & mods) != 0;
-            }
-            if (annotation != null) {
-                matches = method.isAnnotationPresent(annotation);
-            }
-            if (genericReturnType != null) {
-                matches = Objects.equals(method.getGenericReturnType(), genericReturnType);
-            }
-            if (genericParamTypes != null) {
-                matches = Arrays.equals(method.getGenericParameterTypes(), genericParamTypes);
-            }
-            if (exceptionType != null) {
-                matches = Arrays.asList(method.getExceptionTypes()).contains(exceptionType);
-            }
-            return matches;
+            if (paramCount != -1 && method.getParameterCount() != paramCount)
+                return false;
+            if (returnType != null && !Objects.equals(method.getReturnType(), returnType))
+                return false;
+            if (superReturnType != null && !superReturnType.isAssignableFrom(method.getReturnType()))
+                return false;
+            if (mods != -1 && (method.getModifiers() & mods) != mods)
+                return false;
+            if (annotation != null && !method.isAnnotationPresent(annotation))
+                return false;
+            if (genericReturnType != null && !Objects.equals(method.getGenericReturnType(), genericReturnType))
+                return false;
+            if (genericParamTypes != null && !Arrays.equals(method.getGenericParameterTypes(), genericParamTypes))
+                return false;
+            if (exceptionType != null && !Arrays.asList(method.getExceptionTypes()).contains(exceptionType))
+                return false;
+
+            return true;
         }).collect(Collectors.toList());
     }
 }

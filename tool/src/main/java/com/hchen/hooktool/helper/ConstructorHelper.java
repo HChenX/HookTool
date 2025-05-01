@@ -155,7 +155,7 @@ public class ConstructorHelper {
         return null;
     }
 
-    public Constructor<?> singleOrThrow(Supplier<RuntimeException> throwableSupplier) {
+    public Constructor<?> singleOrThrow(@NonNull Supplier<RuntimeException> throwableSupplier) {
         List<Constructor<?>> constructors = matches();
         if (constructors.size() != 1)
             throw throwableSupplier.get();
@@ -165,6 +165,8 @@ public class ConstructorHelper {
 
     /**
      * 核心过滤逻辑
+     *
+     * @noinspection RedundantIfStatement
      */
     private List<Constructor<?>> matches() {
         if (constructorCache != null) {
@@ -182,41 +184,33 @@ public class ConstructorHelper {
 
         return constructors.stream()
             .filter(constructor -> {
-                boolean matches = false;
-
-                if (paramCount != -1) {
-                    matches = (constructor.getParameterCount() == paramCount);
-                }
                 if (paramTypes != null) {
                     if (paramTypes.length != constructor.getParameterCount()) {
-                        matches = false;
+                        return false;
                     } else {
-                        boolean equals = true;
                         for (int i = 0; i < paramTypes.length; i++) {
                             Class<?> want = paramTypes[i];
                             Class<?> actual = constructor.getParameterTypes()[i];
                             if (Objects.equals(want, Any.class)) continue;
                             if (!Objects.equals(want, actual)) {
-                                equals = false;
-                                break;
+                                return false;
                             }
                         }
-                        matches = equals;
                     }
                 }
-                if (mods != -1) {
-                    matches = ((constructor.getModifiers() & mods) != 0);
-                }
-                if (annotation != null) {
-                    matches = constructor.isAnnotationPresent(annotation);
-                }
-                if (genericParamTypes != null) {
-                    matches = Arrays.equals(constructor.getGenericParameterTypes(), genericParamTypes);
-                }
-                if (exceptionType != null) {
-                    matches = Arrays.asList(constructor.getExceptionTypes()).contains(exceptionType);
-                }
-                return matches;
+
+                if (paramCount != -1 && constructor.getParameterCount() != paramCount)
+                    return false;
+                if (mods != -1 && (constructor.getModifiers() & mods) == 0)
+                    return false;
+                if (annotation != null && !constructor.isAnnotationPresent(annotation))
+                    return false;
+                if (genericParamTypes != null && !Arrays.equals(constructor.getGenericParameterTypes(), genericParamTypes))
+                    return false;
+                if (exceptionType != null && !Arrays.asList(constructor.getExceptionTypes()).contains(exceptionType))
+                    return false;
+
+                return true;
             })
             .collect(Collectors.toList());
     }

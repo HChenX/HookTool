@@ -84,6 +84,13 @@ public class ParamTool {
     }
 
     /**
+     * 获取声明类
+     */
+    final public Class<?> getDeclaringClass() {
+        return param.method.getDeclaringClass();
+    }
+
+    /**
      * 获取方法的参数
      */
     final public Object[] getArgs() {
