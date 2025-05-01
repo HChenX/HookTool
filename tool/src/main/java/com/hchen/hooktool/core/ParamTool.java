@@ -22,6 +22,10 @@ import static com.hchen.hooktool.core.CoreTool.callMethod;
 import static com.hchen.hooktool.core.CoreTool.callMethodIfExists;
 import static com.hchen.hooktool.core.CoreTool.callStaticMethod;
 import static com.hchen.hooktool.core.CoreTool.callStaticMethodIfExists;
+import static com.hchen.hooktool.core.CoreTool.existsAnyMethod;
+import static com.hchen.hooktool.core.CoreTool.existsConstructor;
+import static com.hchen.hooktool.core.CoreTool.existsField;
+import static com.hchen.hooktool.core.CoreTool.existsMethod;
 import static com.hchen.hooktool.core.CoreTool.getAdditionalInstanceField;
 import static com.hchen.hooktool.core.CoreTool.getAdditionalStaticField;
 import static com.hchen.hooktool.core.CoreTool.getField;
@@ -332,6 +336,34 @@ public class ParamTool {
      */
     final public Object removeThisStaticAdditionalInstanceField(String key) {
         return removeAdditionalStaticField(param.method.getDeclaringClass(), key);
+    }
+
+    /**
+     * 是否存在指定方法
+     */
+    final public boolean existsThisMethod(String methodName, @NonNull Object... params) {
+        return existsMethod(param.method.getDeclaringClass(), methodName, params);
+    }
+
+    /**
+     * 是否存在指定方法名的方法
+     */
+    final public boolean existsThisAnyMethod(String methodName) {
+        return existsAnyMethod(param.method.getDeclaringClass(), methodName);
+    }
+
+    /**
+     * 是否存在指定构造函数
+     */
+    final public boolean existsThisConstructor(@NonNull Object... params) {
+        return existsConstructor(param.method.getDeclaringClass(), params);
+    }
+
+    /**
+     * 是否存在指定字段
+     */
+    final public boolean existsThisField(String fieldName) {
+        return existsField(param.method.getDeclaringClass(), fieldName);
     }
 
     /**
