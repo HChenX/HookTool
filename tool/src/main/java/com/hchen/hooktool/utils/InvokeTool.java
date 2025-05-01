@@ -42,53 +42,158 @@ public class InvokeTool {
     }
 
     // ---------------------------- 调用方法 --------------------------------
+
+    /**
+     * 调用指定方法
+     *
+     * @param instance   方法所属的实例对象
+     * @param methodName 方法名
+     * @param classes    方法参数类型数组
+     * @param params     方法参数值数组
+     * @param <T>        返回值
+     * @return 方法执行后的返回值
+     */
     public static <T> T callMethod(Object instance, String methodName, Class<?>[] classes, Object... params) {
         return baseInvokeMethod(null, instance, methodName, classes, params);
     }
 
+    /**
+     * 调用静态方法
+     *
+     * @param clazz      方法所属的类
+     * @param methodName 方法名
+     * @param classes    方法参数类型数组
+     * @param params     方法参数值数组
+     * @param <T>        返回值
+     * @return 方法执行后的返回值
+     */
     public static <T> T callStaticMethod(Class<?> clazz, String methodName, Class<?>[] classes, Object... params) {
         return baseInvokeMethod(clazz, null, methodName, classes, params);
     }
 
-    public static <T> T callStaticMethod(String clazz, String methodName, Class<?>[] classes, Object... params) {
-        return baseInvokeMethod(findClass(clazz), null, methodName, classes, params);
+    /**
+     * 调用静态方法
+     *
+     * @param classPath  类引用路径
+     * @param methodName 方法名
+     * @param classes    方法参数类型数组
+     * @param params     方法参数值数组
+     * @param <T>        返回值
+     * @return 方法执行后的返回值
+     */
+    public static <T> T callStaticMethod(String classPath, String methodName, Class<?>[] classes, Object... params) {
+        return baseInvokeMethod(findClass(classPath), null, methodName, classes, params);
     }
 
-    public static <T> T callStaticMethod(String clazz, ClassLoader classLoader, String methodName, Class<?>[] classes, Object... params) {
-        return baseInvokeMethod(findClass(clazz, classLoader), null, methodName, classes, params);
+    /**
+     * 调用静态方法
+     *
+     * @param classPath   类引用路径
+     * @param classLoader 类加载器
+     * @param methodName  方法名
+     * @param classes     方法参数类型数组
+     * @param params      方法参数值数组
+     * @param <T>         返回值
+     * @return 方法执行后的返回值
+     */
+    public static <T> T callStaticMethod(String classPath, ClassLoader classLoader, String methodName, Class<?>[] classes, Object... params) {
+        return baseInvokeMethod(findClass(classPath, classLoader), null, methodName, classes, params);
     }
 
     // ---------------------------- 设置字段 --------------------------------
-    public static <T> T setField(Object instance, String fieldName, Object value) {
-        return baseInvokeField(null, instance, fieldName, true, value);
+
+    /**
+     * 设置实例指定字段的值
+     *
+     * @param instance  字段所属的实例对象
+     * @param fieldName 字段名
+     * @param value     要设置的值
+     */
+    public static void setField(Object instance, String fieldName, Object value) {
+        baseInvokeField(null, instance, fieldName, true, value);
     }
 
-    public static <T> T setStaticField(Class<?> clazz, String fieldName, Object value) {
-        return baseInvokeField(clazz, null, fieldName, true, value);
+    /**
+     * 设置静态字段的值
+     *
+     * @param clazz     字段所属的类
+     * @param fieldName 字段名
+     * @param value     要设置的值
+     */
+    public static void setStaticField(Class<?> clazz, String fieldName, Object value) {
+        baseInvokeField(clazz, null, fieldName, true, value);
     }
 
-    public static <T> T setStaticField(String clazz, String fieldName, Object value) {
-        return baseInvokeField(findClass(clazz), null, fieldName, true, value);
+    /**
+     * 设置静态字段的值
+     *
+     * @param classPath 类引用路径
+     * @param fieldName 字段名
+     * @param value     要设置的值
+     */
+    public static void setStaticField(String classPath, String fieldName, Object value) {
+        baseInvokeField(findClass(classPath), null, fieldName, true, value);
     }
 
-    public static <T> T setStaticField(String clazz, ClassLoader classLoader, String fieldName, Object value) {
-        return baseInvokeField(findClass(clazz, classLoader), null, fieldName, true, value);
+    /**
+     * 设置静态字段的值
+     *
+     * @param classPath   类引用路径
+     * @param classLoader 类加载器
+     * @param fieldName   字段名
+     * @param value       要设置的值
+     */
+    public static void setStaticField(String classPath, ClassLoader classLoader, String fieldName, Object value) {
+        baseInvokeField(findClass(classPath, classLoader), null, fieldName, true, value);
     }
 
+    /**
+     * 获取指定实例的字段的值
+     *
+     * @param instance  字段所属的实例对象
+     * @param fieldName 字段名
+     * @param <T>       返回值类型
+     * @return 字段的值
+     */
     public static <T> T getField(Object instance, String fieldName) {
         return baseInvokeField(null, instance, fieldName, false, null);
     }
 
+    /**
+     * 获取静态字段的值
+     *
+     * @param clazz     字段所属的类
+     * @param fieldName 字段名
+     * @param <T>       返回值类型
+     * @return 字段的值
+     */
     public static <T> T getStaticField(Class<?> clazz, String fieldName) {
         return baseInvokeField(clazz, null, fieldName, false, null);
     }
 
-    public static <T> T getStaticField(String clazz, String fieldName) {
-        return baseInvokeField(findClass(clazz), null, fieldName, false, null);
+    /**
+     * 获取静态字段的值
+     *
+     * @param classPath 类引用路径
+     * @param fieldName 字段名
+     * @param <T>       返回值类型
+     * @return 字段的值
+     */
+    public static <T> T getStaticField(String classPath, String fieldName) {
+        return baseInvokeField(findClass(classPath), null, fieldName, false, null);
     }
 
-    public static <T> T getStaticField(String clazz, ClassLoader classLoader, String fieldName) {
-        return baseInvokeField(findClass(clazz, classLoader), null, fieldName, false, null);
+    /**
+     * 获取静态字段的值
+     *
+     * @param classPath   类引用路径
+     * @param classLoader 类加载器
+     * @param fieldName   字段名
+     * @param <T>         返回值类型
+     * @return 字段的值
+     */
+    public static <T> T getStaticField(String classPath, ClassLoader classLoader, String fieldName) {
+        return baseInvokeField(findClass(classPath, classLoader), null, fieldName, false, null);
     }
 
     /**
@@ -160,18 +265,32 @@ public class InvokeTool {
         }
     }
 
+    /**
+     * 根据类名查找类
+     *
+     * @param classPath 类引用路径
+     * @return 找到的类
+     */
     @NonNull
-    public static Class<?> findClass(String className) {
-        return findClass(className, null);
+    public static Class<?> findClass(String classPath) {
+        return findClass(classPath, null);
     }
 
+
+    /**
+     * 根据类名和类加载器查找类
+     *
+     * @param classPath   类引用路径
+     * @param classLoader 类加载器
+     * @return 找到的类
+     */
     @NonNull
-    public static Class<?> findClass(String className, ClassLoader classLoader) {
+    public static Class<?> findClass(String classPath, ClassLoader classLoader) {
         try {
             if (classLoader == null)
                 classLoader = ClassLoader.getSystemClassLoader();
 
-            return classLoader.loadClass(className);
+            return classLoader.loadClass(classPath);
         } catch (ClassNotFoundException e) {
             throw new UnexpectedException(e);
         }

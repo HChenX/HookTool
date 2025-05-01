@@ -45,22 +45,22 @@ public interface IPrefsApply {
     Set<String> getStringSet(String key, @Nullable Set<String> def);
 
     /**
-     * 根据 key，获取 Boolean
+     * 根据 key，获取 boolean
      */
     boolean getBoolean(String key, boolean def);
 
     /**
-     * 根据 key，获取 Int
+     * 根据 key，获取 int
      */
     int getInt(String key, int def);
 
     /**
-     * 根据 key，获取 Float
+     * 根据 key，获取 float
      */
     float getFloat(String key, float def);
 
     /**
-     * 根据 key，获取 Long
+     * 根据 key，获取 long
      */
     long getLong(String key, long def);
 

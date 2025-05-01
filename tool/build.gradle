@@ -3,8 +3,8 @@ plugins {
     id 'maven-publish'
 }
 
-def defVersion = 'v.2.0.3'
-int defVersionCode = 20250403003
+def defVersion = 'v.2.0.4'
+int defVersionCode = 2025050100
 
 group = 'com.github.HChenX'
 version = defVersion

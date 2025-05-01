@@ -42,19 +42,19 @@ import kotlin.text.Charsets;
  * 记得配置混淆，否则不可用:
  * <p>
  * <pre>{@code
- * -keep class  com.hchen.hooktool.HCState {
- *         static boolean isXposedEnabled;
- *         static java.lang.String framework;
- *         static int  version;
- * }
+ * -keep class com.hchen.hooktool.HCState {
+ *        private final static boolean isXposedEnabled;
+ *        private final static java.lang.String framework;
+ *        private final static int  version;
+ *  }
  * }
  *
  * @author 焕晨HChen
  */
 public class HCState {
-    static boolean isXposedEnabled = false;
-    static String framework = "Unknown";
-    static int version = -1;
+    private static final boolean isXposedEnabled = false;
+    private static final String framework = "Unknown";
+    private static final int version = -1;
 
     private HCState() {
     }

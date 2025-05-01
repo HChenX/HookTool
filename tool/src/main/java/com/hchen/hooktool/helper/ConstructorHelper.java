@@ -26,6 +26,7 @@ import com.hchen.hooktool.exception.UnexpectedException;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -76,6 +77,30 @@ public class ConstructorHelper {
      */
     public ConstructorHelper withMods(int mods) {
         this.mods = mods;
+        return this;
+    }
+
+    /**
+     * Public
+     */
+    public ConstructorHelper withPublic() {
+        this.mods = Modifier.PUBLIC;
+        return this;
+    }
+
+    /**
+     * Private
+     */
+    public ConstructorHelper withPrivate() {
+        this.mods = Modifier.PRIVATE;
+        return this;
+    }
+
+    /**
+     * Protected
+     */
+    public ConstructorHelper withProtected() {
+        this.mods = Modifier.PROTECTED;
         return this;
     }
 

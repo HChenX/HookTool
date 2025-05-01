@@ -166,10 +166,10 @@ public class MainHook implements IXposedHookLoadPackage, IXposedHookZygoteInit {
 // 如果既不继承 HCBase 使用，也不使用日志增强功能则不需要配置混淆规则。
 
 // 其他建议配置:
--keep class  com.hchen.hooktool.HCState {
-        static boolean isXposedEnabled;
-        static java.lang.String framework;
-        static int  version;
+-keep class com.hchen.hooktool.HCState {
+       private final static boolean isXposedEnabled;
+       private final static java.lang.String framework;
+       private final static int  version;
  }
 -keep class * implements android.os.Parcelable {
         public static ** CREATOR;

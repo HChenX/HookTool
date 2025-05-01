@@ -23,7 +23,6 @@ import static com.hchen.hooktool.log.LogExpand.getTag;
 import static com.hchen.hooktool.utils.InvokeTool.getStaticField;
 import static com.hchen.hooktool.utils.SystemPropTool.getProp;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.content.res.Resources;
@@ -98,28 +97,28 @@ public class DeviceTool {
      * 判断是否为指定某个 MIUI 版本
      */
     public static boolean isMiuiVersion(float version) {
-        return getMiuiVersion() == version;
+        return Float.compare(getMiuiVersion(), version) == 0;
     }
 
     /**
      * 判断是否大于等于某个 MIUI 版本
      */
     public static boolean isMoreMiuiVersion(float version) {
-        return getMiuiVersion() >= version;
+        return Float.compare(getMiuiVersion(), version) >= 0;
     }
 
     /**
      * 判断是否为指定某个 HyperOS 版本
      */
     public static boolean isHyperOSVersion(float version) {
-        return getHyperOSVersion() == version;
+        return Float.compare(getHyperOSVersion(), version) == 0;
     }
 
     /**
      * 判断是否大于等于某个 HyperOS 版本
      */
     public static boolean isMoreHyperOSVersion(float version) {
-        return getHyperOSVersion() >= version;
+        return Float.compare(getHyperOSVersion(), version) >= 0;
     }
 
     /**
@@ -257,60 +256,52 @@ public class DeviceTool {
         return Boolean.TRUE.equals(getStaticField("miui.os.Build", "IS_INTERNATIONAL_BUILD"));
     }
 
-    // ------------------------------------------------------------------------------
-    private static final Point mWindowSizePoint = new Point();
-    private static final Point mScreenSizePoint = new Point();
-
     // --------------- 获取窗口参数 --------------
     public static WindowManager getWindowManager(@NonNull Context context) {
         return (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
     }
 
-    @SuppressLint("NewApi")
     public static Display getDisplay(@NonNull Context context) {
-        try {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             return context.getDisplay();
-        } catch (UnsupportedOperationException unused) {
-            // Log.w("WindowUtils", "This context is not associated with a display. You should use createDisplayContext() to create a display context to work with windows.");
+        } else {
             return getWindowManager(context).getDefaultDisplay();
         }
     }
 
-    public static void getWindowSize(@NonNull Context context, @NonNull Point point) {
-        getWindowSize(getWindowManager(context), point);
-    }
-
-    @SuppressLint("NewApi")
-    public static void getWindowSize(@NonNull WindowManager windowManager, @NonNull Point point) {
-        Rect bounds = windowManager.getCurrentWindowMetrics().getBounds();
-        point.x = bounds.width();
-        point.y = bounds.height();
-    }
-
     public static Point getWindowSize(@NonNull Context context) {
-        getWindowSize(context, mWindowSizePoint);
-        return mWindowSizePoint;
+        return getWindowSize(getWindowManager(context));
     }
 
-    @Deprecated
-    public static int getWindowHeight(@NonNull Context context) {
-        return getWindowSize(context).y;
-    }
-
-    public static void getScreenSize(@NonNull Context context, @NonNull Point point) {
-        getScreenSize(getWindowManager(context), point);
+    public static Point getWindowSize(@NonNull WindowManager windowManager) {
+        Point point = new Point();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            Rect bounds = windowManager.getCurrentWindowMetrics().getBounds();
+            point.x = bounds.width();
+            point.y = bounds.height();
+        } else {
+            DisplayMetrics metrics = new DisplayMetrics();
+            windowManager.getDefaultDisplay().getMetrics(metrics);
+            point.x = metrics.widthPixels;
+            point.y = metrics.heightPixels;
+        }
+        return point;
     }
 
     public static Point getScreenSize(@NonNull Context context) {
-        getScreenSize(getWindowManager(context), mScreenSizePoint);
-        return mScreenSizePoint;
+        return getScreenSize(getWindowManager(context));
     }
 
-    @SuppressLint("NewApi")
-    public static void getScreenSize(@NonNull WindowManager windowManager, @NonNull Point point) {
-        Rect bounds = windowManager.getMaximumWindowMetrics().getBounds();
-        point.x = bounds.width();
-        point.y = bounds.height();
+    public static Point getScreenSize(@NonNull WindowManager windowManager) {
+        Point point = new Point();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            Rect bounds = windowManager.getMaximumWindowMetrics().getBounds();
+            point.x = bounds.width();
+            point.y = bounds.height();
+        } else {
+            windowManager.getDefaultDisplay().getSize(point);
+        }
+        return point;
     }
 
     public static boolean isHorizontalScreen(@NonNull Context context) {

@@ -55,6 +55,13 @@ public class ContextTool {
     private ContextTool() {
     }
 
+    /**
+     * 获取上下文对象
+     *
+     * @param flag 标志位
+     * @return 返回获取到的上下文对象
+     * @throws NullPointerException 如果获取的上下文对象为空，则抛出异常
+     */
     public static Context getContext(@Duration int flag) {
         Context context = invokeMethod(flag);
         if (context == null)
@@ -62,6 +69,12 @@ public class ContextTool {
         return context;
     }
 
+    /**
+     * 获取上下文对象，不会抛错
+     *
+     * @param flag 标志位
+     * @return 返回获取到的上下文对象，否则返回 null
+     */
     @Nullable
     private static Context getContextNonThrow(@Duration int flag) {
         try {
@@ -71,12 +84,16 @@ public class ContextTool {
         }
     }
 
+    /**
+     * 异步获取当前应用的 Context，为了防止过早获取导致的 null
+     */
     public static void getAsyncContext(@NonNull IContextGetter iContextGetter, @Duration int flag) {
         getAsyncContext(iContextGetter, flag, 15000);
     }
 
     /**
-     * 异步获取当前应用的 Context，为了防止过早获取导致的 null，
+     * 异步获取当前应用的 Context，为了防止过早获取导致的 null
+     * <p>
      * 使用方法:
      * <pre> {@code
      * handler = new Handler();
@@ -113,7 +130,7 @@ public class ContextTool {
     }
 
     @Nullable
-    private static Context invokeMethod(int flag) {
+    private static Context invokeMethod(@Duration int flag) {
         Context context;
         Class<?> clazz = InvokeTool.findClass("android.app.ActivityThread");
         switch (flag) {
@@ -135,11 +152,11 @@ public class ContextTool {
         return context;
     }
 
-    private static Context getCurrentAppContext(Class<?> clazz) {
+    private static Context getCurrentAppContext(@NonNull Class<?> clazz) {
         return InvokeTool.callStaticMethod(clazz, "currentApplication", new Class[]{});
     }
 
-    private static Context getAndroidContext(Class<?> clazz) {
+    private static Context getAndroidContext(@NonNull Class<?> clazz) {
         Context context;
         Object o = InvokeTool.callStaticMethod(clazz, "currentActivityThread", new Class[]{});
         context = InvokeTool.callMethod(o, "getSystemContext", new Class[]{});

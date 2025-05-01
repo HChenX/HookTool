@@ -19,6 +19,7 @@
 package com.hchen.hooktool.core;
 
 import static com.hchen.hooktool.core.CoreTool.findClass;
+import static com.hchen.hooktool.log.XposedLog.logW;
 
 import androidx.annotation.NonNull;
 
@@ -29,6 +30,7 @@ import com.hchen.hooktool.log.LogExpand;
 import com.hchen.hooktool.log.XposedLog;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.util.Objects;
 
@@ -161,13 +163,17 @@ public class ChainTool {
         final ChainData tempChainData = chainData;
         if (ChainData.chainDataSet.isEmpty()) {
             runFind();
-            ChainData.chainDataSet.add(tempChainData);
-            CoreTool.hookAll(chainData.members, chainData.iHook);
+            if (shouldHook()) {
+                ChainData.chainDataSet.add(tempChainData);
+                CoreTool.hookAll(chainData.members, chainData.iHook);
+            }
         } else {
             if (!ChainData.chainDataSet.contains(chainData)) {
                 runFind();
-                ChainData.chainDataSet.add(tempChainData);
-                CoreTool.hookAll(chainData.members, chainData.iHook);
+                if (shouldHook()) {
+                    ChainData.chainDataSet.add(tempChainData);
+                    CoreTool.hookAll(chainData.members, chainData.iHook);
+                }
             } else {
                 XposedLog.logW(LogExpand.getTag(), "Duplicate content will be skipped: " + chainData);
             }
@@ -204,6 +210,17 @@ public class ChainTool {
                 chainData.members = CoreTool.findAllConstructor(clazz);
             }
         }
+    }
+
+    private boolean shouldHook() {
+        for (Member member : chainData.members) {
+            if (member == null) {
+                if (!chainData.ifExist)
+                    logW(LogExpand.getTag(), "There is an abnormal null object in the member list, skip hook: " + chainData);
+                return false;
+            }
+        }
+        return true;
     }
 
     public class ChainHook {

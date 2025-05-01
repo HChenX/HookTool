@@ -46,11 +46,10 @@ import com.hchen.hooktool.hook.IHook;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
-
-import de.robv.android.xposed.IXposedHookZygoteInit;
 
 /**
  * 资源注入工具
@@ -74,15 +73,6 @@ public class ResInjectTool {
     }
 
     private ResInjectTool() {
-    }
-
-    /**
-     * 请在 {@link  com.hchen.hooktool.HCInit#initStartupParam(IXposedHookZygoteInit.StartupParam)} 处调用
-     *
-     * @param modulePath startupParam.modulePath 即可
-     */
-    public static void init(@NonNull String modulePath) {
-        ResInjectTool.modulePath = modulePath;
     }
 
     /**
@@ -210,11 +200,21 @@ public class ResInjectTool {
     }
 
     public static int createFakeResId(String resName) {
-        return 0x7e000000 | (resName.hashCode() & 0x00ffffff);
+        return 0x7e000000 | (fnv1a32Hash(resName) & 0x00ffffff);
     }
 
     public static int createFakeResId(@NonNull Resources res, int id) {
         return createFakeResId(res.getResourceName(id));
+    }
+
+    private static int fnv1a32Hash(String str) {
+        final int FNV_32_PRIME = 0x01000193;
+        int hash = 0x811c9dc5;
+        for (byte b : str.getBytes(StandardCharsets.UTF_8)) {
+            hash ^= (b & 0xff);
+            hash *= FNV_32_PRIME;
+        }
+        return hash;
     }
 
     /**
@@ -294,7 +294,11 @@ public class ResInjectTool {
         @Override
         public void before() {
             int[] mData = (int[]) getThisField("mData");
+            if (mData == null) return;
+
             int index = (int) getArg(0);
+            if (index < 0 || index >= mData.length - 3) return;
+
             int type = mData[index];
             int id = mData[index + 3];
 
@@ -316,15 +320,15 @@ public class ResInjectTool {
                 resourceSets.add(injectModuleRes(ContextTool.getContext(FLAG_ALL)));
             for (Resources resources : resourceSets) {
                 if (resources == null) return;
-                String method = getMember().getName();
+                String methodName = getMember().getName();
                 Object value;
                 try {
-                    value = getResourceReplacement(resources, (Resources) thisObject(), method, getArgs());
+                    value = getResourceReplacement(resources, (Resources) thisObject(), methodName, getArgs());
                 } catch (Resources.NotFoundException ignore) {
                     continue;
                 }
                 if (value != null) {
-                    if ("getDimensionPixelOffset".equals(method) || "getDimensionPixelSize".equals(method)) {
+                    if ("getDimensionPixelOffset".equals(methodName) || "getDimensionPixelSize".equals(methodName)) {
                         if (value instanceof Float) value = ((Float) value).intValue();
                     }
                     setResult(value);
@@ -335,9 +339,8 @@ public class ResInjectTool {
     };
 
     @Nullable
-    private static Object getResourceReplacement(Resources appResources, Resources thisRes, String methodName, Object[] params) throws Resources.NotFoundException {
-        if (appResources == null) return null;
-
+    private static Object getResourceReplacement(@NonNull Resources appResources, @NonNull Resources thisRes,
+                                                 @NonNull String methodName, @NonNull Object[] params) throws Resources.NotFoundException {
         String pkgName = null;
         String resType = null;
         String resName = null;
@@ -371,13 +374,13 @@ public class ResInjectTool {
                 case ID -> {
                     modResId = (Integer) replacement.second;
                     if (modResId == 0) return null;
+
                     try {
                         appResources.getResourceName(modResId);
                     } catch (Resources.NotFoundException ignore) {
                         injectModuleRes(appResources);
                         appResources.getResourceName(modResId);
                     }
-                    if (methodName == null) return null;
 
                     resMap.put(modResId, true);
                     if ("getDrawable".equals(methodName))
@@ -395,7 +398,7 @@ public class ResInjectTool {
     }
 
     @Nullable
-    private static Object getTypedArrayReplacement(Resources resources, int id) {
+    private static Object getTypedArrayReplacement(@NonNull Resources resources, int id) {
         if (id != 0) {
             String pkgName = null;
             String resType = null;
@@ -417,7 +420,7 @@ public class ResInjectTool {
             } else if (replacements.containsKey(resAnyPkgName)) {
                 replacement = replacements.get(resAnyPkgName);
             }
-            if (replacement != null && (Objects.requireNonNull(replacement.first) == ReplacementType.OBJECT)) {
+            if (replacement != null && (replacement.first == ReplacementType.OBJECT)) {
                 return replacement.second;
             }
         }

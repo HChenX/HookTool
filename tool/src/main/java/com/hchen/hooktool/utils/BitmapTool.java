@@ -38,11 +38,27 @@ public class BitmapTool {
     private BitmapTool() {
     }
 
+    /**
+     * 将 Drawable 对象转换为 Bitmap 对象，使用 Drawable 的固有宽度和高度
+     *
+     * @param drawable 要转换的 Drawable 对象
+     * @return 转换后的 Bitmap 对象
+     */
     @NonNull
     public static Bitmap drawableToBitmap(@NonNull Drawable drawable) {
         return drawableToBitmap(drawable, drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight());
     }
 
+    /**
+     * 将 Drawable 对象转换为 Bitmap 对象，可以指定宽度和高度
+     * <p>
+     * 如果指定的宽度或高度小于等于 0，则使用 Drawable 的固有宽度和高度
+     *
+     * @param drawable 要转换的 Drawable 对象
+     * @param width    指定的宽度
+     * @param height   指定的高度
+     * @return 转换后的 Bitmap 对象
+     */
     @NonNull
     public static Bitmap drawableToBitmap(@NonNull Drawable drawable, int width, int height) {
         if (width <= 0 || height <= 0) {
@@ -58,6 +74,12 @@ public class BitmapTool {
         return bitmap;
     }
 
+    /**
+     * 将 Bitmap 对象转换为字节数组，使用 PNG 格式进行压缩
+     *
+     * @param bitmap 要转换的 Bitmap 对象
+     * @return 转换后的字节数组
+     */
     @NonNull
     public static byte[] bitmapToBytes(@NonNull Bitmap bitmap) {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
@@ -65,6 +87,12 @@ public class BitmapTool {
         return stream.toByteArray();
     }
 
+    /**
+     * 将字节数组转换为 Bitmap 对象如果字节数组为空，则返回 null
+     *
+     * @param bytes 要转换的字节数组
+     * @return 转换后的 Bitmap 对象，如果字节数组为空则返回 null
+     */
     @Nullable
     public static Bitmap bytesToBimap(@NonNull byte[] bytes) {
         if (bytes.length != 0) {

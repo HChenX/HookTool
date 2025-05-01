@@ -26,6 +26,7 @@ import com.hchen.hooktool.exception.UnexpectedException;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -123,6 +124,62 @@ public class MethodHelper {
      */
     public MethodHelper withMods(int mods) {
         this.mods = mods;
+        return this;
+    }
+
+    /**
+     * Public
+     */
+    public MethodHelper withPublic() {
+        this.mods = Modifier.PUBLIC;
+        return this;
+    }
+
+    /**
+     * Private
+     */
+    public MethodHelper withPrivate() {
+        this.mods = Modifier.PRIVATE;
+        return this;
+    }
+
+    /**
+     * Protected
+     */
+    public MethodHelper withProtected() {
+        this.mods = Modifier.PROTECTED;
+        return this;
+    }
+
+    /**
+     * Static
+     */
+    public MethodHelper withStatic() {
+        this.mods = Modifier.STATIC;
+        return this;
+    }
+
+    /**
+     * Synchronized
+     */
+    public MethodHelper withSynchronized() {
+        this.mods = Modifier.SYNCHRONIZED;
+        return this;
+    }
+
+    /**
+     * Native
+     */
+    public MethodHelper withNative() {
+        this.mods = Modifier.NATIVE;
+        return this;
+    }
+
+    /**
+     * Abstract
+     */
+    public MethodHelper withAbstract() {
+        this.mods = Modifier.ABSTRACT;
         return this;
     }
 
