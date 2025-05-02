@@ -28,5 +28,8 @@ android {
 }
 
 dependencies {
+    compileOnly libs.xposed
+    implementation libs.annotation
+
     implementation(project(':tool'))
 }

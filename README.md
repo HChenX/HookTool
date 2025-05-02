@@ -18,11 +18,11 @@
 
 ### 2. **全面便利**
 
-#### Tip: 重构声明: v.2.0.0 再次重构，使工具更加优雅更加便利。 v.1.0.0 版本和之前版本有较大不同，新版本工具完成静态化，更符合工具特征，拥有更好的使用体验和性能。
+#### Tip: 重构声明: v.2.0.5 再次重构，使工具更加优雅更加便利。 ~~v.1.0.0 版本和之前版本有较大不同，新版本工具完成静态化，更符合工具特征，拥有更好的使用体验和性能~~
 
 # 🔧 使用方法
 
-#### 1. 向项目 settings.gradle 文件添加如下代码。
+#### 1. 向项目 settings.gradle 文件添加如下代码
 
 ```groovy
 dependencyResolutionManagement {
@@ -34,136 +34,166 @@ dependencyResolutionManagement {
 }
 ```
 
-#### 2. 向项目 app 内 build.gradle 文件添加如下代码。
+#### 2. 向项目 app 内 build.gradle 文件添加如下代码
 
 ```groovy
 dependencies {
-    implementation 'com.github.HChenX:HookTool:v.2.0.0'
+    implementation 'com.github.HChenX:HookTool:v.2.0.5'
 }
 ```
 
-#### 3. 同步项目，下载依赖即可在代码内调用。
+#### 3. 同步项目，下载依赖后即可使用
 
-#### 4. 使用工具。
+#### 4. 使用工具
 
-- HCInit 介绍。
+- HCInit 介绍
 
 ```java
 public void init() {
-    HCinit.initBasicData(); // 初始化模块基本信息
-    HCinit.initStartupParam(); // 在 zygote 阶段初始化工具
-    HCinit.initLoadPackageParam(); // 在 loadPackage 阶段初始化工具
+    HCInit.initBasicData(); // 初始化模块基本信息
+    HCInit.initStartupParam(); // zygote 阶段初始化工具
+    HCInit.initLoadPackageParam(); // loadPackage 阶段初始化工具
+    HCInit.setClassLoader(); // 更换全局 Classloader
 }
 ```
 
-- 在 Xposed 入口处初始化本工具。
+- 在 Hook 入口处初始化本工具
 
 ```java
-
-@Override
-public void initZygote(IXposedHookZygoteInit.StartupParam startupParam) {
-    HCInit.initBasicData(new BasicData()
-        .setModulePackageName("com.hchen.demo") // 模块包名
-        .setTag("HChenDemo") // 日志 tag
-        .setLogLevel(LOG_D) // 日志等级
-        .setPrefsName("hchen_prefs") // prefs 存储文件名 (可选)
-        .setAutoReload(true) // 是否自动更新共享首选项，默认开启 (可选)
-        .setLogExpandPath("com.hchen.demo.hook") // 日志增强功能
-    ); // Tip: 若有使用 initZygote 建议配置在这里，因为时机很早。
-    HCInit.initStartupParam(startupParam); // 在 zygote 阶段初始化工具
-}
-
-@Override
-public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) {
-    HCInit.initLoadPackageParam(lpparam); // 在 loadPackage 阶段初始化工具
-}
-```
-
-- 如果需要使用 prefs 工具或在模块内使用本工具的 log 类，那么你还需要在模块主界面初始化。
-
-```java
-public static class MainActivity {
+public class HookInit extends HCEntrance /* 建议继承 HCEntrance 类作为入口 */ {
+    @NonNull
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
-        HCInit.initBasicData(new BasicData()
+    public HCInit.BasicData initHC(@NonNull HCInit.BasicData basicData) {
+        return basicData
             .setModulePackageName("com.hchen.demo") // 模块包名
             .setTag("HChenDemo") // 日志 tag
             .setLogLevel(LOG_D) // 日志等级
-            .setPrefsName("hchen_prefs") // prefs 存储文件名。(可选) Tip: 请保持与 Xposed 内填写的文件名一致
+            .setPrefsName("hchen_prefs") // prefs 文件名 (可选)
+            .setAutoReload(true) // 是否自动更新共享首选项，默认开启 (可选)
+            .setLogExpandPath("com.hchen.demo.hook") // 日志增强功能 (可选)
+            .setLogExpandIgnoreClassNames("Demo"); // 排除指定类名 (可选)
+    }
+
+    @NonNull
+    @Override
+    public String[] ignorePackageNameList() {
+        // 指定忽略的包名
+        return new String[]{
+            "com.android.test"
+        };
+    }
+
+    @Override
+    public void onModuleLoad(@NonNull XC_LoadPackage.LoadPackageParam loadPackageParam) {
+        super.onModuleLoad(loadPackageParam); // 模块自身被加载时调用
+    }
+
+    @Override
+    public void onLoadPackage(@NonNull XC_LoadPackage.LoadPackageParam loadPackageParam) throws Throwable {
+        HCInit.initLoadPackageParam(loadPackageParam); // 必须，初始化工具
+        new HookDemo().onApplication().onLoadPackage(); // 添加 onApplication 后才会执行 onApplication() 回调，onLoadPackage 方法必须调用
+    }
+
+    @Override
+    public void onInitZygote(@NonNull StartupParam startupParam) throws Throwable {
+        new HookDemo().onZygote();
+    }
+}
+```
+
+- 在模块主界面初始化
+
+```java
+public class Application extends android.app.Application {
+    @Override
+    public void onCreate() {
+        super.onCreate();
+
+        HCInit.initBasicData(new HCInit.BasicData()
+            .setModulePackageName("com.hchen.demo") // 模块包名
+            .setTag("HChenDemo") // 日志 tag
+            .setLogLevel(LOG_D) // 日志等级
+            .setPrefsName("hchen_prefs") // prefs 存储文件名 (可选)
         );
     }
 }
 ```
 
-- 在代码处调用
+- **Hook 类内强烈建议继承 HCBase 使用！**
 
 ```java
-public class MainTest {
-    public void test() {
-        CoreTool.hookMethod(); // 即可 hook
-        CoreTool.findClass(); // 查找类
-        CoreTool.callMethod(); // 调用方法
-        ChainTool.buildChain("com.hchen.demo")
-            .findMethod("method")
-            .hook()
-            .findMethod("method1")
-            .doNothing(); // 即可链式调用
-        PrefsTool.prefs().getString(); // 即可读取共享首选项
-        // ......
-    }
-}
-```
-
-- 当然你也可以直接继承本工具打包好的类。
-- **强烈建议继承 HCBase 使用！**
-
-```java
-// Hook 方
-public class MainTest extends HCBase {
+public class HookDemo extends HCBase /* 建议继承 HCBase 使用 */ {
     @Override
-    public void init() {
-        // HCBase 继承了 CoreTool 工具，直接调用即可。
+    protected boolean isEnabled() {
+        // 是否启用本 Hook
+        return super.isEnabled();
     }
 
-    // 可选项。
-    // 时机为 zygote。
-    // 请务必在 hook 入口处初始化 HCInit.initStartupParam(startupParam);
     @Override
-    public void initZygote(IXposedHookZygoteInit.StartupParam startupParam) {
-        hookMethod("com.hchen.demo.Main", "test", new IHook() {
-            // TODO
+    protected void init() { // loadPackage 阶段
+        boolean isExists = existsClass("com.hchen.demo.Demo"); // 是否存在类
+        Class<?> clazz = findClass("com.hchen.demo.Demo"); // 查找类
+
+        hookMethod("com.hchen.demo.Demo", "demo", boolean.class, new IHook() {
+            @Override
+            public void before() {
+                // 在 demo 方法调用前执行
+                // 可以拦截方法执行，或者修改方法参数值
+                setResult(true); // 拦截并返回 true
+                setArg(0, false); // 设置方法第一个参数为 false
+            }
+
+            @Override
+            public void after() {
+                // 在 demo 方法执行后调用
+                // 可以用于修改方法返回结果
+                setResult(true);
+            }
+
+            @Override
+            public boolean onThrow(int flag, Throwable e) {
+                // before 或者 after 内代码抛错时会调用
+                // 返回 true 代表已处理异常，工具将不会自动处理
+                return super.onThrow(flag, e);
+            }
         });
     }
-}
 
-// 执行方
-public class MainHook implements IXposedHookLoadPackage, IXposedHookZygoteInit {
     @Override
-    public void handleLoadPackage(XC_LoadPackage.LoadPackageParam loadPackageParam) {
-        new MainTest().onLoadPackage(); // 即可在 loadPackage 阶段执行 Hook。
+    protected void init(@NonNull ClassLoader classLoader) { // loadPackage 阶段
+        // 区别是可以指定自定义的 classloader
+        findClass("com.hchen.demo.Demo", classLoader);
     }
 
     @Override
-    public void initZygote(StartupParam startupParam) {
-        new MainTest().onZygote(); // 即可在 initZygote 阶段 Hook。
+    protected void initZygote(@NonNull IXposedHookZygoteInit.StartupParam startupParam) { // zygote 阶段
+        // 一般不会用到这个时机
+        findClass("com.hchen.demo.Demo", startupParam.getClass().getClassLoader()); // 可以这样写
+    }
+
+    @Override
+    protected void onApplication(@NonNull Context context) {
+        // 目标应用创建 context 时回调
+    }
+
+    @Override
+    protected void onThrowable(int flag, @NonNull Throwable e) {
+        // 上述方法发生抛错时调用，你可以在此处执行清理操作，不建议继续执行 Hook 逻辑
     }
 }
-
 ```
 
 - 混淆配置:
 
 ```text
-// 如果你不需要使用日志增强功能，也可以只加入（对于继承 HCBase 使用的情况）:
+// 如果你不需要使用日志增强功能，也可以只加入 (对于继承 HCBase 使用的情况):
 -keep class * extends com.hchen.hooktool.HCBase
  
 // 如果需要使用日志增强功能，那么建议加入混淆规则:
-// 假设存放 hook 文件的目录为 com.hchen.demo.hook
+// 假设存放 hook 类的目录为 com.hchen.demo.hook
 // 如果有多个存放的目录，建议都分别加入。
 -keep class com.hchen.demo.hook.**
 -keep class com.hchen.demo.hook.**$*
-
-// 如果既不继承 HCBase 使用，也不使用日志增强功能则不需要配置混淆规则。
 
 // 其他建议配置:
 -keep class com.hchen.hooktool.HCState {
@@ -212,13 +242,13 @@ public class MainTest extends HCBase {
 
 # 📌 全面便利
 
-- 工具提供了全面丰富的方法供你调用。
+- 工具提供了全面丰富的方法供你调用
 - 包括:
 
 ----
 
 - ContextTool 类:
-- 更方便的获取 context。
+- 更方便的获取 context
 
 ```java
 public class MainTest {
@@ -232,7 +262,7 @@ public class MainTest {
 ----
 
 - InvokeTool 类:
-- 更方便稳健的反射类。
+- 更方便稳健的反射类
 
 ```java
 public class MainTest {
@@ -246,14 +276,14 @@ public class MainTest {
 ----
 
 - SystemPropTool 类:
-- 更方便的 prop 读取修改工具。
+- 更方便的 prop 读取修改工具
 
 ```java
 public class MainTest {
     public void test() {
-        // 只能在系统框架中调用才能设置 prop
+        // 只能在系统框架中调用才能设置 persist 类型的 prop
         SystemPropTool.setProp("persist.test.prop", "1");
-        // 获取可以随意
+        // 获取应该可以随意
         String result = SystemPropTool.getProp("persist.test.prop");
     }
 }
@@ -262,40 +292,39 @@ public class MainTest {
 ---
 
 - PrefsTool 类:
-- 提供 prefs 读取修改功能。
+- 提供 prefs 读取修改功能
 
 ```java
-// 寄生应用内
-public class MainTest extends HCBase {
+public class HookDemo extends HCBase {
     @Override
     public void init() {
         // xprefs 模式：
-        // 注意 xprefs 模式，寄生应用不能修改配置只能读取。
+        // 注意 xprefs 模式，寄生应用不能修改配置只能读取
         String s = prefs().getString("test", "1");  // 即可读取
         s = prefs("myPrefs").getString("test", "1");  // 可指定读取文件名
 
         // sprefs 模式：
-        // 配置会保存到寄生应用的私有目录，读取也会从寄生应用私有目录读取。
+        // 配置会保存到寄生应用的私有目录，读取也会从寄生应用私有目录读取
         prefs(context).editor().putString("test", "1").commit();
-        // 如果没有继承 HCBase 可以这样调用。
+        // 如果没有继承 HCBase 可以这样调用
         PrefsTool.prefs(context).editor().putString("test", "2").commit();
-        // 注意 sprefs 模式 是和 xprefs 模式相互独立的，可共同存在。
+        // 注意 sprefs 模式 是和 xprefs 模式相互独立的，可共同存在
 
-        // 如果不方便获取 context 可用使用此方法，异步获取寄生应用上下文后再设置。
+        // 如果不方便获取 context 可用使用此方法，异步获取寄生应用上下文后再设置
         asyncPrefs(new IAsyncPrefs() {
             @Override
-            public void async(@NonNull IPrefsApply sp) {
-                sp.editor().put("test", "1").commit();
+            public void async(@NonNull IPrefsApply sPrefs) {
+                sPrefs.editor().put("test", "1").commit();
             }
         });
     }
 }
 
-// 模块内
-public static class MainActivity {
+public class Application extends android.app.Application {
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
-        // ！！！如果使用 xprefs 模式，请在模块主界面调用 PrefsTool.prefs(context); 初始化一下，否则可能不可用！！！
+    protected void onCreate() {
+        // 重要提醒：
+        // 如果需要使用 xprefs 模式，请务必在模块主界面调用 PrefsTool.prefs(context); 进行初始化，否则可能不可用！
         PrefsTool.prefs(this); // 或
         PrefsTool.prefs(this,/* 你自己的 prefs 名称 */);
 
@@ -309,7 +338,7 @@ public static class MainActivity {
 ---
 
 - ShellTool 类：
-- 提供简易的执行 Shell 命令的能力。
+- 提供简易的执行 Shell 命令的能力
 - 使用方法:
 
 ```java
@@ -370,14 +399,14 @@ public class MainTest {
 ----
 
 - DeviceTool 类:
-- 方便的获取系统基本信息。
-- 具体参见源代码和注释。
+- 方便的获取系统基本信息
+- 具体参见源代码和注释
 
 ----
 
 - ResInjectTool 类:
-- 将模块资源注入目标作用域。
-- 具体参见源代码与注释。
+- 将模块资源注入目标作用域
+- 具体参见源代码与注释
 
 ----
 
@@ -400,15 +429,8 @@ public class MainTest {
 |  ForegroundPin   |    [ForegroundPin](https://github.com/HChenX/ForegroundPin)    |
 |  ClipboardList   |    [ClipboardList](https://github.com/HChenX/ClipboardList)    |
 
-- 如果你的项目使用了本工具，可以告诉我，我将会把其加入表格。
+- 如果你的项目使用了本工具，可以告诉我，我将会把其加入表格
 - 想要详细了解本工具也可以参考上述项目，希望给你带来帮助！
-
-# 📢 项目声明
-
-- **本工具基于：**
-- [LSPosed](https://github.com/LSPosed/LSPosed)
-
-- 使用本工具请注明。
 
 # 🎉 结尾
 
