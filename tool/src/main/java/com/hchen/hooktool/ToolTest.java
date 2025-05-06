@@ -32,12 +32,14 @@ import com.hchen.hooktool.callback.IPackageInfoGetter;
 import com.hchen.hooktool.callback.IPrefsApply;
 import com.hchen.hooktool.data.AppData;
 import com.hchen.hooktool.data.ShellResult;
+import com.hchen.hooktool.exception.NonSingletonException;
 import com.hchen.hooktool.hook.IHook;
 import com.hchen.hooktool.utils.PackageTool;
 import com.hchen.hooktool.utils.PrefsTool;
 import com.hchen.hooktool.utils.ShellTool;
 
 import java.util.ArrayList;
+import java.util.function.Supplier;
 
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
@@ -77,6 +79,24 @@ class ToolTest extends HCBase {
                 super.before();
             }
         }).unhook();
+
+        findMethodPro("com.hchen.demo")
+            .withMethodName("demo")
+            .withParamTypes(int.class)
+            .withParamCount(1)
+            .withSuper(true)
+            .singleOrThrow(new Supplier<NonSingletonException>() {
+                @Override
+                public NonSingletonException get() {
+                    return new NonSingletonException("Non single");
+                }
+            })
+            .hook(new IHook() {
+                @Override
+                public void after() {
+                    // TODO
+                }
+            });
 
         // 本工具用法
         new IHook() {

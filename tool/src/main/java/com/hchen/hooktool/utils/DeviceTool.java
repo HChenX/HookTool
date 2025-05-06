@@ -18,8 +18,6 @@
  */
 package com.hchen.hooktool.utils;
 
-import static com.hchen.hooktool.log.AndroidLog.logE;
-import static com.hchen.hooktool.log.LogExpand.getTag;
 import static com.hchen.hooktool.utils.InvokeTool.getStaticField;
 import static com.hchen.hooktool.utils.SystemPropTool.getProp;
 
@@ -36,6 +34,8 @@ import android.view.WindowManager;
 
 import androidx.annotation.NonNull;
 
+import com.hchen.hooktool.helper.TryHelper;
+
 /**
  * 设备工具
  *
@@ -46,14 +46,14 @@ public class DeviceTool {
     }
 
     /**
-     * 获取安卓设备版本
+     * 获取安卓版本
      */
     public static int getAndroidVersion() {
         return Build.VERSION.SDK_INT;
     }
 
     /**
-     * 获取小米设备 MIUI 版本
+     * 获取 MIUI 版本
      */
     public static float getMiuiVersion() {
         return switch (getProp("ro.miui.ui.version.name").trim()) {
@@ -69,7 +69,7 @@ public class DeviceTool {
     }
 
     /**
-     * 获取小米设备 HyperOS 版本
+     * 获取 HyperOS 版本
      */
     public static float getHyperOSVersion() {
         return switch (getProp("ro.mi.os.version.name").trim()) {
@@ -80,62 +80,48 @@ public class DeviceTool {
     }
 
     /**
-     * 判断是否为指定某个 Android 版本
+     * 判断是否为指定 Android 版本
      */
     public static boolean isAndroidVersion(int version) {
         return getAndroidVersion() == version;
     }
 
     /**
-     * 判断是否大于等于某个 Android 版本
+     * 判断是否大于等于指定 Android 版本
      */
     public static boolean isMoreAndroidVersion(int version) {
         return getAndroidVersion() >= version;
     }
 
     /**
-     * 判断是否为指定某个 MIUI 版本
+     * 判断是否为指定 MIUI 版本
      */
     public static boolean isMiuiVersion(float version) {
         return Float.compare(getMiuiVersion(), version) == 0;
     }
 
     /**
-     * 判断是否大于等于某个 MIUI 版本
+     * 判断是否大于等于指定 MIUI 版本
      */
     public static boolean isMoreMiuiVersion(float version) {
         return Float.compare(getMiuiVersion(), version) >= 0;
     }
 
     /**
-     * 判断是否为指定某个 HyperOS 版本
+     * 判断是否为指定 HyperOS 版本
      */
     public static boolean isHyperOSVersion(float version) {
         return Float.compare(getHyperOSVersion(), version) == 0;
     }
 
     /**
-     * 判断是否大于等于某个 HyperOS 版本
+     * 判断是否大于等于指定 HyperOS 版本
      */
     public static boolean isMoreHyperOSVersion(float version) {
         return Float.compare(getHyperOSVersion(), version) >= 0;
     }
 
-    /**
-     * 判断 miui 优化开关是否开启
-     */
-    public static boolean isMiuiOptimization() {
-        return getProp("persist.sys.miui_optimization", false);
-    }
-
-    /**
-     * 获取系统是否已经启动完成
-     */
-    public static boolean isBootCompleted() {
-        return getProp("sys.boot_completed", false);
-    }
-
-    // -------------------------------- 手机品牌 -------------------------------------
+    // ----------------------- 手机品牌 -------------------------
     public static final String[] ROM_HUAWEI = {"huawei"};
     public static final String[] ROM_VIVO = {"vivo"};
     public static final String[] ROM_XIAOMI = {"xiaomi", "redmi"};
@@ -147,6 +133,7 @@ public class DeviceTool {
     public static final String[] ROM_NUBIA = {"nubia"};
     public static final String[] ROM_SAMSUNG = {"samsung"};
     public static final String[] ROM_HONOR = {"honor"};
+    // ---------------------------------------------------------
 
     private static final String VERSION_PROPERTY_HUAWEI = "ro.build.version.emui";
     private static final String VERSION_PROPERTY_VIVO = "ro.vivo.os.build.display.id";
@@ -199,7 +186,9 @@ public class DeviceTool {
      */
     public static boolean isHarmonyOS() {
         // 鸿蒙系统没有 Android 10 以下的
-        if (!isMoreAndroidVersion(Build.VERSION_CODES.Q)) return false;
+        if (!isMoreAndroidVersion(Build.VERSION_CODES.Q))
+            return false;
+
         try {
             Object osBrand = InvokeTool.callStaticMethod(
                 "com.huawei.system.BuildEx",
@@ -208,7 +197,6 @@ public class DeviceTool {
             );
             return "Harmony".equalsIgnoreCase(String.valueOf(osBrand));
         } catch (Throwable throwable) {
-            logE(getTag(), throwable);
             return false;
         }
     }
@@ -223,11 +211,11 @@ public class DeviceTool {
     /**
      * 判断是否是指定的 ROM
      */
-    public static boolean isRightRom(final String... names) {
-        if (names == null) return false;
+    public static boolean isRightRom(@NonNull final String... names) {
         for (String name : names) {
-            if (Build.BRAND.toLowerCase().contains(name.toLowerCase()) ||
-                Build.MANUFACTURER.toLowerCase().contains(name.toLowerCase())
+            if (
+                Build.BRAND.toLowerCase().contains(name.toLowerCase()) ||
+                    Build.MANUFACTURER.toLowerCase().contains(name.toLowerCase())
             ) {
                 return true;
             }
@@ -256,11 +244,36 @@ public class DeviceTool {
         return Boolean.TRUE.equals(getStaticField("miui.os.Build", "IS_INTERNATIONAL_BUILD"));
     }
 
-    // --------------- 获取窗口参数 --------------
+    /**
+     * 判断 MIUI 优化是否开启
+     */
+    public static boolean isMiuiOptimization() {
+        return getProp("persist.sys.miui_optimization", false);
+    }
+
+    /**
+     * 获取系统是否已经启动完成
+     */
+    public static boolean isBootCompleted() {
+        return getProp("sys.boot_completed", false);
+    }
+
+    /**
+     * 获取 WindowManager 实例
+     *
+     * @param context 上下文对象，用于获取系统服务
+     * @return WindowManager 对象，用于管理窗口
+     */
     public static WindowManager getWindowManager(@NonNull Context context) {
         return (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
     }
 
+    /**
+     * 获取当前上下文的 Display 对象
+     *
+     * @param context 上下文对象
+     * @return Display 对象，表示当前设备的显示屏幕
+     */
     public static Display getDisplay(@NonNull Context context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             return context.getDisplay();
@@ -269,10 +282,22 @@ public class DeviceTool {
         }
     }
 
+    /**
+     * 获取窗口尺寸
+     *
+     * @param context 上下文对象
+     * @return Point 对象，包含窗口的宽度和高度
+     */
     public static Point getWindowSize(@NonNull Context context) {
         return getWindowSize(getWindowManager(context));
     }
 
+    /**
+     * 获取窗口尺寸
+     *
+     * @param windowManager WindowManager 对象
+     * @return Point 对象，包含窗口的宽度和高度
+     */
     public static Point getWindowSize(@NonNull WindowManager windowManager) {
         Point point = new Point();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -288,10 +313,23 @@ public class DeviceTool {
         return point;
     }
 
+    /**
+     * 获取屏幕尺寸
+     *
+     * @param context 上下文对象
+     * @return Point 对象，包含屏幕的宽度和高度
+     */
     public static Point getScreenSize(@NonNull Context context) {
         return getScreenSize(getWindowManager(context));
     }
 
+
+    /**
+     * 获取屏幕尺寸
+     *
+     * @param windowManager WindowManager 对象
+     * @return Point 对象，包含屏幕的宽度和高度
+     */
     public static Point getScreenSize(@NonNull WindowManager windowManager) {
         Point point = new Point();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -304,10 +342,22 @@ public class DeviceTool {
         return point;
     }
 
+    /**
+     * 判断屏幕是否为横屏
+     *
+     * @param context 上下文对象
+     * @return 如果屏幕为横屏返回 true，否则返回 false
+     */
     public static boolean isHorizontalScreen(@NonNull Context context) {
         return context.getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE;
     }
 
+    /**
+     * 判断屏幕是否为竖屏
+     *
+     * @param context 上下文对象
+     * @return 如果屏幕为竖屏返回 true，否则返回 false
+     */
     public static boolean isVerticalScreen(@NonNull Context context) {
         return context.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT;
     }
@@ -319,24 +369,52 @@ public class DeviceTool {
         return (resources.getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
     }
 
+    /**
+     * 将像素值转换为密度独立像素值
+     *
+     * @param context 上下文对象，用于获取屏幕密度信息
+     * @param pxValue 像素值
+     * @return 转换后的密度独立像素值
+     */
     public static int px2dp(@NonNull Context context, float pxValue) {
         // 获取屏幕密度（每英寸多少个像素点）
         float scale = context.getResources().getDisplayMetrics().density;
         return (int) (pxValue / scale + 0.5f);
     }
 
+    /**
+     * 将像素值转换为缩放独立的字体像素值
+     *
+     * @param context 上下文对象，用于获取字体的缩放密度信息
+     * @param pxValue 像素值
+     * @return 转换后的缩放独立的字体像素值
+     */
     public static int px2sp(@NonNull Context context, float pxValue) {
         // 获取字体的缩放密度
         float fontScale = context.getResources().getDisplayMetrics().scaledDensity;
         return (int) (pxValue / fontScale + 0.5f);
     }
 
+    /**
+     * 将密度独立像素值转换为像素值
+     *
+     * @param context 上下文对象，用于获取屏幕密度信息
+     * @param dpValue 密度独立像素值
+     * @return 转换后的像素值
+     */
     public static int dp2px(@NonNull Context context, float dpValue) {
         // 获取屏幕密度
         float scale = context.getResources().getDisplayMetrics().density;
         return (int) (dpValue * scale + 0.5f);
     }
 
+    /**
+     * 将缩放独立的字体像素值转换为像素值
+     *
+     * @param context 上下文对象，用于获取字体的缩放密度信息
+     * @param spValue 缩放独立的字体像素值
+     * @return 转换后的像素值
+     */
     public static int sp2px(@NonNull Context context, float spValue) {
         // 获取字体的缩放密度
         float fontScale = context.getResources().getDisplayMetrics().scaledDensity;
@@ -348,7 +426,7 @@ public class DeviceTool {
      */
     public static boolean isPad(@NonNull Context context) {
         int flag = 0;
-        if (isMiuiPad()) return true;
+        if (isXiaomiPad()) return true;
         if (isPadByProp()) ++flag;
         if (isPadBySize(context)) ++flag;
         if (isPadByApi(context)) ++flag;
@@ -358,13 +436,18 @@ public class DeviceTool {
     /**
      * 是否是小米平板
      */
-    public static boolean isMiuiPad() {
-        return Boolean.TRUE.equals(getStaticField("miui.os.Build", "IS_TABLET"));
+    public static boolean isXiaomiPad() {
+        return TryHelper.doTry(() -> Boolean.TRUE.equals(
+            getStaticField(
+                "miui.os.Build",
+                "IS_TABLET"
+            )
+        )).orElse(false);
     }
 
     private static boolean isPadByProp() {
-        String mDeviceType = getProp("ro.build.characteristics", "default");
-        return (mDeviceType != null && mDeviceType.toLowerCase().contains("tablet"))
+        String deviceType = getProp("ro.build.characteristics", "default");
+        return (deviceType != null && deviceType.toLowerCase().contains("tablet"))
             || getProp("persist.sys.muiltdisplay_type", 0) == 2;
     }
 

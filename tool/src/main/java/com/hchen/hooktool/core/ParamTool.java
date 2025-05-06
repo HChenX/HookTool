@@ -141,7 +141,7 @@ public class ParamTool {
         param.setResult(null);
     }
 
-    final public void returnTure() {
+    final public void returnTrue() {
         param.setResult(true);
     }
 

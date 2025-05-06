@@ -98,6 +98,20 @@ public class HCInit {
     }
 
     /**
+     * 设置日志 TAG
+     */
+    public static void setTag(@NonNull String tag) {
+        HCData.setTag(tag);
+    }
+
+    /**
+     * 设置日志等级
+     */
+    public static void setLogLevel(@LogLevel int level) {
+        HCData.setLogLevel(level);
+    }
+
+    /**
      * 更换工具类加载器
      */
     public static void setClassLoader(@NonNull ClassLoader classLoader) {

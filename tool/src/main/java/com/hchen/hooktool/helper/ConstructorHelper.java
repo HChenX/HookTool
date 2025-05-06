@@ -136,31 +136,44 @@ public class ConstructorHelper {
         return this;
     }
 
-    public Constructor<?> single() {
+    /**
+     * 获取查找到的对象，如果查找结果为空或不为单个则抛错
+     */
+    public HookHelper<Constructor<?>> single() {
         List<Constructor<?>> constructors = matches();
         if (constructors.isEmpty())
             throw new NonSingletonException("[ConstructorHelper]: No result found for query!");
         if (constructors.size() > 1)
             throw new NonSingletonException("[ConstructorHelper]: Query did not return a unique result: " + constructors.size());
 
-        return constructorCache = constructors.get(0);
+        constructorCache = constructors.get(0);
+        return new HookHelper<>(constructorCache);
     }
 
+    /**
+     * 获取查找到的对象，如果查找结果为空或不为单个则返回 null
+     */
     @Nullable
-    public Constructor<?> singleOrNull() {
+    public HookHelper<Constructor<?>> singleOrNull() {
         List<Constructor<?>> constructors = matches();
-        if (constructors.size() == 1)
-            return constructorCache = constructors.get(0);
+        if (constructors.size() == 1) {
+            constructorCache = constructors.get(0);
+            return new HookHelper<>(constructorCache);
+        }
 
         return null;
     }
 
-    public Constructor<?> singleOrThrow(@NonNull Supplier<RuntimeException> throwableSupplier) {
+    /**
+     * 获取查找到的对象，如果查找结果为空或不为单个则抛错
+     */
+    public HookHelper<Constructor<?>> singleOrThrow(@NonNull Supplier<NonSingletonException> throwableSupplier) {
         List<Constructor<?>> constructors = matches();
         if (constructors.size() != 1)
             throw throwableSupplier.get();
 
-        return constructorCache = constructors.get(0);
+        constructorCache = constructors.get(0);
+        return new HookHelper<>(constructorCache);
     }
 
     /**

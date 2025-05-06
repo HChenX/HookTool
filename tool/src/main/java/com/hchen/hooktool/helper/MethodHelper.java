@@ -220,7 +220,10 @@ public class MethodHelper {
         return this;
     }
 
-    public Method single() {
+    /**
+     * 获取查找到的对象，如果查找结果为空或不为单个则抛错
+     */
+    public HookHelper<Method> single() {
         List<Method> methods = matches();
         if (methods.isEmpty())
             throw new NonSingletonException("[MethodHelper]: No result found for query!");
@@ -228,24 +231,33 @@ public class MethodHelper {
         if (methods.size() > 1)
             throw new NonSingletonException("[MethodHelper]: Query did not return a unique result: " + methods.size());
 
-        return methodCache = methods.get(0);
+        methodCache = methods.get(0);
+        return new HookHelper<>(methodCache);
     }
 
+    /**
+     * 获取查找到的对象，如果查找结果为空或不为单个则返回 null
+     */
     @Nullable
-    public Method singleOrNull() {
+    public HookHelper<Method> singleOrNull() {
         List<Method> methods = matches();
         if (methods.isEmpty()) return null;
         if (methods.size() > 1) return null;
 
-        return methodCache = methods.get(0);
+        methodCache = methods.get(0);
+        return new HookHelper<>(methodCache);
     }
 
-    public Method singleOrThrow(@NonNull Supplier<RuntimeException> throwableSupplier) {
+    /**
+     * 获取查找到的对象，如果查找结果为空或不为单个则抛错
+     */
+    public HookHelper<Method> singleOrThrow(@NonNull Supplier<NonSingletonException> throwableSupplier) {
         List<Method> methods = matches();
         if (methods.isEmpty()) throw throwableSupplier.get();
         if (methods.size() > 1) throw throwableSupplier.get();
 
-        return methodCache = methods.get(0);
+        methodCache = methods.get(0);
+        return new HookHelper<>(methodCache);
     }
 
     /**
