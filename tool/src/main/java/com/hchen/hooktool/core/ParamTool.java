@@ -45,10 +45,12 @@ import androidx.annotation.NonNull;
 
 import com.hchen.hooktool.log.AndroidLog;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
-import java.util.Arrays;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.Optional;
 
 import de.robv.android.xposed.XC_MethodHook;
@@ -407,9 +409,57 @@ public class ParamTool {
 
     private String paramToString(Object param) {
         if (param == null) return "null";
-        if (param.getClass().isArray())
-            return Arrays.toString((Object[]) param);
+        Class<?> clazz = param.getClass();
+        if (!clazz.isArray())
+            return param.toString();
 
-        return param.toString();
+        class Frame {
+            final Object array;
+            final int length;
+            int index;
+
+            Frame(Object array) {
+                this.array = array;
+                this.length = Array.getLength(array);
+                this.index = 0;
+            }
+        }
+
+        StringBuilder sb = new StringBuilder();
+        Deque<Frame> stack = new ArrayDeque<>();
+        stack.push(new Frame(param));
+        sb.append("[");
+
+        while (!stack.isEmpty()) {
+            Frame top = stack.peek();
+            assert top != null;
+            if (top.index >= top.length) {
+                stack.pop();
+                sb.append("]");
+                if (!stack.isEmpty()) {
+                    Frame parent = stack.peek();
+                    assert parent != null;
+                    if (parent.index < parent.length) {
+                        sb.append(", ");
+                    }
+                }
+                continue;
+            }
+
+            Object element = Array.get(top.array, top.index);
+            top.index++;
+
+            if (element != null && element.getClass().isArray()) {
+                sb.append("[");
+                stack.push(new Frame(element));
+            } else {
+                sb.append(element == null ? "null" : element.toString());
+                if (top.index < top.length) {
+                    sb.append(", ");
+                }
+            }
+        }
+
+        return sb.toString();
     }
 }
