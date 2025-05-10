@@ -38,7 +38,7 @@ dependencyResolutionManagement {
 
 ```groovy
 dependencies {
-    implementation 'com.github.HChenX:HookTool:v.2.0.6'
+    implementation 'com.github.HChenX:HookTool:v.2.0.7'
 }
 ```
 
@@ -428,6 +428,7 @@ public class MainTest {
 |  SwitchFreeForm  |   [SwitchFreeForm](https://github.com/HChenX/SwitchFreeForm)   |
 |  ForegroundPin   |    [ForegroundPin](https://github.com/HChenX/ForegroundPin)    |
 |  ClipboardList   |    [ClipboardList](https://github.com/HChenX/ClipboardList)    |
+|  SuperLyric      |    [SuperLyric](https://github.com/HChenX/SuperLyric)          | 
 
 - 如果你的项目使用了本工具，可以告诉我，我将会把其加入表格
 - 想要详细了解本工具也可以参考上述项目，希望给你带来帮助！
