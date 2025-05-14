@@ -46,7 +46,7 @@ public abstract class HCBase extends CoreTool {
     public String TAG = getClass().getSimpleName();
     public static ClassLoader classLoader;
     public static XC_LoadPackage.LoadPackageParam loadPackageParam;
-    public static ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
+    public static final ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
     private static boolean isHookedApplication = false;
     private static final List<HCBase> mIApplications = new ArrayList<>();
     public static final int ON_LOAD_PACKAGE = 1;

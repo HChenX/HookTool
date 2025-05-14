@@ -18,6 +18,12 @@
  */
 package com.hchen.hooktool.helper;
 
+import static com.hchen.hooktool.helper.RangeHelper.EQ;
+import static com.hchen.hooktool.helper.RangeHelper.GE;
+import static com.hchen.hooktool.helper.RangeHelper.GT;
+import static com.hchen.hooktool.helper.RangeHelper.LE;
+import static com.hchen.hooktool.helper.RangeHelper.LT;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -32,6 +38,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -46,7 +53,7 @@ public class MethodHelper {
     private String methodName = null;
     private String substring = null;
     private Pattern pattern = null;
-    private int paramCount = -1;
+    private int paramCountFinal = -1;
     private Class<?>[] paramTypes = null;
     private Class<?> returnType = null;
     private Class<?> superReturnType = null;
@@ -54,9 +61,10 @@ public class MethodHelper {
     private Class<? extends Annotation> annotation = null;
     private Type genericReturnType = null;
     private Type[] genericParamTypes = null;
-    private Class<? extends Throwable> exceptionType = null;
+    private Class<? extends Throwable>[] exceptionTypes = null;
     private boolean withSuper = false;
     private Method methodCache = null;
+    private final ConcurrentHashMap<Integer, Integer> paramCountVar = new ConcurrentHashMap<>();
 
     public MethodHelper(Class<?> clazz) {
         Objects.requireNonNull(clazz, "[MethodHelper]: class must not is null!");
@@ -90,8 +98,16 @@ public class MethodHelper {
     /**
      * 方法参数数量
      */
-    public MethodHelper withParamCount(int paramCount) {
-        this.paramCount = paramCount;
+    public MethodHelper withParamCountFinal(int paramCountFinal) {
+        this.paramCountFinal = paramCountFinal;
+        return this;
+    }
+
+    /**
+     * 方法参数数量是否在某个范围内
+     */
+    public MethodHelper withParamCountVar(int paramCountVar, @RangeHelper.RangeModeFlag int mode) {
+        this.paramCountVar.put(mode, paramCountVar);
         return this;
     }
 
@@ -206,9 +222,10 @@ public class MethodHelper {
 
     /**
      * 方法抛出的异常类型
+     * @noinspection unchecked
      */
-    public MethodHelper withExceptionType(@NonNull Class<? extends Throwable> exceptionType) {
-        this.exceptionType = exceptionType;
+    public MethodHelper withExceptionType(@NonNull Class<? extends Throwable>... exceptionTypes) {
+        this.exceptionTypes = exceptionTypes;
         return this;
     }
 
@@ -300,8 +317,37 @@ public class MethodHelper {
                     }
                 }
             }
-            if (paramCount != -1 && method.getParameterCount() != paramCount)
+            if (paramCountFinal != -1 && method.getParameterCount() != paramCountFinal)
                 return false;
+            if (!paramCountVar.isEmpty()) {
+                if (paramCountVar.containsKey(EQ)) {
+                    if (!Objects.equals(method.getParameterCount(), paramCountVar.get(EQ)))
+                        return false;
+                } else {
+                    for (int mode : paramCountVar.keySet()) {
+                        Integer count = paramCountVar.get(mode);
+                        if (count == null) return false;
+
+                        switch (mode) {
+                            case GT -> {
+                                if (!(method.getParameterCount() > count)) return false;
+                            }
+                            case LT -> {
+                                if (!(method.getParameterCount() < count)) return false;
+                            }
+                            case GE -> {
+                                if (!(method.getParameterCount() >= count)) return false;
+                            }
+                            case LE -> {
+                                if (!(method.getParameterCount() <= count)) return false;
+                            }
+                            default -> {
+                                return false;
+                            }
+                        }
+                    }
+                }
+            }
             if (returnType != null && !Objects.equals(method.getReturnType(), returnType))
                 return false;
             if (superReturnType != null && !superReturnType.isAssignableFrom(method.getReturnType()))
@@ -314,7 +360,7 @@ public class MethodHelper {
                 return false;
             if (genericParamTypes != null && !Arrays.equals(method.getGenericParameterTypes(), genericParamTypes))
                 return false;
-            if (exceptionType != null && !Arrays.asList(method.getExceptionTypes()).contains(exceptionType))
+            if (exceptionTypes != null && !Arrays.asList(method.getExceptionTypes()).contains(exceptionTypes))
                 return false;
 
             return true;

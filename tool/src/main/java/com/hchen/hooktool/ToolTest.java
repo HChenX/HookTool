@@ -83,7 +83,7 @@ class ToolTest extends HCBase {
         findMethodPro("com.hchen.demo")
             .withMethodName("demo")
             .withParamTypes(int.class)
-            .withParamCount(1)
+            .withParamCountFinal(1)
             .withSuper(true)
             .singleOrThrow(new Supplier<NonSingletonException>() {
                 @Override

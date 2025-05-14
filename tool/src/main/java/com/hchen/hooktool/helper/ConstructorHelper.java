@@ -18,6 +18,12 @@
  */
 package com.hchen.hooktool.helper;
 
+import static com.hchen.hooktool.helper.RangeHelper.EQ;
+import static com.hchen.hooktool.helper.RangeHelper.GE;
+import static com.hchen.hooktool.helper.RangeHelper.GT;
+import static com.hchen.hooktool.helper.RangeHelper.LE;
+import static com.hchen.hooktool.helper.RangeHelper.LT;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -32,6 +38,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -47,9 +54,10 @@ public class ConstructorHelper {
     private int mods = -1;
     private Class<? extends Annotation> annotation = null;
     private Type[] genericParamTypes = null;
-    private Class<? extends Throwable> exceptionType = null;
+    private Class<? extends Throwable>[] exceptionTypes = null;
     private boolean withSuper = false;
     private Constructor<?> constructorCache = null;
+    private final ConcurrentHashMap<Integer, Integer> paramCountVar = new ConcurrentHashMap<>();
 
     public ConstructorHelper(Class<?> clazz) {
         Objects.requireNonNull(clazz, "[ConstructorHelper]: Class must not is null!");
@@ -61,6 +69,14 @@ public class ConstructorHelper {
      */
     public ConstructorHelper withParamCount(int paramCount) {
         this.paramCount = paramCount;
+        return this;
+    }
+
+    /**
+     * 构造函数的参数数量是否在某个范围内
+     */
+    public ConstructorHelper withParamCountVar(int paramCountVar, @RangeHelper.RangeModeFlag int mode) {
+        this.paramCountVar.put(mode, paramCountVar);
         return this;
     }
 
@@ -122,9 +138,10 @@ public class ConstructorHelper {
 
     /**
      * 构造函数抛出的异常
+     * @noinspection unchecked
      */
-    public ConstructorHelper withExceptionType(@NonNull Class<? extends Throwable> exceptionType) {
-        this.exceptionType = exceptionType;
+    public ConstructorHelper withExceptionTypes(@NonNull Class<? extends Throwable>... exceptionTypes) {
+        this.exceptionTypes = exceptionTypes;
         return this;
     }
 
@@ -214,13 +231,42 @@ public class ConstructorHelper {
 
                 if (paramCount != -1 && constructor.getParameterCount() != paramCount)
                     return false;
+                if (!paramCountVar.isEmpty()) {
+                    if (paramCountVar.containsKey(EQ)) {
+                        if (!Objects.equals(constructor.getParameterCount(), paramCountVar.get(EQ)))
+                            return false;
+                    } else {
+                        for (int mode : paramCountVar.keySet()) {
+                            Integer count = paramCountVar.get(mode);
+                            if (count == null) return false;
+
+                            switch (mode) {
+                                case GT -> {
+                                    if (!(constructor.getParameterCount() > count)) return false;
+                                }
+                                case LT -> {
+                                    if (!(constructor.getParameterCount() < count)) return false;
+                                }
+                                case GE -> {
+                                    if (!(constructor.getParameterCount() >= count)) return false;
+                                }
+                                case LE -> {
+                                    if (!(constructor.getParameterCount() <= count)) return false;
+                                }
+                                default -> {
+                                    return false;
+                                }
+                            }
+                        }
+                    }
+                }
                 if (mods != -1 && (constructor.getModifiers() & mods) == 0)
                     return false;
                 if (annotation != null && !constructor.isAnnotationPresent(annotation))
                     return false;
                 if (genericParamTypes != null && !Arrays.equals(constructor.getGenericParameterTypes(), genericParamTypes))
                     return false;
-                if (exceptionType != null && !Arrays.asList(constructor.getExceptionTypes()).contains(exceptionType))
+                if (exceptionTypes != null && !Arrays.equals(constructor.getExceptionTypes(), exceptionTypes))
                     return false;
 
                 return true;
