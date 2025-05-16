@@ -57,7 +57,7 @@ public class ConstructorHelper {
     private Class<? extends Throwable>[] exceptionTypes = null;
     private boolean withSuper = false;
     private Constructor<?> constructorCache = null;
-    private final ConcurrentHashMap<Integer, Integer> paramCountVar = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Integer, Integer> paramCountVarMap = new ConcurrentHashMap<>();
 
     public ConstructorHelper(Class<?> clazz) {
         Objects.requireNonNull(clazz, "[ConstructorHelper]: Class must not is null!");
@@ -75,8 +75,8 @@ public class ConstructorHelper {
     /**
      * 构造函数的参数数量是否在某个范围内
      */
-    public ConstructorHelper withParamCountVar(int paramCountVar, @RangeHelper.RangeModeFlag int mode) {
-        this.paramCountVar.put(mode, paramCountVar);
+    public ConstructorHelper withParamCount(int paramCount, @RangeHelper.RangeModeFlag int mode) {
+        this.paramCountVarMap.put(mode, paramCount);
         return this;
     }
 
@@ -231,13 +231,13 @@ public class ConstructorHelper {
 
                 if (paramCount != -1 && constructor.getParameterCount() != paramCount)
                     return false;
-                if (!paramCountVar.isEmpty()) {
-                    if (paramCountVar.containsKey(EQ)) {
-                        if (!Objects.equals(constructor.getParameterCount(), paramCountVar.get(EQ)))
+                if (!paramCountVarMap.isEmpty()) {
+                    if (paramCountVarMap.containsKey(EQ)) {
+                        if (!Objects.equals(constructor.getParameterCount(), paramCountVarMap.get(EQ)))
                             return false;
                     } else {
-                        for (int mode : paramCountVar.keySet()) {
-                            Integer count = paramCountVar.get(mode);
+                        for (int mode : paramCountVarMap.keySet()) {
+                            Integer count = paramCountVarMap.get(mode);
                             if (count == null) return false;
 
                             switch (mode) {

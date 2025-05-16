@@ -53,7 +53,7 @@ public class MethodHelper {
     private String methodName = null;
     private String substring = null;
     private Pattern pattern = null;
-    private int paramCountFinal = -1;
+    private int paramCount = -1;
     private Class<?>[] paramTypes = null;
     private Class<?> returnType = null;
     private Class<?> superReturnType = null;
@@ -64,7 +64,7 @@ public class MethodHelper {
     private Class<? extends Throwable>[] exceptionTypes = null;
     private boolean withSuper = false;
     private Method methodCache = null;
-    private final ConcurrentHashMap<Integer, Integer> paramCountVar = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Integer, Integer> paramCountVarMap = new ConcurrentHashMap<>();
 
     public MethodHelper(Class<?> clazz) {
         Objects.requireNonNull(clazz, "[MethodHelper]: class must not is null!");
@@ -98,16 +98,16 @@ public class MethodHelper {
     /**
      * 方法参数数量
      */
-    public MethodHelper withParamCountFinal(int paramCountFinal) {
-        this.paramCountFinal = paramCountFinal;
+    public MethodHelper withParamCount(int paramCount) {
+        this.paramCount = paramCount;
         return this;
     }
 
     /**
      * 方法参数数量是否在某个范围内
      */
-    public MethodHelper withParamCountVar(int paramCountVar, @RangeHelper.RangeModeFlag int mode) {
-        this.paramCountVar.put(mode, paramCountVar);
+    public MethodHelper withParamCount(int paramCount, @RangeHelper.RangeModeFlag int mode) {
+        this.paramCountVarMap.put(mode, paramCount);
         return this;
     }
 
@@ -317,15 +317,15 @@ public class MethodHelper {
                     }
                 }
             }
-            if (paramCountFinal != -1 && method.getParameterCount() != paramCountFinal)
+            if (paramCount != -1 && method.getParameterCount() != paramCount)
                 return false;
-            if (!paramCountVar.isEmpty()) {
-                if (paramCountVar.containsKey(EQ)) {
-                    if (!Objects.equals(method.getParameterCount(), paramCountVar.get(EQ)))
+            if (!paramCountVarMap.isEmpty()) {
+                if (paramCountVarMap.containsKey(EQ)) {
+                    if (!Objects.equals(method.getParameterCount(), paramCountVarMap.get(EQ)))
                         return false;
                 } else {
-                    for (int mode : paramCountVar.keySet()) {
-                        Integer count = paramCountVar.get(mode);
+                    for (int mode : paramCountVarMap.keySet()) {
+                        Integer count = paramCountVarMap.get(mode);
                         if (count == null) return false;
 
                         switch (mode) {
