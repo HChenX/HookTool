@@ -225,7 +225,7 @@ public class MethodHelper {
      *
      * @noinspection unchecked
      */
-    public MethodHelper withExceptionType(@NonNull Class<? extends Throwable>... exceptionTypes) {
+    public MethodHelper withExceptionTypes(@NonNull Class<? extends Throwable>... exceptionTypes) {
         this.exceptionTypes = exceptionTypes;
         return this;
     }

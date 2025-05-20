@@ -18,6 +18,8 @@
  */
 package com.hchen.hooktool.hook;
 
+import androidx.annotation.NonNull;
+
 import com.hchen.hooktool.core.CoreTool;
 import com.hchen.hooktool.log.XposedLog;
 
@@ -34,12 +36,19 @@ public class HookFactory {
     private HookFactory() {
     }
 
-    public static XC_MethodHook createHook(String tag, IHook iHook) {
+    /**
+     * 构建 Hook
+     * <p>
+     * 请勿主动调用
+     *
+     * @hide
+     */
+    public static XC_MethodHook createHook(@NonNull String tag, @NonNull IHook iHook) {
         iHook.INNER_TAG = tag;
         XC_MethodHook xcMethodHook = new XC_MethodHook(iHook.PRIORITY) {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                Object[] lastArgs = param.args;
+                final Object[] lastArgs = param.args;
 
                 try {
                     iHook.param = param;
@@ -59,8 +68,8 @@ public class HookFactory {
 
             @Override
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                Object lastResult = param.getResult();
-                Throwable lastThrowable = param.getThrowable();
+                final Object lastResult = param.getResult();
+                final Throwable lastThrowable = param.getThrowable();
 
                 try {
                     iHook.param = param;

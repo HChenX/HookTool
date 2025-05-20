@@ -199,8 +199,7 @@ public class InvokeTool {
     /**
      * @noinspection unchecked
      */
-    private static <T> T baseInvokeMethod(Class<?> clazz /* 类 */, Object instance /* 实例 */, String methodName /* 方法名 */,
-                                          Class<?>[] classes /* 方法参数 */, Object... params /* 值 */) {
+    private static <T> T baseInvokeMethod(Class<?> clazz, Object instance, String methodName, Class<?>[] classes, Object... params) {
         Method declaredMethod;
         if (clazz == null && instance == null) {
             throw new NullPointerException("[InvokeTool]: Class or instance must not is null, can't invoke method: " + methodName);
@@ -211,7 +210,22 @@ public class InvokeTool {
             String methodTag = clazz.getName() + "#" + methodName + "#" + Arrays.toString(classes);
             declaredMethod = mMethodCache.get(methodTag);
             if (declaredMethod == null) {
-                declaredMethod = clazz.getDeclaredMethod(methodName, classes);
+                try {
+                    declaredMethod = clazz.getDeclaredMethod(methodName, classes);
+                } catch (NoSuchMethodException e) {
+                    while (true) {
+                        clazz = clazz.getSuperclass();
+                        if (clazz == null || clazz.equals(Object.class))
+                            break;
+
+                        try {
+                            declaredMethod = clazz.getDeclaredMethod(methodName, classes);
+                            break;
+                        } catch (NoSuchMethodException ignored) {
+                        }
+                    }
+                    if (declaredMethod == null) throw e;
+                }
                 mMethodCache.put(methodTag, declaredMethod);
             }
             declaredMethod.setAccessible(true);
@@ -224,8 +238,7 @@ public class InvokeTool {
     /**
      * @noinspection unchecked
      */
-    private static <T> T baseInvokeField(Class<?> clazz /* 类 */, Object instance /* 实例 */, String fieldName /* 字段名 */,
-                                         boolean isSetMode /* 是否为 set 模式 */, Object value /* 指定值 */) {
+    private static <T> T baseInvokeField(Class<?> clazz, Object instance, String fieldName, boolean isSetMode, Object value) {
         Field declaredField = null;
         if (clazz == null && instance == null) {
             throw new NullPointerException("[InvokeTool]: Class or instance must not is null, can't invoke field: " + fieldName);

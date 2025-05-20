@@ -29,8 +29,8 @@ import com.hchen.hooktool.hook.IHook;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import de.robv.android.xposed.IXposedHookZygoteInit;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
@@ -48,7 +48,7 @@ public abstract class HCBase extends CoreTool {
     public static XC_LoadPackage.LoadPackageParam loadPackageParam;
     public static final ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
     private static boolean isHookedApplication = false;
-    private static final List<HCBase> mIApplications = new ArrayList<>();
+    private static final Set<HCBase> applications = new HashSet<>();
     public static final int ON_LOAD_PACKAGE = 1;
     public static final int ON_ZYGOTE = 2;
     public static final int ON_APPLICATION = 3;
@@ -127,9 +127,7 @@ public abstract class HCBase extends CoreTool {
     final public HCBase onApplication() {
         try {
             if (isEnabled()) {
-                if (!mIApplications.contains(this))
-                    mIApplications.add(this);
-
+                applications.add(this);
                 initApplicationHook();
             }
         } catch (Throwable e) {
@@ -157,7 +155,7 @@ public abstract class HCBase extends CoreTool {
             @Override
             public void after() {
                 Context context = (Context) getArg(0);
-                mIApplications.forEach(iApplication -> {
+                applications.forEach(iApplication -> {
                     try {
                         iApplication.onApplication(context);
                     } catch (Throwable e) {

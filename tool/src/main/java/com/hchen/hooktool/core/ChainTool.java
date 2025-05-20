@@ -66,7 +66,7 @@ public class ChainTool {
      *
      * @param classPath 类
      */
-    public static ChainTool buildChain(String classPath) {
+    public static ChainTool buildChain(@NonNull String classPath) {
         return new ChainTool(findClass(classPath));
     }
 
@@ -76,7 +76,7 @@ public class ChainTool {
      * @param classPath   类
      * @param classLoader 类加载器
      */
-    public static ChainTool buildChain(String classPath, ClassLoader classLoader) {
+    public static ChainTool buildChain(@NonNull String classPath, ClassLoader classLoader) {
         return new ChainTool(findClass(classPath, classLoader));
     }
 
@@ -93,7 +93,7 @@ public class ChainTool {
     /**
      * 查找方法
      */
-    public ChainHook findMethod(String methodName, @NonNull Object... params) {
+    public ChainHook findMethod(@NonNull String methodName, @NonNull Object... params) {
         chainData = new ChainData(methodName, params);
         return chainHook;
     }
@@ -101,7 +101,7 @@ public class ChainTool {
     /**
      * 查找方法，如果存在
      */
-    public ChainHook findMethodIfExist(String methodName, @NonNull Object... params) {
+    public ChainHook findMethodIfExist(@NonNull String methodName, @NonNull Object... params) {
         chainData = new ChainData(methodName, params);
         chainData.setIfExist(true);
         return chainHook;
@@ -110,7 +110,7 @@ public class ChainTool {
     /**
      * 查找全部指定名称的方法
      */
-    public ChainHook findAllMethod(String methodName) {
+    public ChainHook findAllMethod(@NonNull String methodName) {
         chainData = new ChainData(methodName);
         return chainHook;
     }
