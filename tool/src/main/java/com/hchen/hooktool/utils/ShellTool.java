@@ -608,10 +608,10 @@ public class ShellTool {
         private void onBrokenPip() {
             if (iExecListeners.isEmpty()) return;
 
-            Object[] finalVar = createFinalData();
+            Object[] finalData = createFinalData();
             for (IExecListener iExecListener : iExecListeners) {
                 try {
-                    iExecListener.brokenPip((String) finalVar[0], toArray((List<String>) finalVar[3]), "Incorrect shell code causing pipeline rupture!");
+                    iExecListener.brokenPip((String) finalData[0], toArray((List<String>) finalData[3]), "Incorrect shell code causing pipeline rupture!");
                 } catch (Throwable e) {
                     AndroidLog.logE(TAG, "Error during callback!", e);
                 }
