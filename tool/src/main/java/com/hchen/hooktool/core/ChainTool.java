@@ -30,7 +30,6 @@ import com.hchen.hooktool.log.LogExpand;
 import com.hchen.hooktool.log.XposedLog;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.util.Objects;
 
@@ -87,7 +86,7 @@ public class ChainTool {
      * @param clazz 类
      */
     public static ChainTool buildChain(@NonNull Class<?> clazz) {
-        Objects.requireNonNull(clazz, "[ChainTool]: Clazz must not is null!");
+        Objects.requireNonNull(clazz, "[ChainTool]: Class must not is null!");
         return new ChainTool(clazz);
     }
 
@@ -213,12 +212,11 @@ public class ChainTool {
     }
 
     private boolean shouldHook() {
-        for (Member member : chainData.members) {
-            if (member == null) {
-                if (!chainData.ifExist)
-                    logW(LogExpand.getTag(), "There is an abnormal null object in the member list, skip hook: " + chainData);
-                return false;
-            }
+        if (chainData.members.length == 0) return false;
+        if (chainData.members[0] == null) {
+            if (!chainData.ifExist)
+                logW(LogExpand.getTag(), "There is an abnormal null object in the member list, skip hook: " + chainData);
+            return false;
         }
         return true;
     }

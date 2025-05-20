@@ -53,7 +53,7 @@ public class InvokeTool {
      * @param <T>        返回值
      * @return 方法执行后的返回值
      */
-    public static <T> T callMethod(Object instance, String methodName, Class<?>[] classes, Object... params) {
+    public static <T> T callMethod(@NonNull Object instance, @NonNull String methodName, @NonNull Class<?>[] classes, @NonNull Object... params) {
         return baseInvokeMethod(null, instance, methodName, classes, params);
     }
 
@@ -67,7 +67,7 @@ public class InvokeTool {
      * @param <T>        返回值
      * @return 方法执行后的返回值
      */
-    public static <T> T callStaticMethod(Class<?> clazz, String methodName, Class<?>[] classes, Object... params) {
+    public static <T> T callStaticMethod(@NonNull Class<?> clazz, @NonNull String methodName, @NonNull Class<?>[] classes, @NonNull Object... params) {
         return baseInvokeMethod(clazz, null, methodName, classes, params);
     }
 
@@ -81,7 +81,7 @@ public class InvokeTool {
      * @param <T>        返回值
      * @return 方法执行后的返回值
      */
-    public static <T> T callStaticMethod(String classPath, String methodName, Class<?>[] classes, Object... params) {
+    public static <T> T callStaticMethod(@NonNull String classPath, @NonNull String methodName, @NonNull Class<?>[] classes, @NonNull Object... params) {
         return baseInvokeMethod(findClass(classPath), null, methodName, classes, params);
     }
 
@@ -96,7 +96,7 @@ public class InvokeTool {
      * @param <T>         返回值
      * @return 方法执行后的返回值
      */
-    public static <T> T callStaticMethod(String classPath, ClassLoader classLoader, String methodName, Class<?>[] classes, Object... params) {
+    public static <T> T callStaticMethod(@NonNull String classPath, ClassLoader classLoader, @NonNull String methodName, @NonNull Class<?>[] classes, @NonNull Object... params) {
         return baseInvokeMethod(findClass(classPath, classLoader), null, methodName, classes, params);
     }
 
@@ -109,7 +109,7 @@ public class InvokeTool {
      * @param fieldName 字段名
      * @param value     要设置的值
      */
-    public static void setField(Object instance, String fieldName, Object value) {
+    public static void setField(@NonNull Object instance, @NonNull String fieldName, Object value) {
         baseInvokeField(null, instance, fieldName, true, value);
     }
 
@@ -120,7 +120,7 @@ public class InvokeTool {
      * @param fieldName 字段名
      * @param value     要设置的值
      */
-    public static void setStaticField(Class<?> clazz, String fieldName, Object value) {
+    public static void setStaticField(@NonNull Class<?> clazz, @NonNull String fieldName, Object value) {
         baseInvokeField(clazz, null, fieldName, true, value);
     }
 
@@ -131,7 +131,7 @@ public class InvokeTool {
      * @param fieldName 字段名
      * @param value     要设置的值
      */
-    public static void setStaticField(String classPath, String fieldName, Object value) {
+    public static void setStaticField(@NonNull String classPath, @NonNull String fieldName, Object value) {
         baseInvokeField(findClass(classPath), null, fieldName, true, value);
     }
 
@@ -143,7 +143,7 @@ public class InvokeTool {
      * @param fieldName   字段名
      * @param value       要设置的值
      */
-    public static void setStaticField(String classPath, ClassLoader classLoader, String fieldName, Object value) {
+    public static void setStaticField(@NonNull String classPath, ClassLoader classLoader, @NonNull String fieldName, Object value) {
         baseInvokeField(findClass(classPath, classLoader), null, fieldName, true, value);
     }
 
@@ -155,7 +155,7 @@ public class InvokeTool {
      * @param <T>       返回值类型
      * @return 字段的值
      */
-    public static <T> T getField(Object instance, String fieldName) {
+    public static <T> T getField(@NonNull Object instance, @NonNull String fieldName) {
         return baseInvokeField(null, instance, fieldName, false, null);
     }
 
@@ -167,7 +167,7 @@ public class InvokeTool {
      * @param <T>       返回值类型
      * @return 字段的值
      */
-    public static <T> T getStaticField(Class<?> clazz, String fieldName) {
+    public static <T> T getStaticField(@NonNull Class<?> clazz, @NonNull String fieldName) {
         return baseInvokeField(clazz, null, fieldName, false, null);
     }
 
@@ -179,7 +179,7 @@ public class InvokeTool {
      * @param <T>       返回值类型
      * @return 字段的值
      */
-    public static <T> T getStaticField(String classPath, String fieldName) {
+    public static <T> T getStaticField(@NonNull String classPath, @NonNull String fieldName) {
         return baseInvokeField(findClass(classPath), null, fieldName, false, null);
     }
 
@@ -192,7 +192,7 @@ public class InvokeTool {
      * @param <T>         返回值类型
      * @return 字段的值
      */
-    public static <T> T getStaticField(String classPath, ClassLoader classLoader, String fieldName) {
+    public static <T> T getStaticField(@NonNull String classPath, ClassLoader classLoader, @NonNull String fieldName) {
         return baseInvokeField(findClass(classPath, classLoader), null, fieldName, false, null);
     }
 
@@ -272,7 +272,7 @@ public class InvokeTool {
      * @return 找到的类
      */
     @NonNull
-    public static Class<?> findClass(String classPath) {
+    public static Class<?> findClass(@NonNull String classPath) {
         return findClass(classPath, null);
     }
 
@@ -285,7 +285,7 @@ public class InvokeTool {
      * @return 找到的类
      */
     @NonNull
-    public static Class<?> findClass(String classPath, ClassLoader classLoader) {
+    public static Class<?> findClass(@NonNull String classPath, ClassLoader classLoader) {
         try {
             if (classLoader == null)
                 classLoader = ClassLoader.getSystemClassLoader();

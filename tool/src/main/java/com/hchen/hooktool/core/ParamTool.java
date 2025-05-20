@@ -182,14 +182,14 @@ public class ParamTool {
     /**
      * 调用本实例的方法
      */
-    final public Object callThisMethod(String methodName, @NonNull Object... params) {
+    final public Object callThisMethod(@NonNull String methodName, @NonNull Object... params) {
         return callMethod(param.thisObject, methodName, params);
     }
 
     /**
      * 调用本实例的方法，如果存在
      */
-    final public Object callThisMethodIfExists(String methodName, @NonNull Object... params) {
+    final public Object callThisMethodIfExists(@NonNull String methodName, @NonNull Object... params) {
         return callMethodIfExists(param.thisObject, methodName, params);
     }
 
@@ -203,14 +203,14 @@ public class ParamTool {
     /**
      * 获取本实例的字段
      */
-    final public Object getThisField(String fieldName) {
+    final public Object getThisField(@NonNull String fieldName) {
         return getField(param.thisObject, fieldName);
     }
 
     /**
      * 获取本实例的字段，如果存在
      */
-    final public Object getThisFieldIfExists(String fieldName) {
+    final public Object getThisFieldIfExists(@NonNull String fieldName) {
         return getFieldIfExists(param.thisObject, fieldName);
     }
 
@@ -224,14 +224,14 @@ public class ParamTool {
     /**
      * 设置本实例的字段
      */
-    final public void setThisField(String fieldName, Object value) {
+    final public void setThisField(@NonNull String fieldName, Object value) {
         setField(param.thisObject, fieldName, value);
     }
 
     /**
      * 设置本实例的字段，如果存在
      */
-    final public void setThisFieldIfExists(String fieldName, Object value) {
+    final public void setThisFieldIfExists(@NonNull String fieldName, Object value) {
         setFieldIfExists(param.thisObject, fieldName, value);
     }
 
@@ -245,35 +245,35 @@ public class ParamTool {
     /**
      * 将字段附加到本实例
      */
-    final public Object setThisAdditionalInstanceField(String key, Object value) {
+    final public Object setThisAdditionalInstanceField(@NonNull String key, Object value) {
         return setAdditionalInstanceField(param.thisObject, key, value);
     }
 
     /**
      * 获取附加的字段值
      */
-    final public Object getThisAdditionalInstanceField(String key) {
+    final public Object getThisAdditionalInstanceField(@NonNull String key) {
         return getAdditionalInstanceField(param.thisObject, key);
     }
 
     /**
      * 删除附加的字段
      */
-    final public Object removeThisAdditionalInstanceField(String key) {
+    final public Object removeThisAdditionalInstanceField(@NonNull String key) {
         return removeAdditionalInstanceField(param.thisObject, key);
     }
 
     /**
      * 调用本实例的静态方法
      */
-    final public Object callThisStaticMethod(String methodName, @NonNull Object... params) {
+    final public Object callThisStaticMethod(@NonNull String methodName, @NonNull Object... params) {
         return callStaticMethod(param.method.getDeclaringClass(), methodName, params);
     }
 
     /**
      * 调用本实例的静态方法，如果存在
      */
-    final public Object callThisStaticMethodIfExists(String methodName, @NonNull Object... params) {
+    final public Object callThisStaticMethodIfExists(@NonNull String methodName, @NonNull Object... params) {
         return callStaticMethodIfExists(param.method.getDeclaringClass(), methodName, params);
     }
 
@@ -287,14 +287,14 @@ public class ParamTool {
     /**
      * 获取本实例的静态字段
      */
-    final public Object getThisStaticField(String fieldName) {
+    final public Object getThisStaticField(@NonNull String fieldName) {
         return getStaticField(param.method.getDeclaringClass(), fieldName);
     }
 
     /**
      * 获取本实例的静态字段，如果存在
      */
-    final public Object getThisStaticFieldIfExists(String fieldName) {
+    final public Object getThisStaticFieldIfExists(@NonNull String fieldName) {
         return getStaticFieldIfExists(param.method.getDeclaringClass(), fieldName);
     }
 
@@ -308,14 +308,14 @@ public class ParamTool {
     /**
      * 设置本实例的静态字段
      */
-    final public void setThisStaticField(String fieldName, Object value) {
+    final public void setThisStaticField(@NonNull String fieldName, Object value) {
         setStaticField(param.method.getDeclaringClass(), fieldName, value);
     }
 
     /**
      * 设置本实例的静态字段，如果存在
      */
-    final public void setThisStaticFieldIfExists(String fieldName, Object value) {
+    final public void setThisStaticFieldIfExists(@NonNull String fieldName, Object value) {
         setStaticFieldIfExists(param.method.getDeclaringClass(), fieldName, value);
     }
 
@@ -329,35 +329,35 @@ public class ParamTool {
     /**
      * 将静态字段附加到本实例
      */
-    final public Object setThisStaticAdditionalInstanceField(String key, Object value) {
+    final public Object setThisStaticAdditionalInstanceField(@NonNull String key, Object value) {
         return setAdditionalStaticField(param.method.getDeclaringClass(), key, value);
     }
 
     /**
      * 获取附加的静态字段值
      */
-    final public Object getThisStaticAdditionalInstanceField(String key) {
+    final public Object getThisStaticAdditionalInstanceField(@NonNull String key) {
         return getAdditionalStaticField(param.method.getDeclaringClass(), key);
     }
 
     /**
      * 删除附加的静态字段
      */
-    final public Object removeThisStaticAdditionalInstanceField(String key) {
+    final public Object removeThisStaticAdditionalInstanceField(@NonNull String key) {
         return removeAdditionalStaticField(param.method.getDeclaringClass(), key);
     }
 
     /**
      * 是否存在指定方法
      */
-    final public boolean existsThisMethod(String methodName, @NonNull Object... params) {
+    final public boolean existsThisMethod(@NonNull String methodName, @NonNull Object... params) {
         return existsMethod(param.method.getDeclaringClass(), methodName, params);
     }
 
     /**
      * 是否存在指定方法名的方法
      */
-    final public boolean existsThisAnyMethod(String methodName) {
+    final public boolean existsThisAnyMethod(@NonNull String methodName) {
         return existsAnyMethod(param.method.getDeclaringClass(), methodName);
     }
 
@@ -371,7 +371,7 @@ public class ParamTool {
     /**
      * 是否存在指定字段
      */
-    final public boolean existsThisField(String fieldName) {
+    final public boolean existsThisField(@NonNull String fieldName) {
         return existsField(param.method.getDeclaringClass(), fieldName);
     }
 

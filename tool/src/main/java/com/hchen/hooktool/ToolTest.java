@@ -149,28 +149,28 @@ class ToolTest extends HCBase {
         shellTool.cmd("echo hello").async();
         shellTool.cmd("echo world").async(new IExecListener() {
             @Override
-            public void output(String command, @NonNull String[] outputs, String exitCode) {
+            public void output(@NonNull String command, @NonNull String[] outputs, @NonNull String exitCode) {
                 IExecListener.super.output(command, outputs, exitCode);
             }
         });
         shellTool.addExecListener(new IExecListener() {
             @Override
-            public void output(String command, @NonNull String[] outputs, String exitCode) {
+            public void output(@NonNull String command, @NonNull String[] outputs, @NonNull String exitCode) {
                 IExecListener.super.output(command, outputs, exitCode);
             }
 
             @Override
-            public void error(String command, @NonNull String[] errors, String exitCode) {
+            public void error(@NonNull String command, @NonNull String[] errors, @NonNull String exitCode) {
                 IExecListener.super.error(command, errors, exitCode);
             }
 
             @Override
-            public void rootResult(String exitCode) {
+            public void rootResult(@NonNull String exitCode) {
                 IExecListener.super.rootResult(exitCode);
             }
 
             @Override
-            public void brokenPip(String command, @NonNull String[] errors, String reason) {
+            public void brokenPip(@NonNull String command, @NonNull String[] errors, @NonNull String reason) {
                 IExecListener.super.brokenPip(command, errors, reason);
             }
         });

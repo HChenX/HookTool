@@ -72,7 +72,7 @@ public class CoreTool extends XposedLog {
      *
      * @param classPath 类引用路径
      */
-    public static boolean existsClass(String classPath) {
+    public static boolean existsClass(@NonNull String classPath) {
         return existsClass(classPath, HCData.getClassLoader());
     }
 
@@ -82,7 +82,7 @@ public class CoreTool extends XposedLog {
      * @param classPath   类引用路径
      * @param classLoader 类加载器
      */
-    public static boolean existsClass(String classPath, ClassLoader classLoader) {
+    public static boolean existsClass(@NonNull String classPath, ClassLoader classLoader) {
         return doTry(
             () -> Objects.nonNull(XposedHelpers.findClassIfExists(classPath, classLoader))
         ).orElse(false);
@@ -93,7 +93,7 @@ public class CoreTool extends XposedLog {
      *
      * @param classPath 类引用路径
      */
-    public static Class<?> findClass(String classPath) {
+    public static Class<?> findClass(@NonNull String classPath) {
         return findClass(classPath, HCData.getClassLoader());
     }
 
@@ -103,7 +103,7 @@ public class CoreTool extends XposedLog {
      * @param classPath   类引用路径
      * @param classLoader 类加载器
      */
-    public static Class<?> findClass(String classPath, ClassLoader classLoader) {
+    public static Class<?> findClass(@NonNull String classPath, ClassLoader classLoader) {
         return XposedHelpers.findClass(classPath, classLoader);
     }
 
@@ -113,7 +113,7 @@ public class CoreTool extends XposedLog {
      * @param classPath 类引用路径
      */
     @Nullable
-    public static Class<?> findClassIfExists(String classPath) {
+    public static Class<?> findClassIfExists(@NonNull String classPath) {
         return findClassIfExists(classPath, HCData.getClassLoader());
     }
 
@@ -124,7 +124,7 @@ public class CoreTool extends XposedLog {
      * @param classLoader 类加载器
      */
     @Nullable
-    public static Class<?> findClassIfExists(String classPath, ClassLoader classLoader) {
+    public static Class<?> findClassIfExists(@NonNull String classPath, ClassLoader classLoader) {
         return doTry(
             () -> XposedHelpers.findClassIfExists(classPath, classLoader)
         ).get();
@@ -139,7 +139,7 @@ public class CoreTool extends XposedLog {
      * @param methodName 方法名
      * @param params     方法参数
      */
-    public static boolean existsMethod(String classPath, String methodName, @NonNull Object... params) {
+    public static boolean existsMethod(@NonNull String classPath, @NonNull String methodName, @NonNull Object... params) {
         return existsMethod(classPath, HCData.getClassLoader(), methodName, params);
     }
 
@@ -151,7 +151,7 @@ public class CoreTool extends XposedLog {
      * @param methodName  方法名
      * @param params      方法参数
      */
-    public static boolean existsMethod(String classPath, ClassLoader classLoader, String methodName, @NonNull Object... params) {
+    public static boolean existsMethod(@NonNull String classPath, ClassLoader classLoader, @NonNull String methodName, @NonNull Object... params) {
         return doTry(
             () -> Objects.nonNull(XposedHelpers.findMethodExactIfExists(classPath, classLoader, methodName, params))
         ).orElse(false);
@@ -164,7 +164,7 @@ public class CoreTool extends XposedLog {
      * @param methodName 方法名
      * @param params     方法参数
      */
-    public static boolean existsMethod(@NonNull Class<?> clazz, String methodName, @NonNull Object... params) {
+    public static boolean existsMethod(@NonNull Class<?> clazz, @NonNull String methodName, @NonNull Object... params) {
         return doTry(
             () -> Objects.nonNull(XposedHelpers.findMethodExactIfExists(clazz, methodName, params))
         ).orElse(false);
@@ -176,7 +176,7 @@ public class CoreTool extends XposedLog {
      * @param classPath  类引用路径
      * @param methodName 方法名
      */
-    public static boolean existsAnyMethod(String classPath, String methodName) {
+    public static boolean existsAnyMethod(@NonNull String classPath, @NonNull String methodName) {
         return existsAnyMethod(classPath, HCData.getClassLoader(), methodName);
     }
 
@@ -187,7 +187,7 @@ public class CoreTool extends XposedLog {
      * @param classLoader 类加载器
      * @param methodName  方法名
      */
-    public static boolean existsAnyMethod(String classPath, ClassLoader classLoader, String methodName) {
+    public static boolean existsAnyMethod(@NonNull String classPath, ClassLoader classLoader, @NonNull String methodName) {
         return existsAnyMethod(findClass(classPath, classLoader), methodName);
     }
 
@@ -197,7 +197,7 @@ public class CoreTool extends XposedLog {
      * @param clazz      类
      * @param methodName 方法名
      */
-    public static boolean existsAnyMethod(@NonNull Class<?> clazz, String methodName) {
+    public static boolean existsAnyMethod(@NonNull Class<?> clazz, @NonNull String methodName) {
         return doTry(() ->
             Arrays.stream(clazz.getDeclaredMethods())
                 .anyMatch(method -> Objects.equals(method.getName(), methodName))
@@ -211,7 +211,7 @@ public class CoreTool extends XposedLog {
      * @param methodName 方法名
      * @param params     方法参数
      */
-    public static Method findMethod(String classPath, String methodName, @NonNull Object... params) {
+    public static Method findMethod(@NonNull String classPath, @NonNull String methodName, @NonNull Object... params) {
         return findMethod(classPath, HCData.getClassLoader(), methodName, params);
     }
 
@@ -223,7 +223,7 @@ public class CoreTool extends XposedLog {
      * @param methodName  方法名
      * @param params      方法参数
      */
-    public static Method findMethod(String classPath, ClassLoader classLoader, String methodName, @NonNull Object... params) {
+    public static Method findMethod(@NonNull String classPath, ClassLoader classLoader, @NonNull String methodName, @NonNull Object... params) {
         return XposedHelpers.findMethodExact(classPath, classLoader, methodName, params);
     }
 
@@ -234,7 +234,7 @@ public class CoreTool extends XposedLog {
      * @param methodName 方法名
      * @param params     方法参数
      */
-    public static Method findMethod(@NonNull Class<?> clazz, String methodName, @NonNull Object... params) {
+    public static Method findMethod(@NonNull Class<?> clazz, @NonNull String methodName, @NonNull Object... params) {
         return XposedHelpers.findMethodExact(clazz, methodName, params);
     }
 
@@ -243,7 +243,7 @@ public class CoreTool extends XposedLog {
      *
      * @param classPath 类引用路径
      */
-    public static MethodHelper findMethodPro(String classPath) {
+    public static MethodHelper findMethodPro(@NonNull String classPath) {
         return findMethodPro(classPath, HCData.getClassLoader());
     }
 
@@ -253,7 +253,7 @@ public class CoreTool extends XposedLog {
      * @param classPath   类引用路径
      * @param classLoader 类加载器
      */
-    public static MethodHelper findMethodPro(String classPath, ClassLoader classLoader) {
+    public static MethodHelper findMethodPro(@NonNull String classPath, ClassLoader classLoader) {
         return findMethodPro(findClass(classPath, classLoader));
     }
 
@@ -274,7 +274,7 @@ public class CoreTool extends XposedLog {
      * @param params     方法参数
      */
     @Nullable
-    public static Method findMethodIfExists(String classPath, String methodName, @NonNull Object... params) {
+    public static Method findMethodIfExists(@NonNull String classPath, @NonNull String methodName, @NonNull Object... params) {
         return findMethodIfExists(classPath, HCData.getClassLoader(), methodName, params);
     }
 
@@ -287,7 +287,7 @@ public class CoreTool extends XposedLog {
      * @param params      方法参数
      */
     @Nullable
-    public static Method findMethodIfExists(String classPath, ClassLoader classLoader, String methodName, @NonNull Object... params) {
+    public static Method findMethodIfExists(@NonNull String classPath, ClassLoader classLoader, @NonNull String methodName, @NonNull Object... params) {
         return doTry(
             () -> XposedHelpers.findMethodExactIfExists(classPath, classLoader, methodName, params)
         ).get();
@@ -301,7 +301,7 @@ public class CoreTool extends XposedLog {
      * @param params     方法参数
      */
     @Nullable
-    public static Method findMethodIfExists(@NonNull Class<?> clazz, String methodName, @NonNull Object... params) {
+    public static Method findMethodIfExists(@NonNull Class<?> clazz, @NonNull String methodName, @NonNull Object... params) {
         return doTry(
             () -> XposedHelpers.findMethodExactIfExists(clazz, methodName, params)
         ).get();
@@ -313,7 +313,7 @@ public class CoreTool extends XposedLog {
      * @param classPath  类引用路径
      * @param methodName 方法名
      */
-    public static Method[] findAllMethod(String classPath, String methodName) {
+    public static Method[] findAllMethod(@NonNull String classPath, @NonNull String methodName) {
         return findAllMethod(classPath, HCData.getClassLoader(), methodName);
     }
 
@@ -324,7 +324,7 @@ public class CoreTool extends XposedLog {
      * @param classLoader 类加载器
      * @param methodName  方法名
      */
-    public static Method[] findAllMethod(String classPath, ClassLoader classLoader, String methodName) {
+    public static Method[] findAllMethod(@NonNull String classPath, ClassLoader classLoader, @NonNull String methodName) {
         return findAllMethod(findClass(classPath, classLoader), methodName);
     }
 
@@ -334,7 +334,7 @@ public class CoreTool extends XposedLog {
      * @param clazz      类
      * @param methodName 方法名
      */
-    public static Method[] findAllMethod(@NonNull Class<?> clazz, String methodName) {
+    public static Method[] findAllMethod(@NonNull Class<?> clazz, @NonNull String methodName) {
         return Arrays.stream(clazz.getDeclaredMethods())
             .filter(method -> Objects.equals(method.getName(), methodName))
             .toArray(Method[]::new);
@@ -348,7 +348,7 @@ public class CoreTool extends XposedLog {
      * @param classPath 类引用路径
      * @param params    构造函数参数
      */
-    public static boolean existsConstructor(String classPath, @NonNull Object... params) {
+    public static boolean existsConstructor(@NonNull String classPath, @NonNull Object... params) {
         return existsConstructor(classPath, HCData.getClassLoader(), params);
     }
 
@@ -359,7 +359,7 @@ public class CoreTool extends XposedLog {
      * @param classLoader 类加载器
      * @param params      构造函数参数
      */
-    public static boolean existsConstructor(String classPath, ClassLoader classLoader, @NonNull Object... params) {
+    public static boolean existsConstructor(@NonNull String classPath, ClassLoader classLoader, @NonNull Object... params) {
         return doTry(
             () -> Objects.nonNull(XposedHelpers.findConstructorExactIfExists(classPath, classLoader, params))
         ).orElse(false);
@@ -383,7 +383,7 @@ public class CoreTool extends XposedLog {
      * @param classPath 类引用路径
      * @param params    构造函数参数
      */
-    public static Constructor<?> findConstructor(String classPath, @NonNull Object... params) {
+    public static Constructor<?> findConstructor(@NonNull String classPath, @NonNull Object... params) {
         return findConstructor(classPath, HCData.getClassLoader(), params);
     }
 
@@ -394,7 +394,7 @@ public class CoreTool extends XposedLog {
      * @param classLoader 类加载器
      * @param params      构造函数参数
      */
-    public static Constructor<?> findConstructor(String classPath, ClassLoader classLoader, @NonNull Object... params) {
+    public static Constructor<?> findConstructor(@NonNull String classPath, ClassLoader classLoader, @NonNull Object... params) {
         return XposedHelpers.findConstructorExact(classPath, classLoader, params);
     }
 
@@ -413,7 +413,7 @@ public class CoreTool extends XposedLog {
      *
      * @param classPath 类路径
      */
-    public static ConstructorHelper findConstructorPro(String classPath) {
+    public static ConstructorHelper findConstructorPro(@NonNull String classPath) {
         return findConstructorPro(classPath, HCData.getClassLoader());
     }
 
@@ -424,7 +424,7 @@ public class CoreTool extends XposedLog {
      * @param classPath   类路径
      * @param classLoader 类加载器
      */
-    public static ConstructorHelper findConstructorPro(String classPath, ClassLoader classLoader) {
+    public static ConstructorHelper findConstructorPro(@NonNull String classPath, ClassLoader classLoader) {
         return findConstructorPro(findClass(classPath, classLoader));
     }
 
@@ -444,7 +444,7 @@ public class CoreTool extends XposedLog {
      * @param params    构造函数的参数列表
      */
     @Nullable
-    public static Constructor<?> findConstructorIfExists(String classPath, @NonNull Object... params) {
+    public static Constructor<?> findConstructorIfExists(@NonNull String classPath, @NonNull Object... params) {
         return findConstructorIfExists(classPath, HCData.getClassLoader(), params);
     }
 
@@ -456,7 +456,7 @@ public class CoreTool extends XposedLog {
      * @param params      构造函数的参数列表
      */
     @Nullable
-    public static Constructor<?> findConstructorIfExists(String classPath, ClassLoader classLoader, @NonNull Object... params) {
+    public static Constructor<?> findConstructorIfExists(@NonNull String classPath, ClassLoader classLoader, @NonNull Object... params) {
         return doTry(
             () -> XposedHelpers.findConstructorExactIfExists(classPath, classLoader, params)
         ).get();
@@ -480,7 +480,7 @@ public class CoreTool extends XposedLog {
      *
      * @param classPath 类引用路径
      */
-    public static Constructor<?>[] findAllConstructor(String classPath) {
+    public static Constructor<?>[] findAllConstructor(@NonNull String classPath) {
         return findAllConstructor(classPath, HCData.getClassLoader());
     }
 
@@ -490,7 +490,7 @@ public class CoreTool extends XposedLog {
      * @param classPath   类引用路径
      * @param classLoader 类加载器
      */
-    public static Constructor<?>[] findAllConstructor(String classPath, ClassLoader classLoader) {
+    public static Constructor<?>[] findAllConstructor(@NonNull String classPath, ClassLoader classLoader) {
         return findAllConstructor(findClass(classPath, classLoader));
     }
 
@@ -511,7 +511,7 @@ public class CoreTool extends XposedLog {
      * @param classPath 类引用路径
      * @param fieldName 字段名
      */
-    public static boolean existsField(String classPath, String fieldName) {
+    public static boolean existsField(@NonNull String classPath, @NonNull String fieldName) {
         return existsField(classPath, HCData.getClassLoader(), fieldName);
     }
 
@@ -522,7 +522,7 @@ public class CoreTool extends XposedLog {
      * @param classLoader 类加载器
      * @param fieldName   字段名
      */
-    public static boolean existsField(String classPath, ClassLoader classLoader, String fieldName) {
+    public static boolean existsField(@NonNull String classPath, ClassLoader classLoader, @NonNull String fieldName) {
         return doTry(
             () -> existsField(findClass(classPath, classLoader), fieldName)
         ).orElse(false);
@@ -534,7 +534,7 @@ public class CoreTool extends XposedLog {
      * @param clazz     类
      * @param fieldName 字段名
      */
-    public static boolean existsField(@NonNull Class<?> clazz, String fieldName) {
+    public static boolean existsField(@NonNull Class<?> clazz, @NonNull String fieldName) {
         return doTry(
             () -> Objects.nonNull(XposedHelpers.findFieldIfExists(clazz, fieldName))
         ).orElse(false);
@@ -546,7 +546,7 @@ public class CoreTool extends XposedLog {
      * @param classPath 类引用路径
      * @param fieldName 字段名
      */
-    public static Field findField(String classPath, String fieldName) {
+    public static Field findField(@NonNull String classPath, @NonNull String fieldName) {
         return findField(classPath, HCData.getClassLoader(), fieldName);
     }
 
@@ -557,7 +557,7 @@ public class CoreTool extends XposedLog {
      * @param classLoader 类加载器
      * @param fieldName   字段名
      */
-    public static Field findField(String classPath, ClassLoader classLoader, String fieldName) {
+    public static Field findField(@NonNull String classPath, ClassLoader classLoader, @NonNull String fieldName) {
         return findField(findClass(classPath, classLoader), fieldName);
     }
 
@@ -567,7 +567,7 @@ public class CoreTool extends XposedLog {
      * @param clazz     类
      * @param fieldName 字段名
      */
-    public static Field findField(@NonNull Class<?> clazz, String fieldName) {
+    public static Field findField(@NonNull Class<?> clazz, @NonNull String fieldName) {
         return XposedHelpers.findField(clazz, fieldName);
     }
 
@@ -578,7 +578,7 @@ public class CoreTool extends XposedLog {
      * @param fieldName 字段名
      */
     @Nullable
-    public static Field findFieldIfExists(String classPath, String fieldName) {
+    public static Field findFieldIfExists(@NonNull String classPath, @NonNull String fieldName) {
         return findFieldIfExists(classPath, HCData.getClassLoader(), fieldName);
     }
 
@@ -590,7 +590,7 @@ public class CoreTool extends XposedLog {
      * @param fieldName   字段名
      */
     @Nullable
-    public static Field findFieldIfExists(String classPath, ClassLoader classLoader, String fieldName) {
+    public static Field findFieldIfExists(@NonNull String classPath, ClassLoader classLoader, @NonNull String fieldName) {
         return doTry(
             () -> findFieldIfExists(findClass(classPath, classLoader), fieldName)
         ).get();
@@ -603,7 +603,7 @@ public class CoreTool extends XposedLog {
      * @param fieldName 字段名
      */
     @Nullable
-    public static Field findFieldIfExists(@NonNull Class<?> clazz, String fieldName) {
+    public static Field findFieldIfExists(@NonNull Class<?> clazz, @NonNull String fieldName) {
         return doTry(
             () -> XposedHelpers.findFieldIfExists(clazz, fieldName)
         ).get();
@@ -618,7 +618,7 @@ public class CoreTool extends XposedLog {
      * @param methodName 方法名
      * @param params     方法参数列表
      */
-    public static XC_MethodHook.Unhook hookMethod(String classPath, String methodName, @NonNull Object... params) {
+    public static XC_MethodHook.Unhook hookMethod(@NonNull String classPath, @NonNull String methodName, @NonNull Object... params) {
         return hookMethod(classPath, HCData.getClassLoader(), methodName, params);
     }
 
@@ -630,7 +630,7 @@ public class CoreTool extends XposedLog {
      * @param methodName  方法名
      * @param params      方法参数列表
      */
-    public static XC_MethodHook.Unhook hookMethod(String classPath, ClassLoader classLoader, String methodName, @NonNull Object... params) {
+    public static XC_MethodHook.Unhook hookMethod(@NonNull String classPath, ClassLoader classLoader, @NonNull String methodName, @NonNull Object... params) {
         return hookMethod(findClass(classPath, classLoader), methodName, params);
     }
 
@@ -641,7 +641,7 @@ public class CoreTool extends XposedLog {
      * @param methodName 方法名
      * @param params     方法参数列表
      */
-    public static XC_MethodHook.Unhook hookMethod(@NonNull Class<?> clazz, String methodName, @NonNull Object... params) {
+    public static XC_MethodHook.Unhook hookMethod(@NonNull Class<?> clazz, @NonNull String methodName, @NonNull Object... params) {
         return hook(findMethod(clazz, methodName, filterParams(params)), filterIHook(params));
     }
 
@@ -653,7 +653,7 @@ public class CoreTool extends XposedLog {
      * @param params     方法参数列表
      */
     @Nullable
-    public static XC_MethodHook.Unhook hookMethodIfExists(String classPath, String methodName, @NonNull Object... params) {
+    public static XC_MethodHook.Unhook hookMethodIfExists(@NonNull String classPath, @NonNull String methodName, @NonNull Object... params) {
         return hookMethod(classPath, HCData.getClassLoader(), methodName, params);
     }
 
@@ -666,7 +666,7 @@ public class CoreTool extends XposedLog {
      * @param params      方法参数列表
      */
     @Nullable
-    public static XC_MethodHook.Unhook hookMethodIfExists(String classPath, ClassLoader classLoader, String methodName, @NonNull Object... params) {
+    public static XC_MethodHook.Unhook hookMethodIfExists(@NonNull String classPath, ClassLoader classLoader, @NonNull String methodName, @NonNull Object... params) {
         return doTry(
             () -> hookMethod(findClass(classPath, classLoader), methodName, params)
         ).get();
@@ -680,7 +680,7 @@ public class CoreTool extends XposedLog {
      * @param params     方法参数列表
      */
     @Nullable
-    public static XC_MethodHook.Unhook hookMethodIfExists(@NonNull Class<?> clazz, String methodName, @NonNull Object... params) {
+    public static XC_MethodHook.Unhook hookMethodIfExists(@NonNull Class<?> clazz, @NonNull String methodName, @NonNull Object... params) {
         return doTry(
             () -> hook(findMethod(clazz, methodName, filterParams(params)), filterIHook(params))
         ).get();
@@ -693,7 +693,7 @@ public class CoreTool extends XposedLog {
      * @param methodName 方法名
      * @param iHook      Hook 回调接口
      */
-    public static XC_MethodHook.Unhook[] hookAllMethod(String classPath, String methodName, @NonNull IHook iHook) {
+    public static XC_MethodHook.Unhook[] hookAllMethod(@NonNull String classPath, @NonNull String methodName, @NonNull IHook iHook) {
         return hookAllMethod(classPath, HCData.getClassLoader(), methodName, iHook);
     }
 
@@ -705,7 +705,7 @@ public class CoreTool extends XposedLog {
      * @param methodName  方法名
      * @param iHook       Hook 回调接口
      */
-    public static XC_MethodHook.Unhook[] hookAllMethod(String classPath, ClassLoader classLoader, String methodName, @NonNull IHook iHook) {
+    public static XC_MethodHook.Unhook[] hookAllMethod(@NonNull String classPath, ClassLoader classLoader, @NonNull String methodName, @NonNull IHook iHook) {
         return hookAllMethod(findClass(classPath, classLoader), methodName, iHook);
     }
 
@@ -716,7 +716,7 @@ public class CoreTool extends XposedLog {
      * @param methodName 方法名
      * @param iHook      Hook 回调接口
      */
-    public static XC_MethodHook.Unhook[] hookAllMethod(@NonNull Class<?> clazz, String methodName, @NonNull IHook iHook) {
+    public static XC_MethodHook.Unhook[] hookAllMethod(@NonNull Class<?> clazz, @NonNull String methodName, @NonNull IHook iHook) {
         return hookAll(findAllMethod(clazz, methodName), iHook);
     }
 
@@ -726,7 +726,7 @@ public class CoreTool extends XposedLog {
      * @param classPath 类引用路径
      * @param params    构造函数的参数列表
      */
-    public static XC_MethodHook.Unhook hookConstructor(String classPath, @NonNull Object... params) {
+    public static XC_MethodHook.Unhook hookConstructor(@NonNull String classPath, @NonNull Object... params) {
         return hookConstructor(classPath, HCData.getClassLoader(), params);
     }
 
@@ -737,7 +737,7 @@ public class CoreTool extends XposedLog {
      * @param classLoader 类加载器
      * @param params      构造函数的参数列表
      */
-    public static XC_MethodHook.Unhook hookConstructor(String classPath, ClassLoader classLoader, @NonNull Object... params) {
+    public static XC_MethodHook.Unhook hookConstructor(@NonNull String classPath, ClassLoader classLoader, @NonNull Object... params) {
         return hookConstructor(findClass(classPath, classLoader), params);
     }
 
@@ -758,7 +758,7 @@ public class CoreTool extends XposedLog {
      * @param params    构造函数的参数列表
      */
     @Nullable
-    public static XC_MethodHook.Unhook hookConstructorIfExists(String classPath, @NonNull Object... params) {
+    public static XC_MethodHook.Unhook hookConstructorIfExists(@NonNull String classPath, @NonNull Object... params) {
         return hookConstructorIfExists(classPath, HCData.getClassLoader(), params);
     }
 
@@ -770,7 +770,7 @@ public class CoreTool extends XposedLog {
      * @param params      构造函数的参数列表
      */
     @Nullable
-    public static XC_MethodHook.Unhook hookConstructorIfExists(String classPath, ClassLoader classLoader, @NonNull Object... params) {
+    public static XC_MethodHook.Unhook hookConstructorIfExists(@NonNull String classPath, ClassLoader classLoader, @NonNull Object... params) {
         return doTry(
             () -> hookConstructorIfExists(findClass(classPath, classLoader), params)
         ).get();
@@ -795,7 +795,7 @@ public class CoreTool extends XposedLog {
      * @param classPath 类引用路径
      * @param iHook     Hook 回调接口
      */
-    public static XC_MethodHook.Unhook[] hookAllConstructor(String classPath, @NonNull IHook iHook) {
+    public static XC_MethodHook.Unhook[] hookAllConstructor(@NonNull String classPath, @NonNull IHook iHook) {
         return hookAllConstructor(classPath, HCData.getClassLoader(), iHook);
     }
 
@@ -806,7 +806,7 @@ public class CoreTool extends XposedLog {
      * @param classLoader 类加载器
      * @param iHook       Hook 回调接口
      */
-    public static XC_MethodHook.Unhook[] hookAllConstructor(String classPath, ClassLoader classLoader, @NonNull IHook iHook) {
+    public static XC_MethodHook.Unhook[] hookAllConstructor(@NonNull String classPath, ClassLoader classLoader, @NonNull IHook iHook) {
         return hookAllConstructor(findClass(classPath, classLoader), iHook);
     }
 
@@ -926,7 +926,7 @@ public class CoreTool extends XposedLog {
      * @param methodName 方法名
      * @param params     方法参数列表
      */
-    public static Object callMethod(@NonNull Object instance, String methodName, @NonNull Object... params) {
+    public static Object callMethod(@NonNull Object instance, @NonNull String methodName, @NonNull Object... params) {
         return XposedHelpers.callMethod(instance, methodName, params);
     }
 
@@ -937,7 +937,7 @@ public class CoreTool extends XposedLog {
      * @param methodName 方法名
      * @param params     方法参数列表
      */
-    public static Object callMethodIfExists(@NonNull Object instance, String methodName, @NonNull Object... params) {
+    public static Object callMethodIfExists(@NonNull Object instance, @NonNull String methodName, @NonNull Object... params) {
         return doTry(
             () -> XposedHelpers.callMethod(instance, methodName, params)
         ).get();
@@ -966,7 +966,7 @@ public class CoreTool extends XposedLog {
      * @param instance  对象实例
      * @param fieldName 字段名
      */
-    public static Object getField(@NonNull Object instance, String fieldName) {
+    public static Object getField(@NonNull Object instance, @NonNull String fieldName) {
         return XposedHelpers.getObjectField(instance, fieldName);
     }
 
@@ -976,7 +976,7 @@ public class CoreTool extends XposedLog {
      * @param instance  对象实例
      * @param fieldName 字段名
      */
-    public static Object getFieldIfExists(@NonNull Object instance, String fieldName) {
+    public static Object getFieldIfExists(@NonNull Object instance, @NonNull String fieldName) {
         return doTry(
             () -> XposedHelpers.getObjectField(instance, fieldName)
         ).get();
@@ -1005,7 +1005,7 @@ public class CoreTool extends XposedLog {
      * @param fieldName 字段名
      * @param value     字段的新值
      */
-    public static void setField(@NonNull Object instance, String fieldName, Object value) {
+    public static void setField(@NonNull Object instance, @NonNull String fieldName, Object value) {
         XposedHelpers.setObjectField(instance, fieldName, value);
     }
 
@@ -1016,7 +1016,7 @@ public class CoreTool extends XposedLog {
      * @param fieldName 字段名
      * @param value     字段的新值
      */
-    public static void setFieldIfExists(@NonNull Object instance, String fieldName, Object value) {
+    public static void setFieldIfExists(@NonNull Object instance, @NonNull String fieldName, Object value) {
         doTry(() -> {
             XposedHelpers.setObjectField(instance, fieldName, value);
             return null;
@@ -1047,7 +1047,7 @@ public class CoreTool extends XposedLog {
      * @param key      字段键
      * @param value    字段的值
      */
-    public static Object setAdditionalInstanceField(@NonNull Object instance, String key, Object value) {
+    public static Object setAdditionalInstanceField(@NonNull Object instance, @NonNull String key, Object value) {
         return XposedHelpers.setAdditionalInstanceField(instance, key, value);
     }
 
@@ -1057,7 +1057,7 @@ public class CoreTool extends XposedLog {
      * @param instance 对象实例
      * @param key      字段键
      */
-    public static Object getAdditionalInstanceField(@NonNull Object instance, String key) {
+    public static Object getAdditionalInstanceField(@NonNull Object instance, @NonNull String key) {
         return XposedHelpers.getAdditionalInstanceField(instance, key);
     }
 
@@ -1068,7 +1068,7 @@ public class CoreTool extends XposedLog {
      * @param instance 对象实例
      * @param key      字段键
      */
-    public static Object removeAdditionalInstanceField(@NonNull Object instance, String key) {
+    public static Object removeAdditionalInstanceField(@NonNull Object instance, @NonNull String key) {
         return XposedHelpers.removeAdditionalInstanceField(instance, key);
     }
 
@@ -1080,7 +1080,7 @@ public class CoreTool extends XposedLog {
      * @param classPath 类引用路径
      * @param params    构造函数的参数列表
      */
-    public static Object newInstance(String classPath, @NonNull Object... params) {
+    public static Object newInstance(@NonNull String classPath, @NonNull Object... params) {
         return newInstance(classPath, HCData.getClassLoader(), params);
     }
 
@@ -1091,7 +1091,7 @@ public class CoreTool extends XposedLog {
      * @param classLoader 类加载器
      * @param params      构造函数的参数列表
      */
-    public static Object newInstance(String classPath, ClassLoader classLoader, @NonNull Object... params) {
+    public static Object newInstance(@NonNull String classPath, ClassLoader classLoader, @NonNull Object... params) {
         return newInstance(findClass(classPath, classLoader), params);
     }
 
@@ -1111,7 +1111,7 @@ public class CoreTool extends XposedLog {
      * @param classPath 类引用路径
      * @param params    构造函数的参数列表
      */
-    public static Object newInstanceIfExists(String classPath, @NonNull Object... params) {
+    public static Object newInstanceIfExists(@NonNull String classPath, @NonNull Object... params) {
         return newInstance(classPath, HCData.getClassLoader(), params);
     }
 
@@ -1122,7 +1122,7 @@ public class CoreTool extends XposedLog {
      * @param classLoader 类加载器
      * @param params      构造函数的参数列表
      */
-    public static Object newInstanceIfExists(String classPath, ClassLoader classLoader, @NonNull Object... params) {
+    public static Object newInstanceIfExists(@NonNull String classPath, ClassLoader classLoader, @NonNull Object... params) {
         return doTry(
             () -> newInstance(findClass(classPath, classLoader), params)
         ).get();
@@ -1147,7 +1147,7 @@ public class CoreTool extends XposedLog {
      * @param methodName 方法名
      * @param params     方法参数列表
      */
-    public static Object callStaticMethod(String classPath, String methodName, @NonNull Object... params) {
+    public static Object callStaticMethod(@NonNull String classPath, @NonNull String methodName, @NonNull Object... params) {
         return callStaticMethod(classPath, HCData.getClassLoader(), methodName, params);
     }
 
@@ -1159,7 +1159,7 @@ public class CoreTool extends XposedLog {
      * @param methodName  方法名
      * @param params      方法参数列表
      */
-    public static Object callStaticMethod(String classPath, ClassLoader classLoader, String methodName, @NonNull Object... params) {
+    public static Object callStaticMethod(@NonNull String classPath, ClassLoader classLoader, @NonNull String methodName, @NonNull Object... params) {
         return callStaticMethod(findClass(classPath, classLoader), methodName, params);
     }
 
@@ -1170,7 +1170,7 @@ public class CoreTool extends XposedLog {
      * @param methodName 方法名
      * @param params     方法参数列表
      */
-    public static Object callStaticMethod(@NonNull Class<?> clazz, String methodName, @NonNull Object... params) {
+    public static Object callStaticMethod(@NonNull Class<?> clazz, @NonNull String methodName, @NonNull Object... params) {
         return XposedHelpers.callStaticMethod(clazz, methodName, params);
     }
 
@@ -1181,7 +1181,7 @@ public class CoreTool extends XposedLog {
      * @param methodName 方法名
      * @param params     方法参数列表
      */
-    public static Object callStaticMethodIfExists(String classPath, String methodName, @NonNull Object... params) {
+    public static Object callStaticMethodIfExists(@NonNull String classPath, @NonNull String methodName, @NonNull Object... params) {
         return callStaticMethod(classPath, HCData.getClassLoader(), methodName, params);
     }
 
@@ -1193,7 +1193,7 @@ public class CoreTool extends XposedLog {
      * @param methodName  方法名
      * @param params      方法参数列表
      */
-    public static Object callStaticMethodIfExists(String classPath, ClassLoader classLoader, String methodName, @NonNull Object... params) {
+    public static Object callStaticMethodIfExists(@NonNull String classPath, ClassLoader classLoader, @NonNull String methodName, @NonNull Object... params) {
         return doTry(
             () -> callStaticMethod(findClass(classPath, classLoader), methodName, params)
         ).get();
@@ -1206,7 +1206,7 @@ public class CoreTool extends XposedLog {
      * @param methodName 方法名
      * @param params     方法参数列表
      */
-    public static Object callStaticMethodIfExists(@NonNull Class<?> clazz, String methodName, @NonNull Object... params) {
+    public static Object callStaticMethodIfExists(@NonNull Class<?> clazz, @NonNull String methodName, @NonNull Object... params) {
         return doTry(
             () -> XposedHelpers.callStaticMethod(clazz, methodName, params)
         ).get();
@@ -1234,7 +1234,7 @@ public class CoreTool extends XposedLog {
      * @param classPath 类引用路径
      * @param fieldName 字段名
      */
-    public static Object getStaticField(String classPath, String fieldName) {
+    public static Object getStaticField(@NonNull String classPath, @NonNull String fieldName) {
         return getStaticField(classPath, HCData.getClassLoader(), fieldName);
     }
 
@@ -1245,7 +1245,7 @@ public class CoreTool extends XposedLog {
      * @param classLoader 类加载器
      * @param fieldName   字段名
      */
-    public static Object getStaticField(String classPath, ClassLoader classLoader, String fieldName) {
+    public static Object getStaticField(@NonNull String classPath, ClassLoader classLoader, @NonNull String fieldName) {
         return getStaticField(findClass(classPath, classLoader), fieldName);
     }
 
@@ -1255,7 +1255,7 @@ public class CoreTool extends XposedLog {
      * @param clazz     类
      * @param fieldName 字段名
      */
-    public static Object getStaticField(@NonNull Class<?> clazz, String fieldName) {
+    public static Object getStaticField(@NonNull Class<?> clazz, @NonNull String fieldName) {
         return XposedHelpers.getStaticObjectField(clazz, fieldName);
     }
 
@@ -1265,7 +1265,7 @@ public class CoreTool extends XposedLog {
      * @param classPath 类引用路径
      * @param fieldName 字段名
      */
-    public static Object getStaticFieldIfExists(String classPath, String fieldName) {
+    public static Object getStaticFieldIfExists(@NonNull String classPath, @NonNull String fieldName) {
         return getStaticField(classPath, HCData.getClassLoader(), fieldName);
     }
 
@@ -1276,7 +1276,7 @@ public class CoreTool extends XposedLog {
      * @param classLoader 类加载器
      * @param fieldName   字段名
      */
-    public static Object getStaticFieldIfExists(String classPath, ClassLoader classLoader, String fieldName) {
+    public static Object getStaticFieldIfExists(@NonNull String classPath, ClassLoader classLoader, @NonNull String fieldName) {
         return doTry(
             () -> getStaticField(findClass(classPath, classLoader), fieldName)
         ).get();
@@ -1288,7 +1288,7 @@ public class CoreTool extends XposedLog {
      * @param clazz     类
      * @param fieldName 字段名
      */
-    public static Object getStaticFieldIfExists(@NonNull Class<?> clazz, String fieldName) {
+    public static Object getStaticFieldIfExists(@NonNull Class<?> clazz, @NonNull String fieldName) {
         return doTry(
             () -> XposedHelpers.getStaticObjectField(clazz, fieldName)
         ).get();
@@ -1316,7 +1316,7 @@ public class CoreTool extends XposedLog {
      * @param fieldName 字段名
      * @param value     字段的新值
      */
-    public static void setStaticField(String classPath, String fieldName, Object value) {
+    public static void setStaticField(@NonNull String classPath, @NonNull String fieldName, Object value) {
         setStaticField(classPath, HCData.getClassLoader(), fieldName, value);
     }
 
@@ -1328,7 +1328,7 @@ public class CoreTool extends XposedLog {
      * @param fieldName   字段名
      * @param value       字段的新值
      */
-    public static void setStaticField(String classPath, ClassLoader classLoader, String fieldName, Object value) {
+    public static void setStaticField(@NonNull String classPath, ClassLoader classLoader, @NonNull String fieldName, Object value) {
         setStaticField(findClass(classPath, classLoader), fieldName, value);
     }
 
@@ -1339,7 +1339,7 @@ public class CoreTool extends XposedLog {
      * @param fieldName 字段名
      * @param value     字段的新值
      */
-    public static void setStaticField(@NonNull Class<?> clazz, String fieldName, Object value) {
+    public static void setStaticField(@NonNull Class<?> clazz, @NonNull String fieldName, Object value) {
         XposedHelpers.setStaticObjectField(clazz, fieldName, value);
     }
 
@@ -1350,7 +1350,7 @@ public class CoreTool extends XposedLog {
      * @param fieldName 字段名
      * @param value     字段的新值
      */
-    public static void setStaticFieldIfExists(String classPath, String fieldName, Object value) {
+    public static void setStaticFieldIfExists(@NonNull String classPath, @NonNull String fieldName, Object value) {
         setStaticField(classPath, HCData.getClassLoader(), fieldName, value);
     }
 
@@ -1362,7 +1362,7 @@ public class CoreTool extends XposedLog {
      * @param fieldName   字段名
      * @param value       字段的新值
      */
-    public static void setStaticFieldIfExists(String classPath, ClassLoader classLoader, String fieldName, Object value) {
+    public static void setStaticFieldIfExists(@NonNull String classPath, ClassLoader classLoader, @NonNull String fieldName, Object value) {
         doTry(() -> {
             setStaticField(findClass(classPath, classLoader), fieldName, value);
             return null;
@@ -1376,7 +1376,7 @@ public class CoreTool extends XposedLog {
      * @param fieldName 字段名
      * @param value     字段的新值
      */
-    public static void setStaticFieldIfExists(@NonNull Class<?> clazz, String fieldName, Object value) {
+    public static void setStaticFieldIfExists(@NonNull Class<?> clazz, @NonNull String fieldName, Object value) {
         doTry(() -> {
             XposedHelpers.setStaticObjectField(clazz, fieldName, value);
             return null;
@@ -1405,7 +1405,7 @@ public class CoreTool extends XposedLog {
      * @param key       附加字段的键
      * @param value     字段的值
      */
-    public static Object setAdditionalStaticField(String classPath, String key, Object value) {
+    public static Object setAdditionalStaticField(@NonNull String classPath, @NonNull String key, Object value) {
         return setAdditionalStaticField(classPath, HCData.getClassLoader(), key, value);
     }
 
@@ -1417,7 +1417,7 @@ public class CoreTool extends XposedLog {
      * @param key         附加字段的键
      * @param value       字段的值
      */
-    public static Object setAdditionalStaticField(String classPath, ClassLoader classLoader, String key, Object value) {
+    public static Object setAdditionalStaticField(@NonNull String classPath, ClassLoader classLoader, @NonNull String key, Object value) {
         return setAdditionalStaticField(findClass(classPath, classLoader), key, value);
     }
 
@@ -1428,7 +1428,7 @@ public class CoreTool extends XposedLog {
      * @param key   附加字段的键
      * @param value 字段的值
      */
-    public static Object setAdditionalStaticField(@NonNull Class<?> clazz, String key, Object value) {
+    public static Object setAdditionalStaticField(@NonNull Class<?> clazz, @NonNull String key, Object value) {
         return XposedHelpers.setAdditionalStaticField(clazz, key, value);
     }
 
@@ -1438,7 +1438,7 @@ public class CoreTool extends XposedLog {
      * @param classPath 类引用路径
      * @param key       附加字段的键
      */
-    public static Object getAdditionalStaticField(String classPath, String key) {
+    public static Object getAdditionalStaticField(@NonNull String classPath, @NonNull String key) {
         return getAdditionalStaticField(classPath, HCData.getClassLoader(), key);
     }
 
@@ -1449,7 +1449,7 @@ public class CoreTool extends XposedLog {
      * @param classLoader 类加载器
      * @param key         附加字段的键
      */
-    public static Object getAdditionalStaticField(String classPath, ClassLoader classLoader, String key) {
+    public static Object getAdditionalStaticField(@NonNull String classPath, ClassLoader classLoader, @NonNull String key) {
         return getAdditionalStaticField(findClass(classPath, classLoader), key);
     }
 
@@ -1459,7 +1459,7 @@ public class CoreTool extends XposedLog {
      * @param clazz 类
      * @param key   附加字段的键
      */
-    public static Object getAdditionalStaticField(@NonNull Class<?> clazz, String key) {
+    public static Object getAdditionalStaticField(@NonNull Class<?> clazz, @NonNull String key) {
         return XposedHelpers.getAdditionalStaticField(clazz, key);
     }
 
@@ -1469,7 +1469,7 @@ public class CoreTool extends XposedLog {
      * @param classPath 类引用路径
      * @param key       附加字段的键
      */
-    public static Object removeAdditionalStaticField(String classPath, String key) {
+    public static Object removeAdditionalStaticField(@NonNull String classPath, @NonNull String key) {
         return removeAdditionalStaticField(classPath, HCData.getClassLoader(), key);
     }
 
@@ -1480,7 +1480,7 @@ public class CoreTool extends XposedLog {
      * @param classLoader 类加载器
      * @param key         附加字段的键
      */
-    public static Object removeAdditionalStaticField(String classPath, ClassLoader classLoader, String key) {
+    public static Object removeAdditionalStaticField(@NonNull String classPath, ClassLoader classLoader, @NonNull String key) {
         return removeAdditionalStaticField(findClass(classPath, classLoader), key);
     }
 
@@ -1490,7 +1490,7 @@ public class CoreTool extends XposedLog {
      * @param clazz 类
      * @param key   附加字段的键
      */
-    public static Object removeAdditionalStaticField(@NonNull Class<?> clazz, String key) {
+    public static Object removeAdditionalStaticField(@NonNull Class<?> clazz, @NonNull String key) {
         return XposedHelpers.removeAdditionalStaticField(clazz, key);
     }
 
@@ -1501,11 +1501,12 @@ public class CoreTool extends XposedLog {
      *
      * @param method     目标方法
      * @param thisObject 调用方法的对象实例
-     * @param params       方法参数
+     * @param params     方法参数
      * @throws InvocationTargetException 如果目标方法抛出异常
      * @throws IllegalAccessException    如果无法访问目标方法
      */
-    public static Object invokeOriginalMethod(Member method, Object thisObject, Object[] params) throws InvocationTargetException, IllegalAccessException {
+    public static Object invokeOriginalMethod(@NonNull Member method, @NonNull Object thisObject, @NonNull Object... params)
+        throws InvocationTargetException, IllegalAccessException {
         return XposedBridge.invokeOriginalMethod(method, thisObject, params);
     }
 
@@ -1516,7 +1517,7 @@ public class CoreTool extends XposedLog {
      *
      * @param classPath 类引用路径
      */
-    public static ChainTool buildChain(String classPath) {
+    public static ChainTool buildChain(@NonNull String classPath) {
         return ChainTool.buildChain(classPath);
     }
 
@@ -1526,7 +1527,7 @@ public class CoreTool extends XposedLog {
      * @param classPath   类引用路径
      * @param classLoader 类加载器
      */
-    public static ChainTool buildChain(String classPath, ClassLoader classLoader) {
+    public static ChainTool buildChain(@NonNull String classPath, ClassLoader classLoader) {
         return ChainTool.buildChain(classPath, classLoader);
     }
 
@@ -1547,7 +1548,7 @@ public class CoreTool extends XposedLog {
      * @param classPath     类引用路径
      * @param iMemberFilter 方法过滤器
      */
-    public static Method[] filterMethod(String classPath, @NonNull IMemberFilter<Method> iMemberFilter) {
+    public static Method[] filterMethod(@NonNull String classPath, @NonNull IMemberFilter<Method> iMemberFilter) {
         return filterMethod(classPath, HCData.getClassLoader(), iMemberFilter);
     }
 
@@ -1558,7 +1559,7 @@ public class CoreTool extends XposedLog {
      * @param classLoader   类加载器
      * @param iMemberFilter 方法过滤器
      */
-    public static Method[] filterMethod(String classPath, ClassLoader classLoader, @NonNull IMemberFilter<Method> iMemberFilter) {
+    public static Method[] filterMethod(@NonNull String classPath, ClassLoader classLoader, @NonNull IMemberFilter<Method> iMemberFilter) {
         return filterMethod(findClass(classPath, classLoader), iMemberFilter);
     }
 
@@ -1580,7 +1581,7 @@ public class CoreTool extends XposedLog {
      * @param classPath     类引用路径
      * @param iMemberFilter 构造函数过滤器
      */
-    public static Constructor<?>[] filterConstructor(String classPath, @NonNull IMemberFilter<Constructor<?>> iMemberFilter) {
+    public static Constructor<?>[] filterConstructor(@NonNull String classPath, @NonNull IMemberFilter<Constructor<?>> iMemberFilter) {
         return filterConstructor(classPath, HCData.getClassLoader(), iMemberFilter);
     }
 
@@ -1591,7 +1592,7 @@ public class CoreTool extends XposedLog {
      * @param classLoader   类加载器
      * @param iMemberFilter 构造函数过滤器
      */
-    public static Constructor<?>[] filterConstructor(String classPath, ClassLoader classLoader, @NonNull IMemberFilter<Constructor<?>> iMemberFilter) {
+    public static Constructor<?>[] filterConstructor(@NonNull String classPath, ClassLoader classLoader, @NonNull IMemberFilter<Constructor<?>> iMemberFilter) {
         return filterConstructor(findClass(classPath, classLoader), iMemberFilter);
     }
 
@@ -1614,7 +1615,7 @@ public class CoreTool extends XposedLog {
      *
      * @param resName 资源名称
      */
-    public static int createFakeResId(String resName) {
+    public static int createFakeResId(@NonNull String resName) {
         return ResInjectTool.createFakeResId(resName);
     }
 
@@ -1636,7 +1637,7 @@ public class CoreTool extends XposedLog {
      * @param resName          资源名称
      * @param replacementResId 替换的资源 ID
      */
-    public static void setResReplacement(String packageName, String type, String resName, int replacementResId) {
+    public static void setResReplacement(@NonNull String packageName, @NonNull String type, @NonNull String resName, int replacementResId) {
         ResInjectTool.setResReplacement(packageName, type, resName, replacementResId);
     }
 
@@ -1648,7 +1649,7 @@ public class CoreTool extends XposedLog {
      * @param resName             资源名称
      * @param replacementResValue 替换的密度值
      */
-    public static void setDensityReplacement(String packageName, String type, String resName, float replacementResValue) {
+    public static void setDensityReplacement(@NonNull String packageName, @NonNull String type, @NonNull String resName, float replacementResValue) {
         ResInjectTool.setDensityReplacement(packageName, type, resName, replacementResValue);
     }
 
@@ -1660,7 +1661,7 @@ public class CoreTool extends XposedLog {
      * @param resName             资源名称
      * @param replacementResValue 替换的对象值
      */
-    public static void setObjectReplacement(String packageName, String type, String resName, Object replacementResValue) {
+    public static void setObjectReplacement(@NonNull String packageName, @NonNull String type, @NonNull String resName, Object replacementResValue) {
         ResInjectTool.setObjectReplacement(packageName, type, resName, replacementResValue);
     }
 

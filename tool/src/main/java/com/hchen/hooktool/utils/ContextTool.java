@@ -62,6 +62,7 @@ public class ContextTool {
      * @return 返回获取到的上下文对象
      * @throws NullPointerException 如果获取的上下文对象为空，则抛出异常
      */
+    @NonNull
     public static Context getContext(@Duration int flag) {
         Context context = invokeMethod(flag);
         if (context == null)

@@ -59,7 +59,7 @@ public class ConstructorHelper {
     private Constructor<?> constructorCache = null;
     private final ConcurrentHashMap<Integer, Integer> paramCountVarMap = new ConcurrentHashMap<>();
 
-    public ConstructorHelper(Class<?> clazz) {
+    public ConstructorHelper(@NonNull Class<?> clazz) {
         Objects.requireNonNull(clazz, "[ConstructorHelper]: Class must not is null!");
         this.clazz = clazz;
     }

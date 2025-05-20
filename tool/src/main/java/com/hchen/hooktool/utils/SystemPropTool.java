@@ -18,6 +18,10 @@
  */
 package com.hchen.hooktool.utils;
 
+import static com.hchen.hooktool.utils.InvokeTool.callStaticMethod;
+
+import androidx.annotation.NonNull;
+
 import java.util.Optional;
 
 /**
@@ -31,65 +35,9 @@ public class SystemPropTool {
     private SystemPropTool() {
     }
 
-    public static String getProp(String key, ClassLoader classLoader) {
-        return invokePropMethod(key, classLoader);
-    }
-
-    /**
-     * 获取 boolean 类型的 prop
-     */
-    public static boolean getProp(String key, boolean def) {
-        return Boolean.TRUE.equals(
-            invokePropMethod("getBoolean", new Class[]{String.class, boolean.class}, key, def)
-        );
-    }
-
-    /**
-     * 获取 int 类型的 prop
-     */
-    public static int getProp(String key, int def) {
-        return (int) Optional.ofNullable(
-            invokePropMethod("getInt", new Class[]{String.class, int.class}, key, def)
-        ).orElse(def);
-    }
-
-    /**
-     * 获取 long 类型的 prop
-     */
-    public static long getProp(String key, long def) {
-        return (long) Optional.ofNullable(
-            invokePropMethod("getLong", new Class[]{String.class, long.class}, key, def)
-        ).orElse(def);
-    }
-
-    /**
-     * 获取 String 类型的 prop
-     */
-    public static String getProp(String key, String def) {
+    public static String getProp(@NonNull String key, ClassLoader classLoader) {
         return (String) Optional.ofNullable(
-            invokePropMethod("get", new Class[]{String.class, String.class}, key, def)
-        ).orElse(def);
-    }
-
-    /**
-     * 获取 String 类型的 prop，无默认值
-     */
-    public static String getProp(String key) {
-        return (String) Optional.ofNullable(
-            invokePropMethod("get", new Class[]{String.class}, key)
-        ).orElse("");
-    }
-
-    /**
-     * 只有系统框架才可能可以调用
-     */
-    public static void setProp(String key, String vale) {
-        invokePropMethod("set", new Class[]{String.class, String.class}, key, vale);
-    }
-
-    private static String invokePropMethod(String key, ClassLoader classLoader) {
-        return (String) Optional.ofNullable(
-            InvokeTool.callStaticMethod(
+            callStaticMethod(
                 "android.os.SystemProperties",
                 classLoader,
                 "get",
@@ -99,7 +47,55 @@ public class SystemPropTool {
         ).orElse("");
     }
 
-    private static <T> T invokePropMethod(String methodName, Class<?>[] classes, Object... objs) {
-        return InvokeTool.callStaticMethod(propClass, methodName, classes, objs);
+    /**
+     * 获取 boolean 类型的 prop
+     */
+    public static boolean getProp(@NonNull String key, boolean def) {
+        return Boolean.TRUE.equals(
+            callStaticMethod(propClass, "getBoolean", new Class[]{String.class, boolean.class}, key, def)
+        );
+    }
+
+    /**
+     * 获取 int 类型的 prop
+     */
+    public static int getProp(@NonNull String key, int def) {
+        return (int) Optional.ofNullable(
+            callStaticMethod(propClass, "getInt", new Class[]{String.class, int.class}, key, def)
+        ).orElse(def);
+    }
+
+    /**
+     * 获取 long 类型的 prop
+     */
+    public static long getProp(@NonNull String key, long def) {
+        return (long) Optional.ofNullable(
+            callStaticMethod(propClass, "getLong", new Class[]{String.class, long.class}, key, def)
+        ).orElse(def);
+    }
+
+    /**
+     * 获取 String 类型的 prop
+     */
+    public static String getProp(@NonNull String key, String def) {
+        return (String) Optional.ofNullable(
+            callStaticMethod(propClass, "get", new Class[]{String.class, String.class}, key, def)
+        ).orElse(def);
+    }
+
+    /**
+     * 获取 String 类型的 prop，无默认值
+     */
+    public static String getProp(@NonNull String key) {
+        return (String) Optional.ofNullable(
+            callStaticMethod(propClass, "get", new Class[]{String.class}, key)
+        ).orElse("");
+    }
+
+    /**
+     * 只有系统框架才可能可以调用
+     */
+    public static void setProp(@NonNull String key, String vale) {
+        callStaticMethod(propClass, "set", new Class[]{String.class, String.class}, key, vale);
     }
 }

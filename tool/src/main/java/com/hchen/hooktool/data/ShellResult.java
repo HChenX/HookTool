@@ -29,7 +29,8 @@ import java.util.Objects;
  * @author 焕晨HChen
  * @noinspection DeconstructionCanBeUsed
  */
-public record ShellResult(String command, @NonNull String[] outputs, String exitCode) {
+public record ShellResult(@NonNull String command, @NonNull String[] outputs,
+                          @NonNull String exitCode) {
     /**
      * 是否成功执行
      */

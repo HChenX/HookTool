@@ -199,7 +199,7 @@ public class ResInjectTool {
         return true;
     }
 
-    public static int createFakeResId(String resName) {
+    public static int createFakeResId(@NonNull String resName) {
         return 0x7e000000 | (fnv1a32Hash(resName) & 0x00ffffff);
     }
 
@@ -220,7 +220,7 @@ public class ResInjectTool {
     /**
      * 设置资源 ID 类型的替换
      */
-    public static void setResReplacement(String packageName, String type, String resName, int replacementResId) {
+    public static void setResReplacement(@NonNull String packageName, @NonNull String type, @NonNull String resName, int replacementResId) {
         applyHooks();
         replacements.put(packageName + ":" + type + "/" + resName, new Pair<>(ReplacementType.ID, replacementResId));
     }
@@ -228,7 +228,7 @@ public class ResInjectTool {
     /**
      * 设置密度类型的资源
      */
-    public static void setDensityReplacement(String packageName, String type, String resName, float replacementResValue) {
+    public static void setDensityReplacement(@NonNull String packageName, @NonNull String type, @NonNull String resName, float replacementResValue) {
         applyHooks();
         replacements.put(packageName + ":" + type + "/" + resName, new Pair<>(ReplacementType.DENSITY, replacementResValue));
     }
@@ -236,7 +236,7 @@ public class ResInjectTool {
     /**
      * 设置 Object 类型的资源
      */
-    public static void setObjectReplacement(String packageName, String type, String resName, Object replacementResValue) {
+    public static void setObjectReplacement(@NonNull String packageName, @NonNull String type, @NonNull String resName, Object replacementResValue) {
         applyHooks();
         replacements.put(packageName + ":" + type + "/" + resName, new Pair<>(ReplacementType.OBJECT, replacementResValue));
     }

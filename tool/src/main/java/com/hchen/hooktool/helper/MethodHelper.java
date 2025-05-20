@@ -66,8 +66,8 @@ public class MethodHelper {
     private Method methodCache = null;
     private final ConcurrentHashMap<Integer, Integer> paramCountVarMap = new ConcurrentHashMap<>();
 
-    public MethodHelper(Class<?> clazz) {
-        Objects.requireNonNull(clazz, "[MethodHelper]: class must not is null!");
+    public MethodHelper(@NonNull Class<?> clazz) {
+        Objects.requireNonNull(clazz, "[MethodHelper]: Class must not is null!");
         this.clazz = clazz;
     }
 
@@ -222,6 +222,7 @@ public class MethodHelper {
 
     /**
      * 方法抛出的异常类型
+     *
      * @noinspection unchecked
      */
     public MethodHelper withExceptionType(@NonNull Class<? extends Throwable>... exceptionTypes) {
@@ -360,7 +361,7 @@ public class MethodHelper {
                 return false;
             if (genericParamTypes != null && !Arrays.equals(method.getGenericParameterTypes(), genericParamTypes))
                 return false;
-            if (exceptionTypes != null && !Arrays.asList(method.getExceptionTypes()).contains(exceptionTypes))
+            if (exceptionTypes != null && !Arrays.equals(method.getExceptionTypes(), exceptionTypes))
                 return false;
 
             return true;

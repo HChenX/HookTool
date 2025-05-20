@@ -33,7 +33,7 @@ public interface IExecListener {
      * @param outputs  执行后输出的内容
      * @param exitCode 退出码
      */
-    default void output(String command, @NonNull String[] outputs, String exitCode) {
+    default void output(@NonNull String command, @NonNull String[] outputs, @NonNull String exitCode) {
     }
 
     /**
@@ -43,7 +43,7 @@ public interface IExecListener {
      * @param errors   报错内容
      * @param exitCode 退出码
      */
-    default void error(String command, @NonNull String[] errors, String exitCode) {
+    default void error(@NonNull String command, @NonNull String[] errors, @NonNull String exitCode) {
     }
 
     /**
@@ -51,7 +51,7 @@ public interface IExecListener {
      *
      * @param exitCode 退出码，非零码表尝试 Root 失败
      */
-    default void rootResult(String exitCode) {
+    default void rootResult(@NonNull String exitCode) {
     }
 
     /**
@@ -61,6 +61,6 @@ public interface IExecListener {
      * @param errors  报错内容
      * @param reason  崩溃原因
      */
-    default void brokenPip(String command, @NonNull String[] errors, String reason) {
+    default void brokenPip(@NonNull String command, @NonNull String[] errors, @NonNull String reason) {
     }
 }

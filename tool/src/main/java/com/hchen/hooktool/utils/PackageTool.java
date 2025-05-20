@@ -53,7 +53,7 @@ public class PackageTool {
     /**
      * 判断应用是否已被卸载
      */
-    public static boolean isUninstall(@NonNull Context context, String packageName) {
+    public static boolean isUninstall(@NonNull Context context, @NonNull String packageName) {
         try {
             PackageManager packageManager = context.getPackageManager();
             packageManager.getPackageInfo(packageName, PackageManager.MATCH_ALL);
@@ -66,7 +66,7 @@ public class PackageTool {
     /**
      * 判断应用是否被禁用
      */
-    public static boolean isDisable(@NonNull Context context, String packageName) {
+    public static boolean isDisable(@NonNull Context context, @NonNull String packageName) {
         try {
             PackageManager packageManager = context.getPackageManager();
             ApplicationInfo result = packageManager.getApplicationInfo(packageName, 0);
@@ -81,7 +81,7 @@ public class PackageTool {
     /**
      * 判断应用是否被隐藏
      */
-    public static boolean isHidden(@NonNull Context context, String packageName) {
+    public static boolean isHidden(@NonNull Context context, @NonNull String packageName) {
         try {
             PackageManager packageManager = context.getPackageManager();
             packageManager.getApplicationInfo(packageName, 0);
@@ -148,7 +148,7 @@ public class PackageTool {
     /**
      * 获取指定包名的应用信息
      */
-    public static AppData getTargetPackage(@NonNull Context context, String packageName) throws PackageManager.NameNotFoundException {
+    public static AppData getTargetPackage(@NonNull Context context, @NonNull String packageName) throws PackageManager.NameNotFoundException {
         PackageManager packageManager = context.getPackageManager();
         return createAppData(packageManager.getPackageInfo(packageName, PackageManager.GET_ACTIVITIES), packageManager);
     }
