@@ -51,7 +51,9 @@ import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 
@@ -188,7 +190,9 @@ public class CoreTool extends XposedLog {
      * @param methodName  方法名
      */
     public static boolean existsAnyMethod(@NonNull String classPath, ClassLoader classLoader, @NonNull String methodName) {
-        return existsAnyMethod(findClass(classPath, classLoader), methodName);
+        return doTry(() ->
+            existsAnyMethod(findClass(classPath, classLoader), methodName)
+        ).orElse(false);
     }
 
     /**
@@ -668,7 +672,7 @@ public class CoreTool extends XposedLog {
     @Nullable
     public static XC_MethodHook.Unhook hookMethodIfExists(@NonNull String classPath, ClassLoader classLoader, @NonNull String methodName, @NonNull Object... params) {
         return doTry(
-            () -> hookMethod(findClass(classPath, classLoader), methodName, params)
+            () -> hookMethodIfExists(findClass(classPath, classLoader), methodName, params)
         ).get();
     }
 
@@ -945,6 +949,36 @@ public class CoreTool extends XposedLog {
 
     /**
      * 调用指定对象的实例方法
+     * <p>
+     * 允许指定方法参数，这将在存在多个同名方法的情况下有所帮助，特别是传递 null 参数时
+     *
+     * @param instance   对象实例
+     * @param methodName 方法名
+     * @param paramTypes 方法参数列表 (只能是 String(类完整引用) 或者 Class 类型)
+     * @param params     方法参数列表
+     */
+    public static Object callMethod(@NonNull Object instance, @NonNull String methodName, @NonNull Object[] paramTypes, @NonNull Object... params) {
+        return XposedHelpers.callMethod(instance, methodName, getParamTypes(instance.getClass().getClassLoader(), paramTypes), params);
+    }
+
+    /**
+     * 调用指定对象的实例方法，不会抛错
+     * <p>
+     * 允许指定方法参数，这将在存在多个同名方法的情况下有所帮助，特别是传递 null 参数时
+     *
+     * @param instance   对象实例
+     * @param methodName 方法名
+     * @param paramTypes 方法参数列表 (只能是 String(类完整引用) 或者 Class 类型)
+     * @param params     方法参数列表
+     */
+    public static Object callMethodIfExists(@NonNull Object instance, @NonNull String methodName, @NonNull Object[] paramTypes, @NonNull Object... params) {
+        return doTry(
+            () -> XposedHelpers.callMethod(instance, methodName, getParamTypes(instance.getClass().getClassLoader(), paramTypes), params)
+        ).get();
+    }
+
+    /**
+     * 调用指定对象的实例方法
      *
      * @param instance 对象实例
      * @param method   方法对象
@@ -1112,7 +1146,7 @@ public class CoreTool extends XposedLog {
      * @param params    构造函数的参数列表
      */
     public static Object newInstanceIfExists(@NonNull String classPath, @NonNull Object... params) {
-        return newInstance(classPath, HCData.getClassLoader(), params);
+        return newInstanceIfExists(classPath, HCData.getClassLoader(), params);
     }
 
     /**
@@ -1124,7 +1158,7 @@ public class CoreTool extends XposedLog {
      */
     public static Object newInstanceIfExists(@NonNull String classPath, ClassLoader classLoader, @NonNull Object... params) {
         return doTry(
-            () -> newInstance(findClass(classPath, classLoader), params)
+            () -> newInstanceIfExists(findClass(classPath, classLoader), params)
         ).get();
     }
 
@@ -1137,6 +1171,78 @@ public class CoreTool extends XposedLog {
     public static Object newInstanceIfExists(@NonNull Class<?> clazz, @NonNull Object... params) {
         return doTry(
             () -> XposedHelpers.newInstance(clazz, params)
+        ).get();
+    }
+
+    /**
+     * 创建指定类的新实例
+     *
+     * @param classPath  类引用路径
+     * @param paramTypes 方法参数列表 (只能是 String(类完整引用) 或者 Class 类型)
+     * @param params     构造函数的参数列表
+     */
+    public static Object newInstance(@NonNull String classPath, @NonNull Object[] paramTypes, @NonNull Object... params) {
+        return newInstance(classPath, HCData.getClassLoader(), paramTypes, params);
+    }
+
+    /**
+     * 创建指定类的新实例
+     *
+     * @param classPath   类引用路径
+     * @param classLoader 类加载器
+     * @param paramTypes  方法参数列表 (只能是 String(类完整引用) 或者 Class 类型)
+     * @param params      构造函数的参数列表
+     */
+    public static Object newInstance(@NonNull String classPath, ClassLoader classLoader, @NonNull Object[] paramTypes, @NonNull Object... params) {
+        return newInstance(findClass(classPath, classLoader), paramTypes, params);
+    }
+
+    /**
+     * 创建指定类的新实例
+     *
+     * @param clazz      类
+     * @param paramTypes 方法参数列表 (只能是 String(类完整引用) 或者 Class 类型)
+     * @param params     构造函数的参数列表
+     */
+    public static Object newInstance(@NonNull Class<?> clazz, @NonNull Object[] paramTypes, @NonNull Object... params) {
+        return XposedHelpers.newInstance(clazz, getParamTypes(clazz.getClassLoader(), paramTypes), params);
+    }
+
+    /**
+     * 创建指定类的新实例，不会抛错
+     *
+     * @param classPath  类引用路径
+     * @param paramTypes 方法参数列表 (只能是 String(类完整引用) 或者 Class 类型)
+     * @param params     构造函数的参数列表
+     */
+    public static Object newInstanceIfExists(@NonNull String classPath, @NonNull Object[] paramTypes, @NonNull Object... params) {
+        return newInstanceIfExists(classPath, HCData.getClassLoader(), paramTypes, params);
+    }
+
+    /**
+     * 创建指定类的新实例，不会抛错
+     *
+     * @param classPath   类引用路径
+     * @param classLoader 类加载器
+     * @param paramTypes  方法参数列表 (只能是 String(类完整引用) 或者 Class 类型)
+     * @param params      构造函数的参数列表
+     */
+    public static Object newInstanceIfExists(@NonNull String classPath, ClassLoader classLoader, @NonNull Object[] paramTypes, @NonNull Object... params) {
+        return doTry(
+            () -> newInstanceIfExists(findClass(classPath, classLoader), paramTypes, params)
+        ).get();
+    }
+
+    /**
+     * 创建指定类的新实例，不会抛错
+     *
+     * @param clazz      类
+     * @param paramTypes 方法参数列表 (只能是 String(类完整引用) 或者 Class 类型)
+     * @param params     构造函数的参数列表
+     */
+    public static Object newInstanceIfExists(@NonNull Class<?> clazz, @NonNull Object[] paramTypes, @NonNull Object... params) {
+        return doTry(
+            () -> XposedHelpers.newInstance(clazz, getParamTypes(clazz.getClassLoader(), paramTypes), params)
         ).get();
     }
 
@@ -1182,7 +1288,7 @@ public class CoreTool extends XposedLog {
      * @param params     方法参数列表
      */
     public static Object callStaticMethodIfExists(@NonNull String classPath, @NonNull String methodName, @NonNull Object... params) {
-        return callStaticMethod(classPath, HCData.getClassLoader(), methodName, params);
+        return callStaticMethodIfExists(classPath, HCData.getClassLoader(), methodName, params);
     }
 
     /**
@@ -1195,7 +1301,7 @@ public class CoreTool extends XposedLog {
      */
     public static Object callStaticMethodIfExists(@NonNull String classPath, ClassLoader classLoader, @NonNull String methodName, @NonNull Object... params) {
         return doTry(
-            () -> callStaticMethod(findClass(classPath, classLoader), methodName, params)
+            () -> callStaticMethodIfExists(findClass(classPath, classLoader), methodName, params)
         ).get();
     }
 
@@ -1209,6 +1315,84 @@ public class CoreTool extends XposedLog {
     public static Object callStaticMethodIfExists(@NonNull Class<?> clazz, @NonNull String methodName, @NonNull Object... params) {
         return doTry(
             () -> XposedHelpers.callStaticMethod(clazz, methodName, params)
+        ).get();
+    }
+
+    /**
+     * 调用指定类的静态方法
+     *
+     * @param classPath  类引用路径
+     * @param methodName 方法名
+     * @param paramTypes 方法参数列表 (只能是 String(类完整引用) 或者 Class 类型)
+     * @param params     方法参数列表
+     */
+    public static Object callStaticMethod(@NonNull String classPath, @NonNull String methodName, @NonNull Object[] paramTypes, @NonNull Object... params) {
+        return callStaticMethod(classPath, HCData.getClassLoader(), methodName, paramTypes, params);
+    }
+
+    /**
+     * 调用指定类的静态方法
+     *
+     * @param classPath   类引用路径
+     * @param classLoader 类加载器
+     * @param methodName  方法名
+     * @param paramTypes  方法参数列表 (只能是 String(类完整引用) 或者 Class 类型)
+     * @param params      方法参数列表
+     */
+    public static Object callStaticMethod(@NonNull String classPath, ClassLoader classLoader, @NonNull String methodName, @NonNull Object[] paramTypes, @NonNull Object... params) {
+        return callStaticMethod(findClass(classPath, classLoader), methodName, paramTypes, params);
+    }
+
+    /**
+     * 调用指定类的静态方法
+     *
+     * @param clazz      类
+     * @param methodName 方法名
+     * @param paramTypes 方法参数列表 (只能是 String(类完整引用) 或者 Class 类型)
+     * @param params     方法参数列表
+     */
+    public static Object callStaticMethod(@NonNull Class<?> clazz, @NonNull String methodName, @NonNull Object[] paramTypes, @NonNull Object... params) {
+        return XposedHelpers.callStaticMethod(clazz, methodName, getParamTypes(clazz.getClassLoader(), paramTypes), params);
+    }
+
+    /**
+     * 调用指定类的静态方法，不会抛错
+     *
+     * @param classPath  类引用路径
+     * @param methodName 方法名
+     * @param paramTypes 方法参数列表 (只能是 String(类完整引用) 或者 Class 类型)
+     * @param params     方法参数列表
+     */
+    public static Object callStaticMethodIfExists(@NonNull String classPath, @NonNull String methodName, @NonNull Object[] paramTypes, @NonNull Object... params) {
+        return callStaticMethodIfExists(classPath, HCData.getClassLoader(), methodName, paramTypes, params);
+    }
+
+    /**
+     * 调用指定类的静态方法，不会抛错
+     *
+     * @param classPath   类引用路径
+     * @param classLoader 类加载器
+     * @param methodName  方法名
+     * @param paramTypes  方法参数列表 (只能是 String(类完整引用) 或者 Class 类型)
+     * @param params      方法参数列表
+     */
+    public static Object callStaticMethodIfExists(@NonNull String classPath, ClassLoader classLoader, @NonNull String methodName, @NonNull Object[] paramTypes, @NonNull Object... params) {
+        return doTry(
+            () -> callStaticMethodIfExists(findClass(classPath, classLoader), methodName, paramTypes, params)
+        ).get();
+    }
+
+    /**
+     * 调用指定类的静态方法，不会抛错
+     *
+     * @param clazz      类
+     * @param methodName 方法名
+     * @param paramTypes 方法参数列表 (只能是 String(类完整引用) 或者 Class 类型)
+     * @param params     方法参数列表
+     */
+    public static Object callStaticMethodIfExists(@NonNull Class<?> clazz, @NonNull String methodName, @NonNull Object[] paramTypes, @NonNull Object... params) {
+        return doTry(
+            () -> XposedHelpers.callStaticMethod(clazz, methodName, getParamTypes(clazz.getClassLoader(), paramTypes), params)
         ).get();
     }
 
@@ -1266,7 +1450,7 @@ public class CoreTool extends XposedLog {
      * @param fieldName 字段名
      */
     public static Object getStaticFieldIfExists(@NonNull String classPath, @NonNull String fieldName) {
-        return getStaticField(classPath, HCData.getClassLoader(), fieldName);
+        return getStaticFieldIfExists(classPath, HCData.getClassLoader(), fieldName);
     }
 
     /**
@@ -1278,7 +1462,7 @@ public class CoreTool extends XposedLog {
      */
     public static Object getStaticFieldIfExists(@NonNull String classPath, ClassLoader classLoader, @NonNull String fieldName) {
         return doTry(
-            () -> getStaticField(findClass(classPath, classLoader), fieldName)
+            () -> getStaticFieldIfExists(findClass(classPath, classLoader), fieldName)
         ).get();
     }
 
@@ -1351,7 +1535,7 @@ public class CoreTool extends XposedLog {
      * @param value     字段的新值
      */
     public static void setStaticFieldIfExists(@NonNull String classPath, @NonNull String fieldName, Object value) {
-        setStaticField(classPath, HCData.getClassLoader(), fieldName, value);
+        setStaticFieldIfExists(classPath, HCData.getClassLoader(), fieldName, value);
     }
 
     /**
@@ -1364,7 +1548,7 @@ public class CoreTool extends XposedLog {
      */
     public static void setStaticFieldIfExists(@NonNull String classPath, ClassLoader classLoader, @NonNull String fieldName, Object value) {
         doTry(() -> {
-            setStaticField(findClass(classPath, classLoader), fieldName, value);
+            setStaticFieldIfExists(findClass(classPath, classLoader), fieldName, value);
             return null;
         });
     }
@@ -1505,7 +1689,7 @@ public class CoreTool extends XposedLog {
      * @throws InvocationTargetException 如果目标方法抛出异常
      * @throws IllegalAccessException    如果无法访问目标方法
      */
-    public static Object invokeOriginalMethod(@NonNull Member method, @NonNull Object thisObject, @NonNull Object... params)
+    public static Object invokeOriginalMethod(@NonNull Member method, Object thisObject, @NonNull Object... params)
         throws InvocationTargetException, IllegalAccessException {
         return XposedBridge.invokeOriginalMethod(method, thisObject, params);
     }
@@ -1758,5 +1942,27 @@ public class CoreTool extends XposedLog {
             Instant end = Instant.now();
             return Duration.between(start, end).toMillis();
         }).orElse(-1L);
+    }
+
+    /**
+     * 将参数列表转换为类参数列表
+     *
+     * @param classLoader 类加载器
+     * @param paramTypes  参数列表
+     * @noinspection IfCanBeSwitch
+     */
+    public static Class<?>[] getParamTypes(ClassLoader classLoader, @NonNull Object... paramTypes) {
+        List<Class<?>> classes = new ArrayList<>();
+        for (Object type : paramTypes) {
+            if (type == null)
+                throw new NullPointerException("Param type must not is null: " + Arrays.toString(paramTypes));
+            else if (type instanceof String strType)
+                classes.add(findClass(strType, classLoader));
+            else if (type instanceof Class<?> clazz)
+                classes.add(clazz);
+            else
+                throw new UnexpectedException("Unknown param type! param type must either be specified as Class or String: " + Arrays.toString(paramTypes));
+        }
+        return classes.toArray(new Class[0]);
     }
 }

@@ -32,6 +32,8 @@ import static com.hchen.hooktool.core.CoreTool.getField;
 import static com.hchen.hooktool.core.CoreTool.getFieldIfExists;
 import static com.hchen.hooktool.core.CoreTool.getStaticField;
 import static com.hchen.hooktool.core.CoreTool.getStaticFieldIfExists;
+import static com.hchen.hooktool.core.CoreTool.newInstance;
+import static com.hchen.hooktool.core.CoreTool.newInstanceIfExists;
 import static com.hchen.hooktool.core.CoreTool.removeAdditionalInstanceField;
 import static com.hchen.hooktool.core.CoreTool.removeAdditionalStaticField;
 import static com.hchen.hooktool.core.CoreTool.setAdditionalInstanceField;
@@ -179,6 +181,8 @@ public class ParamTool {
         return param.getResultOrThrowable();
     }
 
+    // ---------------------------------------- Non Static -----------------------------------------
+
     /**
      * 调用本实例的方法
      */
@@ -191,6 +195,20 @@ public class ParamTool {
      */
     final public Object callThisMethodIfExists(@NonNull String methodName, @NonNull Object... params) {
         return callMethodIfExists(param.thisObject, methodName, params);
+    }
+
+    /**
+     * 调用本实例的方法
+     */
+    final public Object callThisMethod(@NonNull String methodName, @NonNull Object[] paramTypes, @NonNull Object... params) {
+        return callMethod(param.thisObject, methodName, paramTypes, params);
+    }
+
+    /**
+     * 调用本实例的方法，如果存在
+     */
+    final public Object callThisMethodIfExists(@NonNull String methodName, @NonNull Object[] paramTypes, @NonNull Object... params) {
+        return callMethodIfExists(param.thisObject, methodName, paramTypes, params);
     }
 
     /**
@@ -263,6 +281,36 @@ public class ParamTool {
         return removeAdditionalInstanceField(param.thisObject, key);
     }
 
+    // ---------------------------------------- Static -------------------------------------------
+
+    /**
+     * 为本实例创建新实例
+     */
+    final public Object newThisInstance(@NonNull Object... params) {
+        return newInstance(param.method.getDeclaringClass(), params);
+    }
+
+    /**
+     * 为本实例创建新实例
+     */
+    final public Object newThisInstanceIfExists(@NonNull Object... params) {
+        return newInstanceIfExists(param.method.getDeclaringClass(), params);
+    }
+
+    /**
+     * 为本实例创建新实例
+     */
+    final public Object newThisInstance(@NonNull Object[] paramTypes, @NonNull Object... params) {
+        return newInstance(param.method.getDeclaringClass(), paramTypes, params);
+    }
+
+    /**
+     * 为本实例创建新实例
+     */
+    final public Object newThisInstanceIfExists(@NonNull Object[] paramTypes, @NonNull Object... params) {
+        return newInstanceIfExists(param.method.getDeclaringClass(), paramTypes, params);
+    }
+
     /**
      * 调用本实例的静态方法
      */
@@ -275,6 +323,20 @@ public class ParamTool {
      */
     final public Object callThisStaticMethodIfExists(@NonNull String methodName, @NonNull Object... params) {
         return callStaticMethodIfExists(param.method.getDeclaringClass(), methodName, params);
+    }
+
+    /**
+     * 调用本实例的静态方法
+     */
+    final public Object callThisStaticMethod(@NonNull String methodName, @NonNull Object[] paramTypes, @NonNull Object... params) {
+        return callStaticMethod(param.method.getDeclaringClass(), methodName, paramTypes, params);
+    }
+
+    /**
+     * 调用本实例的静态方法，如果存在
+     */
+    final public Object callThisStaticMethodIfExists(@NonNull String methodName, @NonNull Object[] paramTypes, @NonNull Object... params) {
+        return callStaticMethodIfExists(param.method.getDeclaringClass(), methodName, paramTypes, params);
     }
 
     /**
@@ -374,6 +436,8 @@ public class ParamTool {
     final public boolean existsThisField(@NonNull String fieldName) {
         return existsField(param.method.getDeclaringClass(), fieldName);
     }
+
+    // ---------------------------------------- Other -------------------------------------------
 
     /**
      * 观察方法调用

@@ -57,6 +57,7 @@ public class ChainTool {
     private ChainData chainData;
 
     private ChainTool(@NonNull Class<?> clazz) {
+        Objects.requireNonNull(clazz, "[ChainTool]: Class must not is null!");
         chainHook = new ChainHook();
         this.clazz = clazz;
     }
@@ -86,7 +87,6 @@ public class ChainTool {
      * @param clazz 类
      */
     public static ChainTool buildChain(@NonNull Class<?> clazz) {
-        Objects.requireNonNull(clazz, "[ChainTool]: Class must not is null!");
         return new ChainTool(clazz);
     }
 
