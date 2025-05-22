@@ -169,6 +169,13 @@ public class FieldHelper {
     }
 
     /**
+     * 返回查找到的全部对象
+     */
+    public Field[] list() {
+        return matches().toArray(new Field[0]);
+    }
+
+    /**
      * 查找核心逻辑
      */
     private List<Field> matches() {

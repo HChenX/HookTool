@@ -168,9 +168,10 @@ public class ClassHelper {
      */
     public Class<?> single() {
         List<Class<?>> list = matches();
-        if (list.isEmpty()) throw new NonSingletonException("[ClassHelper]: No result found!");
+        if (list.isEmpty())
+            throw new NonSingletonException("[ClassHelper]: No result found for query!");
         if (list.size() > 1)
-            throw new NonSingletonException("[ClassHelper]: Multiple results: " + list.size());
+            throw new NonSingletonException("[ClassHelper]: Query did not return a unique result: " + list.size());
         return list.get(0);
     }
 
@@ -192,6 +193,13 @@ public class ClassHelper {
         if (list.size() != 1) throw supplier.get();
 
         return list.get(0);
+    }
+
+    /**
+     * 返回查找到的全部对象
+     */
+    public Class<?>[] list() {
+        return matches().toArray(new Class[0]);
     }
 
     /**

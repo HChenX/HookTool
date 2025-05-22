@@ -36,9 +36,9 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -64,7 +64,7 @@ public class MethodHelper {
     private Class<? extends Throwable>[] exceptionTypes = null;
     private boolean withSuper = false;
     private Method methodCache = null;
-    private final ConcurrentHashMap<Integer, Integer> paramCountVarMap = new ConcurrentHashMap<>();
+    private final HashMap<Integer, Integer> paramCountVarMap = new HashMap<>();
 
     public MethodHelper(@NonNull Class<?> clazz) {
         Objects.requireNonNull(clazz, "[MethodHelper]: Class must not is null!");
@@ -276,6 +276,13 @@ public class MethodHelper {
 
         methodCache = methods.get(0);
         return new HookHelper<>(methodCache);
+    }
+
+    /**
+     * 返回查找到的全部对象
+     */
+    public Method[] list() {
+        return matches().toArray(new Method[0]);
     }
 
     /**

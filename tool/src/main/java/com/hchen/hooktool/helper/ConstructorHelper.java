@@ -36,9 +36,9 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -57,7 +57,7 @@ public class ConstructorHelper {
     private Class<? extends Throwable>[] exceptionTypes = null;
     private boolean withSuper = false;
     private Constructor<?> constructorCache = null;
-    private final ConcurrentHashMap<Integer, Integer> paramCountVarMap = new ConcurrentHashMap<>();
+    private final HashMap<Integer, Integer> paramCountVarMap = new HashMap<>();
 
     public ConstructorHelper(@NonNull Class<?> clazz) {
         Objects.requireNonNull(clazz, "[ConstructorHelper]: Class must not is null!");
@@ -138,6 +138,7 @@ public class ConstructorHelper {
 
     /**
      * 构造函数抛出的异常
+     *
      * @noinspection unchecked
      */
     public ConstructorHelper withExceptionTypes(@NonNull Class<? extends Throwable>... exceptionTypes) {
@@ -191,6 +192,13 @@ public class ConstructorHelper {
 
         constructorCache = constructors.get(0);
         return new HookHelper<>(constructorCache);
+    }
+
+    /**
+     * 返回查找到的全部对象
+     */
+    public Constructor<?>[] list() {
+        return matches().toArray(new Constructor[0]);
     }
 
     /**

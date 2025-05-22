@@ -344,6 +344,34 @@ public class CoreTool extends XposedLog {
             .toArray(Method[]::new);
     }
 
+    /**
+     * 查找全部方法
+     *
+     * @param classPath 类引用路径
+     */
+    public static Method[] findAllMethod(@NonNull String classPath) {
+        return findAllMethod(classPath, HCData.getClassLoader());
+    }
+
+    /**
+     * 查找全部方法
+     *
+     * @param classPath   类引用路径
+     * @param classLoader 类加载器
+     */
+    public static Method[] findAllMethod(@NonNull String classPath, ClassLoader classLoader) {
+        return findAllMethod(findClass(classPath, classLoader));
+    }
+
+    /**
+     * 查找全部方法
+     *
+     * @param clazz 类
+     */
+    public static Method[] findAllMethod(@NonNull Class<?> clazz) {
+        return clazz.getDeclaredMethods();
+    }
+
     // -------------------------- Constructor ------------------------------
 
     /**
