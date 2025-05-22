@@ -19,6 +19,8 @@
 package com.hchen.hooktool.helper;
 
 import java.util.Objects;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * TryHelper
@@ -29,21 +31,21 @@ public class TryHelper {
     private TryHelper() {
     }
 
-    public static <R> Result<R> doTry(IRun<R> supplier) {
+    public static <R> Result<R> doTry(IDecomposer<R> supplier) {
         return new Result<R>(supplier);
     }
 
-    public interface IRun<R> {
-        R run() throws Throwable;
+    public interface IDecomposer<R> {
+        R get() throws Throwable;
     }
 
     public static final class Result<R> {
         private R result;
         private Throwable throwable;
 
-        private Result(IRun<R> iRun) {
+        private Result(IDecomposer<R> iDecomposer) {
             try {
-                this.result = iRun.run();
+                this.result = iDecomposer.get();
                 this.throwable = null;
             } catch (Throwable throwable) {
                 this.result = null;
@@ -59,6 +61,16 @@ public class TryHelper {
             if (isSuccess())
                 return result;
             return or;
+        }
+
+        public void onThrowable(Consumer<Throwable> consumer) {
+            if (isSuccess()) return;
+            consumer.accept(throwable);
+        }
+
+        public R onThrowable(Function<Throwable, R> consumer) {
+            if (isSuccess()) return result;
+            return consumer.apply(throwable);
         }
 
         public Throwable getThrowable() {
