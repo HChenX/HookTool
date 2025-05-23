@@ -192,8 +192,8 @@ public class FieldHelper {
 
         return fields.stream().filter(field -> {
             if (fieldName != null && !Objects.equals(field.getName(), fieldName)) return false;
-            if (substring != null && !field.getName().contains(substring)) return false;
-            if (pattern != null && !pattern.matcher(field.getName()).matches()) return false;
+            else if (substring != null && !field.getName().contains(substring)) return false;
+            else if (pattern != null && !pattern.matcher(field.getName()).matches()) return false;
             if (fieldType != null && !Objects.equals(field.getType(), fieldType)) return false;
             if (mods != -1 && (field.getModifiers() & mods) != mods) return false;
             if (annotation != null && !field.isAnnotationPresent(annotation)) return false;

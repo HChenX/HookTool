@@ -36,7 +36,7 @@ public class HCData {
     @NonNull
     private static String modulePackageName = "";
     @NonNull
-    private static String targetPackageName = "UnknownPackage";
+    private static String targetPackageName = "Unknown";
     @NonNull
     private static String prefsName = "";
     private static boolean isAutoReload = true;
@@ -55,48 +55,78 @@ public class HCData {
     private HCData() {
     }
 
+    /**
+     * 获取当前日志等级
+     */
     @NonNull
     public static String getTag() {
         return TAG;
     }
 
+    /**
+     * 获取当前日志 TAG
+     */
     public static int getLogLevel() {
         return logLevel;
     }
 
+    /**
+     * 获取当前设置的模块包名
+     */
     @NonNull
     public static String getModulePackageName() {
         return modulePackageName;
     }
 
+    /**
+     * 获取当前注入的软件包名
+     */
     @NonNull
     public static String getTargetPackageName() {
         return targetPackageName;
     }
 
+    /**
+     * 获取当前使用的共享首选项名称
+     */
     @NonNull
     public static String getPrefsName() {
         return prefsName;
     }
 
+    /**
+     * 是否自动更新 Xprefs
+     */
     public static boolean isAutoReload() {
         return isAutoReload;
     }
 
+    /**
+     * 是否处于 注入/Xposed 环境
+     */
     public static boolean isXposed() {
         return isXposed;
     }
 
+    /**
+     * 获取当前使用日志增强的路径
+     */
     @Nullable
     public static String[] getLogExpandPath() {
         return logExpandPath;
     }
 
+    /**
+     * 获取日志增强时应忽略的类名列表
+     */
     @Nullable
     public static String[] getLogExpandIgnoreClassNames() {
         return logExpandIgnoreClassNames;
     }
 
+    /**
+     * 获取模块 Apk 的路径
+     */
     @Nullable
     public static String getModulePath() {
         if (startupParam != null) {
@@ -105,55 +135,99 @@ public class HCData {
         return null;
     }
 
+    /**
+     * 获取当前的类加载器
+     */
     @NonNull
     public static ClassLoader getClassLoader() {
         return classLoader;
     }
 
+    /**
+     * 获取当前的 LoadPackageParam
+     */
     @Nullable
     public static XC_LoadPackage.LoadPackageParam getLoadPackageParam() {
         return loadPackageParam;
     }
 
+    /**
+     * 获取当前的 StartupParam
+     */
     @Nullable
     public static IXposedHookZygoteInit.StartupParam getStartupParam() {
         return startupParam;
     }
 
     // ------------------------ 工具内部使用 -------------------------------
-    protected static void setTag(@NonNull String tag) {
+
+    /**
+     * 设置工具日志 TAG
+     */
+    public static void setTag(@NonNull String tag) {
         HCData.TAG = tag;
     }
 
-    protected static void setLogLevel(int logLevel) {
+    /**
+     * 设置日志等级
+     */
+    public static void setLogLevel(@HCInit.LogLevel int logLevel) {
         HCData.logLevel = logLevel;
     }
 
-    protected static void setModulePackageName(@NonNull String modulePackageName) {
+    /**
+     * 设置本模块包名
+     */
+    public static void setModulePackageName(@NonNull String modulePackageName) {
         HCData.modulePackageName = modulePackageName;
     }
 
-    protected static void setPrefsName(@NonNull String prefsName) {
+    /**
+     * 设置通用共享首选项名称
+     * <p>
+     * 不设置默认使用：模块包名_prefs
+     */
+    public static void setPrefsName(@NonNull String prefsName) {
         HCData.prefsName = prefsName;
     }
 
-    protected static void setAutoReload(boolean isAutoReload) {
+    /**
+     * 是否自动更新 Xprefs
+     * <p>
+     * 默认开启
+     */
+    public static void setAutoReload(boolean isAutoReload) {
         HCData.isAutoReload = isAutoReload;
     }
 
-    protected static void setIsXposed(boolean isXposed) {
-        HCData.isXposed = isXposed;
-    }
-
-    protected static void setLogExpandPath(@NonNull String... logExpandPath) {
+    /**
+     * 指定使用日志增强功能的路径
+     * <p>
+     * 开启的路径可正常获取类名作为日志 TAG
+     * <p>
+     * 请注意本功能存在性能消耗，介意勿开
+     * <p>
+     * 同时加入类似的混淆规则:
+     * <pre>{@code
+     *     -keep class com.hchen.demo.hook.**
+     *     -keep class com.hchen.demo.hook.**$*
+     * }
+     */
+    public static void setLogExpandPath(@NonNull String... logExpandPath) {
         HCData.logExpandPath = logExpandPath;
     }
 
-    protected static void setLogExpandIgnoreClassNames(@NonNull String... logExpandIgnoreClassNames) {
+    /**
+     * 设置使用日志增强时应忽略的类名
+     */
+    public static void setLogExpandIgnoreClassNames(@NonNull String... logExpandIgnoreClassNames) {
         HCData.logExpandIgnoreClassNames = logExpandIgnoreClassNames;
     }
 
-    protected static void setClassLoader(@NonNull ClassLoader classLoader) {
+    /**
+     * 设置类加载器
+     */
+    public static void setClassLoader(@NonNull ClassLoader classLoader) {
         HCData.classLoader = classLoader;
         HCBase.classLoader = classLoader;
     }
@@ -166,5 +240,12 @@ public class HCData {
 
     protected static void setStartupParam(@NonNull IXposedHookZygoteInit.StartupParam startupParam) {
         HCData.startupParam = startupParam;
+    }
+
+    /**
+     * @noinspection SameParameterValue
+     */
+    protected static void setIsXposed(boolean isXposed) {
+        HCData.isXposed = isXposed;
     }
 }

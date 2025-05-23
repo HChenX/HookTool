@@ -49,7 +49,7 @@ public class HCInit {
         LOG_D
     })
     @Retention(RetentionPolicy.SOURCE)
-    private @interface LogLevel {
+    protected @interface LogLevel {
     }
 
     private HCInit() {
@@ -97,27 +97,6 @@ public class HCInit {
         HCData.setLogExpandIgnoreClassNames(basicData.logExpandIgnoreClassNames);
     }
 
-    /**
-     * 设置日志 TAG
-     */
-    public static void setTag(@NonNull String tag) {
-        HCData.setTag(tag);
-    }
-
-    /**
-     * 设置日志等级
-     */
-    public static void setLogLevel(@LogLevel int level) {
-        HCData.setLogLevel(level);
-    }
-
-    /**
-     * 更换工具类加载器
-     */
-    public static void setClassLoader(@NonNull ClassLoader classLoader) {
-        HCData.setClassLoader(classLoader);
-    }
-
     public final static class BasicData {
         String tag = null;
         int logLevel = LOG_I;
@@ -128,15 +107,7 @@ public class HCInit {
         String[] logExpandIgnoreClassNames = null;
 
         /**
-         * 设置本模块包名
-         */
-        public BasicData setModulePackageName(@NonNull String modulePackageName) {
-            packageName = modulePackageName;
-            return this;
-        }
-
-        /**
-         * 设置日志 TAG
+         * 设置工具日志 TAG
          */
         public BasicData setTag(@NonNull String tag) {
             this.tag = tag;
@@ -152,7 +123,17 @@ public class HCInit {
         }
 
         /**
-         * 设置共享首选项文件名
+         * 设置本模块包名
+         */
+        public BasicData setModulePackageName(@NonNull String modulePackageName) {
+            packageName = modulePackageName;
+            return this;
+        }
+
+        /**
+         * 设置通用共享首选项名称
+         * <p>
+         * 不设置默认使用：模块包名_prefs
          */
         public BasicData setPrefsName(@NonNull String prefsName) {
             this.prefsName = prefsName;
@@ -160,7 +141,7 @@ public class HCInit {
         }
 
         /**
-         * 是否自动更新 Xprefs 值
+         * 是否自动更新 Xprefs
          * <p>
          * 默认开启
          */
@@ -170,7 +151,11 @@ public class HCInit {
         }
 
         /**
-         * 设置日志增强的路径
+         * 指定使用日志增强功能的路径
+         * <p>
+         * 开启的路径可正常获取类名作为日志 TAG
+         * <p>
+         * 请注意本功能存在性能消耗，介意勿开
          * <p>
          * 同时加入类似的混淆规则:
          * <pre>{@code
@@ -184,7 +169,7 @@ public class HCInit {
         }
 
         /**
-         * 设置日志增强时应忽略的类名
+         * 设置使用日志增强时应忽略的类名
          */
         public BasicData setLogExpandIgnoreClassNames(@NonNull String... logExpandIgnoreClassNames) {
             this.logExpandIgnoreClassNames = logExpandIgnoreClassNames;

@@ -212,7 +212,10 @@ public class ChainTool {
     }
 
     private boolean shouldHook() {
-        if (chainData.members.length == 0) return false;
+        if (chainData.members.length == 0) {
+            logW(LogExpand.getTag(), "Hook method list cannot be empty! chainData: " + chainData);
+            return false;
+        }
         if (chainData.members[0] == null) {
             if (!chainData.ifExist)
                 logW(LogExpand.getTag(), "There is an abnormal null object in the member list, skip hook: " + chainData);

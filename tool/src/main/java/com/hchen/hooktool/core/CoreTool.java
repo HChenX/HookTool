@@ -34,7 +34,9 @@ import com.hchen.hooktool.callback.IPrefsApply;
 import com.hchen.hooktool.exception.HookException;
 import com.hchen.hooktool.exception.MissingParameterException;
 import com.hchen.hooktool.exception.UnexpectedException;
+import com.hchen.hooktool.helper.ClassHelper;
 import com.hchen.hooktool.helper.ConstructorHelper;
+import com.hchen.hooktool.helper.FieldHelper;
 import com.hchen.hooktool.helper.MethodHelper;
 import com.hchen.hooktool.hook.HookFactory;
 import com.hchen.hooktool.hook.IHook;
@@ -107,6 +109,22 @@ public class CoreTool extends XposedLog {
      */
     public static Class<?> findClass(@NonNull String classPath, ClassLoader classLoader) {
         return XposedHelpers.findClass(classPath, classLoader);
+    }
+
+    /**
+     * 使用 Pro 工具查找类
+     */
+    public static ClassHelper findClassPro() {
+        return findClassPro(HCData.getClassLoader());
+    }
+
+    /**
+     * 使用 Pro 工具查找类
+     *
+     * @param classLoader 类加载器
+     */
+    public static ClassHelper findClassPro(ClassLoader classLoader) {
+        return new ClassHelper(classLoader);
     }
 
     /**
@@ -604,6 +622,34 @@ public class CoreTool extends XposedLog {
     }
 
     /**
+     * 使用 Pro 工具查找字段
+     *
+     * @param classPath 类引用路径
+     */
+    public static FieldHelper findFieldPro(@NonNull String classPath) {
+        return findFieldPro(classPath, HCData.getClassLoader());
+    }
+
+    /**
+     * 使用 Pro 工具查找字段
+     *
+     * @param classPath   类引用路径
+     * @param classLoader 类加载器
+     */
+    public static FieldHelper findFieldPro(@NonNull String classPath, ClassLoader classLoader) {
+        return findFieldPro(findClass(classPath, classLoader));
+    }
+
+    /**
+     * 使用 Pro 工具查找字段
+     *
+     * @param clazz 类
+     */
+    public static FieldHelper findFieldPro(@NonNull Class<?> clazz) {
+        return new FieldHelper(clazz);
+    }
+
+    /**
      * 查找指定类的字段，不存在则返回 null，不会抛错
      *
      * @param classPath 类引用路径
@@ -719,7 +765,7 @@ public class CoreTool extends XposedLog {
     }
 
     /**
-     * Hook 指定类的所有方法
+     * Hook 指定类的所有指定名称的方法
      *
      * @param classPath  类引用路径
      * @param methodName 方法名
@@ -730,7 +776,7 @@ public class CoreTool extends XposedLog {
     }
 
     /**
-     * Hook 指定类的所有方法
+     * Hook 指定类的所有指定名称的方法
      *
      * @param classPath   类引用路径
      * @param classLoader 类加载器
@@ -742,7 +788,7 @@ public class CoreTool extends XposedLog {
     }
 
     /**
-     * Hook 指定类的所有方法
+     * Hook 指定类的所有指定名称的方法
      *
      * @param clazz      类
      * @param methodName 方法名
@@ -750,6 +796,37 @@ public class CoreTool extends XposedLog {
      */
     public static XC_MethodHook.Unhook[] hookAllMethod(@NonNull Class<?> clazz, @NonNull String methodName, @NonNull IHook iHook) {
         return hookAll(findAllMethod(clazz, methodName), iHook);
+    }
+
+    /**
+     * Hook 指定类的所有方法
+     *
+     * @param classPath  类引用路径
+     * @param iHook      Hook 回调接口
+     */
+    public static XC_MethodHook.Unhook[] hookAllMethod(@NonNull String classPath, @NonNull IHook iHook) {
+        return hookAllMethod(classPath, HCData.getClassLoader(), iHook);
+    }
+
+    /**
+     * Hook 指定类的所有方法
+     *
+     * @param classPath   类引用路径
+     * @param classLoader 类加载器
+     * @param iHook       Hook 回调接口
+     */
+    public static XC_MethodHook.Unhook[] hookAllMethod(@NonNull String classPath, ClassLoader classLoader, @NonNull IHook iHook) {
+        return hookAllMethod(findClass(classPath, classLoader), iHook);
+    }
+
+    /**
+     * Hook 指定类的所有方法
+     *
+     * @param clazz      类
+     * @param iHook      Hook 回调接口
+     */
+    public static XC_MethodHook.Unhook[] hookAllMethod(@NonNull Class<?> clazz, @NonNull IHook iHook) {
+        return hookAll(findAllMethod(clazz), iHook);
     }
 
     /**

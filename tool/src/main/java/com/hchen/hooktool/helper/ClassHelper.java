@@ -70,9 +70,9 @@ public class ClassHelper {
     private boolean cacheBuilt = false;
     private Set<String> classPathsCache = null;
 
-    public ClassHelper(@NonNull ClassLoader loader) {
-        Objects.requireNonNull(loader, "[ClassHelper]: ClassLoader must not be null!");
-        this.loader = loader;
+    public ClassHelper(ClassLoader loader) {
+        if (loader == null) this.loader = ClassLoader.getSystemClassLoader();
+        else this.loader = loader;
     }
 
     /**
