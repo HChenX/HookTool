@@ -24,7 +24,7 @@
 -keep class com.hchen.hooktool.HCState {
        private final static boolean isXposedEnabled;
        private final static java.lang.String framework;
-       private final static int  version;
+       private final static int version;
  }
 -keep class com.hchen.hooktool.data.AppData {*;}
 -keep class * implements android.os.Parcelable {

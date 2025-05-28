@@ -732,7 +732,7 @@ public class CoreTool extends XposedLog {
      */
     @Nullable
     public static XC_MethodHook.Unhook hookMethodIfExists(@NonNull String classPath, @NonNull String methodName, @NonNull Object... params) {
-        return hookMethod(classPath, HCData.getClassLoader(), methodName, params);
+        return hookMethodIfExists(classPath, HCData.getClassLoader(), methodName, params);
     }
 
     /**

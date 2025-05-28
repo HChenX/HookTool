@@ -18,6 +18,11 @@
  */
 package com.hchen.hooktool.utils;
 
+import static com.hchen.hooktool.helper.RangeHelper.EQ;
+import static com.hchen.hooktool.helper.RangeHelper.GE;
+import static com.hchen.hooktool.helper.RangeHelper.GT;
+import static com.hchen.hooktool.helper.RangeHelper.LE;
+import static com.hchen.hooktool.helper.RangeHelper.LT;
 import static com.hchen.hooktool.utils.InvokeTool.getStaticField;
 import static com.hchen.hooktool.utils.SystemPropTool.getProp;
 
@@ -34,6 +39,7 @@ import android.view.WindowManager;
 
 import androidx.annotation.NonNull;
 
+import com.hchen.hooktool.helper.RangeHelper;
 import com.hchen.hooktool.helper.TryHelper;
 
 /**
@@ -83,42 +89,99 @@ public class DeviceTool {
      * 判断是否为指定 Android 版本
      */
     public static boolean isAndroidVersion(int version) {
-        return getAndroidVersion() == version;
+        return isAndroidVersion(version, EQ);
     }
 
     /**
-     * 判断是否大于等于指定 Android 版本
+     * 根据指定模式匹配 Android 版本是否符合要求
      */
-    public static boolean isMoreAndroidVersion(int version) {
-        return getAndroidVersion() >= version;
+    public static boolean isAndroidVersion(int version, @RangeHelper.RangeModeFlag int mode) {
+        return isMatchVersion(getAndroidVersion(), version, mode);
     }
 
     /**
      * 判断是否为指定 MIUI 版本
      */
     public static boolean isMiuiVersion(float version) {
-        return Float.compare(getMiuiVersion(), version) == 0;
+        return isMiuiVersion(version, EQ);
     }
 
     /**
-     * 判断是否大于等于指定 MIUI 版本
+     * 根据指定模式匹配 Miui 版本是否符合要求
      */
-    public static boolean isMoreMiuiVersion(float version) {
-        return Float.compare(getMiuiVersion(), version) >= 0;
+    public static boolean isMiuiVersion(float version, @RangeHelper.RangeModeFlag int mode) {
+        return isMatchVersion(getMiuiVersion(), version, mode);
     }
 
     /**
      * 判断是否为指定 HyperOS 版本
      */
     public static boolean isHyperOSVersion(float version) {
-        return Float.compare(getHyperOSVersion(), version) == 0;
+        return isHyperOSVersion(version, EQ);
+    }
+
+
+    /**
+     * 根据指定模式匹配 HyperOS 版本是否符合要求
+     */
+    public static boolean isHyperOSVersion(float version, @RangeHelper.RangeModeFlag int mode) {
+        return isMatchVersion(getHyperOSVersion(), version, mode);
     }
 
     /**
-     * 判断是否大于等于指定 HyperOS 版本
+     * 是否是指定 HyperOS 的指定小版本
+     * <p>
+     * 例如：OS2.0.201.0.VOMCNXM
+     * <p>
+     * HyperOS -> 2.0
+     * <p>
+     * Small Version -> 201
      */
-    public static boolean isMoreHyperOSVersion(float version) {
-        return Float.compare(getHyperOSVersion(), version) >= 0;
+    public static boolean isSmallHyperOSVersion(float osVersion, int smallVersion) {
+        return isSmallHyperOSVersion(osVersion, smallVersion, EQ);
+    }
+
+    /**
+     * 根据指定模式匹配指定 HyperOS 版本的小版本是否符合要求
+     * <p>
+     * 例如：OS2.0.201.0.VOMCNXM
+     * <p>
+     * HyperOS -> 2.0
+     * <p>
+     * Small Version -> 201
+     */
+    public static boolean isSmallHyperOSVersion(float osVersion, int smallVersion, @RangeHelper.RangeModeFlag int mode) {
+        if (isHyperOSVersion(osVersion)) {
+            String version = getProp("ro.mi.os.version.incremental");
+            if (version.isEmpty()) version = getProp("ro.system.build.version.incremental");
+            String[] vs = version.trim().split(".");
+            if (vs.length >= 3) return isMatchVersion(Integer.parseInt(vs[2]), smallVersion, mode);
+            return false;
+        }
+        return false;
+    }
+
+    private static boolean isMatchVersion(float version, float targetVersion, @RangeHelper.RangeModeFlag int mode) {
+        switch (mode) {
+            case EQ -> {
+                return version == targetVersion;
+            }
+            case GT -> {
+                return version > targetVersion;
+            }
+            case LT -> {
+                return version < targetVersion;
+            }
+            case GE -> {
+                return version >= targetVersion;
+            }
+            case LE -> {
+                return version <= targetVersion;
+            }
+            default -> {
+                return false;
+            }
+        }
     }
 
     // ----------------------- 手机品牌 -------------------------
@@ -186,7 +249,7 @@ public class DeviceTool {
      */
     public static boolean isHarmonyOS() {
         // 鸿蒙系统没有 Android 10 以下的
-        if (!isMoreAndroidVersion(Build.VERSION_CODES.Q))
+        if (isAndroidVersion(Build.VERSION_CODES.Q, LT))
             return false;
 
         try {
@@ -196,7 +259,7 @@ public class DeviceTool {
                 new Class[]{}
             );
             return "Harmony".equalsIgnoreCase(String.valueOf(osBrand));
-        } catch (Throwable throwable) {
+        } catch (Throwable ignore) {
             return false;
         }
     }
@@ -323,7 +386,6 @@ public class DeviceTool {
         return getScreenSize(getWindowManager(context));
     }
 
-
     /**
      * 获取屏幕尺寸
      *
@@ -377,7 +439,6 @@ public class DeviceTool {
      * @return 转换后的密度独立像素值
      */
     public static int px2dp(@NonNull Context context, float pxValue) {
-        // 获取屏幕密度（每英寸多少个像素点）
         float scale = context.getResources().getDisplayMetrics().density;
         return (int) (pxValue / scale + 0.5f);
     }
@@ -390,7 +451,6 @@ public class DeviceTool {
      * @return 转换后的缩放独立的字体像素值
      */
     public static int px2sp(@NonNull Context context, float pxValue) {
-        // 获取字体的缩放密度
         float fontScale = context.getResources().getDisplayMetrics().scaledDensity;
         return (int) (pxValue / fontScale + 0.5f);
     }
@@ -403,7 +463,6 @@ public class DeviceTool {
      * @return 转换后的像素值
      */
     public static int dp2px(@NonNull Context context, float dpValue) {
-        // 获取屏幕密度
         float scale = context.getResources().getDisplayMetrics().density;
         return (int) (dpValue * scale + 0.5f);
     }
@@ -416,7 +475,6 @@ public class DeviceTool {
      * @return 转换后的像素值
      */
     public static int sp2px(@NonNull Context context, float spValue) {
-        // 获取字体的缩放密度
         float fontScale = context.getResources().getDisplayMetrics().scaledDensity;
         return (int) (spValue * fontScale + 0.5f);
     }

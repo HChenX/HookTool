@@ -58,7 +58,7 @@ public class RangeHelper {
         LE
     })
     @Retention(RetentionPolicy.SOURCE)
-    protected @interface RangeModeFlag {
+    public @interface RangeModeFlag {
     }
 
     private RangeHelper() {

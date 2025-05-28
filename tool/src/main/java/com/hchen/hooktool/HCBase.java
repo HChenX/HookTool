@@ -140,7 +140,6 @@ public abstract class HCBase extends CoreTool {
     final public void onZygote() {
         try {
             if (!isEnabled()) return;
-
             assert HCData.getStartupParam() != null;
             initZygote(HCData.getStartupParam());
         } catch (Throwable e) {

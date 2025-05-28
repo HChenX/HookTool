@@ -45,7 +45,7 @@ import kotlin.text.Charsets;
  * -keep class com.hchen.hooktool.HCState {
  *        private final static boolean isXposedEnabled;
  *        private final static java.lang.String framework;
- *        private final static int  version;
+ *        private final static int version;
  *  }
  * }
  *
