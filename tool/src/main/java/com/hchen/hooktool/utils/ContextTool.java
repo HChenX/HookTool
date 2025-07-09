@@ -49,7 +49,7 @@ public class ContextTool {
         FLAG_ONLY_ANDROID
     })
     @Retention(RetentionPolicy.SOURCE)
-    private @interface Duration {
+    private @interface ContextFlag {
     }
 
     private ContextTool() {
@@ -63,10 +63,10 @@ public class ContextTool {
      * @throws NullPointerException 如果获取的上下文对象为空，则抛出异常
      */
     @NonNull
-    public static Context getContext(@Duration int flag) {
+    public static Context getContext(@ContextFlag int flag) {
         Context context = invokeMethod(flag);
         if (context == null)
-            throw new NullPointerException("[ContextTool]: Failed to get context!");
+            throw new NullPointerException("[ContextTool]: Failed to get context!!");
         return context;
     }
 
@@ -77,7 +77,7 @@ public class ContextTool {
      * @return 返回获取到的上下文对象，否则返回 null
      */
     @Nullable
-    private static Context getContextNonThrow(@Duration int flag) {
+    private static Context getContextNonThrow(@ContextFlag int flag) {
         try {
             return invokeMethod(flag);
         } catch (Throwable ignore) {
@@ -88,8 +88,8 @@ public class ContextTool {
     /**
      * 异步获取当前应用的 Context，为了防止过早获取导致的 null
      */
-    public static void getAsyncContext(@NonNull IContextGetter iContextGetter, @Duration int flag) {
-        getAsyncContext(iContextGetter, flag, 15000);
+    public static void getAsyncContext(@NonNull IContextGetter iContextGetter, @ContextFlag int flag) {
+        getAsyncContext(iContextGetter, flag, 10000 /* 10 秒 */);
     }
 
     /**
@@ -108,13 +108,13 @@ public class ContextTool {
      *        }
      *      });
      *   }
-     * }, FLAG_ALL, 15000);
+     * }, FLAG_ALL, 10000);
      * }
      * 当然 Handler 是可选项, 适用于 Toast 显示等场景
      * @param iContextGetter 回调获取 Context
      */
-    public static void getAsyncContext(@NonNull IContextGetter iContextGetter, @Duration int flag, int timeout) {
-        Executors.newSingleThreadExecutor().submit(() -> {
+    public static void getAsyncContext(@NonNull IContextGetter iContextGetter, @ContextFlag int flag, int timeout) {
+        Executors.newSingleThreadExecutor().execute(() -> {
             Context context = getContextNonThrow(flag);
             if (context == null) {
                 long time = System.currentTimeMillis();
@@ -131,7 +131,7 @@ public class ContextTool {
     }
 
     @Nullable
-    private static Context invokeMethod(@Duration int flag) {
+    private static Context invokeMethod(@ContextFlag int flag) {
         Context context;
         Class<?> clazz = InvokeTool.findClass("android.app.ActivityThread");
         switch (flag) {

@@ -18,10 +18,10 @@
  */
 package com.hchen.hooktool.callback;
 
+import android.content.SharedPreferences;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-
-import com.hchen.hooktool.utils.PrefsTool;
 
 import java.util.Map;
 import java.util.Set;
@@ -83,5 +83,5 @@ public interface IPrefsApply {
      * 获取共享首选项编辑器
      */
     @NonNull
-    PrefsTool.Editor editor();
+    SharedPreferences.Editor editor();
 }

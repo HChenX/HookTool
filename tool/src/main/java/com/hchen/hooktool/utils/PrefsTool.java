@@ -112,6 +112,9 @@ public class PrefsTool {
         }, ContextTool.FLAG_CURRENT_APP);
     }
 
+    /**
+     * @hide
+     */
     @Deprecated
     public static void clear() {
         sPrefsMap.clear();
@@ -141,9 +144,6 @@ public class PrefsTool {
      */
     @SuppressLint("WorldReadableFiles")
     private static IPrefsApply createSpIfNeed(Context context, String prefsName) {
-        if (context == null)
-            throw new NullPointerException("[PrefsTool]: Context is null, can't create sprefs!");
-
         prefsName = initPrefsName(prefsName);
         if (sPrefsMap.get(context.getPackageName() + prefsName) == null) {
             SharedPreferences s;
@@ -164,7 +164,7 @@ public class PrefsTool {
 
     private static String initPrefsName(String name) {
         if (name == null)
-            throw new NullPointerException("[PrefsTool]: prefs name can't is null!");
+            throw new NullPointerException("[PrefsTool]: prefs name must not be null!");
 
         if (name.isEmpty()) {
             if (HCData.getPrefsName().isEmpty()) {
@@ -177,6 +177,7 @@ public class PrefsTool {
         } else return name;
     }
 
+    /** @noinspection unchecked, DataFlowIssue */
     private record Xprefs(XSharedPreferences xSharedPreferences) implements IPrefsApply {
         @Override
         @Nullable
@@ -251,7 +252,7 @@ public class PrefsTool {
          */
         @Override
         @NonNull
-        public Editor editor() {
+        public SharedPreferences.Editor editor() {
             throw new UnsupportedOperationException("[PrefsTool]: Xposed unsupported edit prefs!");
         }
 
@@ -264,6 +265,7 @@ public class PrefsTool {
         }
     }
 
+    /** @noinspection unchecked*/
     private record Sprefs(SharedPreferences preferences) implements IPrefsApply {
         @Override
         @Nullable
@@ -327,81 +329,8 @@ public class PrefsTool {
 
         @Override
         @NonNull
-        public Editor editor() {
-            return new Editor(preferences.edit());
-        }
-    }
-
-    public static class Editor {
-        private final SharedPreferences.Editor editor;
-
-        private Editor(SharedPreferences.Editor editor) {
-            this.editor = editor;
-        }
-
-        public Editor putString(String key, @Nullable String value) {
-            editor.putString(key, value);
-            return this;
-        }
-
-        public Editor putStringSet(String key, @Nullable Set<String> value) {
-            editor.putStringSet(key, value);
-            return this;
-        }
-
-        public Editor putBoolean(String key, boolean value) {
-            editor.putBoolean(key, value);
-            return this;
-        }
-
-        public Editor putInt(String key, int value) {
-            editor.putInt(key, value);
-            return this;
-        }
-
-        public Editor putFloat(String key, float value) {
-            editor.putFloat(key, value);
-            return this;
-        }
-
-        public Editor putLong(String key, long value) {
-            editor.putLong(key, value);
-            return this;
-        }
-
-        public Editor put(String key, Object value) {
-            if (value instanceof String s) {
-                return putString(key, s);
-            } else if (value instanceof Set<?> set) {
-                return putStringSet(key, (Set<String>) set);
-            } else if (value instanceof Integer i) {
-                return putInt(key, i);
-            } else if (value instanceof Boolean b) {
-                return putBoolean(key, b);
-            } else if (value instanceof Float f) {
-                return putFloat(key, f);
-            } else if (value instanceof Long l) {
-                return putLong(key, l);
-            }
-            throw new UnexpectedException("[PrefsTool]: Unknown type value: " + value);
-        }
-
-        public Editor remove(String key) {
-            editor.remove(key);
-            return this;
-        }
-
-        public Editor clear() {
-            editor.clear();
-            return this;
-        }
-
-        public boolean commit() {
-            return editor.commit();
-        }
-
-        public void apply() {
-            editor.apply();
+        public SharedPreferences.Editor editor() {
+            return preferences.edit();
         }
     }
 }

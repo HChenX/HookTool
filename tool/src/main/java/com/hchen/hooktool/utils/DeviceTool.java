@@ -137,8 +137,8 @@ public class DeviceTool {
      * <p>
      * Small Version -> 201
      */
-    public static boolean isSmallHyperOSVersion(float osVersion, int smallVersion) {
-        return isSmallHyperOSVersion(osVersion, smallVersion, EQ);
+    public static boolean isHyperOSSmallVersion(float osVersion, int smallVersion) {
+        return isHyperOSSmallVersion(osVersion, smallVersion, EQ);
     }
 
     /**
@@ -150,7 +150,7 @@ public class DeviceTool {
      * <p>
      * Small Version -> 201
      */
-    public static boolean isSmallHyperOSVersion(float osVersion, int smallVersion, @RangeHelper.RangeModeFlag int mode) {
+    public static boolean isHyperOSSmallVersion(float osVersion, int smallVersion, @RangeHelper.RangeModeFlag int mode) {
         if (isHyperOSVersion(osVersion)) {
             String version = getProp("ro.mi.os.version.incremental");
             if (version.isEmpty()) version = getProp("ro.system.build.version.incremental");
@@ -265,7 +265,7 @@ public class DeviceTool {
     }
 
     /**
-     * 判断当前是否为 MagicOS 系统（荣耀）
+     * 判断当前是否为 MagicOS 系统
      */
     public static boolean isMagicOS() {
         return isRightRom(ROM_HONOR);
@@ -289,6 +289,7 @@ public class DeviceTool {
     /**
      * 通过 prop 获取系统版本号
      */
+    @NonNull
     public static String getRomVersion(@NonNull String... props) {
         for (String property : props) {
             String versionName = getProp(property);

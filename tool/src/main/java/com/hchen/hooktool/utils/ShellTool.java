@@ -229,9 +229,7 @@ public class ShellTool {
                 return false;
             }
         } else {
-            ExecutorService service = Executors.newSingleThreadExecutor();
-            service.submit(callable);
-            service.shutdown();
+            Executors.newSingleThreadExecutor().submit(callable);
             return false;
         }
     }

@@ -59,7 +59,7 @@ public abstract class HCBase extends CoreTool {
         ON_APPLICATION
     })
     @Retention(RetentionPolicy.SOURCE)
-    private @interface BaseFlag {
+    private @interface StageFlag {
     }
 
     /**
@@ -89,9 +89,15 @@ public abstract class HCBase extends CoreTool {
     }
 
     /**
-     * Application 创建时调用
+     * Application 创建之前时调用
      */
-    protected void onApplication(@NonNull Context context) {
+    protected void onApplicationBefore(@NonNull Context context) {
+    }
+
+    /**
+     * Application 创建之后时调用
+     */
+    protected void onApplicationAfter(@NonNull Context context) {
     }
 
     /**
@@ -101,7 +107,7 @@ public abstract class HCBase extends CoreTool {
      *
      * @param flag 抛错的时机
      */
-    protected void onThrowable(@BaseFlag int flag, @NonNull Throwable e) {
+    protected void onThrowable(@StageFlag int flag, @NonNull Throwable e) {
     }
 
     final public void onLoadPackage() {
@@ -110,7 +116,7 @@ public abstract class HCBase extends CoreTool {
             init();
         } catch (Throwable e) {
             onThrowable(ON_LOAD_PACKAGE, e);
-            logE(TAG, "[onLoadPackage]: Waring! will stop hook process!", e);
+            logE(TAG, "[onLoadPackage]: Will stop hook process!", e);
         }
     }
 
@@ -120,11 +126,11 @@ public abstract class HCBase extends CoreTool {
             init(classLoader);
         } catch (Throwable e) {
             onThrowable(ON_LOAD_PACKAGE, e);
-            logE(TAG, "[onLoadPackage/classLoader]: Waring! will stop hook process!", e);
+            logE(TAG, "[onLoadPackage/classLoader]: Will stop hook process!", e);
         }
     }
 
-    final public HCBase onApplication() {
+    final public HCBase onApplicationBefore() {
         try {
             if (isEnabled()) {
                 applications.add(this);
@@ -132,7 +138,7 @@ public abstract class HCBase extends CoreTool {
             }
         } catch (Throwable e) {
             onThrowable(ON_APPLICATION, e);
-            logE(TAG, "[onApplication]: Waring! failed to hook application!", e);
+            logE(TAG, "[onApplication]: Failed to hook Application#attach(Context)!!", e);
         }
         return this;
     }
@@ -144,7 +150,7 @@ public abstract class HCBase extends CoreTool {
             initZygote(HCData.getStartupParam());
         } catch (Throwable e) {
             onThrowable(ON_ZYGOTE, e);
-            logE(TAG, "[onZygote]: Waring! will stop hook process!", e);
+            logE(TAG, "[onZygote]: Will stop hook process!", e);
         }
     }
 
@@ -152,11 +158,23 @@ public abstract class HCBase extends CoreTool {
         if (isHookedApplication) return;
         hookMethod(Application.class, "attach", Context.class, new IHook() {
             @Override
+            public void before() {
+                Context context = (Context) getArg(0);
+                applications.forEach(iApplication -> {
+                    try {
+                        iApplication.onApplicationBefore(context);
+                    } catch (Throwable e) {
+                        logE("Application", e);
+                    }
+                });
+            }
+
+            @Override
             public void after() {
                 Context context = (Context) getArg(0);
                 applications.forEach(iApplication -> {
                     try {
-                        iApplication.onApplication(context);
+                        iApplication.onApplicationAfter(context);
                     } catch (Throwable e) {
                         logE("Application", e);
                     }

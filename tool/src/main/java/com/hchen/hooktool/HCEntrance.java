@@ -56,7 +56,7 @@ public abstract class HCEntrance implements IXposedHookLoadPackage, IXposedHookZ
     /**
      * 模块自身加载阶段
      */
-    public void onModuleLoad(@NonNull XC_LoadPackage.LoadPackageParam loadPackageParam) {
+    public void onLoadModule(@NonNull XC_LoadPackage.LoadPackageParam loadPackageParam) {
     }
 
     /**
@@ -77,7 +77,7 @@ public abstract class HCEntrance implements IXposedHookLoadPackage, IXposedHookZ
         if (Objects.equals(HCData.getModulePackageName(), loadPackageParam.packageName)) {
             HCInit.initLoadPackageParam(loadPackageParam);
             initHCState();
-            onModuleLoad(loadPackageParam);
+            onLoadModule(loadPackageParam);
             return;
         }
 

@@ -32,7 +32,7 @@ import java.util.Objects;
  * @author 焕晨HChen
  */
 public class AppData implements Parcelable {
-    public int user = 0;
+    public int user = -1;
     public int uid = -1;
     public Bitmap icon;
     public String label;

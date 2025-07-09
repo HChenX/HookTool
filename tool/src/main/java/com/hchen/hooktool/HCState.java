@@ -21,7 +21,7 @@ package com.hchen.hooktool;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
@@ -29,7 +29,6 @@ import android.util.Base64;
 
 import androidx.annotation.NonNull;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.HashMap;
@@ -69,6 +68,7 @@ public class HCState {
     /**
      * 获取框架类型
      */
+    @NonNull
     public static String getFramework() {
         return framework;
     }
@@ -92,34 +92,41 @@ public class HCState {
             Bundle result = null;
             try {
                 result = contentResolver.call(uri, "active", null, null);
-            } catch (Throwable e) {
+            } catch (Throwable t) {
                 try {
                     Intent intent = new Intent("me.weishu.exp.ACTION_ACTIVE");
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     context.startActivity(intent);
-                } catch (Throwable i) {
+                } catch (Throwable ignore) {
                     return false;
                 }
             }
 
-            if (result == null)
-                result = contentResolver.call(uri, "active", null, null);
+            try {
+                if (result == null)
+                    result = contentResolver.call(uri, "active", null, null);
+            } catch (Throwable ignore) {
+            }
             if (result == null) return false;
             return result.getBoolean("active", false);
-        } catch (PackageManager.NameNotFoundException e) {
+        } catch (PackageManager.NameNotFoundException ignore) {
             return false;
         }
     }
 
     /**
      * 是否是 LSPath 环境
+     * <p>
+     * 需要声明权限 android.permission.QUERY_ALL_PACKAGES
      */
-    public static HashMap<String, String> isLSPatchActive(@NonNull ApplicationInfo appInfo) {
-        String config = appInfo.metaData.getString("lspatch");
-        if (config == null) return new HashMap<>();
-
-        String json = new String(Base64.decode(config, Base64.DEFAULT), Charsets.UTF_8);
+    @NonNull
+    public static HashMap<String, String> isLSPatchActive(@NonNull Context context, @NonNull String packageName) {
         try {
+            PackageInfo info = context.getPackageManager().getPackageInfo(packageName, PackageManager.GET_META_DATA);
+            String config = info.applicationInfo.metaData.getString("lspatch");
+            if (config == null) return new HashMap<>();
+
+            String json = new String(Base64.decode(config, Base64.DEFAULT), Charsets.UTF_8);
             JSONObject pathConfig = new JSONObject(json);
             boolean useManager = pathConfig.getBoolean("useManager");
             JSONObject lspConfig = pathConfig.getJSONObject("lspConfig");
@@ -130,7 +137,7 @@ public class HCState {
             configMap.put("versionName", versionName);
             configMap.put("versionCode", versionCode);
             return configMap;
-        } catch (JSONException e) {
+        } catch (Throwable e) {
             return new HashMap<>();
         }
     }

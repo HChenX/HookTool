@@ -45,8 +45,8 @@ public class HCData {
     private static String[] logExpandPath = null;
     @Nullable
     private static String[] logExpandIgnoreClassNames = null;
-    @NonNull
-    private static ClassLoader classLoader = ClassLoader.getSystemClassLoader();
+    @Nullable
+    private static ClassLoader classLoader = null;
     @Nullable
     private static XC_LoadPackage.LoadPackageParam loadPackageParam;
     @Nullable
@@ -56,7 +56,7 @@ public class HCData {
     }
 
     /**
-     * 获取当前日志等级
+     * 获取当前日志 TAG
      */
     @NonNull
     public static String getTag() {
@@ -64,14 +64,14 @@ public class HCData {
     }
 
     /**
-     * 获取当前日志 TAG
+     * 获取当前日志等级
      */
     public static int getLogLevel() {
         return logLevel;
     }
 
     /**
-     * 获取当前设置的模块包名
+     * 获取设置的模块包名
      */
     @NonNull
     public static String getModulePackageName() {
@@ -79,7 +79,7 @@ public class HCData {
     }
 
     /**
-     * 获取当前注入的软件包名
+     * 获取当前注入软件的包名
      */
     @NonNull
     public static String getTargetPackageName() {
@@ -102,14 +102,14 @@ public class HCData {
     }
 
     /**
-     * 是否处于 注入/Xposed 环境
+     * 是否处于 Xposed 环境
      */
     public static boolean isXposed() {
         return isXposed;
     }
 
     /**
-     * 获取当前使用日志增强的路径
+     * 获取使用日志增强功能的路径
      */
     @Nullable
     public static String[] getLogExpandPath() {
@@ -117,7 +117,7 @@ public class HCData {
     }
 
     /**
-     * 获取日志增强时应忽略的类名列表
+     * 获取使用日志增强功能时应忽略的类名列表
      */
     @Nullable
     public static String[] getLogExpandIgnoreClassNames() {
@@ -138,7 +138,7 @@ public class HCData {
     /**
      * 获取当前的类加载器
      */
-    @NonNull
+    @Nullable
     public static ClassLoader getClassLoader() {
         return classLoader;
     }
@@ -176,7 +176,7 @@ public class HCData {
     }
 
     /**
-     * 设置本模块包名
+     * 设置模块包名
      */
     public static void setModulePackageName(@NonNull String modulePackageName) {
         HCData.modulePackageName = modulePackageName;

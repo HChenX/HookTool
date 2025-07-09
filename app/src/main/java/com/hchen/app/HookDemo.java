@@ -82,7 +82,7 @@ public class HookDemo extends HCBase /* 建议继承 HCBase 使用 */ {
     }
 
     @Override
-    protected void onApplication(@NonNull Context context) {
+    protected void onApplicationAfter(@NonNull Context context) {
         // 目标应用创建 context 时回调
     }
 

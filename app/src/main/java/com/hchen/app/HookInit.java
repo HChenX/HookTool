@@ -56,14 +56,14 @@ public class HookInit extends HCEntrance /* 建议继承 HCEntrance 类作为入
     }
 
     @Override
-    public void onModuleLoad(@NonNull XC_LoadPackage.LoadPackageParam loadPackageParam) {
-        super.onModuleLoad(loadPackageParam); // 模块自身被加载时调用
+    public void onLoadModule(@NonNull XC_LoadPackage.LoadPackageParam loadPackageParam) {
+        super.onLoadModule(loadPackageParam); // 模块自身被加载时调用
     }
 
     @Override
     public void onLoadPackage(@NonNull XC_LoadPackage.LoadPackageParam loadPackageParam) throws Throwable {
         HCInit.initLoadPackageParam(loadPackageParam); // 必须，初始化工具
-        new HookDemo().onApplication().onLoadPackage(); // 添加 onApplication 后才会执行 onApplication() 回调，onLoadPackage 方法必须调用
+        new HookDemo().onApplicationBefore().onLoadPackage(); // 添加 onApplication 后才会执行 onApplication() 回调，onLoadPackage 方法必须调用
     }
 
     @Override

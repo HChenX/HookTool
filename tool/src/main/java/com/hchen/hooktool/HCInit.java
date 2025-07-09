@@ -60,12 +60,12 @@ public class HCInit {
      */
     public static void initLoadPackageParam(XC_LoadPackage.LoadPackageParam loadPackageParam) {
         if (loadPackageParam == null)
-            throw new NullPointerException("[HCInit]: loadPackageParam must not is null!");
+            throw new NullPointerException("[HCInit]: LoadPackageParam must not be null!!");
 
         HCData.setIsXposed(true);
         HCData.setLoadPackageParam(loadPackageParam);
         HCData.setClassLoader(loadPackageParam.classLoader);
-        XposedLog.logI("Init classloader: [" + loadPackageParam.classLoader + "], packageName: " + loadPackageParam.packageName);
+        XposedLog.logI("Init classloader: [" + loadPackageParam.classLoader + "], packageName: [" + loadPackageParam.packageName + "]");
     }
 
     /**
@@ -73,7 +73,7 @@ public class HCInit {
      */
     public static void initStartupParam(IXposedHookZygoteInit.StartupParam startupParam) {
         if (startupParam == null)
-            throw new NullPointerException("[HCInit]: startupParam must not is null!");
+            throw new NullPointerException("[HCInit]: StartupParam must not be null!!");
 
         HCData.setIsXposed(true);
         HCData.setStartupParam(startupParam);
@@ -98,10 +98,13 @@ public class HCInit {
     }
 
     public final static class BasicData {
-        String tag = null;
+        @NonNull
+        String tag = "Unknown";
         int logLevel = LOG_I;
-        String packageName = null;
-        String prefsName = null;
+        @NonNull
+        String packageName = "";
+        @NonNull
+        String prefsName = "";
         boolean isAutoReload = true;
         String[] logExpandPath = null;
         String[] logExpandIgnoreClassNames = null;

@@ -26,9 +26,9 @@ import android.os.Parcelable;
 
 import androidx.annotation.NonNull;
 
+import com.hchen.hooktool.callback.IAppDataGetter;
 import com.hchen.hooktool.callback.IAsyncPrefs;
 import com.hchen.hooktool.callback.IExecListener;
-import com.hchen.hooktool.callback.IPackageInfoGetter;
 import com.hchen.hooktool.callback.IPrefsApply;
 import com.hchen.hooktool.data.AppData;
 import com.hchen.hooktool.data.ShellResult;
@@ -177,10 +177,10 @@ class ToolTest extends HCBase {
         shellTool.close();
 
         Context context = null;
-        AppData appData = PackageTool.getPackagesByCode(context, new IPackageInfoGetter() {
+        AppData appData = PackageTool.getAppData(context, new IAppDataGetter() {
             @NonNull
             @Override
-            public Parcelable[] packageInfoGetter(@NonNull PackageManager pm) throws PackageManager.NameNotFoundException {
+            public Parcelable[] getPackages(@NonNull PackageManager pm) throws PackageManager.NameNotFoundException {
                 PackageInfo packageInfo = null;
                 ArrayList<PackageInfo> arrayList = new ArrayList<>();
                 arrayList.add(packageInfo);

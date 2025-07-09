@@ -200,15 +200,16 @@ public class InvokeTool {
      * @noinspection unchecked
      */
     private static <T> T baseInvokeMethod(Class<?> clazz, Object instance, String methodName, Class<?>[] classes, Object... params) {
-        Method declaredMethod;
         if (clazz == null && instance == null) {
-            throw new NullPointerException("[InvokeTool]: Class or instance must not is null, can't invoke method: " + methodName);
+            throw new NullPointerException("[InvokeTool]: Class or Instance must not be null, can't invoke method: " + methodName);
         } else if (clazz == null) {
             clazz = instance.getClass();
         }
+
         try {
-            String methodTag = clazz.getName() + "#" + methodName + "#" + Arrays.toString(classes);
-            declaredMethod = mMethodCache.get(methodTag);
+            Method declaredMethod;
+            String id = clazz.getName() + "#" + methodName + "#" + Arrays.toString(classes);
+            declaredMethod = mMethodCache.get(id);
             if (declaredMethod == null) {
                 try {
                     declaredMethod = clazz.getDeclaredMethod(methodName, classes);
@@ -226,7 +227,7 @@ public class InvokeTool {
                     }
                     if (declaredMethod == null) throw e;
                 }
-                mMethodCache.put(methodTag, declaredMethod);
+                mMethodCache.put(id, declaredMethod);
             }
             declaredMethod.setAccessible(true);
             return (T) declaredMethod.invoke(instance, params);
@@ -239,15 +240,16 @@ public class InvokeTool {
      * @noinspection unchecked
      */
     private static <T> T baseInvokeField(Class<?> clazz, Object instance, String fieldName, boolean isSetMode, Object value) {
-        Field declaredField = null;
         if (clazz == null && instance == null) {
-            throw new NullPointerException("[InvokeTool]: Class or instance must not is null, can't invoke field: " + fieldName);
+            throw new NullPointerException("[InvokeTool]: Class or Instance must not be null, can't invoke field: " + fieldName);
         } else if (clazz == null) {
             clazz = instance.getClass();
         }
+
         try {
-            String fieldTag = clazz.getName() + "#" + fieldName;
-            declaredField = mFieldCache.get(fieldTag);
+            Field declaredField;
+            String id = clazz.getName() + "#" + fieldName;
+            declaredField = mFieldCache.get(id);
             if (declaredField == null) {
                 try {
                     declaredField = clazz.getDeclaredField(fieldName);
@@ -265,7 +267,7 @@ public class InvokeTool {
                     }
                     if (declaredField == null) throw e;
                 }
-                mFieldCache.put(fieldTag, declaredField);
+                mFieldCache.put(id, declaredField);
             }
             declaredField.setAccessible(true);
             if (isSetMode) {
