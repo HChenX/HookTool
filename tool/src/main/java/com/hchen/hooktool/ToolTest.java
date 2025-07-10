@@ -41,6 +41,7 @@ import com.hchen.hooktool.utils.ShellTool;
 import java.util.ArrayList;
 import java.util.function.Supplier;
 
+import de.robv.android.xposed.IXposedHookZygoteInit;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 /**
@@ -53,8 +54,13 @@ class ToolTest extends HCBase {
     }
 
     @Override
+    protected boolean isEnabled() {
+        return false; // 是否启用
+    }
+
+    @Override
     protected void init() {
-        // 链式
+        // 链式 Hook
         buildChain("com.hchen.demo")
             .findMethod("test")
             .hook(new IHook() {
@@ -80,6 +86,7 @@ class ToolTest extends HCBase {
             }
         }).unhook();
 
+        // 查找模式
         findMethodPro("com.hchen.demo")
             .withMethodName("demo")
             .withParamTypes(int.class)
@@ -98,7 +105,7 @@ class ToolTest extends HCBase {
                 }
             });
 
-        // 本工具用法
+        // 基本用法
         new IHook() {
             @Override
             public void before() {
@@ -120,9 +127,12 @@ class ToolTest extends HCBase {
                 callMethod(o, "method");
                 getField(o, "test");
 
-                // 静态需要 class
+                // 静态本类内
                 callThisStaticMethod("thisCall", getArg(0));
+                int t = (int) getThisStaticField("test");
 
+                // 静态本类外
+                callStaticMethod(Object.class, "thisCall", getArg(0));
                 callStaticMethod("com.demo.Main", "callStatic", getArg(1)); // 调用静态方法 callStatic
                 int i = (int) getStaticField("com.demo.Main", "field");
                 setStaticField("com.demo.Main", "test", true); // 设置静态字段 test
@@ -133,6 +143,7 @@ class ToolTest extends HCBase {
             }
         };
 
+        // Shell 工具使用方法
         ShellTool shellTool = ShellTool.builder().isRoot(true).create();
         shellTool = ShellTool.obtain();
         ShellResult shellResult = shellTool.cmd("ls").exec();
@@ -176,6 +187,7 @@ class ToolTest extends HCBase {
         });
         shellTool.close();
 
+        // PackageTool 使用
         Context context = null;
         AppData appData = PackageTool.getAppData(context, new IAppDataGetter() {
             @NonNull
@@ -189,32 +201,75 @@ class ToolTest extends HCBase {
         })[0];
         Bitmap bitmap = appData.icon;
 
+        PackageTool.getAppData(context, true, new IAppDataGetter() {
+            @NonNull
+            @Override
+            public Parcelable[] getPackages(@NonNull PackageManager pm) throws PackageManager.NameNotFoundException {
+                PackageInfo packageInfo = null;
+                ArrayList<PackageInfo> arrayList = new ArrayList<>();
+                arrayList.add(packageInfo);
+                return arrayList.toArray(new PackageInfo[0]);
+            }
+
+            @Override
+            public void getAsyncAppData(@NonNull AppData[] appData) {
+                Bitmap bitmap = appData[0].icon;
+            }
+        });
+
+        // 资源注入
         createFakeResId("test_res"); // 获取 test_res 的虚拟资源 id
         // 设置 pkg 的 string 资源 test_res_str 值为 HC!
         setObjectReplacement("com.hchen.demo", "string", "test_res_str", "HC!");
 
+        // 共享首选项工具使用方法
         prefs().get("test_key", "0"); // 获取 prefs test_key 的值
         prefs().getBoolean("test_key_bool", false); // 获取 prefs test_key_bool 的值
 
         // xprefs 模式：
-        // 注意 xprefs 模式，寄生应用不能修改配置只能读取。
+        // 注意 xprefs 模式，寄生应用不能修改配置只能读取
         String s = prefs().getString("test", "1");  // 即可读取
         s = prefs("myPrefs").getString("test", "1");  // 可指定读取文件名
 
         // sprefs 模式：
-        // 配置会保存到寄生应用的私有目录，读取也会从寄生应用私有目录读取。
+        // 配置会保存到寄生应用的私有目录，读取也会从寄生应用私有目录读取
         prefs(context).editor().putString("test", "1").commit();
-        // 如果没有继承 BaseHC 可以这样调用。
+        // 如果没有继承 HCBase 可以这样调用
         PrefsTool.prefs(context).editor().putString("test", "2").commit();
-        // 注意 sprefs 模式 是和 xprefs 模式相互独立的，可共同存在。
+        // 注意 sprefs 模式 是和 xprefs 模式相互独立的，可共同存在
 
-        // 如果不方便获取 context 可用使用此方法，异步获取寄生应用上下文后再设置。
+        // 如果不方便获取 context 可用使用此方法，异步获取寄生应用上下文后再设置
         asyncPrefs(new IAsyncPrefs() {
             @Override
             public void async(@NonNull IPrefsApply sPrefs) {
                 sPrefs.editor().putString("test", "1").commit();
             }
         });
+    }
+
+    @Override
+    protected void init(@NonNull ClassLoader classLoader) {
+        super.init(classLoader); // 使用自定义的类加载器
+    }
+
+    @Override
+    protected void initZygote(@NonNull IXposedHookZygoteInit.StartupParam startupParam) {
+        super.initZygote(startupParam); // zygote 阶段
+    }
+
+    @Override
+    protected void onApplicationBefore(@NonNull Context context) {
+        super.onApplicationBefore(context); // Application 创建前
+    }
+
+    @Override
+    protected void onApplicationAfter(@NonNull Context context) {
+        super.onApplicationAfter(context); // Application 创建后
+    }
+
+    @Override
+    protected void onThrowable(int flag, @NonNull Throwable e) {
+        super.onThrowable(flag, e); // 以上流程内抛错后会回调本方法，可以在此处执行清理操作
     }
 
     private static class InitHook extends HCEntrance {
@@ -227,12 +282,30 @@ class ToolTest extends HCBase {
                 .setModulePackageName("com.hchen.demo")
                 .setPrefsName("myprefs") // 可选
                 .setAutoReload(true) // 可选
-                .setLogExpandPath("com.hchen.demo.hook"); // 可选
+                .setLogExpandPath("com.hchen.demo.hook") // 可选
+                .setLogExpandIgnoreClassNames("Ignore"); // 可选
+        }
+
+        @NonNull
+        @Override
+        public String[] ignorePackageNameList() {
+            return super.ignorePackageNameList(); // 设置忽略的包名列表，会阻止其触发 onLoadPackage 方法
         }
 
         @Override
         public void onLoadPackage(@NonNull XC_LoadPackage.LoadPackageParam loadPackageParam) throws Throwable {
             new ToolTest().onLoadPackage();
+            new ToolTest().onApplication().onLoadPackage();
+        }
+
+        @Override
+        public void onInitZygote(@NonNull StartupParam startupParam) throws Throwable {
+            super.onInitZygote(startupParam);
+        }
+
+        @Override
+        public void onLoadModule(@NonNull XC_LoadPackage.LoadPackageParam loadPackageParam) {
+            super.onLoadModule(loadPackageParam); // 模块本身被 hook 时调用
         }
     }
 }

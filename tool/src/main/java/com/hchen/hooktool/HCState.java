@@ -118,6 +118,8 @@ public class HCState {
      * 是否是 LSPath 环境
      * <p>
      * 需要声明权限 android.permission.QUERY_ALL_PACKAGES
+     *
+     * @noinspection ExtractMethodRecommender
      */
     @NonNull
     public static HashMap<String, String> isLSPatchActive(@NonNull Context context, @NonNull String packageName) {

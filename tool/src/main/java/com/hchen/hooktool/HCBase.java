@@ -130,7 +130,7 @@ public abstract class HCBase extends CoreTool {
         }
     }
 
-    final public HCBase onApplicationBefore() {
+    final public HCBase onApplication() {
         try {
             if (isEnabled()) {
                 applications.add(this);

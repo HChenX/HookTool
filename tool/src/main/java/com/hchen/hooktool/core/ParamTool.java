@@ -32,6 +32,7 @@ import static com.hchen.hooktool.core.CoreTool.getField;
 import static com.hchen.hooktool.core.CoreTool.getFieldIfExists;
 import static com.hchen.hooktool.core.CoreTool.getStaticField;
 import static com.hchen.hooktool.core.CoreTool.getStaticFieldIfExists;
+import static com.hchen.hooktool.core.CoreTool.invokeOriginalMethod;
 import static com.hchen.hooktool.core.CoreTool.newInstance;
 import static com.hchen.hooktool.core.CoreTool.newInstanceIfExists;
 import static com.hchen.hooktool.core.CoreTool.removeAdditionalInstanceField;
@@ -57,7 +58,6 @@ import java.util.Deque;
 import java.util.Optional;
 
 import de.robv.android.xposed.XC_MethodHook;
-import de.robv.android.xposed.XposedBridge;
 
 /**
  * 参数工具
@@ -443,9 +443,12 @@ public class ParamTool {
 
     // ---------------------------------------- Original -------------------------------------------
 
-    final public Object invokeOriginalMethod(@NonNull Object... params)
+    /**
+     * 调用本方法的原始方法
+     */
+    final public Object invokeThisOriginalMethod(@NonNull Object... params)
         throws InvocationTargetException, IllegalAccessException {
-        return XposedBridge.invokeOriginalMethod(param.method, param.thisObject, params);
+        return invokeOriginalMethod(param.method, param.thisObject, params);
     }
 
     // ---------------------------------------- Other -------------------------------------------

@@ -78,6 +78,7 @@ public class TryHelper {
             return consumer.apply(throwable);
         }
 
+        @Nullable
         public Throwable getThrowable() {
             return throwable;
         }
