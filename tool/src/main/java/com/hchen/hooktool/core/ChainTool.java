@@ -52,12 +52,14 @@ import java.util.Objects;
  * @author 焕晨HChen
  */
 public class ChainTool {
+    @NonNull
     private final Class<?> clazz;
+    @NonNull
     private final ChainHook chainHook;
     private ChainData chainData;
 
     private ChainTool(@NonNull Class<?> clazz) {
-        Objects.requireNonNull(clazz, "[ChainTool]: Class must not is null!");
+        Objects.requireNonNull(clazz, "[ChainTool]: Class must not be null!");
         chainHook = new ChainHook();
         this.clazz = clazz;
     }
@@ -157,7 +159,7 @@ public class ChainTool {
     }
 
     private void runChain() {
-        Objects.requireNonNull(chainData, "[ChainTool]: Chain data must not is null!");
+        Objects.requireNonNull(chainData, "[ChainTool]: Chain data must not be null!");
 
         final ChainData tempChainData = chainData;
         if (ChainData.chainDataSet.isEmpty()) {

@@ -49,6 +49,7 @@ import com.hchen.hooktool.log.AndroidLog;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.util.ArrayDeque;
@@ -56,6 +57,7 @@ import java.util.Deque;
 import java.util.Optional;
 
 import de.robv.android.xposed.XC_MethodHook;
+import de.robv.android.xposed.XposedBridge;
 
 /**
  * 参数工具
@@ -437,6 +439,13 @@ public class ParamTool {
      */
     final public boolean existsThisField(@NonNull String fieldName) {
         return existsField(param.method.getDeclaringClass(), fieldName);
+    }
+
+    // ---------------------------------------- Original -------------------------------------------
+
+    final public Object invokeOriginalMethod(@NonNull Object... params)
+        throws InvocationTargetException, IllegalAccessException {
+        return XposedBridge.invokeOriginalMethod(param.method, param.thisObject, params);
     }
 
     // ---------------------------------------- Other -------------------------------------------

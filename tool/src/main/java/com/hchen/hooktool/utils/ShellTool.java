@@ -508,7 +508,7 @@ public class ShellTool {
 
                     try {
                         lock.wait();
-                    } catch (InterruptedException e) {
+                    } catch (InterruptedException ignore) {
                     }
                     return true;
                 } else {

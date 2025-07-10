@@ -18,6 +18,9 @@
  */
 package com.hchen.hooktool.helper;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -31,7 +34,8 @@ public class TryHelper {
     private TryHelper() {
     }
 
-    public static <R> Result<R> doTry(IDecomposer<R> supplier) {
+    @NonNull
+    public static <R> Result<R> doTry(@NonNull IDecomposer<R> supplier) {
         return new Result<R>(supplier);
     }
 
@@ -41,9 +45,10 @@ public class TryHelper {
 
     public static final class Result<R> {
         private R result;
+        @Nullable
         private Throwable throwable;
 
-        private Result(IDecomposer<R> iDecomposer) {
+        private Result(@NonNull IDecomposer<R> iDecomposer) {
             try {
                 this.result = iDecomposer.get();
                 this.throwable = null;
@@ -63,12 +68,12 @@ public class TryHelper {
             return or;
         }
 
-        public void onThrowable(Consumer<Throwable> consumer) {
+        public void onThrowable(@NonNull Consumer<Throwable> consumer) {
             if (isSuccess()) return;
             consumer.accept(throwable);
         }
 
-        public R onThrowable(Function<Throwable, R> consumer) {
+        public R onThrowable(@NonNull Function<Throwable, R> consumer) {
             if (isSuccess()) return result;
             return consumer.apply(throwable);
         }

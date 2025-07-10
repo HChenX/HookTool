@@ -60,7 +60,7 @@ public class ConstructorHelper {
     private final HashMap<Integer, Integer> paramCountVarMap = new HashMap<>();
 
     public ConstructorHelper(@NonNull Class<?> clazz) {
-        Objects.requireNonNull(clazz, "[ConstructorHelper]: Class must not is null!");
+        Objects.requireNonNull(clazz, "[ConstructorHelper]: Class must not be null!");
         this.clazz = clazz;
     }
 

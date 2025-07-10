@@ -2099,7 +2099,7 @@ public class CoreTool extends XposedLog {
         List<Class<?>> classes = new ArrayList<>();
         for (Object type : paramTypes) {
             if (type == null)
-                throw new NullPointerException("Param type must not is null: " + Arrays.toString(paramTypes));
+                throw new NullPointerException("Param type must not be null: " + Arrays.toString(paramTypes));
             else if (type instanceof String strType)
                 classes.add(findClass(strType, classLoader));
             else if (type instanceof Class<?> clazz)

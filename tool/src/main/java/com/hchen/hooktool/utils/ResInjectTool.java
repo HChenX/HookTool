@@ -194,7 +194,7 @@ public class ResInjectTool {
         return createFakeResId(res.getResourceName(id));
     }
 
-    private static int fnv1a32Hash(String str) {
+    private static int fnv1a32Hash(@NonNull String str) {
         final int FNV_32_PRIME = 0x01000193;
         int hash = 0x811c9dc5;
         for (byte b : str.getBytes(StandardCharsets.UTF_8)) {

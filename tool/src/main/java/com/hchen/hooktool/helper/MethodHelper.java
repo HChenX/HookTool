@@ -67,7 +67,7 @@ public class MethodHelper {
     private final HashMap<Integer, Integer> paramCountVarMap = new HashMap<>();
 
     public MethodHelper(@NonNull Class<?> clazz) {
-        Objects.requireNonNull(clazz, "[MethodHelper]: Class must not is null!");
+        Objects.requireNonNull(clazz, "[MethodHelper]: Class must not be null!");
         this.clazz = clazz;
     }
 
