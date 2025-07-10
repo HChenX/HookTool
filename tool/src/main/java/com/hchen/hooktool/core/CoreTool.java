@@ -801,8 +801,8 @@ public class CoreTool extends XposedLog {
     /**
      * Hook 指定类的所有方法
      *
-     * @param classPath  类引用路径
-     * @param iHook      Hook 回调接口
+     * @param classPath 类引用路径
+     * @param iHook     Hook 回调接口
      */
     public static XC_MethodHook.Unhook[] hookAllMethod(@NonNull String classPath, @NonNull IHook iHook) {
         return hookAllMethod(classPath, HCData.getClassLoader(), iHook);
@@ -822,8 +822,8 @@ public class CoreTool extends XposedLog {
     /**
      * Hook 指定类的所有方法
      *
-     * @param clazz      类
-     * @param iHook      Hook 回调接口
+     * @param clazz 类
+     * @param iHook Hook 回调接口
      */
     public static XC_MethodHook.Unhook[] hookAllMethod(@NonNull Class<?> clazz, @NonNull IHook iHook) {
         return hookAll(findAllMethod(clazz), iHook);
@@ -1797,6 +1797,45 @@ public class CoreTool extends XposedLog {
     public static Object invokeOriginalMethod(@NonNull Member method, Object thisObject, @NonNull Object... params)
         throws InvocationTargetException, IllegalAccessException {
         return XposedBridge.invokeOriginalMethod(method, thisObject, params);
+    }
+
+    /**
+     * 调用原始方法
+     *
+     * @param thisObject 调用方法的对象实例
+     * @param methodName 方法名
+     * @param paramTypes 方法的参数列表
+     * @param params     方法参数
+     * @throws InvocationTargetException 如果目标方法抛出异常
+     * @throws IllegalAccessException    如果无法访问目标方法
+     */
+    public static Object invokeOriginalMethod(Object thisObject, String methodName, Class<?>[] paramTypes, @NonNull Object... params)
+        throws InvocationTargetException, IllegalAccessException {
+        try {
+            Method method = thisObject.getClass().getDeclaredMethod(methodName, paramTypes);
+            return XposedBridge.invokeOriginalMethod(method, thisObject, params);
+        } catch (NoSuchMethodException e) {
+            throw new UnexpectedException(e);
+        }
+    }
+
+    /**
+     * 调用原始方法
+     *
+     * @param thisObject 调用方法的对象实例
+     * @param paramTypes 方法的参数列表
+     * @param params     方法参数
+     * @throws InvocationTargetException 如果目标方法抛出异常
+     * @throws IllegalAccessException    如果无法访问目标方法
+     */
+    public static Object invokeOriginalMethod(Object thisObject, Class<?>[] paramTypes, @NonNull Object... params)
+        throws InvocationTargetException, IllegalAccessException {
+        try {
+            Constructor<?> method = thisObject.getClass().getDeclaredConstructor(paramTypes);
+            return XposedBridge.invokeOriginalMethod(method, thisObject, params);
+        } catch (NoSuchMethodException e) {
+            throw new UnexpectedException(e);
+        }
     }
 
     // -------------------------- Chain ------------------------------
