@@ -433,7 +433,7 @@ public class MainTest {
 
 |       项目名称       |                              项目链接                              |
 |:----------------:|:--------------------------------------------------------------:|
-| AppRetentionHook | [AppRetentionHook](https://github.com/HChenX/AppRetentionHook) |
+|   AppRetention   |   [AppRetention](https://github.com/HChenX/AppRetention)       |
 |  AutoSEffSwitch  |   [AutoSEffSwitch](https://github.com/HChenX/AutoSEffSwitch)   |
 |  SwitchFreeForm  |   [SwitchFreeForm](https://github.com/HChenX/SwitchFreeForm)   |
 |  ForegroundPin   |    [ForegroundPin](https://github.com/HChenX/ForegroundPin)    |
