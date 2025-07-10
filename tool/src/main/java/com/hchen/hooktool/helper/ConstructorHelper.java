@@ -28,7 +28,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.hchen.hooktool.exception.NonSingletonException;
-import com.hchen.hooktool.exception.UnexpectedException;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
@@ -46,18 +45,18 @@ import java.util.stream.Collectors;
  * 构造函数查找
  *
  * @author 焕晨HChen
+ * @noinspection SequencedCollectionMethodCanBeUsed
  */
 public class ConstructorHelper {
     private final Class<?> clazz;
     private int paramCount = -1;
+    private final HashMap<Integer, Integer> paramCountVarMap = new HashMap<>();
     private Class<?>[] paramTypes = null;
     private int mods = -1;
     private Class<? extends Annotation> annotation = null;
     private Type[] genericParamTypes = null;
     private Class<? extends Throwable>[] exceptionTypes = null;
     private boolean withSuper = false;
-    private Constructor<?> constructorCache = null;
-    private final HashMap<Integer, Integer> paramCountVarMap = new HashMap<>();
 
     public ConstructorHelper(@NonNull Class<?> clazz) {
         Objects.requireNonNull(clazz, "[ConstructorHelper]: Class must not be null!");
@@ -164,8 +163,7 @@ public class ConstructorHelper {
         if (constructors.size() > 1)
             throw new NonSingletonException("[ConstructorHelper]: Query did not return a unique result: " + constructors.size());
 
-        constructorCache = constructors.get(0);
-        return new HookHelper<>(constructorCache);
+        return new HookHelper<>(constructors.get(0));
     }
 
     /**
@@ -174,10 +172,8 @@ public class ConstructorHelper {
     @Nullable
     public HookHelper<Constructor<?>> singleOrNull() {
         List<Constructor<?>> constructors = matches();
-        if (constructors.size() == 1) {
-            constructorCache = constructors.get(0);
-            return new HookHelper<>(constructorCache);
-        }
+        if (constructors.size() == 1)
+            return new HookHelper<>(constructors.get(0));
 
         return null;
     }
@@ -190,8 +186,7 @@ public class ConstructorHelper {
         if (constructors.size() != 1)
             throw throwableSupplier.get();
 
-        constructorCache = constructors.get(0);
-        return new HookHelper<>(constructorCache);
+        return new HookHelper<>(constructors.get(0));
     }
 
     /**
@@ -202,15 +197,25 @@ public class ConstructorHelper {
     }
 
     /**
+     * 重置查找器
+     */
+    public void reset() {
+        paramCount = -1;
+        paramCountVarMap.clear();
+        paramTypes = null;
+        mods = -1;
+        annotation = null;
+        genericParamTypes = null;
+        exceptionTypes = null;
+        withSuper = false;
+    }
+
+    /**
      * 核心过滤逻辑
      *
      * @noinspection RedundantIfStatement
      */
     private List<Constructor<?>> matches() {
-        if (constructorCache != null) {
-            throw new UnexpectedException("[ConstructorHelper]: Do not reuse!");
-        }
-
         List<Constructor<?>> constructors = new ArrayList<>(Arrays.asList(clazz.getDeclaredConstructors()));
         if (withSuper) {
             Class<?> sup = clazz.getSuperclass();
@@ -268,7 +273,7 @@ public class ConstructorHelper {
                         }
                     }
                 }
-                if (mods != -1 && (constructor.getModifiers() & mods) == 0)
+                if (mods != -1 && (constructor.getModifiers() & mods) != mods)
                     return false;
                 if (annotation != null && !constructor.isAnnotationPresent(annotation))
                     return false;

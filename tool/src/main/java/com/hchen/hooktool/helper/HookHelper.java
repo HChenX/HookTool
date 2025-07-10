@@ -65,7 +65,7 @@ public class HookHelper<T extends Member> {
     /**
      * 获取成员
      */
-    public T get() {
+    public T obtain() {
         return member;
     }
 }

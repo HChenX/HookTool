@@ -28,7 +28,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.hchen.hooktool.exception.NonSingletonException;
-import com.hchen.hooktool.exception.UnexpectedException;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -47,6 +46,7 @@ import java.util.stream.Collectors;
  * 方法查找
  *
  * @author 焕晨HChen
+ * @noinspection SequencedCollectionMethodCanBeUsed
  */
 public class MethodHelper {
     private final Class<?> clazz;
@@ -55,6 +55,7 @@ public class MethodHelper {
     private Pattern pattern = null;
     private int paramCount = -1;
     private Class<?>[] paramTypes = null;
+    private final HashMap<Integer, Integer> paramCountVarMap = new HashMap<>();
     private Class<?> returnType = null;
     private Class<?> superReturnType = null;
     private int mods = -1;
@@ -63,8 +64,6 @@ public class MethodHelper {
     private Type[] genericParamTypes = null;
     private Class<? extends Throwable>[] exceptionTypes = null;
     private boolean withSuper = false;
-    private Method methodCache = null;
-    private final HashMap<Integer, Integer> paramCountVarMap = new HashMap<>();
 
     public MethodHelper(@NonNull Class<?> clazz) {
         Objects.requireNonNull(clazz, "[MethodHelper]: Class must not be null!");
@@ -249,8 +248,7 @@ public class MethodHelper {
         if (methods.size() > 1)
             throw new NonSingletonException("[MethodHelper]: Query did not return a unique result: " + methods.size());
 
-        methodCache = methods.get(0);
-        return new HookHelper<>(methodCache);
+        return new HookHelper<>(methods.get(0));
     }
 
     /**
@@ -262,8 +260,7 @@ public class MethodHelper {
         if (methods.isEmpty()) return null;
         if (methods.size() > 1) return null;
 
-        methodCache = methods.get(0);
-        return new HookHelper<>(methodCache);
+        return new HookHelper<>(methods.get(0));
     }
 
     /**
@@ -274,8 +271,7 @@ public class MethodHelper {
         if (methods.isEmpty()) throw throwableSupplier.get();
         if (methods.size() > 1) throw throwableSupplier.get();
 
-        methodCache = methods.get(0);
-        return new HookHelper<>(methodCache);
+        return new HookHelper<>(methods.get(0));
     }
 
     /**
@@ -286,15 +282,31 @@ public class MethodHelper {
     }
 
     /**
+     * 重置查找器
+     */
+    public void reset() {
+        methodName = null;
+        substring = null;
+        pattern = null;
+        paramCount = -1;
+        paramTypes = null;
+        paramCountVarMap.clear();
+        returnType = null;
+        superReturnType = null;
+        mods = -1;
+        annotation = null;
+        genericReturnType = null;
+        genericParamTypes = null;
+        exceptionTypes = null;
+        withSuper = false;
+    }
+
+    /**
      * 核心过滤逻辑
      *
      * @noinspection RedundantIfStatement
      */
     private List<Method> matches() {
-        if (methodCache != null) {
-            throw new UnexpectedException("[MethodHelper]: Do not reuse!");
-        }
-
         ArrayList<Method> methods = new ArrayList<>(Arrays.asList(clazz.getDeclaredMethods()));
         if (withSuper) {
             Class<?> clazzWithSuper = clazz.getSuperclass();

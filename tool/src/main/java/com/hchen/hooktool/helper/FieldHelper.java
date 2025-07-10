@@ -22,7 +22,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.hchen.hooktool.exception.NonSingletonException;
-import com.hchen.hooktool.exception.UnexpectedException;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -39,17 +38,17 @@ import java.util.stream.Collectors;
  * 字段查找
  *
  * @author 焕晨HChen
+ * @noinspection SequencedCollectionMethodCanBeUsed
  */
 public class FieldHelper {
     private final Class<?> clazz;
-    private String fieldName;
-    private String substring;
-    private Pattern pattern;
-    private Class<?> fieldType;
+    private String fieldName = null;
+    private String substring = null;
+    private Pattern pattern = null;
+    private Class<?> fieldType = null;
     private int mods = -1;
-    private Class<? extends Annotation> annotation;
+    private Class<? extends Annotation> annotation = null;
     private boolean withSuper = false;
-    private Field fieldCache;
 
     public FieldHelper(@NonNull Class<?> clazz) {
         Objects.requireNonNull(clazz, "[FieldHelper]: Class must not be null!");
@@ -143,8 +142,7 @@ public class FieldHelper {
             throw new NonSingletonException("[FieldHelper]: No result found for query!");
         if (list.size() > 1)
             throw new NonSingletonException("[FieldHelper]: Query did not return a unique result: " + list.size());
-        fieldCache = list.get(0);
-        return fieldCache;
+        return list.get(0);
     }
 
     /**
@@ -154,8 +152,7 @@ public class FieldHelper {
     public Field singleOrNull() {
         List<Field> list = matches();
         if (list.size() != 1) return null;
-        fieldCache = list.get(0);
-        return fieldCache;
+        return list.get(0);
     }
 
     /**
@@ -164,8 +161,7 @@ public class FieldHelper {
     public Field singleOrThrow(@NonNull Supplier<NonSingletonException> supplier) {
         List<Field> list = matches();
         if (list.size() != 1) throw supplier.get();
-        fieldCache = list.get(0);
-        return fieldCache;
+        return list.get(0);
     }
 
     /**
@@ -176,11 +172,24 @@ public class FieldHelper {
     }
 
     /**
+     * 重置查找器
+     */
+    public void reset() {
+        fieldName = null;
+        substring = null;
+        pattern = null;
+        fieldType = null;
+        mods = -1;
+        annotation = null;
+        withSuper = false;
+    }
+
+    /**
      * 查找核心逻辑
+     *
+     * @noinspection RedundantIfStatement
      */
     private List<Field> matches() {
-        if (fieldCache != null) throw new UnexpectedException("[FieldHelper]: Do not reuse!");
-
         List<Field> fields = new ArrayList<>(Arrays.asList(clazz.getDeclaredFields()));
         if (withSuper) {
             Class<?> sup = clazz.getSuperclass();

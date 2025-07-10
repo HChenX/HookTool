@@ -28,6 +28,7 @@ import com.hchen.hooktool.exception.UnexpectedException;
 
 import java.io.File;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URL;
@@ -35,7 +36,6 @@ import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -53,6 +53,7 @@ import dalvik.system.DexFile;
  * 类查找
  *
  * @author 焕晨HChen
+ * @noinspection SequencedCollectionMethodCanBeUsed
  */
 public class ClassHelper {
     private final ClassLoader loader;
@@ -61,14 +62,18 @@ public class ClassHelper {
     private Pattern pattern = null;
     private String packagePath = null;
     private String[] fieldNames = null;
+    private int fieldCount = -1;
     private Class<?>[] fieldTypes = null;
     private String[] methodNames = null;
+    private int methodCount = -1;
+    private Class<?>[] constructorTypes = null;
+    private int constructorCount = -1;
     private Class<? extends Annotation> annotation = null;
     private Class<?> superClass = null;
     private Class<?>[] interfaceClasses = null;
     private boolean includeAndroidClasses = false;
     private boolean cacheBuilt = false;
-    private Set<String> classPathsCache = null;
+    private List<String> classPathsCache = null;
 
     public ClassHelper(ClassLoader loader) {
         if (loader == null) this.loader = ClassLoader.getSystemClassLoader();
@@ -116,6 +121,14 @@ public class ClassHelper {
     }
 
     /**
+     * 查找包含指定数量字段的类
+     */
+    public ClassHelper withFieldCount(int count) {
+        this.fieldCount = count;
+        return this;
+    }
+
+    /**
      * 查找包含指定字段集的类
      */
     public ClassHelper withFieldTypes(@NonNull Class<?>... fieldTypes) {
@@ -128,6 +141,30 @@ public class ClassHelper {
      */
     public ClassHelper withMethodNames(@NonNull String... methodNames) {
         this.methodNames = methodNames;
+        return this;
+    }
+
+    /**
+     * 查找包含指定方法数量的类
+     */
+    public ClassHelper withMethodCount(int count) {
+        this.methodCount = count;
+        return this;
+    }
+
+    /**
+     * 查找包含指定构造函数参数集的类
+     */
+    public ClassHelper withConstructorTypes(@NonNull Class<?>... classes) {
+        this.constructorTypes = classes;
+        return this;
+    }
+
+    /**
+     * 查找包含指定构造函数数量的类
+     */
+    public ClassHelper withConstructorCount(int count) {
+        this.constructorCount = count;
         return this;
     }
 
@@ -203,11 +240,34 @@ public class ClassHelper {
     }
 
     /**
+     * 重置查找器
+     * <p>
+     * 不会重置类路径的缓存列表
+     */
+    public void reset() {
+        className = null;
+        substring = null;
+        pattern = null;
+        packagePath = null;
+        fieldNames = null;
+        fieldCount = -1;
+        fieldTypes = null;
+        methodNames = null;
+        methodCount = -1;
+        constructorTypes = null;
+        constructorCount = -1;
+        annotation = null;
+        superClass = null;
+        interfaceClasses = null;
+        includeAndroidClasses = false;
+    }
+
+    /**
      * 查找所有匹配
      */
     private List<Class<?>> matches() {
-        Set<String> names = buildCache();
-        return names.stream().filter(path -> {
+        List<String> paths = getAllClassPath();
+        return paths.stream().filter(path -> {
             try {
                 Class<?> cls = loader.loadClass(path);
                 if (!includeAndroidClasses && path.startsWith("andorid.")) return false;
@@ -223,15 +283,38 @@ public class ClassHelper {
                     Set<String> fieldNameSet = Arrays.stream(cls.getDeclaredFields()).map(Field::getName).collect(Collectors.toSet());
                     if (!Arrays.stream(fieldNames).allMatch(fieldNameSet::contains))
                         return false;
-                } else if (fieldTypes != null) {
+                }
+                if (fieldCount != -1 && cls.getDeclaredFields().length != fieldCount) return false;
+                if (fieldTypes != null) {
                     Set<Class<?>> fieldTypeSet = Arrays.stream(cls.getDeclaredFields()).map(Field::getType).collect(Collectors.toSet());
-                    if (!Arrays.stream(fieldTypes).allMatch(fieldTypeSet::contains))
+                    if (!Arrays.stream(fieldTypes).allMatch(c -> Objects.equals(c, Any.class) || fieldTypeSet.contains(c)))
                         return false;
                 }
                 if (methodNames != null) {
                     Set<String> methodNameSet = Arrays.stream(cls.getDeclaredMethods()).map(Method::getName).collect(Collectors.toSet());
                     if (!Arrays.stream(methodNames).allMatch(methodNameSet::contains))
                         return false;
+                }
+                if (methodCount != -1 && cls.getDeclaredMethods().length != methodCount)
+                    return false;
+                if (constructorCount != -1 && cls.getDeclaredConstructors().length != constructorCount)
+                    return false;
+                if (constructorTypes != null) {
+                    boolean exist = false;
+                    for (int i = 0; i < cls.getDeclaredConstructors().length; i++) {
+                        Constructor<?> constructor = cls.getDeclaredConstructors()[i];
+                        if (constructor.getParameterCount() != constructorTypes.length)
+                            continue;
+                        for (int c = 0; c < constructor.getParameterCount(); c++) {
+                            Class<?> actual = constructor.getParameterTypes()[c];
+                            Class<?> want = constructorTypes[c];
+                            if (Objects.equals(want, Any.class)) continue;
+                            exist = Objects.equals(actual, want);
+                            if (!exist) break;
+                        }
+                        if (exist) break;
+                    }
+                    return exist;
                 }
                 if (annotation != null && !cls.isAnnotationPresent(annotation)) return false;
                 if (superClass != null && !superClass.isAssignableFrom(cls)) return false;
@@ -251,11 +334,12 @@ public class ClassHelper {
     }
 
     /**
-     * 构建类名缓存，仅执行一次
+     * @noinspection JavaReflectionMemberAccess
      */
-    private Set<String> buildCache() {
+    private List<String> getAllClassPath() {
         if (cacheBuilt) return classPathsCache;
-        Set<String> paths = new HashSet<>();
+
+        List<String> paths = new ArrayList<>();
         // Android Dex
         try {
             if (loader instanceof BaseDexClassLoader) {
