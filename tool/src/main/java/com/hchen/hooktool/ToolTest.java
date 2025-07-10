@@ -149,29 +149,29 @@ class ToolTest extends HCBase {
         shellTool.cmd("echo hello").async();
         shellTool.cmd("echo world").async(new IExecListener() {
             @Override
-            public void output(@NonNull String command, @NonNull String[] outputs, @NonNull String exitCode) {
-                IExecListener.super.output(command, outputs, exitCode);
+            public void output(@NonNull String command, @NonNull String exitCode, @NonNull String[] outputs) {
+                IExecListener.super.output(command, exitCode, outputs);
             }
         });
         shellTool.addExecListener(new IExecListener() {
             @Override
-            public void output(@NonNull String command, @NonNull String[] outputs, @NonNull String exitCode) {
-                IExecListener.super.output(command, outputs, exitCode);
+            public void output(@NonNull String command, @NonNull String exitCode, @NonNull String[] outputs) {
+                IExecListener.super.output(command, exitCode, outputs);
             }
 
             @Override
-            public void error(@NonNull String command, @NonNull String[] errors, @NonNull String exitCode) {
-                IExecListener.super.error(command, errors, exitCode);
+            public void error(@NonNull String command, @NonNull String exitCode, @NonNull String[] errors) {
+                IExecListener.super.error(command, exitCode, errors);
             }
 
             @Override
-            public void rootResult(@NonNull String exitCode) {
-                IExecListener.super.rootResult(exitCode);
+            public void rootResult(boolean hasRoot, @NonNull String exitCode) {
+                IExecListener.super.rootResult(hasRoot, exitCode);
             }
 
             @Override
-            public void brokenPip(@NonNull String command, @NonNull String[] errors, @NonNull String reason) {
-                IExecListener.super.brokenPip(command, errors, reason);
+            public void brokenPip(@NonNull String reason, @NonNull String[] errors) {
+                IExecListener.super.brokenPip(reason, errors);
             }
         });
         shellTool.close();
@@ -212,7 +212,7 @@ class ToolTest extends HCBase {
         asyncPrefs(new IAsyncPrefs() {
             @Override
             public void async(@NonNull IPrefsApply sPrefs) {
-                sPrefs.editor().put("test", "1").commit();
+                sPrefs.editor().putString("test", "1").commit();
             }
         });
     }

@@ -29,8 +29,8 @@ import java.util.Objects;
  * @author 焕晨HChen
  * @noinspection DeconstructionCanBeUsed
  */
-public record ShellResult(@NonNull String command, @NonNull String[] outputs,
-                          @NonNull String exitCode) {
+public record ShellResult(@NonNull String command, @NonNull String exitCode,
+                          @NonNull String[] outputs, @NonNull String[] errors) {
     /**
      * 是否成功执行
      */
@@ -41,15 +41,15 @@ public record ShellResult(@NonNull String command, @NonNull String[] outputs,
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof ShellResult that)) return false;
-
         return Objects.equals(command, that.command) &&
             Objects.equals(exitCode, that.exitCode) &&
+            Objects.deepEquals(errors, that.errors) &&
             Objects.deepEquals(outputs, that.outputs);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(command, Arrays.hashCode(outputs), exitCode);
+        return Objects.hash(command, exitCode, Arrays.hashCode(outputs), Arrays.hashCode(errors));
     }
 
     @Override
@@ -57,8 +57,9 @@ public record ShellResult(@NonNull String command, @NonNull String[] outputs,
     public String toString() {
         return "ShellResult{" +
             "command='" + command + '\'' +
-            ", outputs=" + Arrays.toString(outputs) +
             ", exitCode='" + exitCode + '\'' +
+            ", outputs=" + Arrays.toString(outputs) +
+            ", errors=" + Arrays.toString(errors) +
             '}';
     }
 }

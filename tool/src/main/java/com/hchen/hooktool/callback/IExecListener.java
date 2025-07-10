@@ -30,20 +30,20 @@ public interface IExecListener {
      * 标准输出
      *
      * @param command  输入的命令
-     * @param outputs  执行后输出的内容
      * @param exitCode 退出码
+     * @param outputs  执行后输出的内容
      */
-    default void output(@NonNull String command, @NonNull String[] outputs, @NonNull String exitCode) {
+    default void output(@NonNull String command, @NonNull String exitCode, @NonNull String[] outputs) {
     }
 
     /**
      * 标准错误
      *
      * @param command  输入的命令
-     * @param errors   报错内容
      * @param exitCode 退出码
+     * @param errors   报错内容
      */
-    default void error(@NonNull String command, @NonNull String[] errors, @NonNull String exitCode) {
+    default void error(@NonNull String command, @NonNull String exitCode, @NonNull String[] errors) {
     }
 
     /**
@@ -51,16 +51,15 @@ public interface IExecListener {
      *
      * @param exitCode 退出码，非零码表尝试 Root 失败
      */
-    default void rootResult(@NonNull String exitCode) {
+    default void rootResult(boolean hasRoot, @NonNull String exitCode) {
     }
 
     /**
      * 管道破裂时的回调，代表 Shell 流非正常终止
      *
-     * @param command 输入的命令
-     * @param errors  报错内容
-     * @param reason  崩溃原因
+     * @param reason 崩溃原因
+     * @param errors 报错内容
      */
-    default void brokenPip(@NonNull String command, @NonNull String[] errors, @NonNull String reason) {
+    default void brokenPip(@NonNull String reason, @NonNull String[] errors) {
     }
 }
