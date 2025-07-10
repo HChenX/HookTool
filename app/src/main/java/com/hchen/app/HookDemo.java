@@ -77,13 +77,17 @@ public class HookDemo extends HCBase /* 建议继承 HCBase 使用 */ {
 
     @Override
     protected void initZygote(@NonNull IXposedHookZygoteInit.StartupParam startupParam) { // zygote 阶段
-        // 一般不会用到这个时机
         findClass("com.hchen.demo.Demo", startupParam.getClass().getClassLoader()); // 可以这样写
     }
 
     @Override
+    protected void onApplicationBefore(@NonNull Context context) {
+        // 目标应用创建 Application 前回调
+    }
+
+    @Override
     protected void onApplicationAfter(@NonNull Context context) {
-        // 目标应用创建 context 时回调
+        // 目标应用创建 Application 后回调
     }
 
     @Override
