@@ -18,7 +18,9 @@
 
 ### 2. **全面便利**
 
-#### Tip: 重构声明: v.2.0.5 再次重构，使工具更加优雅更加便利。 ~~v.1.0.0 版本和之前版本有较大不同，新版本工具完成静态化，更符合工具特征，拥有更好的使用体验和性能~~
+#### Tip: 重构声明: v.2.0.5 再次重构，使工具更加优雅更加便利。 ~~v.1.0.0
+
+版本和之前版本有较大不同，新版本工具完成静态化，更符合工具特征，拥有更好的使用体验和性能~~
 
 # 🔧 使用方法
 
@@ -38,7 +40,7 @@ dependencyResolutionManagement {
 
 ```groovy
 dependencies {
-    implementation 'com.github.HChenX:HookTool:v.2.1.1'
+    implementation 'com.github.HChenX:HookTool:v.2.1.4'
 }
 ```
 
@@ -53,7 +55,8 @@ public void init() {
     HCInit.initBasicData(); // 初始化模块基本信息
     HCInit.initStartupParam(); // zygote 阶段初始化工具
     HCInit.initLoadPackageParam(); // loadPackage 阶段初始化工具
-    HCInit.setClassLoader(); // 更换全局 Classloader
+    HCData.setClassLoader(); // 更换全局 Classloader
+    HCData....
 }
 ```
 
@@ -91,7 +94,7 @@ public class HookInit extends HCEntrance /* 建议继承 HCEntrance 类作为入
     @Override
     public void onLoadPackage(@NonNull XC_LoadPackage.LoadPackageParam loadPackageParam) throws Throwable {
         HCInit.initLoadPackageParam(loadPackageParam); // 必须，初始化工具
-        new HookDemo().onApplication().onLoadPackage(); // 添加 onApplication 后才会执行 onApplication() 回调，onLoadPackage 方法必须调用
+        new HookDemo().onApplication().onLoadPackage(); // 添加 onApplication 后才会执行 onApplicationBefore/After() 回调
     }
 
     @Override
@@ -172,8 +175,13 @@ public class HookDemo extends HCBase /* 建议继承 HCBase 使用 */ {
     }
 
     @Override
-    protected void onApplication(@NonNull Context context) {
-        // 目标应用创建 context 时回调
+    protected void onApplicationBefore(@NonNull Context context) {
+        // 目标应用创建 Application 之前回调
+    }
+
+    @Override
+    protected void onApplicationAfter(@NonNull Context context) {
+        // 目标应用创建 Application 之后回调
     }
 
     @Override
@@ -199,8 +207,11 @@ public class HookDemo extends HCBase /* 建议继承 HCBase 使用 */ {
 -keep class com.hchen.hooktool.HCState {
        private final static boolean isXposedEnabled;
        private final static java.lang.String framework;
-       private final static int  version;
+       private final static int version;
  }
+ 
+-keep class com.hchen.hooktool.data.AppData {*;} 
+// or
 -keep class * implements android.os.Parcelable {
         public static ** CREATOR;
 }
@@ -314,7 +325,7 @@ public class HookDemo extends HCBase {
         asyncPrefs(new IAsyncPrefs() {
             @Override
             public void async(@NonNull IPrefsApply sPrefs) {
-                sPrefs.editor().put("test", "1").commit();
+                sPrefs.editor().putString("test", "1").commit();
             }
         });
     }
@@ -360,29 +371,29 @@ public class MainTest {
         shellTool.cmd("echo hello").async();
         shellTool.cmd("echo world").async(new IExecListener() {
             @Override
-            public void output(@NonNull String command, @NonNull String[] outputs, @NonNull String exitCode) {
-                IExecListener.super.output(command, outputs, exitCode);
+            public void output(@NonNull String command, @NonNull String exitCode, @NonNull String[] outputs) {
+                IExecListener.super.output(command, exitCode, outputs);
             }
         });
         shellTool.addExecListener(new IExecListener() {
             @Override
-            public void output(@NonNull String command, @NonNull String[] outputs, @NonNull String exitCode) {
-                IExecListener.super.output(command, outputs, exitCode);
+            public void output(@NonNull String command, @NonNull String exitCode, @NonNull String[] outputs) {
+                IExecListener.super.output(command, exitCode, outputs);
             }
 
             @Override
-            public void error(@NonNull String command, @NonNull String[] errors, @NonNull String exitCode) {
-                IExecListener.super.error(command, errors, exitCode);
+            public void error(@NonNull String command, @NonNull String exitCode, @NonNull String[] errors) {
+                IExecListener.super.error(command, exitCode, errors);
             }
 
             @Override
-            public void notRoot(@NonNull String exitCode) {
-                IExecListener.super.notRoot(exitCode);
+            public void rootResult(boolean hasRoot, @NonNull String exitCode) {
+                IExecListener.super.rootResult(hasRoot, exitCode);
             }
 
             @Override
-            public void brokenPip(@NonNull String command, @NonNull String[] errors, @NonNull String reason) {
-                IExecListener.super.brokenPip(command, errors, reason);
+            public void brokenPip(@NonNull String reason, @NonNull String[] errors) {
+                IExecListener.super.brokenPip(reason, errors);
             }
         });
         shellTool.close();
@@ -428,7 +439,8 @@ public class MainTest {
 |  SwitchFreeForm  |   [SwitchFreeForm](https://github.com/HChenX/SwitchFreeForm)   |
 |  ForegroundPin   |    [ForegroundPin](https://github.com/HChenX/ForegroundPin)    |
 |  ClipboardList   |    [ClipboardList](https://github.com/HChenX/ClipboardList)    |
-|  SuperLyric      |    [SuperLyric](https://github.com/HChenX/SuperLyric)          | 
+| SplitScreenPlus  |  [SplitScreenPlus](https://github.com/HChenX/SplitScreenPlus)  |
+|    SuperLyric    |       [SuperLyric](https://github.com/HChenX/SuperLyric)       | 
 
 - 如果你的项目使用了本工具，可以告诉我，我将会把其加入表格
 - 想要详细了解本工具也可以参考上述项目，希望给你带来帮助！
