@@ -90,7 +90,7 @@ public class HCInit {
     public static void initBasicData(@NonNull BasicData basicData) {
         HCData.setTag(basicData.tag);
         HCData.setLogLevel(basicData.logLevel);
-        HCData.setModulePackageName(basicData.packageName);
+        HCData.setModulePackageName(basicData.modulePackageName);
         HCData.setPrefsName(basicData.prefsName);
         HCData.setAutoReload(basicData.isAutoReload);
         HCData.setLogExpandPath(basicData.logExpandPath);
@@ -102,7 +102,7 @@ public class HCInit {
         String tag = "Unknown";
         int logLevel = LOG_I;
         @NonNull
-        String packageName = "";
+        String modulePackageName = "";
         @NonNull
         String prefsName = "";
         boolean isAutoReload = true;
@@ -120,8 +120,8 @@ public class HCInit {
         /**
          * 设置日志等级
          */
-        public BasicData setLogLevel(@LogLevel int level) {
-            logLevel = level;
+        public BasicData setLogLevel(@LogLevel int logLevel) {
+            this.logLevel = logLevel;
             return this;
         }
 
@@ -129,7 +129,7 @@ public class HCInit {
          * 设置本模块包名
          */
         public BasicData setModulePackageName(@NonNull String modulePackageName) {
-            packageName = modulePackageName;
+            this.modulePackageName = modulePackageName;
             return this;
         }
 

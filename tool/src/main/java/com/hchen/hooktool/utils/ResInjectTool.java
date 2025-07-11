@@ -19,6 +19,7 @@
 package com.hchen.hooktool.utils;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
@@ -73,6 +74,16 @@ public class ResInjectTool {
     }
 
     @NonNull
+    public static Resources injectModuleRes(@NonNull Context context) {
+        return injectModuleRes(context.getResources());
+    }
+
+    @NonNull
+    public static Resources injectModuleRes(@NonNull Context context, boolean mainLooper) {
+        return injectModuleRes(context.getResources(), mainLooper);
+    }
+
+    @NonNull
     public static Resources injectModuleRes(@NonNull Resources resources) {
         return injectModuleRes(resources, false);
     }
@@ -103,20 +114,12 @@ public class ResInjectTool {
         if (resourceSets.contains(resources))
             return resources;
 
-        boolean load;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            load = injectResAboveApi30(resources, mainLooper);
-        } else {
-            load = injectResBelowApi30(resources);
-        }
-        // if (!load) {
-        //     try {
-        //         return getModuleRes(context);
-        //     } catch (PackageManager.NameNotFoundException e) {
-        //         logE(tag(), "failed to load resource! critical error!! scope may crash!!", e);
-        //     }
-        // }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)
+            injectResAboveApi30(resources, mainLooper);
+        else injectResBelowApi30(resources);
+
         resourceSets.add(resources);
+
         return resources;
     }
 
@@ -124,7 +127,7 @@ public class ResInjectTool {
      * 来自 QA 的方法
      */
     @RequiresApi(api = Build.VERSION_CODES.R)
-    private static boolean injectResAboveApi30(@NonNull Resources resources, boolean mainLooper) {
+    private static void injectResAboveApi30(@NonNull Resources resources, boolean mainLooper) {
         if (resourcesLoader == null) {
             try (ParcelFileDescriptor pfd =
                      ParcelFileDescriptor.open(new File(modulePath), ParcelFileDescriptor.MODE_READ_ONLY)
@@ -139,39 +142,37 @@ public class ResInjectTool {
         }
         if (mainLooper)
             if (Looper.myLooper() == Looper.getMainLooper()) {
-                return addLoaders(resources);
+                addLoaders(resources);
             } else {
                 if (handler == null) {
                     handler = new Handler(Looper.getMainLooper());
                 }
                 handler.post(() -> addLoaders(resources));
-                return true; // 此状态下保持返回 true，请观察日志是否有报错来判断是否成功。
             }
         else
-            return addLoaders(resources);
+            addLoaders(resources);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.R)
-    private static boolean addLoaders(@NonNull Resources resources) {
+    private static void addLoaders(@NonNull Resources resources) {
         try {
             resources.addLoaders(resourcesLoader);
         } catch (IllegalArgumentException e) {
             String expected = "Cannot modify resource loaders of ResourcesImpl not registered with ResourcesManager";
             if (expected.equals(e.getMessage())) {
                 // fallback to below API 30
-                return injectResBelowApi30(resources);
+                injectResBelowApi30(resources);
             } else {
                 throw new InjectResourcesException("[ResInjectTool/addLoaders]: Failed to inject res!!", e);
             }
         }
-        return true;
     }
 
     /**
      * @noinspection JavaReflectionMemberAccess
      */
     @SuppressLint("DiscouragedPrivateApi")
-    private static boolean injectResBelowApi30(@NonNull Resources resources) {
+    private static void injectResBelowApi30(@NonNull Resources resources) {
         try {
             AssetManager assets = resources.getAssets();
             Method addAssetPath = AssetManager.class.getDeclaredMethod("addAssetPath", String.class);
@@ -183,7 +184,6 @@ public class ResInjectTool {
         } catch (Throwable e) {
             throw new InjectResourcesException("[ResInjectTool/injectResBelowApi30]: Failed to inject res!", e);
         }
-        return true;
     }
 
     public static int createFakeResId(@NonNull String resName) {
@@ -270,11 +270,32 @@ public class ResInjectTool {
         CoreTool.hookMethod(TypedArray.class, "getDimension", int.class, float.class, hookTypedBefore); // float
         CoreTool.hookMethod(TypedArray.class, "getDimensionPixelOffset", int.class, int.class, hookTypedBefore); // int
         CoreTool.hookMethod(TypedArray.class, "getDimensionPixelSize", int.class, int.class, hookTypedBefore); // int
+        CoreTool.hookMethod(TypedArray.class, "getLayoutDimension", int.class, int.class, hookTypedBefore); // int
+        CoreTool.hookMethod(TypedArray.class, "getLayoutDimension", int.class, String.class, hookTypedBefore); // int
         CoreTool.hookMethod(TypedArray.class, "getDrawableForDensity", int.class, int.class, hookTypedBefore); // Drawable
-        // CoreTool.hookMethod(TypedArray.class, "getFraction", int.class, int.class, int.class, float.class, hookTypedBefore); // float 不好实现
+        CoreTool.hookMethod(TypedArray.class, "getFraction", int.class, int.class, int.class, float.class, hookTypedBefore); // float
 
         isHooked = true;
     }
+
+    private static final IHook hookResBefore = new IHook() {
+        @Override
+        public void before() {
+            try {
+                injectModuleRes((Resources) thisObject()); // 注入资源
+                String methodName = getMember().getName();
+                Object value = getResourceReplacement(getMember(), (Resources) thisObject(), getArgs());
+                if (value != null) {
+                    if ("getDimensionPixelOffset".equals(methodName) || "getDimensionPixelSize".equals(methodName)) {
+                        if (value instanceof Float) value = ((Float) value).intValue();
+                    }
+                    setResult(value);
+                }
+            } catch (Throwable ignore) {
+                // 忽略报错
+            }
+        }
+    };
 
     private static final IHook hookTypedBefore = new IHook() {
         @Override
@@ -291,32 +312,17 @@ public class ResInjectTool {
                     Resources resources = (Resources) getThisField("mResources");
                     Resources.Theme theme = (Resources.Theme) getThisField("mTheme");
                     injectModuleRes(resources); // 注入资源
-                    Object value = getTypedArrayReplacement(resources, theme, methodName, id);
+                    Object value = getTypedArrayReplacement(resources, theme, id, methodName, getArgs());
                     if (value != null) {
-                        if ("getDimensionPixelOffset".equals(methodName) || "getDimensionPixelSize".equals(methodName)) {
+                        if (
+                            "getDimensionPixelOffset".equals(methodName) ||
+                                "getDimensionPixelSize".equals(methodName) ||
+                                "getLayoutDimension".equals(methodName)
+                        ) {
                             if (value instanceof Float) value = ((Float) value).intValue();
                         }
                         setResult(value);
                     }
-                }
-            } catch (Throwable ignore) {
-                // 忽略报错
-            }
-        }
-    };
-
-    private static final IHook hookResBefore = new IHook() {
-        @Override
-        public void before() {
-            try {
-                injectModuleRes((Resources) thisObject()); // 注入资源
-                String methodName = getMember().getName();
-                Object value = getResourceReplacement(getMember(), (Resources) thisObject(), getArgs());
-                if (value != null) {
-                    if ("getDimensionPixelOffset".equals(methodName) || "getDimensionPixelSize".equals(methodName)) {
-                        if (value instanceof Float) value = ((Float) value).intValue();
-                    }
-                    setResult(value);
                 }
             } catch (Throwable ignore) {
                 // 忽略报错
@@ -365,56 +371,57 @@ public class ResInjectTool {
     }
 
     @Nullable
-    private static Object getTypedArrayReplacement(@NonNull Resources res, @NonNull Resources.Theme theme, @NonNull String methodName, int id)
+    private static Object getTypedArrayReplacement(@NonNull Resources res, @NonNull Resources.Theme theme, int id, @NonNull String methodName, Object[] params)
         throws InvocationTargetException, IllegalAccessException {
-        if (id != 0) {
-            String pkgName = null;
-            String resType = null;
-            String resName = null;
-            try {
-                pkgName = res.getResourcePackageName(id);
-                resType = res.getResourceTypeName(id);
-                resName = res.getResourceEntryName(id);
-            } catch (Throwable ignore) {
-            }
-            if (pkgName == null || resType == null || resName == null) return null;
+        String pkgName = null;
+        String resType = null;
+        String resName = null;
+        try {
+            pkgName = res.getResourcePackageName(id);
+            resType = res.getResourceTypeName(id);
+            resName = res.getResourceEntryName(id);
+        } catch (Throwable ignore) {
+        }
+        if (pkgName == null || resType == null || resName == null) return null;
 
-            String resFullName = pkgName + ":" + resType + "/" + resName;
-            String resAnyPkgName = "*:" + resType + "/" + resName;
+        String resFullName = pkgName + ":" + resType + "/" + resName;
+        String resAnyPkgName = "*:" + resType + "/" + resName;
 
-            Pair<ReplacementType, Object> replacement = null;
-            if (replacements.containsKey(resFullName)) {
-                replacement = replacements.get(resFullName);
-            } else if (replacements.containsKey(resAnyPkgName)) {
-                replacement = replacements.get(resAnyPkgName);
-            }
-            if (replacement != null) {
-                switch (replacement.first) {
-                    case OBJECT -> {
-                        return replacement.second;
-                    }
-                    case DENSITY -> {
-                        return (Float) replacement.second * res.getDisplayMetrics().density;
-                    }
-                    case ID -> {
-                        switch (methodName) {
-                            case "getBoolean", "getFloat", "getInteger", "getString", "getText",
-                                 "getFont", "getDimension", "getDimensionPixelOffset",
-                                 "getDimensionPixelSize" -> {
-                                return CoreTool.invokeOriginalMethod(res, methodName, new Class[]{int.class}, replacement.second);
-                            }
-                            case "getColor", "getColorStateList" -> {
-                                return CoreTool.invokeOriginalMethod(res, methodName, new Class[]{int.class, Resources.Theme.class}, replacement.second, theme);
-                            }
-                            case "getDrawableForDensity" -> {
-                                return CoreTool.invokeOriginalMethod(res, methodName, new Class[]{int.class, int.class, Resources.Theme.class}, replacement.second, 0, theme);
-                            }
-                            // case "getFraction" -> {
-                            //     return CoreTool.invokeOriginalMethod(res, "getInteger", new Class[]{int.class, int.class, int.class}, replacement.second);
-                            // }
-                            case "getInt" -> {
-                                return CoreTool.invokeOriginalMethod(res, "getInteger", new Class[]{int.class}, replacement.second);
-                            }
+        Pair<ReplacementType, Object> replacement = null;
+        if (replacements.containsKey(resFullName)) {
+            replacement = replacements.get(resFullName);
+        } else if (replacements.containsKey(resAnyPkgName)) {
+            replacement = replacements.get(resAnyPkgName);
+        }
+        if (replacement != null) {
+            switch (replacement.first) {
+                case OBJECT -> {
+                    return replacement.second;
+                }
+                case DENSITY -> {
+                    return (Float) replacement.second * res.getDisplayMetrics().density;
+                }
+                case ID -> {
+                    switch (methodName) {
+                        case "getBoolean", "getFloat", "getInteger", "getString", "getText",
+                             "getFont", "getDimension", "getDimensionPixelOffset",
+                             "getDimensionPixelSize" -> {
+                            return CoreTool.invokeOriginalMethod(res, methodName, new Class[]{int.class}, replacement.second);
+                        }
+                        case "getColor", "getColorStateList" -> {
+                            return CoreTool.invokeOriginalMethod(res, methodName, new Class[]{int.class, Resources.Theme.class}, replacement.second, theme);
+                        }
+                        case "getDrawableForDensity" -> {
+                            return CoreTool.invokeOriginalMethod(res, methodName, new Class[]{int.class, int.class, Resources.Theme.class}, replacement.second, 0, theme);
+                        }
+                        case "getLayoutDimension" -> {
+                            return CoreTool.invokeOriginalMethod(res, "getDimensionPixelSize", new Class[]{int.class}, replacement.second);
+                        }
+                        case "getFraction" -> {
+                            return CoreTool.invokeOriginalMethod(res, methodName, new Class[]{int.class, int.class, int.class}, replacement.second, params[1], params[2]);
+                        }
+                        case "getInt" -> {
+                            return CoreTool.invokeOriginalMethod(res, "getInteger", new Class[]{int.class}, replacement.second);
                         }
                     }
                 }
@@ -423,23 +430,23 @@ public class ResInjectTool {
         return null;
     }
 
-    // 下面注入方法存在风险，可能导致资源混乱，抛弃。
-    /*public static Context getModuleContext(Context context)
-            throws PackageManager.NameNotFoundException {
-        return getModuleContext(context, null);
-    }
-
-    public static Context getModuleContext(Context context, Configuration config)
-            throws PackageManager.NameNotFoundException {
-        Context mModuleContext;
-        mModuleContext = context.createPackageContext(mProjectPkg, Context.CONTEXT_IGNORE_SECURITY).createDeviceProtectedStorageContext();
-        return config == null ? mModuleContext : mModuleContext.createConfigurationContext(config);
-    }
-
-    public static Resources getModuleRes(Context context)
-            throws PackageManager.NameNotFoundException {
-        Configuration config = context.getResources().getConfiguration();
-        Context moduleContext = getModuleContext(context);
-        return (config == null ? moduleContext.getResources() : moduleContext.createConfigurationContext(config).getResources());
-    }*/
+    // 下面注入方法存在风险，可能导致资源混乱。抛弃。
+    // public static Context getModuleContext(Context context)
+    //         throws PackageManager.NameNotFoundException {
+    //     return getModuleContext(context, null);
+    // }
+    //
+    // public static Context getModuleContext(Context context, Configuration config)
+    //         throws PackageManager.NameNotFoundException {
+    //     Context mModuleContext;
+    //     mModuleContext = context.createPackageContext(mProjectPkg, Context.CONTEXT_IGNORE_SECURITY).createDeviceProtectedStorageContext();
+    //     return config == null ? mModuleContext : mModuleContext.createConfigurationContext(config);
+    // }
+    //
+    // public static Resources getModuleRes(Context context)
+    //         throws PackageManager.NameNotFoundException {
+    //     Configuration config = context.getResources().getConfiguration();
+    //     Context moduleContext = getModuleContext(context);
+    //     return (config == null ? moduleContext.getResources() : moduleContext.createConfigurationContext(config).getResources());
+    // }
 }
