@@ -154,7 +154,7 @@ public class DeviceTool {
         if (isHyperOSVersion(osVersion)) {
             String version = getProp("ro.mi.os.version.incremental");
             if (version.isEmpty()) version = getProp("ro.system.build.version.incremental");
-            String[] vs = version.trim().split(".");
+            String[] vs = version.trim().split("\\.");
             if (vs.length >= 3) return isMatchVersion(Integer.parseInt(vs[2]), smallVersion, mode);
             return false;
         }
