@@ -43,8 +43,6 @@ import com.hchen.hooktool.hook.IHook;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ConcurrentHashMap;
@@ -62,6 +60,7 @@ public class ResInjectTool {
     private static Handler handler = null;
     private static final CopyOnWriteArraySet<Resources> resourceSets = new CopyOnWriteArraySet<>();
     private static final ConcurrentHashMap<String, Pair<ReplacementType, Object>> replacements = new ConcurrentHashMap<>();
+    private static final CopyOnWriteArraySet<Integer> waitSet = new CopyOnWriteArraySet<>();
     private static boolean isHooked = false;
 
     private enum ReplacementType {
@@ -282,9 +281,12 @@ public class ResInjectTool {
         @Override
         public void before() {
             try {
+                Integer resId = (Integer) getArg(0);
+                if (waitSet.contains(resId)) return;
+
                 injectModuleRes((Resources) thisObject()); // 注入资源
-                String methodName = getMember().getName();
-                Object value = getResourceReplacement(getMember(), (Resources) thisObject(), getArgs());
+                String methodName = getMethod().getName();
+                Object value = getResourceReplacement(methodName, (Resources) thisObject(), getArgs());
                 if (value != null) {
                     if ("getDimensionPixelOffset".equals(methodName) || "getDimensionPixelSize".equals(methodName)) {
                         if (value instanceof Float) value = ((Float) value).intValue();
@@ -308,7 +310,7 @@ public class ResInjectTool {
                 int type = data[index + STYLE_TYPE];
                 int id = data[index + STYLE_RESOURCE_ID];
                 if (type != TypedValue.TYPE_NULL /* 不为空数据 */ && id != 0 /* 储存的是资源 */) {
-                    String methodName = getMember().getName();
+                    String methodName = getMethod().getName();
                     Resources resources = (Resources) getThisField("mResources");
                     Resources.Theme theme = (Resources.Theme) getThisField("mTheme");
                     injectModuleRes(resources); // 注入资源
@@ -331,8 +333,7 @@ public class ResInjectTool {
     };
 
     @Nullable
-    private static Object getResourceReplacement(@NonNull Member member, @NonNull Resources res, @NonNull Object[] params)
-        throws InvocationTargetException, IllegalAccessException {
+    private static Object getResourceReplacement(@NonNull String methodName, @NonNull Resources res, @NonNull Object[] params) {
         String pkgName = null;
         String resType = null;
         String resName = null;
@@ -362,8 +363,12 @@ public class ResInjectTool {
                     return (Float) replacement.second * res.getDisplayMetrics().density;
                 }
                 case ID -> {
-                    params[0] = replacement.second;
-                    return CoreTool.invokeOriginalMethod(member, res, params);
+                    int resId = (int) replacement.second;
+                    waitSet.add(resId);
+                    params[0] = resId;
+                    Object result = CoreTool.callMethod(res, methodName, params);
+                    waitSet.remove(resId);
+                    return result;
                 }
             }
         }
@@ -371,8 +376,7 @@ public class ResInjectTool {
     }
 
     @Nullable
-    private static Object getTypedArrayReplacement(@NonNull Resources res, @NonNull Resources.Theme theme, int id, @NonNull String methodName, Object[] params)
-        throws InvocationTargetException, IllegalAccessException {
+    private static Object getTypedArrayReplacement(@NonNull Resources res, @NonNull Resources.Theme theme, int id, @NonNull String methodName, Object[] params) {
         String pkgName = null;
         String resType = null;
         String resName = null;
@@ -402,28 +406,33 @@ public class ResInjectTool {
                     return (Float) replacement.second * res.getDisplayMetrics().density;
                 }
                 case ID -> {
+                    int resId = (int) replacement.second;
+                    waitSet.add(resId);
+                    Object result = null;
                     switch (methodName) {
                         case "getBoolean", "getFloat", "getInteger", "getString", "getText",
                              "getFont", "getDimension", "getDimensionPixelOffset",
                              "getDimensionPixelSize" -> {
-                            return CoreTool.invokeOriginalMethod(res, methodName, new Class[]{int.class}, replacement.second);
+                            result = CoreTool.callMethod(res, methodName, resId);
                         }
                         case "getColor", "getColorStateList" -> {
-                            return CoreTool.invokeOriginalMethod(res, methodName, new Class[]{int.class, Resources.Theme.class}, replacement.second, theme);
+                            result = CoreTool.callMethod(res, methodName, resId, theme);
                         }
                         case "getDrawableForDensity" -> {
-                            return CoreTool.invokeOriginalMethod(res, methodName, new Class[]{int.class, int.class, Resources.Theme.class}, replacement.second, 0, theme);
+                            result = CoreTool.callMethod(res, methodName, resId, 0, theme);
                         }
                         case "getLayoutDimension" -> {
-                            return CoreTool.invokeOriginalMethod(res, "getDimensionPixelSize", new Class[]{int.class}, replacement.second);
+                            result = CoreTool.callMethod(res, "getDimensionPixelSize", resId);
                         }
                         case "getFraction" -> {
-                            return CoreTool.invokeOriginalMethod(res, methodName, new Class[]{int.class, int.class, int.class}, replacement.second, params[1], params[2]);
+                            result = CoreTool.callMethod(res, methodName, resId, params[1], params[2]);
                         }
                         case "getInt" -> {
-                            return CoreTool.invokeOriginalMethod(res, "getInteger", new Class[]{int.class}, replacement.second);
+                            result = CoreTool.callMethod(res, "getInteger", resId);
                         }
                     }
+                    waitSet.remove(resId);
+                    return result;
                 }
             }
         }

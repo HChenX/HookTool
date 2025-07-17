@@ -24,6 +24,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.Size;
 
+import com.hchen.hooktool.callback.ICommandListener;
 import com.hchen.hooktool.callback.IExecListener;
 import com.hchen.hooktool.data.ShellResult;
 import com.hchen.hooktool.exception.UnexpectedException;
@@ -106,6 +107,7 @@ public class ShellTool {
     private static final Builder builder = new Builder();
     private final ShellImpl shellImpl = new ShellImpl(this);
     private final List<IExecListener> iExecListeners = new ArrayList<>();
+    private static ICommandListener iCommandListener;
     private String[] shellCommands = new String[]{"su", "sh"};
     private boolean isRoot;
 
@@ -129,11 +131,62 @@ public class ShellTool {
     }
 
     /**
+     * 获取已经构建的 Shell，不存在则返回 null
+     */
+    @Nullable
+    private ShellTool obtainNonThrow() {
+        return builder.obtainNonThrow();
+    }
+
+    /**
+     * 获取已经构建的 Shell，不存在则自动构建
+     */
+    @NonNull
+    private ShellTool obtainAutoBuildIfNeed(boolean isRoot) {
+        return builder.obtainAutoBuildIfNeed(isRoot);
+    }
+
+    /**
+     * 获取已经构建的 Shell，不存在则自动构建
+     */
+    @NonNull
+    private ShellTool obtainAutoBuildIfNeed(boolean isRoot, @NonNull @Size(2) String[] shellCommands) {
+        return builder.obtainAutoBuildIfNeed(isRoot, shellCommands);
+    }
+
+    /**
+     * 设置全局命令监听器
+     * <p>
+     * 您可以通过此监听器，判断命令是否可以被合法的输入并执行
+     */
+    public static void setCommandListener(@Nullable ICommandListener listener) {
+        ShellTool.iCommandListener = listener;
+    }
+
+    /**
+     * 是否使用命令拼接模式
+     * <p>
+     * 请注意：使用此模式后，在调用 {@link ShellTool#exec()} 和{@link ShellTool#async()} 之前都会保持在拼接模式
+     * <pre>{@code
+     *     ShellTool.obtain().enableSplicingMode()
+     *          .cmd("if [[ hello == world ]]; then")
+     *          .cmd("  echo \"hello world\"       ")
+     *          .cmd("fi                           ")
+     *          .exec();
+     * }
+     */
+    public ShellTool enableSplicingMode() {
+        return shellImpl.enableSplicingMode();
+    }
+
+    /**
      * 输入命令
      */
     @NonNull
     public ShellTool cmd(@NonNull String cmd) {
-        return shellImpl.cmd(cmd);
+        if (iCommandListener == null || iCommandListener.onCommand(cmd))
+            return shellImpl.cmd(cmd);
+        else return this;
     }
 
     /**
@@ -238,6 +291,8 @@ public class ShellTool {
     final class ShellImpl {
         @NonNull
         private final ShellTool shellTool;
+        private boolean isSplicingMode = false;
+        private final ArrayList<String> waitSplicingCommandList = new ArrayList<>();
         private String command = null;
         private Process process = null;
         private StreamThread streamThread = null;
@@ -265,17 +320,26 @@ public class ShellTool {
         }
 
         @NonNull
+        private synchronized ShellTool enableSplicingMode() {
+            this.isSplicingMode = true;
+            return shellTool;
+        }
+
+        @NonNull
         private synchronized ShellTool cmd(@NonNull String cmd) {
             if (!isActive())
                 return shellTool;
 
-            command = cmd;
+            if (isSplicingMode) waitSplicingCommandList.add(cmd);
+            else command = cmd;
             return shellTool;
         }
 
         @Nullable
         private synchronized ShellResult exec() {
             if (!isActive()) return null;
+
+            splicingCommandIfNeed();
             if (command == null) return null;
 
             String[] commands = command.split("\n");
@@ -289,6 +353,7 @@ public class ShellTool {
             writeAll(commands);
             write("}");
             write(END_CMD);
+            command = null;
             sync();
 
             return streamThread.getResult();
@@ -296,6 +361,8 @@ public class ShellTool {
 
         private synchronized void async(@Nullable IExecListener iExecListener) {
             if (!isActive()) return;
+
+            splicingCommandIfNeed();
             if (command == null) return;
 
             String[] commands = command.split("\n");
@@ -310,6 +377,7 @@ public class ShellTool {
             writeAll(commands);
             write("}");
             write(END_CMD_ID);
+            command = null;
         }
 
         private synchronized void sync() {
@@ -387,6 +455,18 @@ public class ShellTool {
         private synchronized boolean isActive() {
             if (streamThread == null || process == null) return false;
             return streamThread.isActive() && process.isAlive();
+        }
+
+        private void splicingCommandIfNeed() {
+            if (!isSplicingMode) return;
+            StringBuilder stringBuilder = new StringBuilder();
+            for (int i = 0; i < waitSplicingCommandList.size(); i++) {
+                if (i == waitSplicingCommandList.size() - 1)
+                    stringBuilder.append(waitSplicingCommandList.get(i));
+                else stringBuilder.append(waitSplicingCommandList.get(i)).append("\n");
+            }
+            isSplicingMode = false;
+            command = stringBuilder.toString();
         }
     }
 
@@ -631,23 +711,42 @@ public class ShellTool {
 
     public static final class Builder {
         private static final ShellTool mShell = new ShellTool();
+        private static String[] shellCommands = new String[]{"su", "sh"};
+        private static boolean isRoot;
 
         private Builder() {
         }
 
+        @NonNull
         private ShellTool obtain() {
-            if (mShell.isActive())
-                return mShell;
-            else {
+            if (mShell.isActive()) return mShell;
+            else
                 throw new UnexpectedException("[ShellTool]: The shell tool has not been initialized, please use it after initialization!");
-            }
+        }
+
+        @Nullable
+        private ShellTool obtainNonThrow() {
+            if (mShell.isActive()) return mShell;
+            else return null;
+        }
+
+        @NonNull
+        private ShellTool obtainAutoBuildIfNeed(boolean isRoot) {
+            if (mShell.isActive()) return mShell;
+            else return isRoot(isRoot).setEntranceCmds(shellCommands).create();
+        }
+
+        @NonNull
+        private ShellTool obtainAutoBuildIfNeed(boolean isRoot, @NonNull @Size(2) String[] shellCommands) {
+            if (mShell.isActive()) return mShell;
+            else return isRoot(isRoot).setEntranceCmds(shellCommands).create();
         }
 
         /**
          * 是否使用 Root 模式
          */
         public Builder isRoot(boolean isRoot) {
-            mShell.isRoot = isRoot;
+            Builder.isRoot = isRoot;
             return this;
         }
 
@@ -656,11 +755,13 @@ public class ShellTool {
          */
         public Builder setEntranceCmds(@NonNull @Size(2) String[] cmds) {
             if (cmds.length != 2) return this;
-            mShell.shellCommands = cmds;
+            Builder.shellCommands = cmds;
             return this;
         }
 
         public ShellTool create() {
+            mShell.isRoot = Builder.isRoot;
+            mShell.shellCommands = Builder.shellCommands;
             mShell.create();
             return mShell;
         }

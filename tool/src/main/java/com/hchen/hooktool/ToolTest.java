@@ -110,7 +110,7 @@ class ToolTest extends HCBase {
             @Override
             public void before() {
                 // hook 方法所属的类
-                Class<?> c = getMember().getDeclaringClass();
+                Class<?> c = getMethod().getDeclaringClass();
                 Context context = (Context) thisObject();
                 String string = (String) getArg(0); // 获取第一个参数值
                 setArg(1, 1); // 设置第二个参数值

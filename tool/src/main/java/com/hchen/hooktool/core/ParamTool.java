@@ -85,7 +85,7 @@ public class ParamTool {
     /**
      * 获取当前的方法
      */
-    final public Member getMember() {
+    final public Member getMethod() {
         return param.method;
     }
 
