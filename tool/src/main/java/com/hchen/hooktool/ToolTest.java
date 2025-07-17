@@ -144,8 +144,7 @@ class ToolTest extends HCBase {
         };
 
         // Shell 工具使用方法
-        ShellTool shellTool = ShellTool.builder().isRoot(true).create();
-        shellTool = ShellTool.obtain();
+        ShellTool shellTool = ShellTool.obtain(true);
         ShellResult shellResult = shellTool.cmd("ls").exec();
         if (shellResult != null) {
             boolean result = shellResult.isSuccess();

@@ -27,7 +27,6 @@ import androidx.annotation.Size;
 import com.hchen.hooktool.callback.ICommandListener;
 import com.hchen.hooktool.callback.IExecListener;
 import com.hchen.hooktool.data.ShellResult;
-import com.hchen.hooktool.exception.UnexpectedException;
 import com.hchen.hooktool.log.AndroidLog;
 
 import java.io.BufferedReader;
@@ -55,8 +54,7 @@ import java.util.stream.Collectors;
  * 使用方法:
  * <p>
  * <pre>{@code
- *         ShellTool shellTool = ShellTool.builder().isRoot(true).create();
- *         shellTool = ShellTool.obtain();
+ *         ShellTool shellTool = ShellTool.obtain(true);
  *         ShellResult shellResult = shellTool.cmd("ls").exec();
  *         if (shellResult != null) {
  *             boolean result = shellResult.isSuccess();
@@ -107,23 +105,21 @@ public class ShellTool {
     private static final Builder builder = new Builder();
     private final ShellImpl shellImpl = new ShellImpl(this);
     private final List<IExecListener> iExecListeners = new ArrayList<>();
-    private static ICommandListener iCommandListener;
+    private ICommandListener iCommandListener;
     private String[] shellCommands = new String[]{"su", "sh"};
-    private boolean isRoot;
+    private boolean isRoot = false;
 
     private ShellTool() {
     }
 
     /**
-     * 构建 Shell
-     */
-    @NonNull
-    public static Builder builder() {
-        return builder;
-    }
-
-    /**
-     * 获取已经构建的 Shell，不存在会报错
+     * 获取 Shell 实例
+     * <p>
+     * 请注意您只能创建一个全局 Shell 实例
+     * <p>
+     * 重复创建会复用实例，此时您的部分启动参数设置是无效的
+     * <p>
+     * 如果您担心启动参数丢失，可以每次都传入启动参数
      */
     @NonNull
     public static ShellTool obtain() {
@@ -131,36 +127,36 @@ public class ShellTool {
     }
 
     /**
-     * 获取已经构建的 Shell，不存在则返回 null
-     */
-    @Nullable
-    private ShellTool obtainNonThrow() {
-        return builder.obtainNonThrow();
-    }
-
-    /**
-     * 获取已经构建的 Shell，不存在则自动构建
-     */
-    @NonNull
-    private ShellTool obtainAutoBuildIfNeed(boolean isRoot) {
-        return builder.obtainAutoBuildIfNeed(isRoot);
-    }
-
-    /**
-     * 获取已经构建的 Shell，不存在则自动构建
-     */
-    @NonNull
-    private ShellTool obtainAutoBuildIfNeed(boolean isRoot, @NonNull @Size(2) String[] shellCommands) {
-        return builder.obtainAutoBuildIfNeed(isRoot, shellCommands);
-    }
-
-    /**
-     * 设置全局命令监听器
+     * 获取 Shell 实例
      * <p>
-     * 您可以通过此监听器，判断命令是否可以被合法的输入并执行
+     * 请注意您只能创建一个全局 Shell 实例
+     * <p>
+     * 重复创建会复用实例，此时您的部分启动参数设置是无效的
+     * <p>
+     * 如果您担心启动参数丢失，可以每次都传入启动参数
+     *
+     * @param isRoot 是否使用 Root 模式运行
      */
-    public static void setCommandListener(@Nullable ICommandListener listener) {
-        ShellTool.iCommandListener = listener;
+    @NonNull
+    public static ShellTool obtain(boolean isRoot) {
+        return builder.obtain(isRoot);
+    }
+
+    /**
+     * 获取 Shell 实例
+     * <p>
+     * 请注意您只能创建一个全局 Shell 实例
+     * <p>
+     * 重复创建会复用实例，此时您的部分启动参数设置是无效的
+     * <p>
+     * 如果您担心启动参数丢失，可以每次都传入启动参数
+     *
+     * @param isRoot        是否使用 Root 模式运行
+     * @param shellCommands 设置启动时执行的命令，默认: {"su" (Root), "sh" (Non Root)}
+     */
+    @NonNull
+    public static ShellTool obtain(boolean isRoot, @NonNull @Size(2) String[] shellCommands) {
+        return builder.obtain(isRoot, shellCommands);
     }
 
     /**
@@ -184,9 +180,7 @@ public class ShellTool {
      */
     @NonNull
     public ShellTool cmd(@NonNull String cmd) {
-        if (iCommandListener == null || iCommandListener.onCommand(cmd))
-            return shellImpl.cmd(cmd);
-        else return this;
+        return shellImpl.cmd(cmd);
     }
 
     /**
@@ -209,17 +203,26 @@ public class ShellTool {
     }
 
     /**
-     * 添加回调，传入 null 则删除全部回调
+     * 添加全局执行回调，传入 null 则删除全部回调
      */
     public void addExecListener(@NonNull IExecListener iExecListener) {
         iExecListeners.add(iExecListener);
     }
 
     /**
-     * 移除指定回调
+     * 移除指定全局回调
      */
     public void removeExecListener(@NonNull IExecListener iExecListener) {
         iExecListeners.remove(iExecListener);
+    }
+
+    /**
+     * 设置全局命令监听器
+     * <p>
+     * 您可以通过此监听器，判断命令是否可以被合法的输入并执行
+     */
+    public void setCommandListener(@Nullable ICommandListener listener) {
+        iCommandListener = listener;
     }
 
     /**
@@ -243,7 +246,7 @@ public class ShellTool {
         shellImpl.close();
     }
 
-    private void create() {
+    private void init() {
         shellImpl.init();
     }
 
@@ -340,6 +343,7 @@ public class ShellTool {
             if (!isActive()) return null;
 
             splicingCommandIfNeed();
+            callbackCommandListener();
             if (command == null) return null;
 
             String[] commands = command.split("\n");
@@ -363,6 +367,7 @@ public class ShellTool {
             if (!isActive()) return;
 
             splicingCommandIfNeed();
+            callbackCommandListener();
             if (command == null) return;
 
             String[] commands = command.split("\n");
@@ -467,6 +472,12 @@ public class ShellTool {
             }
             isSplicingMode = false;
             command = stringBuilder.toString();
+        }
+
+        private void callbackCommandListener() {
+            if (command == null) return;
+            if (iCommandListener == null) return;
+            if (!iCommandListener.onCommand(command)) command = null;
         }
     }
 
@@ -709,10 +720,10 @@ public class ShellTool {
         }
     }
 
-    public static final class Builder {
+    private static final class Builder {
         private static final ShellTool mShell = new ShellTool();
         private static String[] shellCommands = new String[]{"su", "sh"};
-        private static boolean isRoot;
+        private static boolean isRoot = false;
 
         private Builder() {
         }
@@ -720,49 +731,36 @@ public class ShellTool {
         @NonNull
         private ShellTool obtain() {
             if (mShell.isActive()) return mShell;
-            else
-                throw new UnexpectedException("[ShellTool]: The shell tool has not been initialized, please use it after initialization!");
-        }
-
-        @Nullable
-        private ShellTool obtainNonThrow() {
-            if (mShell.isActive()) return mShell;
-            else return null;
+            else return isRoot(isRoot).setEntranceCmds(shellCommands).init();
         }
 
         @NonNull
-        private ShellTool obtainAutoBuildIfNeed(boolean isRoot) {
+        private ShellTool obtain(boolean isRoot) {
             if (mShell.isActive()) return mShell;
-            else return isRoot(isRoot).setEntranceCmds(shellCommands).create();
+            else return isRoot(isRoot).setEntranceCmds(shellCommands).init();
         }
 
         @NonNull
-        private ShellTool obtainAutoBuildIfNeed(boolean isRoot, @NonNull @Size(2) String[] shellCommands) {
+        private ShellTool obtain(boolean isRoot, @NonNull @Size(2) String[] shellCommands) {
             if (mShell.isActive()) return mShell;
-            else return isRoot(isRoot).setEntranceCmds(shellCommands).create();
+            else return isRoot(isRoot).setEntranceCmds(shellCommands).init();
         }
 
-        /**
-         * 是否使用 Root 模式
-         */
-        public Builder isRoot(boolean isRoot) {
+        private Builder isRoot(boolean isRoot) {
             Builder.isRoot = isRoot;
             return this;
         }
 
-        /**
-         * 设置启动时执行的命令。默认: {"su", "sh"}
-         */
-        public Builder setEntranceCmds(@NonNull @Size(2) String[] cmds) {
+        private Builder setEntranceCmds(@NonNull @Size(2) String[] cmds) {
             if (cmds.length != 2) return this;
             Builder.shellCommands = cmds;
             return this;
         }
 
-        public ShellTool create() {
+        private ShellTool init() {
             mShell.isRoot = Builder.isRoot;
             mShell.shellCommands = Builder.shellCommands;
-            mShell.create();
+            mShell.init();
             return mShell;
         }
     }
