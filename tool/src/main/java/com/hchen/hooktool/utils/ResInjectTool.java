@@ -111,16 +111,14 @@ public class ResInjectTool {
                     throw new InjectResourcesException("[ResInjectTool]: Failed to create res loader!!", e);
                 }
             }
-        }
 
-        CoreTool.hookConstructor("android.content.res.ResourcesKey",
-            String.class /* resDir */, String[].class /* splitResDirs */, String[].class /* overlayPaths */,
-            String[].class,/* libDirs */ int.class /* overrideDisplayId */, Configuration.class /* overrideConfig */,
-            "android.content.res.CompatibilityInfo" /* compatInfo */, ResourcesLoader[].class /* loader */,
-            new IHook() {
-                @Override
-                public void before() {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            CoreTool.hookConstructor("android.content.res.ResourcesKey",
+                String.class /* resDir */, String[].class /* splitResDirs */, String[].class /* overlayPaths */,
+                String[].class,/* libDirs */ int.class /* overrideDisplayId */, Configuration.class /* overrideConfig */,
+                "android.content.res.CompatibilityInfo" /* compatInfo */, ResourcesLoader[].class /* loader */,
+                new IHook() {
+                    @Override
+                    public void before() {
                         ResourcesLoader[] loader = (ResourcesLoader[]) getArg(7);
                         if (loader != null) {
                             if (Arrays.stream(loader).noneMatch(l -> Objects.equals(l, resourcesLoader))) {
@@ -131,7 +129,17 @@ public class ResInjectTool {
                         } else {
                             setArg(7, new ResourcesLoader[]{resourcesLoader});
                         }
-                    } else {
+                    }
+                }
+            );
+        } else {
+            CoreTool.hookConstructor("android.content.res.ResourcesKey",
+                String.class /* resDir */, String[].class /* splitResDirs */, String[].class /* overlayDirs */,
+                String[].class,/* libDirs */ int.class /* displayId */, Configuration.class /* overrideConfig */,
+                "android.content.res.CompatibilityInfo" /* compatInfo */,
+                new IHook() {
+                    @Override
+                    public void before() {
                         String[] splitResDirs = (String[]) getArg(1);
                         if (splitResDirs != null) {
                             if (Arrays.stream(splitResDirs).noneMatch(s -> Objects.equals(s, HCData.getModulePath()))) {
@@ -144,8 +152,8 @@ public class ResInjectTool {
                         }
                     }
                 }
-            }
-        );
+            );
+        }
 
         isInjected = true;
         isFailed = false;
@@ -262,7 +270,7 @@ public class ResInjectTool {
                     setResult(value);
                 }
             } catch (Throwable t) {
-                XposedLog.logD(TAG, "Failed to replacement res!!" , t);
+                XposedLog.logD(TAG, "Failed to replacement res!!", t);
             }
         }
     };
@@ -332,11 +340,13 @@ public class ResInjectTool {
                 }
                 case ID -> {
                     int resId = (int) replacement.second;
-                    waitSet.add(resId);
-                    params[0] = resId;
-                    Object result = CoreTool.callMethod(res, method, params);
-                    waitSet.remove(resId);
-                    return result;
+                    try {
+                        waitSet.add(resId);
+                        params[0] = resId;
+                        return CoreTool.callMethod(res, method, params);
+                    } finally {
+                        waitSet.remove(resId);
+                    }
                 }
             }
         }
@@ -376,33 +386,36 @@ public class ResInjectTool {
                 }
                 case ID -> {
                     int resId = (int) replacement.second;
-                    waitSet.add(resId);
-                    Object result;
-                    switch (methodName) {
-                        case "getBoolean", "getFloat", "getInteger", "getString", "getText",
-                             "getFont", "getDimension", "getDimensionPixelOffset",
-                             "getDimensionPixelSize" -> {
-                            result = CoreTool.callMethod(res, methodName, new Class<?>[]{int.class}, resId);
+                    try {
+                        Object result;
+                        waitSet.add(resId);
+                        switch (methodName) {
+                            case "getBoolean", "getFloat", "getInteger", "getString", "getText",
+                                 "getFont", "getDimension", "getDimensionPixelOffset",
+                                 "getDimensionPixelSize" -> {
+                                result = CoreTool.callMethod(res, methodName, new Class<?>[]{int.class}, resId);
+                            }
+                            case "getColor", "getColorStateList" -> {
+                                result = CoreTool.callMethod(res, methodName, new Class<?>[]{int.class, Resources.Theme.class}, resId, theme);
+                            }
+                            case "getDrawableForDensity" -> {
+                                result = CoreTool.callMethod(res, methodName, new Class<?>[]{int.class, int.class, Resources.Theme.class}, resId, params[1], theme);
+                            }
+                            case "getLayoutDimension" -> {
+                                result = CoreTool.callMethod(res, "getDimensionPixelSize", new Class<?>[]{int.class}, resId);
+                            }
+                            case "getFraction" -> {
+                                result = CoreTool.callMethod(res, methodName, new Class<?>[]{int.class, int.class, int.class}, resId, params[1], params[2]);
+                            }
+                            case "getInt" -> {
+                                result = CoreTool.callMethod(res, "getInteger", new Class<?>[]{int.class}, resId);
+                            }
+                            default -> result = null;
                         }
-                        case "getColor", "getColorStateList" -> {
-                            result = CoreTool.callMethod(res, methodName, new Class<?>[]{int.class, Resources.Theme.class}, resId, theme);
-                        }
-                        case "getDrawableForDensity" -> {
-                            result = CoreTool.callMethod(res, methodName, new Class<?>[]{int.class, int.class, Resources.Theme.class}, resId, 0, theme);
-                        }
-                        case "getLayoutDimension" -> {
-                            result = CoreTool.callMethod(res, "getDimensionPixelSize", new Class<?>[]{int.class}, resId);
-                        }
-                        case "getFraction" -> {
-                            result = CoreTool.callMethod(res, methodName, new Class<?>[]{int.class, int.class, int.class}, resId, params[1], params[2]);
-                        }
-                        case "getInt" -> {
-                            result = CoreTool.callMethod(res, "getInteger", new Class<?>[]{int.class}, resId);
-                        }
-                        default -> result = null;
+                        return result;
+                    } finally {
+                        waitSet.remove(resId);
                     }
-                    waitSet.remove(resId);
-                    return result;
                 }
             }
         }
