@@ -104,7 +104,7 @@ public class ContextTool {
      *      handler.post(new Runnable() {
      *        @Override
      *        public void run() {
-     *          Toast.makeText(context, "found context!", Toast.LENGTH_SHORT).show();
+     *          Toast.makeText(context, "found context!!", Toast.LENGTH_SHORT).show();
      *        }
      *      });
      *   }
@@ -164,11 +164,6 @@ public class ContextTool {
         if (context == null) {
             o = InvokeTool.callStaticMethod(clazz, "systemMain", new Class[]{});
             context = InvokeTool.callMethod(o, "getSystemContext", new Class[]{});
-            // 这里获取的 context 可能存在问题。
-            // 所以暂时注释。
-            // Method getSystemUiContext = clz.getDeclaredMethod("getSystemUiContext");
-            // getSystemUiContext.setAccessible(true);
-            // context = (Context) getSystemContext.invoke(o);
         }
         return context;
     }

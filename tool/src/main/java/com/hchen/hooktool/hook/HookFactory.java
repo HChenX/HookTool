@@ -61,7 +61,7 @@ public class HookFactory {
                             param.setThrowable(exception.getCause());
                         } catch (Throwable ignore) {
                         }
-                        XposedLog.logE(tag, "Before throw!", e);
+                        XposedLog.logE(tag, "Before throw!!", e);
                     }
                 }
             }
@@ -79,7 +79,7 @@ public class HookFactory {
                         if (lastThrowable == null) param.setResult(lastResult);
                         else param.setThrowable(lastThrowable);
 
-                        XposedLog.logE(tag, "After throw!", e);
+                        XposedLog.logE(tag, "After throw!!", e);
                     }
                 }
             }

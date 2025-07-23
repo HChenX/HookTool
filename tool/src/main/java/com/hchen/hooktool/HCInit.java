@@ -25,6 +25,7 @@ import com.hchen.hooktool.log.XposedLog;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.Objects;
 import java.util.Optional;
 
 import de.robv.android.xposed.IXposedHookZygoteInit;
@@ -58,9 +59,8 @@ public class HCInit {
     /**
      * 初始化 loadPackageParam
      */
-    public static void initLoadPackageParam(XC_LoadPackage.LoadPackageParam loadPackageParam) {
-        if (loadPackageParam == null)
-            throw new NullPointerException("[HCInit]: LoadPackageParam must not be null!!");
+    public static void initLoadPackageParam(@NonNull XC_LoadPackage.LoadPackageParam loadPackageParam) {
+        Objects.requireNonNull(loadPackageParam, "[HCInit]: LoadPackageParam must not be null!!");
 
         HCData.setIsXposed(true);
         HCData.setLoadPackageParam(loadPackageParam);
@@ -71,9 +71,8 @@ public class HCInit {
     /**
      * 初始化 startupParam
      */
-    public static void initStartupParam(IXposedHookZygoteInit.StartupParam startupParam) {
-        if (startupParam == null)
-            throw new NullPointerException("[HCInit]: StartupParam must not be null!!");
+    public static void initStartupParam(@NonNull IXposedHookZygoteInit.StartupParam startupParam) {
+        Objects.requireNonNull(startupParam, "[HCInit]: StartupParam must not be null!!");
 
         HCData.setIsXposed(true);
         HCData.setStartupParam(startupParam);

@@ -206,7 +206,7 @@ public class ClassHelper {
     public Class<?> single() {
         List<Class<?>> list = matches();
         if (list.isEmpty())
-            throw new NonSingletonException("[ClassHelper]: No result found for query!");
+            throw new NonSingletonException("[ClassHelper]: No result found for query!!");
         if (list.size() > 1)
             throw new NonSingletonException("[ClassHelper]: Query did not return a unique result: " + list.size());
         return list.get(0);

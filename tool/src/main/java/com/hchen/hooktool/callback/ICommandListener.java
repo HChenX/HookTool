@@ -36,7 +36,5 @@ public interface ICommandListener {
      * @param cmd 命令
      * @return 是否拦截
      */
-    default boolean onCommand(@NonNull String cmd) {
-        return true;
-    }
+    boolean onCommand(@NonNull String cmd);
 }

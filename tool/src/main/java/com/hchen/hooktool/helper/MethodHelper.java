@@ -66,7 +66,7 @@ public class MethodHelper {
     private boolean withSuper = false;
 
     public MethodHelper(@NonNull Class<?> clazz) {
-        Objects.requireNonNull(clazz, "[MethodHelper]: Class must not be null!");
+        Objects.requireNonNull(clazz, "[MethodHelper]: Class must not be null!!");
         this.clazz = clazz;
     }
 
@@ -243,7 +243,7 @@ public class MethodHelper {
     public HookHelper<Method> single() {
         List<Method> methods = matches();
         if (methods.isEmpty())
-            throw new NonSingletonException("[MethodHelper]: No result found for query!");
+            throw new NonSingletonException("[MethodHelper]: No result found for query!!");
 
         if (methods.size() > 1)
             throw new NonSingletonException("[MethodHelper]: Query did not return a unique result: " + methods.size());

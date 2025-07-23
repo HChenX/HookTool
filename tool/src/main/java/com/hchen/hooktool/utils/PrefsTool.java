@@ -29,7 +29,6 @@ import androidx.annotation.Nullable;
 
 import com.hchen.hooktool.HCData;
 import com.hchen.hooktool.callback.IAsyncPrefs;
-import com.hchen.hooktool.callback.IContextGetter;
 import com.hchen.hooktool.callback.IPrefsApply;
 import com.hchen.hooktool.exception.NonXposedException;
 import com.hchen.hooktool.exception.UnexpectedException;
@@ -37,6 +36,7 @@ import com.hchen.hooktool.log.AndroidLog;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import de.robv.android.xposed.XSharedPreferences;
@@ -76,7 +76,7 @@ public class PrefsTool {
     @NonNull
     public static IPrefsApply prefs() {
         if (!HCData.isXposed())
-            throw new NonXposedException("[PrefsTool]: Not xposed environment!");
+            throw new NonXposedException("[PrefsTool]: Not xposed environment!!");
         return prefs("");
     }
 
@@ -86,7 +86,7 @@ public class PrefsTool {
     @NonNull
     public static IPrefsApply prefs(@NonNull String prefsName) {
         if (!HCData.isXposed())
-            throw new NonXposedException("[PrefsTool]: Not xposed environment!");
+            throw new NonXposedException("[PrefsTool]: Not xposed environment!!");
         return createXspIfNeed(prefsName);
     }
 
@@ -102,14 +102,12 @@ public class PrefsTool {
      */
     public static void asyncPrefs(@NonNull String prefsName, @NonNull IAsyncPrefs asyncPrefs) {
         if (!HCData.isXposed())
-            throw new NonXposedException("[PrefsTool]: Not xposed environment!");
+            throw new NonXposedException("[PrefsTool]: Not xposed environment!!");
 
-        ContextTool.getAsyncContext(new IContextGetter() {
-            @Override
-            public void onContext(@Nullable Context context) {
-                asyncPrefs.async(createSpIfNeed(context, prefsName));
-            }
-        }, ContextTool.FLAG_CURRENT_APP);
+        ContextTool.getAsyncContext(context ->
+                asyncPrefs.async(createSpIfNeed(Objects.requireNonNull(context), prefsName)),
+            ContextTool.FLAG_CURRENT_APP
+        );
     }
 
     /**
@@ -121,9 +119,9 @@ public class PrefsTool {
         xPrefsMap.clear();
     }
 
-    private static IPrefsApply createXspIfNeed(String prefsName) {
+    private static IPrefsApply createXspIfNeed(@NonNull String prefsName) {
         if (HCData.getModulePackageName().isEmpty())
-            throw new UnexpectedException("[PrefsTool]: Module package name is empty, Please set module package name!");
+            throw new UnexpectedException("[PrefsTool]: Module package name is empty, Please set module package name!!");
 
         prefsName = initPrefsName(prefsName);
         if (xPrefsMap.get(HCData.getModulePackageName() + prefsName) == null) {
@@ -143,7 +141,7 @@ public class PrefsTool {
      * @noinspection deprecation
      */
     @SuppressLint("WorldReadableFiles")
-    private static IPrefsApply createSpIfNeed(Context context, String prefsName) {
+    private static IPrefsApply createSpIfNeed(@NonNull Context context, @NonNull String prefsName) {
         prefsName = initPrefsName(prefsName);
         if (sPrefsMap.get(context.getPackageName() + prefsName) == null) {
             SharedPreferences s;
@@ -151,7 +149,7 @@ public class PrefsTool {
                 s = context.getSharedPreferences(prefsName, Context.MODE_WORLD_READABLE);
             } catch (Throwable ignored) {
                 s = context.getSharedPreferences(prefsName, Context.MODE_PRIVATE);
-                AndroidLog.logW(TAG, "Maybe unsupported xSharedPreferences!", getStackTrace());
+                AndroidLog.logW(TAG, "Maybe unsupported xSharedPreferences!!", getStackTrace());
             }
 
             Sprefs sprefs = new Sprefs(s);
@@ -162,9 +160,9 @@ public class PrefsTool {
         }
     }
 
-    private static String initPrefsName(String name) {
-        if (name == null)
-            throw new NullPointerException("[PrefsTool]: prefs name must not be null!");
+    @NonNull
+    private static String initPrefsName(@NonNull String name) {
+        Objects.requireNonNull(name, "[PrefsTool]: prefs name must not be null!!");
 
         if (name.isEmpty()) {
             if (HCData.getPrefsName().isEmpty()) {
@@ -177,8 +175,10 @@ public class PrefsTool {
         } else return name;
     }
 
-    /** @noinspection unchecked, DataFlowIssue */
-    private record Xprefs(XSharedPreferences xSharedPreferences) implements IPrefsApply {
+    /**
+     * @noinspection unchecked, DataFlowIssue
+     */
+    private record Xprefs(@NonNull XSharedPreferences xSharedPreferences) implements IPrefsApply {
         @Override
         @Nullable
         public String getString(String key, @Nullable String def) {
@@ -253,7 +253,7 @@ public class PrefsTool {
         @Override
         @NonNull
         public SharedPreferences.Editor editor() {
-            throw new UnsupportedOperationException("[PrefsTool]: Xposed unsupported edit prefs!");
+            throw new UnsupportedOperationException("[PrefsTool]: Xposed unsupported edit prefs!!");
         }
 
         private void reload() {
@@ -265,8 +265,10 @@ public class PrefsTool {
         }
     }
 
-    /** @noinspection unchecked*/
-    private record Sprefs(SharedPreferences preferences) implements IPrefsApply {
+    /**
+     * @noinspection unchecked
+     */
+    private record Sprefs(@NonNull SharedPreferences preferences) implements IPrefsApply {
         @Override
         @Nullable
         public String getString(String key, @Nullable String def) {

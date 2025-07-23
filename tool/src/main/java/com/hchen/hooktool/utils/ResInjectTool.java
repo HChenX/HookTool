@@ -199,7 +199,7 @@ public class ResInjectTool {
 
     private static void applyHooks() {
         if (isHooked) return;
-        if (isInjected) {
+        if (!isInjected) {
             throw new InjectResourcesException("[ResInjectTool]: You should inject module res first!!");
         }
 
@@ -270,11 +270,11 @@ public class ResInjectTool {
     private static final IHook hookTypedBefore = new IHook() {
         @Override
         public void before() {
-            int index = (int) getArg(0);
-            index *= STYLE_NUM_ENTRIES;
-            int[] data = (int[]) getThisField("mData");
-
             try {
+                int index = (int) getArg(0);
+                index *= STYLE_NUM_ENTRIES;
+                int[] data = (int[]) getThisField("mData");
+
                 int type = data[index + STYLE_TYPE];
                 int id = data[index + STYLE_RESOURCE_ID];
                 if (type != TypedValue.TYPE_NULL /* 不为空数据 */ && id != 0 /* 储存的是资源 */) {

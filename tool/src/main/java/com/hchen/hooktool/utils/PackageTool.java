@@ -175,9 +175,13 @@ public class PackageTool {
     /**
      * 获取指定包名的应用信息
      */
-    public static AppData getTargetAppData(@NonNull Context context, @NonNull String packageName) throws PackageManager.NameNotFoundException {
-        PackageManager packageManager = context.getPackageManager();
-        return createAppData(packageManager.getPackageInfo(packageName, PackageManager.GET_ACTIVITIES), packageManager);
+    public static AppData getTargetAppData(@NonNull Context context, @NonNull String packageName) {
+        try {
+            PackageManager packageManager = context.getPackageManager();
+            return createAppData(packageManager.getPackageInfo(packageName, PackageManager.GET_ACTIVITIES), packageManager);
+        } catch (PackageManager.NameNotFoundException e) {
+            throw new UnexpectedException(e);
+        }
     }
 
     /**
@@ -240,6 +244,6 @@ public class PackageTool {
         if (resolveInfo.activityInfo != null) return resolveInfo.activityInfo;
         if (resolveInfo.serviceInfo != null) return resolveInfo.serviceInfo;
         if (resolveInfo.providerInfo != null) return resolveInfo.providerInfo;
-        throw new UnexpectedException("[PackageTool]: Unable to obtain application information!");
+        throw new UnexpectedException("[PackageTool]: Unable to obtain application information!!");
     }
 }

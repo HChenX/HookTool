@@ -1014,14 +1014,14 @@ public class CoreTool extends XposedLog {
 
     private static Object[] filterParams(@NonNull Object... params) {
         if (params.length == 0 || !(params[params.length - 1] instanceof IHook))
-            throw new MissingParameterException("[CoreTool]: Missing IHook parameter!");
+            throw new MissingParameterException("[CoreTool]: Missing IHook parameter!!");
 
         return Arrays.copyOf(params, params.length - 1);
     }
 
     private static IHook filterIHook(@NonNull Object... params) {
         if (params.length == 0 || !(params[params.length - 1] instanceof IHook iHook))
-            throw new MissingParameterException("[CoreTool]: Missing IHook parameter!");
+            throw new MissingParameterException("[CoreTool]: Missing IHook parameter!!");
 
         return iHook;
     }

@@ -68,7 +68,7 @@ public abstract class HCEntrance implements IXposedHookLoadPackage, IXposedHookZ
     }
 
     @Override
-    public final void handleLoadPackage(XC_LoadPackage.LoadPackageParam loadPackageParam) throws Throwable {
+    public final void handleLoadPackage(@NonNull XC_LoadPackage.LoadPackageParam loadPackageParam) throws Throwable {
         if (ignorePackageNameList().length != 0) {
             if (Arrays.stream(ignorePackageNameList()).anyMatch(s -> Objects.equals(s, loadPackageParam.packageName)))
                 return;
@@ -85,7 +85,7 @@ public abstract class HCEntrance implements IXposedHookLoadPackage, IXposedHookZ
     }
 
     @Override
-    public final void initZygote(StartupParam startupParam) throws Throwable {
+    public final void initZygote(@NonNull StartupParam startupParam) throws Throwable {
         HCInit.initBasicData(initHC(new HCInit.BasicData()));
         HCInit.initStartupParam(startupParam);
         onInitZygote(startupParam);

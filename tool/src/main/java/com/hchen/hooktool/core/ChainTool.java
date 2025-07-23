@@ -59,7 +59,7 @@ public class ChainTool {
     private ChainData chainData;
 
     private ChainTool(@NonNull Class<?> clazz) {
-        Objects.requireNonNull(clazz, "[ChainTool]: Class must not be null!");
+        Objects.requireNonNull(clazz, "[ChainTool]: Class must not be null!!");
         chainHook = new ChainHook();
         this.clazz = clazz;
     }
@@ -159,7 +159,7 @@ public class ChainTool {
     }
 
     private void runChain() {
-        Objects.requireNonNull(chainData, "[ChainTool]: Chain data must not be null!");
+        Objects.requireNonNull(chainData, "[ChainTool]: Chain data must not be null!!");
 
         final ChainData tempChainData = chainData;
         if (ChainData.chainDataSet.isEmpty()) {

@@ -260,6 +260,13 @@ public class ShellTool {
     /**
      * 检查是否支持 Root
      */
+    public static boolean isRootAvailable(@NonNull IExecListener iExecListener) {
+        return isRootAvailable(true, iExecListener);
+    }
+
+    /**
+     * 检查是否支持 Root
+     */
     public static boolean isRootAvailable(boolean sync, @Nullable IExecListener iExecListener) {
         Callable<Integer> callable = () -> {
             Process process = null;
@@ -271,7 +278,7 @@ public class ShellTool {
                 }
                 return exitCode;
             } catch (IOException | InterruptedException e) {
-                AndroidLog.logE(TAG, "Error checking if root permission is supported!", e);
+                AndroidLog.logE(TAG, "Error checking if root permission is supported!!", e);
                 return -1;
             } finally {
                 if (process != null)
@@ -316,7 +323,7 @@ public class ShellTool {
                 streamThread = new StreamThread(this, process.getInputStream(), process.getErrorStream());
                 streamThread.run();
             } catch (IOException e) {
-                AndroidLog.logE(TAG, "Error initializing Shell stream!", e);
+                AndroidLog.logE(TAG, "Error initializing Shell stream!!", e);
             } finally {
                 notify();
             }
@@ -405,7 +412,7 @@ public class ShellTool {
                 os.write(LINE_BREAK);
                 os.flush();
             } catch (IOException e) {
-                AndroidLog.logE(TAG, "Error writing data to shell stream!", e);
+                AndroidLog.logE(TAG, "Error writing data to shell stream!!", e);
             }
         }
 
@@ -420,7 +427,7 @@ public class ShellTool {
                 }
                 os.flush();
             } catch (IOException e) {
-                AndroidLog.logE(TAG, "Error writing data to shell stream!", e);
+                AndroidLog.logE(TAG, "Error writing data to shell stream!!", e);
             }
         }
 
@@ -442,13 +449,13 @@ public class ShellTool {
                     try {
                         os.close();
                     } catch (IOException e) {
-                        AndroidLog.logE(TAG, "Error closing OS!", e);
+                        AndroidLog.logE(TAG, "Error closing OS!!", e);
                     }
                 }
 
                 streamThread.close();
             } catch (InterruptedException e) {
-                AndroidLog.logE(TAG, "Error closing shell stream!", e);
+                AndroidLog.logE(TAG, "Error closing shell stream!!", e);
             } finally {
                 streamThread = null;
                 command = null;
@@ -522,7 +529,7 @@ public class ShellTool {
                             outputList.add(line);
                         }
                     } catch (Throwable e) {
-                        AndroidLog.logE(TAG, "Error reading shell standard output stream!", e);
+                        AndroidLog.logE(TAG, "Error reading shell standard output stream!!", e);
                     }
                 }
             );
@@ -548,7 +555,7 @@ public class ShellTool {
                             shellImpl.init();
                         }
                     } catch (Throwable e) {
-                        AndroidLog.logE(TAG, "Error reading shell standard error stream!", e);
+                        AndroidLog.logE(TAG, "Error reading shell standard error stream!!", e);
                     }
                 }
             );
@@ -636,7 +643,7 @@ public class ShellTool {
                         toArray(errorList)
                     );
                 } catch (Throwable e) {
-                    AndroidLog.logE(TAG, "Error during callback!", e);
+                    AndroidLog.logE(TAG, "Error during callback!!", e);
                 }
             }
         }

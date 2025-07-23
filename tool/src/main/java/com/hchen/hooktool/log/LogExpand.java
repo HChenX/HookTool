@@ -25,7 +25,6 @@ import com.hchen.hooktool.HCData;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Arrays;
-import java.util.function.Consumer;
 
 /**
  * 日志扩展
@@ -46,18 +45,15 @@ public class LogExpand {
     public static String getStackTrace() {
         StringBuilder stringBuilder = new StringBuilder();
         StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
-        Arrays.stream(stackTraceElements).forEach(new Consumer<StackTraceElement>() {
-            @Override
-            public void accept(StackTraceElement stackTraceElement) {
-                String clazz = stackTraceElement.getClassName();
-                String method = stackTraceElement.getMethodName();
-                String field = stackTraceElement.getFileName();
-                int line = stackTraceElement.getLineNumber();
-                stringBuilder.append("\nat ").append(clazz).append(".")
-                    .append(method).append("(")
-                    .append(field).append(":")
-                    .append(line).append(")");
-            }
+        Arrays.stream(stackTraceElements).forEach(element -> {
+            String clazz = element.getClassName();
+            String method = element.getMethodName();
+            String field = element.getFileName();
+            int line = element.getLineNumber();
+            stringBuilder.append("\nat ").append(clazz).append(".")
+                .append(method).append("(")
+                .append(field).append(":")
+                .append(line).append(")");
         });
         return stringBuilder.toString();
     }

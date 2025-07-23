@@ -120,7 +120,6 @@ public class DeviceTool {
         return isHyperOSVersion(version, EQ);
     }
 
-
     /**
      * 根据指定模式匹配 HyperOS 版本是否符合要求
      */

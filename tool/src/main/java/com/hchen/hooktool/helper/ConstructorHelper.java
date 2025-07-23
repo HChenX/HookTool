@@ -59,7 +59,7 @@ public class ConstructorHelper {
     private boolean withSuper = false;
 
     public ConstructorHelper(@NonNull Class<?> clazz) {
-        Objects.requireNonNull(clazz, "[ConstructorHelper]: Class must not be null!");
+        Objects.requireNonNull(clazz, "[ConstructorHelper]: Class must not be null!!");
         this.clazz = clazz;
     }
 
@@ -159,7 +159,7 @@ public class ConstructorHelper {
     public HookHelper<Constructor<?>> single() {
         List<Constructor<?>> constructors = matches();
         if (constructors.isEmpty())
-            throw new NonSingletonException("[ConstructorHelper]: No result found for query!");
+            throw new NonSingletonException("[ConstructorHelper]: No result found for query!!");
         if (constructors.size() > 1)
             throw new NonSingletonException("[ConstructorHelper]: Query did not return a unique result: " + constructors.size());
 

@@ -35,18 +35,6 @@ public class SystemPropTool {
     private SystemPropTool() {
     }
 
-    public static String getProp(@NonNull String key, ClassLoader classLoader) {
-        return (String) Optional.ofNullable(
-            callStaticMethod(
-                "android.os.SystemProperties",
-                classLoader,
-                "get",
-                new Class[]{String.class},
-                key
-            )
-        ).orElse("");
-    }
-
     /**
      * 获取 boolean 类型的 prop
      */
@@ -87,13 +75,26 @@ public class SystemPropTool {
      * 获取 String 类型的 prop，无默认值
      */
     public static String getProp(@NonNull String key) {
-        return (String) Optional.ofNullable(
-            callStaticMethod(propClass, "get", new Class[]{String.class}, key)
-        ).orElse("");
+        return callStaticMethod(propClass, "get", new Class[]{String.class}, key);
+    }
+
+    /**
+     * 获取 String 类型的 prop，无默认值
+     */
+    public static String getProp(@NonNull String key, ClassLoader classLoader) {
+        return callStaticMethod(
+            "android.os.SystemProperties",
+            classLoader,
+            "get",
+            new Class[]{String.class},
+            key
+        );
     }
 
     /**
      * 只有系统框架才可能可以调用
+     * <p>
+     * 可设置的 prop 类型非常有限，一般情况下使用不到
      */
     public static void setProp(@NonNull String key, String vale) {
         callStaticMethod(propClass, "set", new Class[]{String.class, String.class}, key, vale);

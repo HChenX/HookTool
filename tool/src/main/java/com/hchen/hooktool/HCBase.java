@@ -103,7 +103,7 @@ public abstract class HCBase extends CoreTool {
     /**
      * Hook 流程抛错时调用
      * <p>
-     * 在这里进行抛错清理操作
+     * 在这里进行清理操作
      *
      * @param flag 抛错的时机
      */
@@ -116,7 +116,7 @@ public abstract class HCBase extends CoreTool {
             init();
         } catch (Throwable e) {
             onThrowable(ON_LOAD_PACKAGE, e);
-            logE(TAG, "[onLoadPackage]: Will stop hook process!", e);
+            logE(TAG, "[onLoadPackage]: Will stop hook process!!", e);
         }
     }
 
@@ -126,7 +126,7 @@ public abstract class HCBase extends CoreTool {
             init(classLoader);
         } catch (Throwable e) {
             onThrowable(ON_LOAD_PACKAGE, e);
-            logE(TAG, "[onLoadPackage/classLoader]: Will stop hook process!", e);
+            logE(TAG, "[onLoadPackage/classLoader]: Will stop hook process!!", e);
         }
     }
 
@@ -150,7 +150,7 @@ public abstract class HCBase extends CoreTool {
             initZygote(HCData.getStartupParam());
         } catch (Throwable e) {
             onThrowable(ON_ZYGOTE, e);
-            logE(TAG, "[onZygote]: Will stop hook process!", e);
+            logE(TAG, "[onZygote]: Will stop hook process!!", e);
         }
     }
 
@@ -179,7 +179,7 @@ public abstract class HCBase extends CoreTool {
                         logE("Application", e);
                     }
                 });
-                logI("Application", "Application created, package name: " + (context != null ? context.getPackageName() : "unknown"));
+                logI("Application", "Application created!! package name: " + (context != null ? context.getPackageName() : "unknown"));
             }
         });
         isHookedApplication = true;

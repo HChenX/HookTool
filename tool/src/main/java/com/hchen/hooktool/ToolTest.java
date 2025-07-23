@@ -219,7 +219,7 @@ class ToolTest extends HCBase {
         // 资源注入
         createFakeResId("test_res"); // 获取 test_res 的虚拟资源 id
         // 设置 pkg 的 string 资源 test_res_str 值为 HC!
-        setObjectReplacement("com.hchen.demo", "string", "test_res_str", "HC!");
+        setObjectReplacement("com.hchen.demo", "string", "test_res_str", "HC!!");
 
         // 共享首选项工具使用方法
         prefs().get("test_key", "0"); // 获取 prefs test_key 的值
