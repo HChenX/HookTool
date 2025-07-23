@@ -101,6 +101,7 @@ public class ResInjectTool {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             if (resourcesLoader == null) {
+                assert HCData.getModulePath() != null;
                 try (ParcelFileDescriptor pfd = ParcelFileDescriptor.open(new File(HCData.getModulePath()), ParcelFileDescriptor.MODE_READ_ONLY)) {
                     ResourcesProvider provider = ResourcesProvider.loadFromApk(pfd);
                     ResourcesLoader loader = new ResourcesLoader();
