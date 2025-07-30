@@ -62,7 +62,7 @@ public class DeviceTool {
      * 获取 MIUI 版本
      */
     public static float getMiuiVersion() {
-        return switch (getProp("ro.miui.ui.version.name").trim()) {
+        return switch (getProp(VERSION_PROPERTY_MIUI).trim()) {
             case "V150" -> 15f;
             case "V140" -> 14f;
             case "V130" -> 13f;
@@ -78,7 +78,7 @@ public class DeviceTool {
      * 获取 HyperOS 版本
      */
     public static float getHyperOSVersion() {
-        return switch (getProp("ro.mi.os.version.name").trim()) {
+        return switch (getProp(VERSION_PROPERTY_HYPER_OS).trim()) {
             case "OS2.0" -> 2f;
             case "OS1.0" -> 1f;
             default -> 0f;
@@ -195,11 +195,15 @@ public class DeviceTool {
     public static final String[] ROM_NUBIA = {"nubia"};
     public static final String[] ROM_SAMSUNG = {"samsung"};
     public static final String[] ROM_HONOR = {"honor"};
+    public static final String[] ROM_SMARTISAN = {"smartisan"};
     // ---------------------------------------------------------
 
+    // ----------------------- 各系统版本号 prop 条目 -------------------------
+    private static final String VERSION_PROPERTY_MIUI = "ro.miui.ui.version.name";
+    private static final String VERSION_PROPERTY_HYPER_OS = "ro.mi.os.version.name";
     private static final String VERSION_PROPERTY_HUAWEI = "ro.build.version.emui";
     private static final String VERSION_PROPERTY_VIVO = "ro.vivo.os.build.display.id";
-    private static final String VERSION_PROPERTY_XIAOMI = "ro.build.version.incremental";
+    private static final String[] VERSION_PROPERTY_XIAOMI = {"ro.mi.os.version.incremental", "ro.build.version.incremental"};
     private static final String[] VERSION_PROPERTY_OPPO = {"ro.build.version.opporom", "ro.build.version.oplusrom.display"};
     private static final String VERSION_PROPERTY_LEECO = "ro.letv.release.version";
     private static final String VERSION_PROPERTY_360 = "ro.build.uiversion";
@@ -207,19 +211,34 @@ public class DeviceTool {
     private static final String VERSION_PROPERTY_ONEPLUS = "ro.rom.version";
     private static final String VERSION_PROPERTY_NUBIA = "ro.build.rom.id";
     private static final String[] VERSION_PROPERTY_MAGIC = {"msc.config.magic.version", "ro.build.version.magic"};
+    // --------------------------------------------------------------------
+
+    /**
+     * 判断当前厂商是否为 Xiaomi
+     */
+    public static boolean isXiaomi() {
+        return isRightRom(ROM_XIAOMI);
+    }
+
+    /**
+     * 判断当前厂商系统是否为 Miui
+     */
+    public static boolean isMiui() {
+        return !getRomVersion(VERSION_PROPERTY_MIUI).isEmpty();
+    }
+
+    /**
+     * 判断当前厂商系统是否为 HyperOS
+     */
+    public static boolean isHyperOS() {
+        return !getRomVersion(VERSION_PROPERTY_HYPER_OS).isEmpty();
+    }
 
     /**
      * 判断当前厂商系统是否为 Emui
      */
     public static boolean isEmui() {
         return !getRomVersion(VERSION_PROPERTY_HUAWEI).isEmpty();
-    }
-
-    /**
-     * 判断当前厂商系统是否为 Xiaomi
-     */
-    public static boolean isXiaomi() {
-        return !getRomVersion(VERSION_PROPERTY_XIAOMI).isEmpty();
     }
 
     /**
