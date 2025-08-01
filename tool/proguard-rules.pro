@@ -14,19 +14,16 @@
 
 # Uncomment this to preserve the line number information for
 # debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+-keepattributes SourceFile,LineNumberTable
 
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
 
+-keep class * extends com.hchen.hooktool.HCEntrance
 -keep class * extends com.hchen.hooktool.HCBase
 -keep class com.hchen.hooktool.HCState {
        private final static boolean isXposedEnabled;
        private final static java.lang.String framework;
        private final static int version;
  }
--keep class com.hchen.hooktool.data.AppData {*;}
--keep class * implements android.os.Parcelable {
-       public static ** CREATOR;
-}

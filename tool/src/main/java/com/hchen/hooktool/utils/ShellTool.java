@@ -697,7 +697,7 @@ public class ShellTool {
                         if ("0".equals(exitCode)) iExecListener.output(command, exitCode, outputs);
                         else iExecListener.error(command, exitCode, errors);
                     } catch (Throwable e) {
-                        AndroidLog.logE(TAG, "Error during callback:", e);
+                        AndroidLog.logE(TAG, "Error during callback!!", e);
                     }
                 }
             }
@@ -720,7 +720,7 @@ public class ShellTool {
                         if ("0".equals(exitCode)) iExecListener.output(command, exitCode, outputs);
                         else iExecListener.error(command, exitCode, errors);
                     } catch (Throwable e) {
-                        AndroidLog.logE(TAG, "Error during callback:", e);
+                        AndroidLog.logE(TAG, "Error during callback!!", e);
                     }
                 }
             }

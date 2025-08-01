@@ -12,16 +12,6 @@
 <p>使用 Java 编写的 Hook 工具！帮助你减轻编写 Hook 代码的复杂度！</p>
 </div>
 
-# ✨ 工具特性
-
-### 1. **链式调用**
-
-### 2. **全面便利**
-
-#### Tip: 重构声明: v.2.0.5 再次重构，使工具更加优雅更加便利。 ~~v.1.0.0
-
-版本和之前版本有较大不同，新版本工具完成静态化，更符合工具特征，拥有更好的使用体验和性能~~
-
 # 🔧 使用方法
 
 #### 1. 向项目 settings.gradle 文件添加如下代码
@@ -40,7 +30,7 @@ dependencyResolutionManagement {
 
 ```groovy
 dependencies {
-    implementation 'com.github.HChenX:HookTool:v.2.1.9'
+    implementation 'com.github.HChenX:HookTool:v.2.2.0'
 }
 ```
 
@@ -60,7 +50,7 @@ public void init() {
 }
 ```
 
-- 在 Hook 入口处初始化本工具
+- 在 Hook 入口处初始化
 
 ```java
 public class HookInit extends HCEntrance /* 建议继承 HCEntrance 类作为入口 */ {
@@ -72,7 +62,7 @@ public class HookInit extends HCEntrance /* 建议继承 HCEntrance 类作为入
             .setTag("HChenDemo") // 日志 tag
             .setLogLevel(LOG_D) // 日志等级
             .setPrefsName("hchen_prefs") // prefs 文件名 (可选)
-            .setAutoReload(true) // 是否自动更新共享首选项，默认开启 (可选)
+            .setAutoReload(true) // 是否自动更新共享首选项数据，默认开启 (可选)
             .setLogExpandPath("com.hchen.demo.hook") // 日志增强功能 (可选)
             .setLogExpandIgnoreClassNames("Demo"); // 排除指定类名 (可选)
     }
@@ -104,7 +94,7 @@ public class HookInit extends HCEntrance /* 建议继承 HCEntrance 类作为入
 }
 ```
 
-- 在模块主界面初始化
+- 在模块 Application 中初始化
 
 ```java
 public class Application extends android.app.Application {
@@ -175,12 +165,12 @@ public class HookDemo extends HCBase /* 建议继承 HCBase 使用 */ {
 
     @Override
     protected void onApplicationBefore(@NonNull Context context) {
-        // 目标应用创建 Application 之前回调
+        // 目标应用创建 Context 之前回调
     }
 
     @Override
     protected void onApplicationAfter(@NonNull Context context) {
-        // 目标应用创建 Application 之后回调
+        // 目标应用创建 Context 之后回调
     }
 
     @Override
@@ -193,6 +183,8 @@ public class HookDemo extends HCBase /* 建议继承 HCBase 使用 */ {
 - 混淆配置:
 
 ```text
+-keep class * extends com.hchen.hooktool.HCEntrance
+
 // 如果你不需要使用日志增强功能，也可以只加入 (对于继承 HCBase 使用的情况):
 -keep class * extends com.hchen.hooktool.HCBase
  
@@ -208,12 +200,6 @@ public class HookDemo extends HCBase /* 建议继承 HCBase 使用 */ {
        private final static java.lang.String framework;
        private final static int version;
  }
- 
--keep class com.hchen.hooktool.data.AppData {*;} 
-// or
--keep class * implements android.os.Parcelable {
-        public static ** CREATOR;
-}
 ```
 
 - 到此完成全部工作，可以愉快的使用了！
@@ -250,7 +236,7 @@ public class MainTest extends HCBase {
 }
 ```
 
-# 📌 全面便利
+# 📌 全面丰富
 
 - 工具提供了全面丰富的方法供你调用
 - 包括:
@@ -258,13 +244,14 @@ public class MainTest extends HCBase {
 ----
 
 - ContextTool 类:
-- 更方便的获取 context
+- 更方便的获取上下文信息
 
 ```java
 public class MainTest {
     public void test() {
-        // 即可最简单的获取 context
-        Context context = ContextTool.getContext(ContextUtils.FLAG_ALL);
+        Context context = ContextTool.getContext(ContextTool.FLAG_ALL);
+        Context context = ContextTool.getContext(ContextTool.FLAG_CURRENT_APP);
+        Context context = ContextTool.getContext(ContextTool.FLAG_ONLY_ANDROID);
     }
 }
 ```
@@ -291,7 +278,7 @@ public class MainTest {
 ```java
 public class MainTest {
     public void test() {
-        // 只能在系统框架中调用才能设置 persist 类型的 prop
+        // 只有在系统框架中调用才能设置 persist 类型的 prop
         SystemPropTool.setProp("persist.test.prop", "1");
         // 获取应该可以随意
         String result = SystemPropTool.getProp("persist.test.prop");
@@ -318,7 +305,7 @@ public class HookDemo extends HCBase {
         prefs(context).editor().putString("test", "1").commit();
         // 如果没有继承 HCBase 可以这样调用
         PrefsTool.prefs(context).editor().putString("test", "2").commit();
-        // 注意 sprefs 模式 是和 xprefs 模式相互独立的，可共同存在
+        // 注意 sprefs 模式 和 xprefs 模式相互独立，可共同存在
 
         // 如果不方便获取 context 可用使用此方法，异步获取寄生应用上下文后再设置
         asyncPrefs(new IAsyncPrefs() {
@@ -354,8 +341,7 @@ public class Application extends android.app.Application {
 ```java
 public class MainTest {
     public void test() {
-        ShellTool shellTool = ShellTool.builder().isRoot(true).create();
-        shellTool = ShellTool.obtain();
+        ShellTool shellTool = ShellTool.obtain(true);
         ShellResult shellResult = shellTool.cmd("ls").exec();
         if (shellResult != null) {
             boolean result = shellResult.isSuccess();
@@ -420,7 +406,7 @@ public class MainTest {
 
 ----
 
-- PackagesTool 类:
+- PackageTool 类:
 - 快速获取软件包信息！
 
 ----
