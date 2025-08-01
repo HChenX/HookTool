@@ -39,7 +39,7 @@ public interface IExecListener {
     }
 
     /**
-     * 返回尝试 Root 的结果
+     * 返回 Root 状态
      */
     default void rootResult(boolean hasRoot, @NonNull String exitCode) {
     }

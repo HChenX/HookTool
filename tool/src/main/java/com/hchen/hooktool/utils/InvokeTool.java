@@ -48,29 +48,29 @@ public class InvokeTool {
     /**
      * 调用指定方法
      */
-    public static <T> T callMethod(@NonNull Object instance, @NonNull String methodName, @NonNull Object[] classes, @NonNull Object... params) {
-        return baseInvokeMethod(null, instance, methodName, getParamTypes(instance.getClass().getClassLoader(), classes), params);
+    public static <T> T callMethod(@NonNull Object instance, @NonNull String methodName, @NonNull Object[] paramTypes, @NonNull Object... params) {
+        return baseInvokeMethod(null, instance, methodName, getParamTypes(instance.getClass().getClassLoader(), paramTypes), params);
     }
 
     /**
      * 调用静态方法
      */
-    public static <T> T callStaticMethod(@NonNull Class<?> clazz, @NonNull String methodName, @NonNull Object[] classes, @NonNull Object... params) {
-        return baseInvokeMethod(clazz, null, methodName, getParamTypes(clazz.getClassLoader(), classes), params);
+    public static <T> T callStaticMethod(@NonNull Class<?> clazz, @NonNull String methodName, @NonNull Object[] paramTypes, @NonNull Object... params) {
+        return baseInvokeMethod(clazz, null, methodName, getParamTypes(clazz.getClassLoader(), paramTypes), params);
     }
 
     /**
      * 调用静态方法
      */
-    public static <T> T callStaticMethod(@NonNull String classPath, @NonNull String methodName, @NonNull Object[] classes, @NonNull Object... params) {
-        return baseInvokeMethod(findClass(classPath), null, methodName, getParamTypes(null, classes), params);
+    public static <T> T callStaticMethod(@NonNull String classPath, @NonNull String methodName, @NonNull Object[] paramTypes, @NonNull Object... params) {
+        return baseInvokeMethod(findClass(classPath), null, methodName, getParamTypes(null, paramTypes), params);
     }
 
     /**
      * 调用静态方法
      */
-    public static <T> T callStaticMethod(@NonNull String classPath, ClassLoader classLoader, @NonNull String methodName, @NonNull Object[] classes, @NonNull Object... params) {
-        return baseInvokeMethod(findClass(classPath, classLoader), null, methodName, getParamTypes(classLoader, classes), params);
+    public static <T> T callStaticMethod(@NonNull String classPath, ClassLoader classLoader, @NonNull String methodName, @NonNull Object[] paramTypes, @NonNull Object... params) {
+        return baseInvokeMethod(findClass(classPath, classLoader), null, methodName, getParamTypes(classLoader, paramTypes), params);
     }
 
     // ---------------------------- 设置字段 --------------------------------
@@ -134,7 +134,7 @@ public class InvokeTool {
     /**
      * @noinspection unchecked
      */
-    private static <T> T baseInvokeMethod(Class<?> clazz, Object instance, String methodName, Class<?>[] classes, Object... params) {
+    private static <T> T baseInvokeMethod(Class<?> clazz, Object instance, String methodName, Class<?>[] paramTypes, Object... params) {
         if (clazz == null && instance == null) {
             throw new NullPointerException("[InvokeTool]: Class or Instance must not be null, can't invoke method: " + methodName);
         } else if (clazz == null) {
@@ -143,11 +143,11 @@ public class InvokeTool {
 
         try {
             Method declaredMethod;
-            String id = clazz.getName() + "#" + methodName + "#" + Arrays.toString(classes);
+            String id = clazz.getName() + "#" + methodName + "#" + Arrays.toString(paramTypes);
             declaredMethod = mMethodCache.get(id);
             if (declaredMethod == null) {
                 try {
-                    declaredMethod = clazz.getDeclaredMethod(methodName, classes);
+                    declaredMethod = clazz.getDeclaredMethod(methodName, paramTypes);
                 } catch (NoSuchMethodException e) {
                     while (true) {
                         clazz = clazz.getSuperclass();
@@ -155,7 +155,7 @@ public class InvokeTool {
                             break;
 
                         try {
-                            declaredMethod = clazz.getDeclaredMethod(methodName, classes);
+                            declaredMethod = clazz.getDeclaredMethod(methodName, paramTypes);
                             break;
                         } catch (NoSuchMethodException ignored) {
                         }
