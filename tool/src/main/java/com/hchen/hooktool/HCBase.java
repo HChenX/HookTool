@@ -1,20 +1,20 @@
 /*
  * This file is part of HookTool.
-
+ *
  * HookTool is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License.
-
- * This program is distributed in the hope that it will be useful,
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation; either version 2.1 of the License, or
+ * (at your option) any later version.
+ *
+ * HookTool is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
-
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <https://www.gnu.org/licenses/>.
-
- * Copyright (C) 2023-2025 HChenX
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with HookTool. If not, see <https://www.gnu.org/licenses/lgpl-2.1>.
+ *
+ * Copyright (C) 2023–2025 HChenX
  */
 package com.hchen.hooktool;
 
@@ -50,11 +50,13 @@ public abstract class HCBase extends CoreTool {
     private static boolean isHookedApplication = false;
     private static final Set<HCBase> applications = new HashSet<>();
     public static final int ON_LOAD_PACKAGE = 1;
-    public static final int ON_ZYGOTE = 2;
-    public static final int ON_APPLICATION = 3;
+    public static final int ON_LOAD_PACKAGE_CLASSLOADER = 2;
+    public static final int ON_ZYGOTE = 3;
+    public static final int ON_APPLICATION = 4;
 
     @IntDef(value = {
         ON_LOAD_PACKAGE,
+        ON_LOAD_PACKAGE_CLASSLOADER,
         ON_ZYGOTE,
         ON_APPLICATION
     })
@@ -89,15 +91,15 @@ public abstract class HCBase extends CoreTool {
     }
 
     /**
-     * Application 创建之前时调用
+     * Context 创建之前时调用
      */
-    protected void onApplicationBefore(@NonNull Context context) {
+    protected void initApplicationBefore(@NonNull Context context) {
     }
 
     /**
-     * Application 创建之后时调用
+     * Context 创建之后时调用
      */
-    protected void onApplicationAfter(@NonNull Context context) {
+    protected void initApplicationAfter(@NonNull Context context) {
     }
 
     /**
@@ -125,7 +127,7 @@ public abstract class HCBase extends CoreTool {
             if (!isEnabled()) return;
             init(classLoader);
         } catch (Throwable e) {
-            onThrowable(ON_LOAD_PACKAGE, e);
+            onThrowable(ON_LOAD_PACKAGE_CLASSLOADER, e);
             logE(TAG, "[onLoadPackage/classLoader]: Will stop hook process!!", e);
         }
     }
@@ -162,7 +164,7 @@ public abstract class HCBase extends CoreTool {
                 Context context = (Context) getArg(0);
                 applications.forEach(iApplication -> {
                     try {
-                        iApplication.onApplicationBefore(context);
+                        iApplication.initApplicationBefore(context);
                     } catch (Throwable e) {
                         logE("Application", e);
                     }
@@ -174,12 +176,12 @@ public abstract class HCBase extends CoreTool {
                 Context context = (Context) getArg(0);
                 applications.forEach(iApplication -> {
                     try {
-                        iApplication.onApplicationAfter(context);
+                        iApplication.initApplicationAfter(context);
                     } catch (Throwable e) {
                         logE("Application", e);
                     }
                 });
-                logI("Application", "Application created!! package name: " + (context != null ? context.getPackageName() : "unknown"));
+                logI("Application", "Application created!! package: " + (context != null ? context.getPackageName() : "unknown"));
             }
         });
         isHookedApplication = true;

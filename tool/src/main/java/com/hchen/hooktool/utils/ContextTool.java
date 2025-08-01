@@ -1,20 +1,20 @@
 /*
  * This file is part of HookTool.
-
+ *
  * HookTool is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License.
-
- * This program is distributed in the hope that it will be useful,
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation; either version 2.1 of the License, or
+ * (at your option) any later version.
+ *
+ * HookTool is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
-
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <https://www.gnu.org/licenses/>.
-
- * Copyright (C) 2023-2025 HChenX
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with HookTool. If not, see <https://www.gnu.org/licenses/lgpl-2.1>.
+ *
+ * Copyright (C) 2023–2025 HChenX
  */
 package com.hchen.hooktool.utils;
 
@@ -57,10 +57,6 @@ public class ContextTool {
 
     /**
      * 获取上下文对象
-     *
-     * @param flag 标志位
-     * @return 返回获取到的上下文对象
-     * @throws NullPointerException 如果获取的上下文对象为空，则抛出异常
      */
     @NonNull
     public static Context getContext(@ContextFlag int flag) {
@@ -72,9 +68,6 @@ public class ContextTool {
 
     /**
      * 获取上下文对象，不会抛错
-     *
-     * @param flag 标志位
-     * @return 返回获取到的上下文对象，否则返回 null
      */
     @Nullable
     private static Context getContextNonThrow(@ContextFlag int flag) {
@@ -111,7 +104,6 @@ public class ContextTool {
      * }, FLAG_ALL, 10000);
      * }
      * 当然 Handler 是可选项, 适用于 Toast 显示等场景
-     * @param iContextGetter 回调获取 Context
      */
     public static void getAsyncContext(@NonNull IContextGetter iContextGetter, @ContextFlag int flag, int timeout) {
         Executors.newSingleThreadExecutor().execute(() -> {

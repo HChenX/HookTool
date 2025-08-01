@@ -1,20 +1,20 @@
 /*
  * This file is part of HookTool.
-
+ *
  * HookTool is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License.
-
- * This program is distributed in the hope that it will be useful,
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation; either version 2.1 of the License, or
+ * (at your option) any later version.
+ *
+ * HookTool is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
-
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <https://www.gnu.org/licenses/>.
-
- * Copyright (C) 2023-2025 HChenX
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with HookTool. If not, see <https://www.gnu.org/licenses/lgpl-2.1>.
+ *
+ * Copyright (C) 2023–2025 HChenX
  */
 package com.hchen.hooktool.utils;
 
@@ -35,7 +35,6 @@ import com.hchen.hooktool.HCData;
 import com.hchen.hooktool.core.CoreTool;
 import com.hchen.hooktool.exception.InjectResourcesException;
 import com.hchen.hooktool.hook.IHook;
-import com.hchen.hooktool.log.AndroidLog;
 import com.hchen.hooktool.log.XposedLog;
 
 import java.io.File;
@@ -59,7 +58,6 @@ public class ResInjectTool {
     private static ResourcesLoader resourcesLoader = null;
     private static final ConcurrentHashMap<String, Pair<ReplacementType, Object>> replacements = new ConcurrentHashMap<>();
     private static final CopyOnWriteArraySet<Integer> waitSet = new CopyOnWriteArraySet<>();
-    private static boolean isFailed = false;
     private static boolean isInjected = false;
     private static boolean isHooked = false;
 
@@ -89,15 +87,8 @@ public class ResInjectTool {
      */
     public static void injectModuleRes() {
         if (isInjected) return;
-        if (isFailed) {
-            AndroidLog.logW(TAG, "Failed to inject module res, will try on next reload!!");
-            return;
-        }
-
-        if (HCData.getModulePath() == null) {
-            isFailed = true;
+        if (HCData.getModulePath() == null)
             throw new NullPointerException("[ResInjectTool]: Module path must not be null!!");
-        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             if (resourcesLoader == null) {
@@ -108,7 +99,6 @@ public class ResInjectTool {
                     loader.addProvider(provider);
                     resourcesLoader = loader;
                 } catch (IOException e) {
-                    isFailed = true;
                     throw new InjectResourcesException("[ResInjectTool]: Failed to create res loader!!", e);
                 }
             }
@@ -157,7 +147,6 @@ public class ResInjectTool {
         }
 
         isInjected = true;
-        isFailed = false;
     }
 
     public static int createFakeResId(@NonNull String resName) {

@@ -1,20 +1,20 @@
 /*
  * This file is part of HookTool.
-
+ *
  * HookTool is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License.
-
- * This program is distributed in the hope that it will be useful,
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation; either version 2.1 of the License, or
+ * (at your option) any later version.
+ *
+ * HookTool is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
-
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <https://www.gnu.org/licenses/>.
-
- * Copyright (C) 2023-2025 HChenX
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with HookTool. If not, see <https://www.gnu.org/licenses/lgpl-2.1>.
+ *
+ * Copyright (C) 2023–2025 HChenX
  */
 package com.hchen.hooktool.utils;
 
@@ -66,6 +66,11 @@ import java.util.stream.Collectors;
  *                 echo world;
  *             fi
  *             """).exec();
+ *         shellTool.enableSplicingMode()
+ *             .cmd("if [[ true == true ]]; then")
+ *             .cmd("  echo hello               ")
+ *             .cmd("fi                         ")
+ *             .exec();
  *         shellTool.cmd("echo hello").async();
  *         shellTool.cmd("echo world").async(new IExecListener() {
  *             @Override
@@ -162,7 +167,9 @@ public class ShellTool {
     /**
      * 是否使用命令拼接模式
      * <p>
-     * 请注意：使用此模式后，在调用 {@link ShellTool#exec()} 和{@link ShellTool#async()} 之前都会保持在拼接模式
+     * 请注意：请务必在 {@link ShellTool#cmd(String)} 前调用！
+     * <p>
+     * 使用此模式后，在调用 {@link ShellTool#exec()} 或 {@link ShellTool#async()} 之前都会保持在拼接模式
      * <pre>{@code
      *     ShellTool.obtain().enableSplicingMode()
      *          .cmd("if [[ hello == world ]]; then")

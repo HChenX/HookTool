@@ -1,20 +1,20 @@
 /*
  * This file is part of HookTool.
-
+ *
  * HookTool is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License.
-
- * This program is distributed in the hope that it will be useful,
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation; either version 2.1 of the License, or
+ * (at your option) any later version.
+ *
+ * HookTool is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
-
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <https://www.gnu.org/licenses/>.
-
- * Copyright (C) 2023-2025 HChenX
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with HookTool. If not, see <https://www.gnu.org/licenses/lgpl-2.1>.
+ *
+ * Copyright (C) 2023–2025 HChenX
  */
 package com.hchen.hooktool.utils;
 
@@ -41,6 +41,8 @@ import androidx.annotation.NonNull;
 
 import com.hchen.hooktool.helper.RangeHelper;
 import com.hchen.hooktool.helper.TryHelper;
+
+import java.util.Objects;
 
 /**
  * 设备工具
@@ -160,6 +162,21 @@ public class DeviceTool {
         return false;
     }
 
+    /**
+     * 判断是否为指定 ColorOS 版本
+     */
+    public static boolean isColorOSVersion(float version) {
+        return isColorOSVersion(version, EQ);
+    }
+
+    /**
+     * 根据指定模式匹配 ColorOS 版本是否符合要求
+     */
+    public static boolean isColorOSVersion(float version, @RangeHelper.RangeModeFlag int mode) {
+        String v = getRomVersion(VERSION_PROPERTY_OPPO); // result like "15.0"
+        return isMatchVersion(Float.parseFloat(v), version, mode);
+    }
+
     private static boolean isMatchVersion(float version, float targetVersion, @RangeHelper.RangeModeFlag int mode) {
         switch (mode) {
             case EQ -> {
@@ -256,13 +273,6 @@ public class DeviceTool {
     }
 
     /**
-     * 判断当前厂商系统是否为 OneUI
-     */
-    public static boolean isOneUi() {
-        return isRightRom(ROM_SAMSUNG);
-    }
-
-    /**
      * 判断当前是否为鸿蒙系统
      */
     public static boolean isHarmonyOS() {
@@ -283,10 +293,24 @@ public class DeviceTool {
     }
 
     /**
+     * 判断当前厂商系统是否为 OneUI
+     */
+    public static boolean isOneUi() {
+        return isRightRom(ROM_SAMSUNG);
+    }
+
+    /**
      * 判断当前是否为 MagicOS 系统
      */
     public static boolean isMagicOS() {
         return isRightRom(ROM_HONOR);
+    }
+
+    /**
+     * 判断当前是否为 SmartisanOS 系统
+     */
+    public static boolean isSmartisanOS() {
+        return isRightRom(ROM_SMARTISAN);
     }
 
     /**
@@ -323,28 +347,20 @@ public class DeviceTool {
      * 是否为国际版小米系统
      */
     public static boolean isMiuiInternational() {
-        return Boolean.TRUE.equals(getStaticField("miui.os.Build", "IS_INTERNATIONAL_BUILD"));
-    }
-
-    /**
-     * 判断 MIUI 优化是否开启
-     */
-    public static boolean isMiuiOptimization() {
-        return getProp("persist.sys.miui_optimization", false);
+        return TryHelper.doTry(() ->
+            Boolean.TRUE.equals(getStaticField("miui.os.Build", "IS_INTERNATIONAL_BUILD"))
+        ).orElse(false);
     }
 
     /**
      * 获取系统是否已经启动完成
      */
     public static boolean isBootCompleted() {
-        return getProp("sys.boot_completed", false);
+        return Objects.equals(getProp("sys.boot_completed", 0), 1);
     }
 
     /**
      * 获取 WindowManager 实例
-     *
-     * @param context 上下文对象，用于获取系统服务
-     * @return WindowManager 对象，用于管理窗口
      */
     public static WindowManager getWindowManager(@NonNull Context context) {
         return (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
@@ -352,9 +368,6 @@ public class DeviceTool {
 
     /**
      * 获取当前上下文的 Display 对象
-     *
-     * @param context 上下文对象
-     * @return Display 对象，表示当前设备的显示屏幕
      */
     public static Display getDisplay(@NonNull Context context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -366,9 +379,6 @@ public class DeviceTool {
 
     /**
      * 获取窗口尺寸
-     *
-     * @param context 上下文对象
-     * @return Point 对象，包含窗口的宽度和高度
      */
     public static Point getWindowSize(@NonNull Context context) {
         return getWindowSize(getWindowManager(context));
@@ -376,9 +386,6 @@ public class DeviceTool {
 
     /**
      * 获取窗口尺寸
-     *
-     * @param windowManager WindowManager 对象
-     * @return Point 对象，包含窗口的宽度和高度
      */
     public static Point getWindowSize(@NonNull WindowManager windowManager) {
         Point point = new Point();
@@ -397,9 +404,6 @@ public class DeviceTool {
 
     /**
      * 获取屏幕尺寸
-     *
-     * @param context 上下文对象
-     * @return Point 对象，包含屏幕的宽度和高度
      */
     public static Point getScreenSize(@NonNull Context context) {
         return getScreenSize(getWindowManager(context));
@@ -407,9 +411,6 @@ public class DeviceTool {
 
     /**
      * 获取屏幕尺寸
-     *
-     * @param windowManager WindowManager 对象
-     * @return Point 对象，包含屏幕的宽度和高度
      */
     public static Point getScreenSize(@NonNull WindowManager windowManager) {
         Point point = new Point();
@@ -425,9 +426,6 @@ public class DeviceTool {
 
     /**
      * 判断屏幕是否为横屏
-     *
-     * @param context 上下文对象
-     * @return 如果屏幕为横屏返回 true，否则返回 false
      */
     public static boolean isHorizontalScreen(@NonNull Context context) {
         return context.getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE;
@@ -435,9 +433,6 @@ public class DeviceTool {
 
     /**
      * 判断屏幕是否为竖屏
-     *
-     * @param context 上下文对象
-     * @return 如果屏幕为竖屏返回 true，否则返回 false
      */
     public static boolean isVerticalScreen(@NonNull Context context) {
         return context.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT;
@@ -452,10 +447,6 @@ public class DeviceTool {
 
     /**
      * 将像素值转换为密度独立像素值
-     *
-     * @param context 上下文对象，用于获取屏幕密度信息
-     * @param pxValue 像素值
-     * @return 转换后的密度独立像素值
      */
     public static int px2dp(@NonNull Context context, float pxValue) {
         float scale = context.getResources().getDisplayMetrics().density;
@@ -464,10 +455,6 @@ public class DeviceTool {
 
     /**
      * 将像素值转换为缩放独立的字体像素值
-     *
-     * @param context 上下文对象，用于获取字体的缩放密度信息
-     * @param pxValue 像素值
-     * @return 转换后的缩放独立的字体像素值
      */
     public static int px2sp(@NonNull Context context, float pxValue) {
         float fontScale = context.getResources().getDisplayMetrics().scaledDensity;
@@ -476,10 +463,6 @@ public class DeviceTool {
 
     /**
      * 将密度独立像素值转换为像素值
-     *
-     * @param context 上下文对象，用于获取屏幕密度信息
-     * @param dpValue 密度独立像素值
-     * @return 转换后的像素值
      */
     public static int dp2px(@NonNull Context context, float dpValue) {
         float scale = context.getResources().getDisplayMetrics().density;
@@ -488,10 +471,6 @@ public class DeviceTool {
 
     /**
      * 将缩放独立的字体像素值转换为像素值
-     *
-     * @param context 上下文对象，用于获取字体的缩放密度信息
-     * @param spValue 缩放独立的字体像素值
-     * @return 转换后的像素值
      */
     public static int sp2px(@NonNull Context context, float spValue) {
         float fontScale = context.getResources().getDisplayMetrics().scaledDensity;
@@ -524,8 +503,7 @@ public class DeviceTool {
 
     private static boolean isPadByProp() {
         String deviceType = getProp("ro.build.characteristics", "default");
-        return (deviceType != null && deviceType.toLowerCase().contains("tablet"))
-            || getProp("persist.sys.muiltdisplay_type", 0) == 2;
+        return (deviceType != null && deviceType.toLowerCase().contains("tablet")) || getProp("persist.sys.muiltdisplay_type", 0) == 2;
     }
 
     private static boolean isPadBySize(@NonNull Context context) {

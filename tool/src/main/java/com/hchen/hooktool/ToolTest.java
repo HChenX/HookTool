@@ -1,20 +1,20 @@
 /*
  * This file is part of HookTool.
-
+ *
  * HookTool is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License.
-
- * This program is distributed in the hope that it will be useful,
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation; either version 2.1 of the License, or
+ * (at your option) any later version.
+ *
+ * HookTool is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
-
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <https://www.gnu.org/licenses/>.
-
- * Copyright (C) 2023-2025 HChenX
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with HookTool. If not, see <https://www.gnu.org/licenses/lgpl-2.1>.
+ *
+ * Copyright (C) 2023–2025 HChenX
  */
 package com.hchen.hooktool;
 
@@ -34,9 +34,12 @@ import com.hchen.hooktool.data.AppData;
 import com.hchen.hooktool.data.ShellResult;
 import com.hchen.hooktool.exception.NonSingletonException;
 import com.hchen.hooktool.hook.IHook;
+import com.hchen.hooktool.utils.ContextTool;
+import com.hchen.hooktool.utils.InvokeTool;
 import com.hchen.hooktool.utils.PackageTool;
-import com.hchen.hooktool.utils.PrefsTool;
+import com.hchen.hooktool.utils.ResInjectTool;
 import com.hchen.hooktool.utils.ShellTool;
+import com.hchen.hooktool.utils.SystemPropTool;
 
 import java.util.ArrayList;
 import java.util.function.Supplier;
@@ -60,7 +63,7 @@ class ToolTest extends HCBase {
 
     @Override
     protected void init() {
-        // 链式 Hook
+        // ChainTool
         buildChain("com.hchen.demo")
             .findMethod("test")
             .hook(new IHook() {
@@ -128,12 +131,12 @@ class ToolTest extends HCBase {
                 getField(o, "test");
 
                 // 静态本类内
-                callThisStaticMethod("thisCall", getArg(0));
+                callThisStaticMethod("method", getArg(0));
                 int t = (int) getThisStaticField("test");
 
                 // 静态本类外
-                callStaticMethod(Object.class, "thisCall", getArg(0));
-                callStaticMethod("com.demo.Main", "callStatic", getArg(1)); // 调用静态方法 callStatic
+                callStaticMethod(Object.class, "method", getArg(0));
+                callStaticMethod("com.demo.Main", "method", getArg(1)); // 调用静态方法 callStatic
                 int i = (int) getStaticField("com.demo.Main", "field");
                 setStaticField("com.demo.Main", "test", true); // 设置静态字段 test
 
@@ -156,6 +159,11 @@ class ToolTest extends HCBase {
                 echo world;
             fi
             """).exec();
+        shellTool.enableSplicingMode()
+            .cmd("if [[ true == true ]]; then")
+            .cmd("  echo hello               ")
+            .cmd("fi                         ")
+            .exec();
         shellTool.cmd("echo hello").async();
         shellTool.cmd("echo world").async(new IExecListener() {
             @Override
@@ -216,12 +224,22 @@ class ToolTest extends HCBase {
             }
         });
 
-        // 资源注入
+        // ResInjectTool
+        ResInjectTool.injectModuleRes();
         createFakeResId("test_res"); // 获取 test_res 的虚拟资源 id
-        // 设置 pkg 的 string 资源 test_res_str 值为 HC!
+        // 设置 com.hchen.demo 的 string 资源 test_res_str 值为 HC!!
         setObjectReplacement("com.hchen.demo", "string", "test_res_str", "HC!!");
 
-        // 共享首选项工具使用方法
+        // ContextTool
+        ContextTool.getContext(ContextTool.FLAG_ALL);
+
+        // InvokeTool
+        InvokeTool.callStaticMethod("com.hchen.demo.Main", "method", new Class<?>[]{});
+
+        // SystemPropTool
+        SystemPropTool.getProp("sys.boot_completed", 0);
+
+        // PrefsTool
         prefs().get("test_key", "0"); // 获取 prefs test_key 的值
         prefs().getBoolean("test_key_bool", false); // 获取 prefs test_key_bool 的值
 
@@ -233,9 +251,7 @@ class ToolTest extends HCBase {
         // sprefs 模式：
         // 配置会保存到寄生应用的私有目录，读取也会从寄生应用私有目录读取
         prefs(context).editor().putString("test", "1").commit();
-        // 如果没有继承 HCBase 可以这样调用
-        PrefsTool.prefs(context).editor().putString("test", "2").commit();
-        // 注意 sprefs 模式 是和 xprefs 模式相互独立的，可共同存在
+        // 注意 sprefs 模式 和 xprefs 模式相互独立，可共同存在
 
         // 如果不方便获取 context 可用使用此方法，异步获取寄生应用上下文后再设置
         asyncPrefs(new IAsyncPrefs() {
@@ -257,13 +273,13 @@ class ToolTest extends HCBase {
     }
 
     @Override
-    protected void onApplicationBefore(@NonNull Context context) {
-        super.onApplicationBefore(context); // Application 创建前
+    protected void initApplicationBefore(@NonNull Context context) {
+        super.initApplicationBefore(context); // Context 创建前
     }
 
     @Override
-    protected void onApplicationAfter(@NonNull Context context) {
-        super.onApplicationAfter(context); // Application 创建后
+    protected void initApplicationAfter(@NonNull Context context) {
+        super.initApplicationAfter(context); // Context 创建后
     }
 
     @Override

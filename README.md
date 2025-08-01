@@ -30,7 +30,7 @@ dependencyResolutionManagement {
 
 ```groovy
 dependencies {
-    implementation 'com.github.HChenX:HookTool:v.2.2.0'
+    implementation 'com.github.HChenX:HookTool:v.2.2.1'
 }
 ```
 
@@ -164,12 +164,12 @@ public class HookDemo extends HCBase /* 建议继承 HCBase 使用 */ {
     }
 
     @Override
-    protected void onApplicationBefore(@NonNull Context context) {
+    protected void initApplicationBefore(@NonNull Context context) {
         // 目标应用创建 Context 之前回调
     }
 
     @Override
-    protected void onApplicationAfter(@NonNull Context context) {
+    protected void initApplicationAfter(@NonNull Context context) {
         // 目标应用创建 Context 之后回调
     }
 
