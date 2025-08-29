@@ -80,11 +80,20 @@ public class DeviceTool {
      * 获取 HyperOS 版本
      */
     public static float getHyperOSVersion() {
-        return switch (getProp(VERSION_PROPERTY_HYPER_OS).trim()) {
+        float os = switch (getProp(VERSION_PROPERTY_HYPER_OS).trim()) {
+            case "OS3.0" -> 3f;
             case "OS2.0" -> 2f;
             case "OS1.0" -> 1f;
             default -> 0f;
         };
+        if (os == 0f) {
+            try {
+                return Float.parseFloat(getProp(VERSION_PROPERTY_HYPER_OS).trim().replace("OS", ""));
+            } catch (Throwable ignore) {
+                return 0f;
+            }
+        }
+        return os;
     }
 
     /**

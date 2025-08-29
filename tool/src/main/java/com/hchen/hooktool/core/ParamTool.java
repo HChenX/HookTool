@@ -43,6 +43,7 @@ import static com.hchen.hooktool.core.CoreTool.setField;
 import static com.hchen.hooktool.core.CoreTool.setFieldIfExists;
 import static com.hchen.hooktool.core.CoreTool.setStaticField;
 import static com.hchen.hooktool.core.CoreTool.setStaticFieldIfExists;
+import static com.hchen.hooktool.log.XposedLog.logI;
 
 import androidx.annotation.NonNull;
 
@@ -110,8 +111,7 @@ public class ParamTool {
         return param.args[index];
     }
 
-    @NonNull
-    final public Object getArgNonNull(int index, @NonNull Object def) {
+    @NonNull final public Object getArgNonNull(int index, @NonNull Object def) {
         return Optional.ofNullable(param.args[index]).orElse(def);
     }
 
@@ -453,18 +453,30 @@ public class ParamTool {
 
     // ---------------------------------------- Other -------------------------------------------
 
+    final public void observeCall() {
+        observeCall(false);
+    }
+
     /**
      * 观察方法调用
      */
-    final public void observeCall() {
+    final public void observeCall(boolean printLsp) {
         if (param == null) return;
         if (param.args == null || param.args.length == 0) {
-            AndroidLog.logI(INNER_TAG, "→ Called Method\n"
-                + "├─ Class:  " + param.method.getDeclaringClass().getName() + "\n"
-                + "├─ Method: " + param.method.getName() + "\n"
-                + "├─ Params: { }\n"
-                + "├─ Return: " + param.getResult() + "\n"
-                + "└─ Throwable: " + param.getThrowable());
+            if (printLsp)
+                logI(INNER_TAG, "→ Called Method\n"
+                    + "├─ Class:  " + param.method.getDeclaringClass().getName() + "\n"
+                    + "├─ Method: " + param.method.getName() + "\n"
+                    + "├─ Params: { }\n"
+                    + "├─ Return: " + param.getResult() + "\n"
+                    + "└─ Throwable: " + param.getThrowable());
+            else
+                AndroidLog.logI(INNER_TAG, "→ Called Method\n"
+                    + "├─ Class:  " + param.method.getDeclaringClass().getName() + "\n"
+                    + "├─ Method: " + param.method.getName() + "\n"
+                    + "├─ Params: { }\n"
+                    + "├─ Return: " + param.getResult() + "\n"
+                    + "└─ Throwable: " + param.getThrowable());
             return;
         }
 
@@ -476,13 +488,22 @@ public class ParamTool {
             log.append(" = ").append(paramToString(arg)).append("\n");
         }
 
-        AndroidLog.logI(INNER_TAG, "→ Called Method\n"
-            + "├─ Class:  " + param.method.getDeclaringClass().getName() + "\n"
-            + "├─ Method: " + param.method.getName() + "\n"
-            + "├─ Params: {\n" + log
-            + "├─ }\n"
-            + "├─ Return: " + param.getResult() + "\n"
-            + "└─ Throwable: " + param.getThrowable());
+        if (printLsp)
+            logI(INNER_TAG, "→ Called Method\n"
+                + "├─ Class:  " + param.method.getDeclaringClass().getName() + "\n"
+                + "├─ Method: " + param.method.getName() + "\n"
+                + "├─ Params: {\n" + log
+                + "├─ }\n"
+                + "├─ Return: " + param.getResult() + "\n"
+                + "└─ Throwable: " + param.getThrowable());
+        else
+            AndroidLog.logI(INNER_TAG, "→ Called Method\n"
+                + "├─ Class:  " + param.method.getDeclaringClass().getName() + "\n"
+                + "├─ Method: " + param.method.getName() + "\n"
+                + "├─ Params: {\n" + log
+                + "├─ }\n"
+                + "├─ Return: " + param.getResult() + "\n"
+                + "└─ Throwable: " + param.getThrowable());
     }
 
     private String paramToString(Object param) {
