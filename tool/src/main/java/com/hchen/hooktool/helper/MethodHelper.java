@@ -110,8 +110,8 @@ public class MethodHelper {
     /**
      * 方法返回类型
      */
-    public MethodHelper withReturnClass(@NonNull Class<?> returnType) {
-        this.returnClass = returnType;
+    public MethodHelper withReturnClass(@NonNull Class<?> returnClass) {
+        this.returnClass = returnClass;
         return this;
     }
 
