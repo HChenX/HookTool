@@ -162,8 +162,7 @@ public class DeviceTool {
      */
     public static boolean isHyperOSSmallVersion(float osVersion, int smallVersion, @RangeHelper.RangeModeFlag int mode) {
         if (isHyperOSVersion(osVersion)) {
-            String version = getProp("ro.mi.os.version.incremental");
-            if (version.isEmpty()) version = getProp("ro.system.build.version.incremental");
+            String version = getXiaomiVersion();
             String[] vs = version.trim().split("\\.");
             if (vs.length >= 3) return isMatchVersion(Integer.parseInt(vs[2]), smallVersion, mode);
             return false;
@@ -182,7 +181,7 @@ public class DeviceTool {
      * 根据指定模式匹配 ColorOS 版本是否符合要求
      */
     public static boolean isColorOSVersion(float version, @RangeHelper.RangeModeFlag int mode) {
-        String v = getRomVersion(VERSION_PROPERTY_OPPO); // result like "15.0"
+        String v = getProp(VERSION_PROPERTY_COLOROS); // result like "15.0"
         return isMatchVersion(Float.parseFloat(v), version, mode);
     }
 
@@ -210,40 +209,26 @@ public class DeviceTool {
     }
 
     // ----------------------- 手机品牌 -------------------------
-    public static final String[] ROM_HUAWEI = {"huawei"};
-    public static final String[] ROM_VIVO = {"vivo"};
-    public static final String[] ROM_XIAOMI = {"xiaomi", "redmi"};
-    public static final String[] ROM_OPPO = {"oppo"};
-    public static final String[] ROM_LEECO = {"leeco", "letv"};
-    public static final String[] ROM_360 = {"360", "qiku"};
-    public static final String[] ROM_ZTE = {"zte"};
-    public static final String[] ROM_ONEPLUS = {"oneplus"};
-    public static final String[] ROM_NUBIA = {"nubia"};
-    public static final String[] ROM_SAMSUNG = {"samsung"};
-    public static final String[] ROM_HONOR = {"honor"};
-    public static final String[] ROM_SMARTISAN = {"smartisan"};
+    public static final String[] DEVICE_XIAOMI = {"xiaomi", "redmi"};
+    public static final String[] DEVICE_COLOROS = {"oppo", "realme", "oneplus", "oplus"};
+    public static final String[] DEVICE_SAMSUNG = {"samsung"};
     // ---------------------------------------------------------
 
     // ----------------------- 各系统版本号 prop 条目 -------------------------
     private static final String VERSION_PROPERTY_MIUI = "ro.miui.ui.version.name";
     private static final String VERSION_PROPERTY_HYPER_OS = "ro.mi.os.version.name";
-    private static final String VERSION_PROPERTY_HUAWEI = "ro.build.version.emui";
-    private static final String VERSION_PROPERTY_VIVO = "ro.vivo.os.build.display.id";
+    private static final String VERSION_PROPERTY_XIAOMI_MARKET = "ro.product.marketname";
     private static final String[] VERSION_PROPERTY_XIAOMI = {"ro.mi.os.version.incremental", "ro.build.version.incremental"};
-    private static final String[] VERSION_PROPERTY_OPPO = {"ro.build.version.opporom", "ro.build.version.oplusrom.display"};
-    private static final String VERSION_PROPERTY_LEECO = "ro.letv.release.version";
-    private static final String VERSION_PROPERTY_360 = "ro.build.uiversion";
-    private static final String VERSION_PROPERTY_ZTE = "ro.build.MiFavor_version";
-    private static final String VERSION_PROPERTY_ONEPLUS = "ro.rom.version";
-    private static final String VERSION_PROPERTY_NUBIA = "ro.build.rom.id";
-    private static final String[] VERSION_PROPERTY_MAGIC = {"msc.config.magic.version", "ro.build.version.magic"};
+    private static final String VERSION_PROPERTY_COLOROS = "ro.build.version.oplusrom.display";
+    private static final String VERSION_PROPERTY_COLOROS_FULL = "persist.sys.oplus.ota_ver_display";
+    private static final String VERSION_PROPERTY_COLOROS_MARKET = "ro.vendor.oplus.market.name";
     // --------------------------------------------------------------------
 
     /**
      * 判断当前厂商是否为 Xiaomi
      */
     public static boolean isXiaomi() {
-        return isRightRom(ROM_XIAOMI);
+        return isRightRom(DEVICE_XIAOMI);
     }
 
     /**
@@ -261,65 +246,17 @@ public class DeviceTool {
     }
 
     /**
-     * 判断当前厂商系统是否为 Emui
-     */
-    public static boolean isEmui() {
-        return !getRomVersion(VERSION_PROPERTY_HUAWEI).isEmpty();
-    }
-
-    /**
-     * 判断当前厂商系统是否为 ColorOS
+     * 判断当前厂商是否为 ColoOS
      */
     public static boolean isColorOS() {
-        return !getRomVersion(VERSION_PROPERTY_OPPO).isEmpty();
+        return isRightRom(DEVICE_COLOROS);
     }
 
     /**
-     * 判断当前厂商系统是否为 OriginOS
+     * 判断当前厂商是否为 Samsung
      */
-    public static boolean isOriginOS() {
-        return !getRomVersion(VERSION_PROPERTY_VIVO).isEmpty();
-    }
-
-    /**
-     * 判断当前是否为鸿蒙系统
-     */
-    public static boolean isHarmonyOS() {
-        // 鸿蒙系统没有 Android 10 以下的
-        if (isAndroidVersion(Build.VERSION_CODES.Q, LT))
-            return false;
-
-        try {
-            Object osBrand = InvokeTool.callStaticMethod(
-                "com.huawei.system.BuildEx",
-                "getOsBrand",
-                new Class[]{}
-            );
-            return "Harmony".equalsIgnoreCase(String.valueOf(osBrand));
-        } catch (Throwable ignore) {
-            return false;
-        }
-    }
-
-    /**
-     * 判断当前厂商系统是否为 OneUI
-     */
-    public static boolean isOneUi() {
-        return isRightRom(ROM_SAMSUNG);
-    }
-
-    /**
-     * 判断当前是否为 MagicOS 系统
-     */
-    public static boolean isMagicOS() {
-        return isRightRom(ROM_HONOR);
-    }
-
-    /**
-     * 判断当前是否为 SmartisanOS 系统
-     */
-    public static boolean isSmartisanOS() {
-        return isRightRom(ROM_SMARTISAN);
+    public static boolean isSamsung() {
+        return isRightRom(DEVICE_SAMSUNG);
     }
 
     /**
@@ -335,6 +272,22 @@ public class DeviceTool {
             }
         }
         return false;
+    }
+
+    public static String getXiaomiVersion() {
+        return getRomVersion(VERSION_PROPERTY_XIAOMI);
+    }
+
+    public static String getXiaomiMarketName() {
+        return getProp(VERSION_PROPERTY_XIAOMI_MARKET);
+    }
+
+    public static String getColorOSVersion() {
+        return getProp(VERSION_PROPERTY_COLOROS_FULL);
+    }
+
+    public static String getColorOSMarketName() {
+        return getProp(VERSION_PROPERTY_COLOROS_MARKET);
     }
 
     /**

@@ -53,27 +53,33 @@ import dalvik.system.DexFile;
  * 类查找
  *
  * @author 焕晨HChen
- * @noinspection SequencedCollectionMethodCanBeUsed
+ * @noinspection SequencedCollectionMethodCanBeUsed, unused
  */
 public class ClassHelper {
     private final ClassLoader loader;
-    private String className = null;
-    private String substring = null;
-    private Pattern pattern = null;
-    private String packagePath = null;
-    private String[] fieldNames = null;
+    // ----------- Name ------------
+    private String className;
+    private String substring;
+    private Pattern pattern;
+    // ---------- package -----------
+    private String packagePath;
+    // ----------- field -------------
+    private Class<?>[] fieldClasses;
+    private String[] fieldNames;
     private int fieldCount = -1;
-    private Class<?>[] fieldTypes = null;
-    private String[] methodNames = null;
+    // ------------ method ----------------
+    private String[] methodNames;
     private int methodCount = -1;
-    private Class<?>[] constructorTypes = null;
+    // ------------- constructor ---------------
+    private Class<?>[] constructorClasses;
     private int constructorCount = -1;
-    private Class<? extends Annotation> annotation = null;
-    private Class<?> superClass = null;
-    private Class<?>[] interfaceClasses = null;
-    private boolean includeAndroidClasses = false;
+    // -------------- other --------------------
+    private Class<? extends Annotation>[] annotations;
+    private Class<?>[] interfaceClasses;
+    private Class<?> superClass;
+
     private boolean cacheBuilt = false;
-    private List<String> classPathsCache = null;
+    private List<String> classPathsCache;
 
     public ClassHelper(ClassLoader loader) {
         if (loader == null) this.loader = ClassLoader.getSystemClassLoader();
@@ -115,6 +121,14 @@ public class ClassHelper {
     /**
      * 查找包含指定字段集的类
      */
+    public ClassHelper withFieldClasses(@NonNull Class<?>... fieldClasses) {
+        this.fieldClasses = fieldClasses;
+        return this;
+    }
+
+    /**
+     * 查找包含指定字段集的类
+     */
     public ClassHelper withFieldNames(@NonNull String... fieldNames) {
         this.fieldNames = fieldNames;
         return this;
@@ -125,14 +139,6 @@ public class ClassHelper {
      */
     public ClassHelper withFieldCount(int count) {
         this.fieldCount = count;
-        return this;
-    }
-
-    /**
-     * 查找包含指定字段集的类
-     */
-    public ClassHelper withFieldTypes(@NonNull Class<?>... fieldTypes) {
-        this.fieldTypes = fieldTypes;
         return this;
     }
 
@@ -155,8 +161,8 @@ public class ClassHelper {
     /**
      * 查找包含指定构造函数参数集的类
      */
-    public ClassHelper withConstructorTypes(@NonNull Class<?>... classes) {
-        this.constructorTypes = classes;
+    public ClassHelper withConstructorClasses(@NonNull Class<?>... classes) {
+        this.constructorClasses = classes;
         return this;
     }
 
@@ -171,16 +177,8 @@ public class ClassHelper {
     /**
      * 查找使用了指定注解的类
      */
-    public ClassHelper withAnnotation(@NonNull Class<? extends Annotation> annotation) {
-        this.annotation = annotation;
-        return this;
-    }
-
-    /**
-     * 查找继承了指定类的类
-     */
-    public ClassHelper withSuperClass(@NonNull Class<?> superClass) {
-        this.superClass = superClass;
+    public ClassHelper withAnnotations(@NonNull Class<? extends Annotation>... annotations) {
+        this.annotations = annotations;
         return this;
     }
 
@@ -193,10 +191,10 @@ public class ClassHelper {
     }
 
     /**
-     * 包含 Android 系统类
+     * 查找继承了指定类的类
      */
-    public ClassHelper includeAndroidClasses(boolean includeAndroidClasses) {
-        this.includeAndroidClasses = includeAndroidClasses;
+    public ClassHelper withSuperClass(@NonNull Class<?> superClass) {
+        this.superClass = superClass;
         return this;
     }
 
@@ -235,7 +233,7 @@ public class ClassHelper {
     /**
      * 返回查找到的全部对象
      */
-    public Class<?>[] list() {
+    public Class<?>[] toArray() {
         return matches().toArray(new Class[0]);
     }
 
@@ -251,15 +249,14 @@ public class ClassHelper {
         packagePath = null;
         fieldNames = null;
         fieldCount = -1;
-        fieldTypes = null;
+        fieldClasses = null;
         methodNames = null;
         methodCount = -1;
-        constructorTypes = null;
+        constructorClasses = null;
         constructorCount = -1;
-        annotation = null;
+        annotations = null;
         superClass = null;
         interfaceClasses = null;
-        includeAndroidClasses = false;
     }
 
     /**
@@ -270,48 +267,53 @@ public class ClassHelper {
         return paths.stream().filter(path -> {
             try {
                 Class<?> cls = loader.loadClass(path);
-                if (!includeAndroidClasses && path.startsWith("andorid.")) return false;
                 if (className != null && !Objects.equals(cls.getSimpleName(), className))
                     return false;
                 else if (substring != null && !cls.getSimpleName().contains(substring))
                     return false;
                 else if (pattern != null && !pattern.matcher(cls.getSimpleName()).matches())
                     return false;
+
                 if (packagePath != null && cls.getPackage() != null && !cls.getPackage().getName().startsWith(packagePath))
                     return false;
+
+                if (fieldCount != -1 && cls.getDeclaredFields().length != fieldCount) return false;
+                if (fieldClasses != null) {
+                    Set<Class<?>> fieldTypeSet = Arrays.stream(cls.getDeclaredFields()).map(Field::getType).collect(Collectors.toSet());
+                    if (!Arrays.stream(fieldClasses).allMatch(c -> Objects.equals(c, Any.class) || fieldTypeSet.contains(c)))
+                        return false;
+                }
                 if (fieldNames != null) {
                     Set<String> fieldNameSet = Arrays.stream(cls.getDeclaredFields()).map(Field::getName).collect(Collectors.toSet());
                     if (!Arrays.stream(fieldNames).allMatch(fieldNameSet::contains))
                         return false;
                 }
-                if (fieldCount != -1 && cls.getDeclaredFields().length != fieldCount) return false;
-                if (fieldTypes != null) {
-                    Set<Class<?>> fieldTypeSet = Arrays.stream(cls.getDeclaredFields()).map(Field::getType).collect(Collectors.toSet());
-                    if (!Arrays.stream(fieldTypes).allMatch(c -> Objects.equals(c, Any.class) || fieldTypeSet.contains(c)))
-                        return false;
-                }
+
+                if (methodCount != -1 && cls.getDeclaredMethods().length != methodCount)
+                    return false;
                 if (methodNames != null) {
                     Set<String> methodNameSet = Arrays.stream(cls.getDeclaredMethods()).map(Method::getName).collect(Collectors.toSet());
                     if (!Arrays.stream(methodNames).allMatch(methodNameSet::contains))
                         return false;
                 }
-                if (methodCount != -1 && cls.getDeclaredMethods().length != methodCount)
+
+                if (annotations != null && !Arrays.stream(annotations).allMatch(cls::isAnnotationPresent))
                     return false;
-                if (annotation != null && !cls.isAnnotationPresent(annotation)) return false;
                 if (superClass != null && !superClass.isAssignableFrom(cls)) return false;
                 if (interfaceClasses != null && !Arrays.equals(cls.getInterfaces(), interfaceClasses))
                     return false;
+
                 if (constructorCount != -1 && cls.getDeclaredConstructors().length != constructorCount)
                     return false;
-                if (constructorTypes != null) {
+                if (constructorClasses != null) {
                     boolean exist = false;
                     for (int i = 0; i < cls.getDeclaredConstructors().length; i++) {
                         Constructor<?> constructor = cls.getDeclaredConstructors()[i];
-                        if (constructor.getParameterCount() != constructorTypes.length)
+                        if (constructor.getParameterCount() != constructorClasses.length)
                             continue;
                         for (int c = 0; c < constructor.getParameterCount(); c++) {
                             Class<?> actual = constructor.getParameterTypes()[c];
-                            Class<?> want = constructorTypes[c];
+                            Class<?> want = constructorClasses[c];
                             if (Objects.equals(want, Any.class)) continue;
                             exist = Objects.equals(actual, want);
                             if (!exist) break;

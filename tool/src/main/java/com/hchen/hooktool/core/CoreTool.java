@@ -1280,32 +1280,6 @@ public class CoreTool extends XposedLog {
         return XposedBridge.invokeOriginalMethod(method, thisObject, params);
     }
 
-    /**
-     * 调用原始方法
-     */
-    public static Object invokeOriginalMethod(Object thisObject, String methodName, Class<?>[] paramTypes, @NonNull Object... params)
-        throws InvocationTargetException, IllegalAccessException {
-        try {
-            Method method = thisObject.getClass().getMethod(methodName, paramTypes);
-            return XposedBridge.invokeOriginalMethod(method, thisObject, params);
-        } catch (NoSuchMethodException e) {
-            throw new UnexpectedException(e);
-        }
-    }
-
-    /**
-     * 调用原始方法
-     */
-    public static Object invokeOriginalMethod(Object thisObject, Class<?>[] paramTypes, @NonNull Object... params)
-        throws InvocationTargetException, IllegalAccessException {
-        try {
-            Constructor<?> method = thisObject.getClass().getConstructor(paramTypes);
-            return XposedBridge.invokeOriginalMethod(method, thisObject, params);
-        } catch (NoSuchMethodException e) {
-            throw new UnexpectedException(e);
-        }
-    }
-
     // -------------------------- Chain ------------------------------
 
     /**

@@ -178,7 +178,7 @@ public class PackageTool {
     public static AppData getTargetAppData(@NonNull Context context, @NonNull String packageName) {
         try {
             PackageManager packageManager = context.getPackageManager();
-            return createAppData(packageManager.getPackageInfo(packageName, PackageManager.GET_ACTIVITIES), packageManager);
+            return createAppData(packageManager.getApplicationInfo(packageName, 0), packageManager);
         } catch (PackageManager.NameNotFoundException e) {
             throw new UnexpectedException(e);
         }
@@ -188,7 +188,7 @@ public class PackageTool {
      * @noinspection IfCanBeSwitch
      */
     @NonNull
-    private static AppData createAppData(@NonNull Parcelable parcelable, @NonNull PackageManager pm) {
+    public static AppData createAppData(@NonNull Parcelable parcelable, @NonNull PackageManager pm) {
         AppData appData = new AppData();
         if (parcelable instanceof PackageInfo packageInfo) {
             appData.icon = BitmapTool.drawableToBitmap(packageInfo.applicationInfo.loadIcon(pm));

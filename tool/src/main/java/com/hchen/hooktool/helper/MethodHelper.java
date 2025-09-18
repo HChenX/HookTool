@@ -32,7 +32,6 @@ import com.hchen.hooktool.exception.NonSingletonException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -46,23 +45,21 @@ import java.util.stream.Collectors;
  * 方法查找
  *
  * @author 焕晨HChen
- * @noinspection SequencedCollectionMethodCanBeUsed
+ * @noinspection SequencedCollectionMethodCanBeUsed, unused
  */
 public class MethodHelper {
     private final Class<?> clazz;
+    private int mods = -1; // 修饰符
     private String methodName = null;
     private String substring = null;
     private Pattern pattern = null;
-    private int paramCount = -1;
-    private Class<?>[] paramTypes = null;
+
+    private Class<?>[] paramClasses = null;
     private final HashMap<Integer, Integer> paramCountVarMap = new HashMap<>();
-    private Class<?> returnType = null;
-    private Class<?> superReturnType = null;
-    private int mods = -1;
-    private Class<? extends Annotation> annotation = null;
-    private Type genericReturnType = null;
-    private Type[] genericParamTypes = null;
-    private Class<? extends Throwable>[] exceptionTypes = null;
+
+    private Class<?> returnClass = null;
+    private Class<? extends Annotation>[] annotations = null;
+    private Class<? extends Throwable>[] exceptionClasses = null;
     private boolean withSuper = false;
 
     public MethodHelper(@NonNull Class<?> clazz) {
@@ -95,14 +92,6 @@ public class MethodHelper {
     }
 
     /**
-     * 方法参数数量
-     */
-    public MethodHelper withParamCount(int paramCount) {
-        this.paramCount = paramCount;
-        return this;
-    }
-
-    /**
      * 方法参数数量是否在某个范围内
      */
     public MethodHelper withParamCount(int paramCount, @RangeHelper.RangeModeFlag int mode) {
@@ -113,24 +102,16 @@ public class MethodHelper {
     /**
      * 方法参数类型，可使用 Any.class 占位，表示任意类型
      */
-    public MethodHelper withParamTypes(@NonNull Class<?>... paramTypes) {
-        this.paramTypes = paramTypes;
+    public MethodHelper withParamClasses(@NonNull Class<?>... paramClasses) {
+        this.paramClasses = paramClasses;
         return this;
     }
 
     /**
      * 方法返回类型
      */
-    public MethodHelper withReturnType(@NonNull Class<?> returnType) {
-        this.returnType = returnType;
-        return this;
-    }
-
-    /**
-     * 方法返回类型的超类
-     */
-    public MethodHelper withSuperReturnType(@NonNull Class<?> superReturnType) {
-        this.superReturnType = superReturnType;
+    public MethodHelper withReturnClass(@NonNull Class<?> returnType) {
+        this.returnClass = returnType;
         return this;
     }
 
@@ -198,24 +179,8 @@ public class MethodHelper {
     /**
      * 方法的注解
      */
-    public MethodHelper withAnnotation(@NonNull Class<? extends Annotation> annotation) {
-        this.annotation = annotation;
-        return this;
-    }
-
-    /**
-     * 方法的泛型返回类型
-     */
-    public MethodHelper withGenericReturnType(@NonNull Type genericReturnType) {
-        this.genericReturnType = genericReturnType;
-        return this;
-    }
-
-    /**
-     * 方法的泛型参数
-     */
-    public MethodHelper withGenericParamTypes(@NonNull Type... genericParamTypes) {
-        this.genericParamTypes = genericParamTypes;
+    public MethodHelper withAnnotations(@NonNull Class<? extends Annotation>... annotations) {
+        this.annotations = annotations;
         return this;
     }
 
@@ -224,8 +189,8 @@ public class MethodHelper {
      *
      * @noinspection unchecked
      */
-    public MethodHelper withExceptionTypes(@NonNull Class<? extends Throwable>... exceptionTypes) {
-        this.exceptionTypes = exceptionTypes;
+    public MethodHelper withExceptionClasses(@NonNull Class<? extends Throwable>... exceptionClasses) {
+        this.exceptionClasses = exceptionClasses;
         return this;
     }
 
@@ -285,19 +250,15 @@ public class MethodHelper {
      * 重置查找器
      */
     public void reset() {
+        mods = -1;
         methodName = null;
         substring = null;
         pattern = null;
-        paramCount = -1;
-        paramTypes = null;
+        paramClasses = null;
+        returnClass = null;
+        annotations = null;
+        exceptionClasses = null;
         paramCountVarMap.clear();
-        returnType = null;
-        superReturnType = null;
-        mods = -1;
-        annotation = null;
-        genericReturnType = null;
-        genericParamTypes = null;
-        exceptionTypes = null;
         withSuper = false;
     }
 
@@ -324,21 +285,20 @@ public class MethodHelper {
             else if (substring != null && !method.getName().contains(substring))
                 return false;
 
-            if (paramTypes != null) {
-                if (paramTypes.length != method.getParameterCount()) {
+            if (paramClasses != null) {
+                if (paramClasses.length != method.getParameterCount()) {
                     return false;
                 }
                 for (int i = 0; i < method.getParameterCount(); i++) {
                     Class<?> actual = method.getParameterTypes()[i];
-                    Class<?> want = paramTypes[i];
+                    Class<?> want = paramClasses[i];
                     if (Objects.equals(want, Any.class)) continue;
                     if (!Objects.equals(actual, want)) {
                         return false;
                     }
                 }
             }
-            if (paramCount != -1 && method.getParameterCount() != paramCount)
-                return false;
+
             if (!paramCountVarMap.isEmpty()) {
                 if (paramCountVarMap.containsKey(EQ)) {
                     if (!Objects.equals(method.getParameterCount(), paramCountVarMap.get(EQ)))
@@ -368,19 +328,15 @@ public class MethodHelper {
                     }
                 }
             }
-            if (returnType != null && !Objects.equals(method.getReturnType(), returnType))
-                return false;
-            if (superReturnType != null && !superReturnType.isAssignableFrom(method.getReturnType()))
-                return false;
+
             if (mods != -1 && (method.getModifiers() & mods) != mods)
                 return false;
-            if (annotation != null && !method.isAnnotationPresent(annotation))
+            if (returnClass != null &&
+                !(Objects.equals(method.getReturnType(), returnClass) || returnClass.isAssignableFrom(method.getReturnType())))
                 return false;
-            if (genericReturnType != null && !Objects.equals(method.getGenericReturnType(), genericReturnType))
+            if (annotations != null && !Arrays.stream(annotations).allMatch(method::isAnnotationPresent))
                 return false;
-            if (genericParamTypes != null && !Arrays.equals(method.getGenericParameterTypes(), genericParamTypes))
-                return false;
-            if (exceptionTypes != null && !Arrays.equals(method.getExceptionTypes(), exceptionTypes))
+            if (exceptionClasses != null && !Arrays.equals(method.getExceptionTypes(), exceptionClasses))
                 return false;
 
             return true;

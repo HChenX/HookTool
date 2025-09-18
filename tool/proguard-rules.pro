@@ -23,7 +23,7 @@
 -keep class * extends com.hchen.hooktool.HCEntrance
 -keep class * extends com.hchen.hooktool.HCBase
 -keep class com.hchen.hooktool.HCState {
-       private final static boolean isXposedEnabled;
-       private final static java.lang.String framework;
-       private final static int version;
- }
+    public static boolean isXposedEnabled();
+    public static java.lang.String getFramework();
+    public static int getVersion();
+}

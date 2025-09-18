@@ -111,7 +111,8 @@ public class ParamTool {
         return param.args[index];
     }
 
-    @NonNull final public Object getArgNonNull(int index, @NonNull Object def) {
+    @NonNull
+    final public Object getArgNonNull(int index, @NonNull Object def) {
         return Optional.ofNullable(param.args[index]).orElse(def);
     }
 

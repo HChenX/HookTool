@@ -27,6 +27,7 @@ import androidx.annotation.Size;
 import com.hchen.hooktool.callback.ICommandListener;
 import com.hchen.hooktool.callback.IExecListener;
 import com.hchen.hooktool.data.ShellResult;
+import com.hchen.hooktool.exception.UnexpectedException;
 import com.hchen.hooktool.log.AndroidLog;
 
 import java.io.BufferedReader;
@@ -99,7 +100,7 @@ import java.util.stream.Collectors;
  *                 IExecListener.super.brokenPip(reason, errors);
  *             }
  *         });
- *         shellTool.close();
+ *         ShellTool.close();
  * }
  * @author 焕晨HChen
  */
@@ -107,61 +108,92 @@ public class ShellTool {
     private static final String TAG = "ShellTool";
     private static final String END_UUID = UUID.randomUUID().toString();
     private static final byte[] LINE_BREAK = "\n".getBytes(StandardCharsets.UTF_8);
-    private static final Builder builder = new Builder();
-    private final ShellImpl shellImpl = new ShellImpl(this);
-    private final List<IExecListener> iExecListeners = new ArrayList<>();
-    private ICommandListener iCommandListener;
-    private String[] shellCommands = new String[]{"su", "sh"};
-    private boolean isRoot = false;
+    private static final ShellTool shellTool = new ShellTool();
+    private static boolean isRoot = false;
+    private static String[] shellCommands = new String[]{"su", "sh"};
+    private static IExecListener iGlobalExecListeners;
+    private static ICommandListener iGlobalCommandListener;
+    private static ShellImpl shellImpl;
 
     private ShellTool() {
+        shellImpl = new ShellImpl(this);
     }
 
     /**
      * 获取 Shell 实例
      * <p>
      * 请注意您只能创建一个全局 Shell 实例
-     * <p>
-     * 重复创建会复用实例，此时您的部分启动参数设置是无效的
-     * <p>
-     * 如果您担心启动参数丢失，可以每次都传入启动参数
      */
     @NonNull
     public static ShellTool obtain() {
-        return builder.obtain();
+        shellImpl.init();
+        return shellTool;
     }
 
-    /**
-     * 获取 Shell 实例
-     * <p>
-     * 请注意您只能创建一个全局 Shell 实例
-     * <p>
-     * 重复创建会复用实例，此时您的部分启动参数设置是无效的
-     * <p>
-     * 如果您担心启动参数丢失，可以每次都传入启动参数
-     *
-     * @param isRoot 是否使用 Root 模式运行
-     */
     @NonNull
     public static ShellTool obtain(boolean isRoot) {
-        return builder.obtain(isRoot);
+        setRoot(isRoot);
+        return obtain();
     }
 
     /**
-     * 获取 Shell 实例
+     * 是否使用 Root 模式运行
      * <p>
-     * 请注意您只能创建一个全局 Shell 实例
-     * <p>
-     * 重复创建会复用实例，此时您的部分启动参数设置是无效的
-     * <p>
-     * 如果您担心启动参数丢失，可以每次都传入启动参数
-     *
-     * @param isRoot        是否使用 Root 模式运行
-     * @param shellCommands 设置启动时执行的命令，默认: {"su" (Root), "sh" (Non Root)}
+     * 请在 {@link #obtain()} 前调用
      */
     @NonNull
-    public static ShellTool obtain(boolean isRoot, @NonNull @Size(2) String[] shellCommands) {
-        return builder.obtain(isRoot, shellCommands);
+    public static ShellTool setRoot(boolean isRoot) {
+        ShellTool.isRoot = isRoot;
+        return shellTool;
+    }
+
+    /**
+     * 设置自定义启动命令
+     * <p>
+     * 请在 {@link #obtain()} 前调用
+     */
+    @NonNull
+    public static ShellTool setShellCommands(@Size(2) String[] commands) {
+        shellCommands = commands;
+        return shellTool;
+    }
+
+    /**
+     * 添加全局执行回调，传入 null 则删除回调
+     * <p>
+     * 请在 {@link #obtain()} 前调用
+     */
+    @NonNull
+    public static ShellTool setExecListener(@Nullable IExecListener iExecListener) {
+        iGlobalExecListeners = iExecListener;
+        return shellTool;
+    }
+
+    /**
+     * 设置全局命令监听器
+     * <p>
+     * 您可以通过此监听器，判断命令是否可以被合法的输入并执行
+     * <p>
+     * 请在 {@link #obtain()} 前调用
+     */
+    @NonNull
+    public static ShellTool setCommandListener(@Nullable ICommandListener listener) {
+        iGlobalCommandListener = listener;
+        return shellTool;
+    }
+
+    /**
+     * Shell 是否处于活动状态
+     */
+    public static boolean isActive() {
+        return shellImpl.isActive();
+    }
+
+    /**
+     * 关闭 Shell 流
+     */
+    public static void close() {
+        shellImpl.close();
     }
 
     /**
@@ -178,6 +210,7 @@ public class ShellTool {
      *          .exec();
      * }
      */
+    @NonNull
     public ShellTool enableSplicingMode() {
         return shellImpl.enableSplicingMode();
     }
@@ -209,53 +242,7 @@ public class ShellTool {
         shellImpl.async(iExecListener);
     }
 
-    /**
-     * 添加全局执行回调，传入 null 则删除全部回调
-     */
-    public void addExecListener(@NonNull IExecListener iExecListener) {
-        iExecListeners.add(iExecListener);
-    }
-
-    /**
-     * 移除指定全局回调
-     */
-    public void removeExecListener(@NonNull IExecListener iExecListener) {
-        iExecListeners.remove(iExecListener);
-    }
-
-    /**
-     * 设置全局命令监听器
-     * <p>
-     * 您可以通过此监听器，判断命令是否可以被合法的输入并执行
-     */
-    public void setCommandListener(@Nullable ICommandListener listener) {
-        iCommandListener = listener;
-    }
-
-    /**
-     * 清除全部回调
-     */
-    public void clearExecListener() {
-        iExecListeners.clear();
-    }
-
-    /**
-     * Shell 是否处于活动状态
-     */
-    public boolean isActive() {
-        return shellImpl.isActive();
-    }
-
-    /**
-     * 关闭 Shell 流
-     */
-    public void close() {
-        shellImpl.close();
-    }
-
-    private void init() {
-        shellImpl.init();
-    }
+    // --------------------------------------- Root Check -------------------------------------------
 
     /**
      * 检查是否支持 Root
@@ -304,6 +291,7 @@ public class ShellTool {
             return false;
         }
     }
+    // ----------------------------------------------------------------------------------------------
 
     final class ShellImpl {
         @NonNull
@@ -330,7 +318,7 @@ public class ShellTool {
                 streamThread = new StreamThread(this, process.getInputStream(), process.getErrorStream());
                 streamThread.run();
             } catch (IOException e) {
-                AndroidLog.logE(TAG, "Error initializing Shell stream!!", e);
+                throw new UnexpectedException("Error initializing shell stream!!");
             } finally {
                 notify();
             }
@@ -345,7 +333,7 @@ public class ShellTool {
         @NonNull
         private synchronized ShellTool cmd(@NonNull String cmd) {
             if (!isActive())
-                return shellTool;
+                throw new UnexpectedException("Shell stream is dead!");
 
             if (isSplicingMode) waitSplicingCommandList.add(cmd);
             else command = cmd;
@@ -354,7 +342,8 @@ public class ShellTool {
 
         @Nullable
         private synchronized ShellResult exec() {
-            if (!isActive()) return null;
+            if (!isActive())
+                throw new UnexpectedException("Shell stream is dead!");
 
             splicingCommandIfNeed();
             callbackCommandListener();
@@ -372,13 +361,18 @@ public class ShellTool {
             write("}");
             write(END_CMD);
             command = null;
-            sync();
+
+            try {
+                wait();
+            } catch (InterruptedException ignore) {
+            }
 
             return streamThread.getResult();
         }
 
         private synchronized void async(@Nullable IExecListener iExecListener) {
-            if (!isActive()) return;
+            if (!isActive())
+                throw new UnexpectedException("Shell stream is dead!");
 
             splicingCommandIfNeed();
             callbackCommandListener();
@@ -399,21 +393,11 @@ public class ShellTool {
             command = null;
         }
 
-        private synchronized void sync() {
-            if (!isActive()) return;
-
-            try {
-                wait();
-            } catch (InterruptedException ignore) {
-            }
-        }
-
         private void write(@NonNull String command) {
             write(command.getBytes(StandardCharsets.UTF_8));
         }
 
         private void write(@NonNull byte[] bytes) {
-            if (!isActive() || os == null) return;
             try {
                 os.write(bytes);
                 os.write(LINE_BREAK);
@@ -424,8 +408,6 @@ public class ShellTool {
         }
 
         private void writeAll(@NonNull String[] commands) {
-            if (!isActive() || os == null) return;
-
             try {
                 for (String cmd : commands) {
                     final byte[] bytes = cmd.getBytes(StandardCharsets.UTF_8);
@@ -439,28 +421,28 @@ public class ShellTool {
         }
 
         public synchronized void close() {
-            if (!isActive() /* 已关闭 */ && !streamThread.isAbnormalExit() /* 不是异常退出 */)
-                return;
-
             try {
-                // 异常退出时 os 流已经死了，不需要再写入 exit 了
-                if (!streamThread.isAbnormalExit()) {
-                    write("exit");
-                }
-
-                if (process != null) {
-                    process.waitFor(3, TimeUnit.SECONDS);
-                    process.destroy();
-                }
-                if (os != null && !streamThread.isAbnormalExit()) {
-                    try {
-                        os.close();
-                    } catch (IOException e) {
-                        AndroidLog.logE(TAG, "Error closing OS!!", e);
+                if (isActive() || (streamThread != null && streamThread.isAbnormalExit())) {
+                    // 异常退出时 os 流已经死了，不需要再写入 exit 了
+                    if (!streamThread.isAbnormalExit()) {
+                        write("exit");
                     }
-                }
 
-                streamThread.close();
+                    if (process != null) {
+                        process.waitFor(3, TimeUnit.SECONDS);
+                        process.destroy();
+                    }
+
+                    if (os != null && !streamThread.isAbnormalExit()) {
+                        try {
+                            os.close();
+                        } catch (IOException e) {
+                            AndroidLog.logE(TAG, "Error closing OS!!", e);
+                        }
+                    }
+
+                    streamThread.close();
+                }
             } catch (InterruptedException e) {
                 AndroidLog.logE(TAG, "Error closing shell stream!!", e);
             } finally {
@@ -486,12 +468,13 @@ public class ShellTool {
             }
             isSplicingMode = false;
             command = stringBuilder.toString();
+            waitSplicingCommandList.clear();
         }
 
         private void callbackCommandListener() {
             if (command == null) return;
-            if (iCommandListener == null) return;
-            if (!iCommandListener.onCommand(command)) command = null;
+            if (iGlobalCommandListener == null) return;
+            if (!iGlobalCommandListener.onCommand(command)) command = null;
         }
     }
 
@@ -583,12 +566,11 @@ public class ShellTool {
         }
 
         private boolean filterContent(@NonNull String content, int id) {
-            if (!content.startsWith(END_UUID)) return false;
-
-            String[] split = content.split(",");
-            String hashCode = split[2].trim();
-
             synchronized (lock) {
+                if (!content.startsWith(END_UUID)) return false;
+
+                String[] split = content.split(",");
+                String hashCode = split[2].trim();
                 if (shellDataMap.get(hashCode) == null) {
                     ShellData shellData = new ShellData();
                     shellData.exitCode = split[1].trim();
@@ -629,7 +611,7 @@ public class ShellTool {
                         outputList.clear();
                         errorList.clear();
 
-                        lock.notifyAll();
+                        lock.notify();
                         return true;
                     }
                 }
@@ -639,19 +621,17 @@ public class ShellTool {
         }
 
         private void onBrokenPip() {
-            if (iExecListeners.isEmpty()) return;
+            if (iGlobalExecListeners == null) return;
 
-            for (IExecListener iExecListener : iExecListeners) {
-                try {
-                    iExecListener.brokenPip(
-                        "Incorrect shell code causing pipeline rupture!!" +
-                            " Shell code list: sync: " + shellSyncMap.values()
-                            + ", async: " + shellAsyncMap.values().stream().map(p -> p.first).collect(Collectors.toCollection(ArrayList::new)),
-                        toArray(errorList)
-                    );
-                } catch (Throwable e) {
-                    AndroidLog.logE(TAG, "Error during callback!!", e);
-                }
+            try {
+                iGlobalExecListeners.brokenPip(
+                    "Incorrect shell code causing pipeline rupture!!" +
+                        " Shell code list: sync: " + shellSyncMap.values()
+                        + ", async: " + shellAsyncMap.values().stream().map(p -> p.first).collect(Collectors.toCollection(ArrayList::new)),
+                    toArray(errorList)
+                );
+            } catch (Throwable e) {
+                AndroidLog.logE(TAG, "Error during callback!!", e);
             }
         }
 
@@ -659,7 +639,7 @@ public class ShellTool {
             return list.toArray(new String[0]);
         }
 
-        private synchronized void close() {
+        private void close() {
             if (outputService != null)
                 outputService.shutdownNow();
             if (errorService != null)
@@ -687,8 +667,8 @@ public class ShellTool {
             private void onShellDone() {
                 createResult();
                 callbackSyncListener();
-                notifyThread();
                 callbackAsyncListenerIfNeed();
+                notifyImpl();
             }
 
             private void createResult() {
@@ -697,19 +677,18 @@ public class ShellTool {
 
             private void callbackSyncListener() {
                 if (isAsyncCommand) return;
-                if (iExecListeners.isEmpty()) return;
+                if (iGlobalExecListeners == null) return;
 
-                for (IExecListener iExecListener : iExecListeners) {
-                    try {
-                        if ("0".equals(exitCode)) iExecListener.output(command, exitCode, outputs);
-                        else iExecListener.error(command, exitCode, errors);
-                    } catch (Throwable e) {
-                        AndroidLog.logE(TAG, "Error during callback!!", e);
-                    }
+                try {
+                    if ("0".equals(exitCode))
+                        iGlobalExecListeners.output(command, exitCode, outputs);
+                    else iGlobalExecListeners.error(command, exitCode, errors);
+                } catch (Throwable e) {
+                    AndroidLog.logE(TAG, "Error during callback!!", e);
                 }
             }
 
-            private void notifyThread() {
+            private void notifyImpl() {
                 if (isAsyncCommand) return;
 
                 synchronized (shellImpl) {
@@ -731,51 +710,6 @@ public class ShellTool {
                     }
                 }
             }
-        }
-    }
-
-    private static final class Builder {
-        private static final ShellTool mShell = new ShellTool();
-        private static String[] shellCommands = new String[]{"su", "sh"};
-        private static boolean isRoot = false;
-
-        private Builder() {
-        }
-
-        @NonNull
-        private ShellTool obtain() {
-            if (mShell.isActive()) return mShell;
-            else return isRoot(isRoot).setEntranceCmds(shellCommands).init();
-        }
-
-        @NonNull
-        private ShellTool obtain(boolean isRoot) {
-            if (mShell.isActive()) return mShell;
-            else return isRoot(isRoot).setEntranceCmds(shellCommands).init();
-        }
-
-        @NonNull
-        private ShellTool obtain(boolean isRoot, @NonNull @Size(2) String[] shellCommands) {
-            if (mShell.isActive()) return mShell;
-            else return isRoot(isRoot).setEntranceCmds(shellCommands).init();
-        }
-
-        private Builder isRoot(boolean isRoot) {
-            Builder.isRoot = isRoot;
-            return this;
-        }
-
-        private Builder setEntranceCmds(@NonNull @Size(2) String[] cmds) {
-            if (cmds.length != 2) return this;
-            Builder.shellCommands = cmds;
-            return this;
-        }
-
-        private ShellTool init() {
-            mShell.isRoot = Builder.isRoot;
-            mShell.shellCommands = Builder.shellCommands;
-            mShell.init();
-            return mShell;
         }
     }
 }

@@ -76,7 +76,7 @@ public abstract class HCEntrance implements IXposedHookLoadPackage, IXposedHookZ
 
         if (Objects.equals(HCData.getModulePackageName(), loadPackageParam.packageName)) {
             HCInit.initLoadPackageParam(loadPackageParam);
-            initHCState();
+            initHCState(loadPackageParam);
             onLoadModule(loadPackageParam);
             return;
         }
@@ -91,21 +91,17 @@ public abstract class HCEntrance implements IXposedHookLoadPackage, IXposedHookZ
         onInitZygote(startupParam);
     }
 
-    private void initHCState() {
-        CoreTool.setStaticField("com.hchen.hooktool.HCState", "isXposedEnabled", true);
-        CoreTool.setStaticField("com.hchen.hooktool.HCState", "version", XposedBridge.getXposedVersion());
+    private void initHCState(XC_LoadPackage.LoadPackageParam loadPackageParam) {
+        CoreTool.hookMethod("com.hchen.hooktool.HCState", loadPackageParam.classLoader, "isXposedEnabled", CoreTool.returnResult(true));
+        CoreTool.hookMethod("com.hchen.hooktool.HCState", loadPackageParam.classLoader, "getVersion", CoreTool.returnResult(XposedBridge.getXposedVersion()));
 
         String bridgeTag = (String) CoreTool.getStaticField(XposedBridge.class, "TAG");
         if (bridgeTag == null) return;
 
-        if (bridgeTag.startsWith("LSPosed")) {
-            bridgeTag = "LSPosed";
-        } else if (bridgeTag.startsWith("EdXposed")) {
-            bridgeTag = "EdXposed";
-        } else if (bridgeTag.startsWith("Xposed")) {
-            bridgeTag = "Xposed";
-        } else
-            bridgeTag = "Unknown";
-        CoreTool.setStaticField("com.hchen.hooktool.HCState", "framework", bridgeTag);
+        if (bridgeTag.startsWith("LSPosed")) bridgeTag = "LSPosed";
+        else if (bridgeTag.startsWith("EdXposed")) bridgeTag = "EdXposed";
+        else if (bridgeTag.startsWith("Xposed")) bridgeTag = "Xposed";
+        else bridgeTag = "Unknown";
+        CoreTool.hookMethod("com.hchen.hooktool.HCState", loadPackageParam.classLoader, "getFramework", CoreTool.returnResult(bridgeTag));
     }
 }

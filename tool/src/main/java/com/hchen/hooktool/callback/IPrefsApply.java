@@ -84,4 +84,14 @@ public interface IPrefsApply {
      */
     @NonNull
     SharedPreferences.Editor editor();
+
+    /**
+     * 注册回调
+     */
+    void registerOnSharedPreferenceChangeListener(SharedPreferences.OnSharedPreferenceChangeListener listener);
+
+    /**
+     * 注销回调
+     */
+    void unregisterOnSharedPreferenceChangeListener(SharedPreferences.OnSharedPreferenceChangeListener listener);
 }

@@ -38,16 +38,16 @@ import java.util.stream.Collectors;
  * 字段查找
  *
  * @author 焕晨HChen
- * @noinspection SequencedCollectionMethodCanBeUsed
+ * @noinspection SequencedCollectionMethodCanBeUsed, unused
  */
 public class FieldHelper {
     private final Class<?> clazz;
-    private String fieldName = null;
-    private String substring = null;
-    private Pattern pattern = null;
-    private Class<?> fieldType = null;
-    private int mods = -1;
-    private Class<? extends Annotation> annotation = null;
+    private int mods = -1; // 修饰符
+    private String fieldName;
+    private String substring;
+    private Pattern pattern;
+    private Class<?> fieldClass;
+    private Class<? extends Annotation>[] annotations;
     private boolean withSuper = false;
 
     public FieldHelper(@NonNull Class<?> clazz) {
@@ -82,8 +82,8 @@ public class FieldHelper {
     /**
      * 字段类型
      */
-    public FieldHelper withFieldType(@NonNull Class<?> fieldType) {
-        this.fieldType = fieldType;
+    public FieldHelper withFieldClass(@NonNull Class<?> fieldClass) {
+        this.fieldClass = fieldClass;
         return this;
     }
 
@@ -120,8 +120,8 @@ public class FieldHelper {
     /**
      * 字段注解
      */
-    public FieldHelper withAnnotation(@NonNull Class<? extends Annotation> annotation) {
-        this.annotation = annotation;
+    public FieldHelper withAnnotations(@NonNull Class<? extends Annotation>... annotations) {
+        this.annotations = annotations;
         return this;
     }
 
@@ -167,7 +167,7 @@ public class FieldHelper {
     /**
      * 返回查找到的全部对象
      */
-    public Field[] list() {
+    public Field[] toArray() {
         return matches().toArray(new Field[0]);
     }
 
@@ -175,12 +175,12 @@ public class FieldHelper {
      * 重置查找器
      */
     public void reset() {
+        mods = -1;
         fieldName = null;
         substring = null;
         pattern = null;
-        fieldType = null;
-        mods = -1;
-        annotation = null;
+        fieldClass = null;
+        annotations = null;
         withSuper = false;
     }
 
@@ -203,9 +203,10 @@ public class FieldHelper {
             if (fieldName != null && !Objects.equals(field.getName(), fieldName)) return false;
             else if (substring != null && !field.getName().contains(substring)) return false;
             else if (pattern != null && !pattern.matcher(field.getName()).matches()) return false;
-            if (fieldType != null && !Objects.equals(field.getType(), fieldType)) return false;
+
             if (mods != -1 && (field.getModifiers() & mods) != mods) return false;
-            if (annotation != null && !field.isAnnotationPresent(annotation)) return false;
+            if (fieldClass != null && !Objects.equals(field.getType(), fieldClass)) return false;
+            if (annotations != null && !Arrays.stream(annotations).allMatch(field::isAnnotationPresent)) return false;
 
             return true;
         }).collect(Collectors.toCollection(ArrayList::new));

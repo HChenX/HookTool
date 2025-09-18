@@ -42,19 +42,15 @@ import kotlin.text.Charsets;
  * <p>
  * <pre>{@code
  * -keep class com.hchen.hooktool.HCState {
- *        private final static boolean isXposedEnabled;
- *        private final static java.lang.String framework;
- *        private final static int version;
- *  }
+ *    public static boolean isXposedEnabled();
+ *    public static java.lang.String getFramework();
+ *    public static int getVersion();
+ * }
  * }
  *
  * @author 焕晨HChen
  */
 public class HCState {
-    private static final boolean isXposedEnabled = false;
-    private static final String framework = "Unknown";
-    private static final int version = -1;
-
     private HCState() {
     }
 
@@ -62,7 +58,7 @@ public class HCState {
      * 模块是否被激活
      */
     public static boolean isXposedEnabled() {
-        return isXposedEnabled;
+        return false;
     }
 
     /**
@@ -70,14 +66,14 @@ public class HCState {
      */
     @NonNull
     public static String getFramework() {
-        return framework;
+        return "Unknown";
     }
 
     /**
      * 获取框架版本
      */
     public static int getVersion() {
-        return version;
+        return -1;
     }
 
     /**

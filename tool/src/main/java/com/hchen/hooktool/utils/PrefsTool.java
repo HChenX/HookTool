@@ -247,11 +247,19 @@ public class PrefsTool {
             throw new UnsupportedOperationException("[PrefsTool]: Xposed unsupported edit prefs!!");
         }
 
+        @Override
+        public void registerOnSharedPreferenceChangeListener(SharedPreferences.OnSharedPreferenceChangeListener listener) {
+            xSharedPreferences.registerOnSharedPreferenceChangeListener(listener);
+        }
+
+        @Override
+        public void unregisterOnSharedPreferenceChangeListener(SharedPreferences.OnSharedPreferenceChangeListener listener) {
+            xSharedPreferences.unregisterOnSharedPreferenceChangeListener(listener);
+        }
+
         private void reload() {
             if (HCData.isAutoReload()) {
-                if (xSharedPreferences.hasFileChanged()) {
-                    xSharedPreferences.reload();
-                }
+                xSharedPreferences.reload();
             }
         }
     }
@@ -324,6 +332,16 @@ public class PrefsTool {
         @NonNull
         public SharedPreferences.Editor editor() {
             return preferences.edit();
+        }
+
+        @Override
+        public void registerOnSharedPreferenceChangeListener(SharedPreferences.OnSharedPreferenceChangeListener listener) {
+            preferences.registerOnSharedPreferenceChangeListener(listener);
+        }
+
+        @Override
+        public void unregisterOnSharedPreferenceChangeListener(SharedPreferences.OnSharedPreferenceChangeListener listener) {
+            preferences.unregisterOnSharedPreferenceChangeListener(listener);
         }
     }
 }

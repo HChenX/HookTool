@@ -32,7 +32,6 @@ import com.hchen.hooktool.exception.NonSingletonException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -45,30 +44,20 @@ import java.util.stream.Collectors;
  * 构造函数查找
  *
  * @author 焕晨HChen
- * @noinspection SequencedCollectionMethodCanBeUsed
+ * @noinspection SequencedCollectionMethodCanBeUsed, unused
  */
 public class ConstructorHelper {
     private final Class<?> clazz;
-    private int paramCount = -1;
+    private int mods = -1; // 修饰符
+    private Class<?>[] paramClasses;
     private final HashMap<Integer, Integer> paramCountVarMap = new HashMap<>();
-    private Class<?>[] paramTypes = null;
-    private int mods = -1;
-    private Class<? extends Annotation> annotation = null;
-    private Type[] genericParamTypes = null;
-    private Class<? extends Throwable>[] exceptionTypes = null;
+    private Class<? extends Annotation>[] annotations;
+    private Class<? extends Throwable>[] exceptionClasses;
     private boolean withSuper = false;
 
     public ConstructorHelper(@NonNull Class<?> clazz) {
         Objects.requireNonNull(clazz, "[ConstructorHelper]: Class must not be null!!");
         this.clazz = clazz;
-    }
-
-    /**
-     * 构造函数的参数数量
-     */
-    public ConstructorHelper withParamCount(int paramCount) {
-        this.paramCount = paramCount;
-        return this;
     }
 
     /**
@@ -82,8 +71,8 @@ public class ConstructorHelper {
     /**
      * 构造函数的参数类型，可使用 Any.class 占位，表示任意类型
      */
-    public ConstructorHelper withParamTypes(@NonNull Class<?>... paramTypes) {
-        this.paramTypes = paramTypes;
+    public ConstructorHelper withParamClasses(@NonNull Class<?>... paramClasses) {
+        this.paramClasses = paramClasses;
         return this;
     }
 
@@ -122,16 +111,8 @@ public class ConstructorHelper {
     /**
      * 构造函数的注释
      */
-    public ConstructorHelper withAnnotation(@NonNull Class<? extends Annotation> annotation) {
-        this.annotation = annotation;
-        return this;
-    }
-
-    /**
-     * 构造函数的泛型参数
-     */
-    public ConstructorHelper withGenericParamTypes(@NonNull Type... genericParamTypes) {
-        this.genericParamTypes = genericParamTypes;
+    public ConstructorHelper withAnnotations(@NonNull Class<? extends Annotation>... annotations) {
+        this.annotations = annotations;
         return this;
     }
 
@@ -140,8 +121,8 @@ public class ConstructorHelper {
      *
      * @noinspection unchecked
      */
-    public ConstructorHelper withExceptionTypes(@NonNull Class<? extends Throwable>... exceptionTypes) {
-        this.exceptionTypes = exceptionTypes;
+    public ConstructorHelper withExceptionClasses(@NonNull Class<? extends Throwable>... exceptionClasses) {
+        this.exceptionClasses = exceptionClasses;
         return this;
     }
 
@@ -192,7 +173,7 @@ public class ConstructorHelper {
     /**
      * 返回查找到的全部对象
      */
-    public Constructor<?>[] list() {
+    public Constructor<?>[] toArray() {
         return matches().toArray(new Constructor[0]);
     }
 
@@ -200,13 +181,11 @@ public class ConstructorHelper {
      * 重置查找器
      */
     public void reset() {
-        paramCount = -1;
-        paramCountVarMap.clear();
-        paramTypes = null;
         mods = -1;
-        annotation = null;
-        genericParamTypes = null;
-        exceptionTypes = null;
+        paramClasses = null;
+        annotations = null;
+        exceptionClasses = null;
+        paramCountVarMap.clear();
         withSuper = false;
     }
 
@@ -227,12 +206,12 @@ public class ConstructorHelper {
 
         return constructors.stream()
             .filter(constructor -> {
-                if (paramTypes != null) {
-                    if (paramTypes.length != constructor.getParameterCount()) {
+                if (paramClasses != null) {
+                    if (paramClasses.length != constructor.getParameterCount()) {
                         return false;
                     } else {
-                        for (int i = 0; i < paramTypes.length; i++) {
-                            Class<?> want = paramTypes[i];
+                        for (int i = 0; i < paramClasses.length; i++) {
+                            Class<?> want = paramClasses[i];
                             Class<?> actual = constructor.getParameterTypes()[i];
                             if (Objects.equals(want, Any.class)) continue;
                             if (!Objects.equals(want, actual)) {
@@ -242,8 +221,6 @@ public class ConstructorHelper {
                     }
                 }
 
-                if (paramCount != -1 && constructor.getParameterCount() != paramCount)
-                    return false;
                 if (!paramCountVarMap.isEmpty()) {
                     if (paramCountVarMap.containsKey(EQ)) {
                         if (!Objects.equals(constructor.getParameterCount(), paramCountVarMap.get(EQ)))
@@ -275,11 +252,9 @@ public class ConstructorHelper {
                 }
                 if (mods != -1 && (constructor.getModifiers() & mods) != mods)
                     return false;
-                if (annotation != null && !constructor.isAnnotationPresent(annotation))
+                if (annotations != null && !Arrays.stream(annotations).allMatch(constructor::isAnnotationPresent))
                     return false;
-                if (genericParamTypes != null && !Arrays.equals(constructor.getGenericParameterTypes(), genericParamTypes))
-                    return false;
-                if (exceptionTypes != null && !Arrays.equals(constructor.getExceptionTypes(), exceptionTypes))
+                if (exceptionClasses != null && !Arrays.equals(constructor.getExceptionTypes(), exceptionClasses))
                     return false;
 
                 return true;
