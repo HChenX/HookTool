@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with HookTool. If not, see <https://www.gnu.org/licenses/lgpl-2.1>.
  *
- * Copyright (C) 2023–2025 HChenX
+ * Copyright (C) 2024–2026 HChenX
  */
 package com.hchen.hooktool.helper;
 

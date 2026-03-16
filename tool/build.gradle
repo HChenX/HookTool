@@ -11,12 +11,13 @@ version = defVersion
 
 android {
     namespace 'com.hchen.hooktool'
-    compileSdk 34
+    compileSdk {
+        version = release(36)
+    }
 
     defaultConfig {
         minSdk 26
-        // noinspection OldTargetApi
-        targetSdk 34
+        targetSdk 36
         // noinspection HighAppVersionCode
         versionCode defVersionCode
         versionName defVersion
