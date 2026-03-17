@@ -75,7 +75,7 @@ public class PrefsTool {
      */
     @NonNull
     public static IPrefsApply prefs() {
-        if (!ModuleConfig.isXposed())
+        if (!ModuleConfig.isXposedEnvironment())
             throw new NonXposedException("[PrefsTool]: Not xposed environment!!");
         return prefs("");
     }
@@ -85,7 +85,7 @@ public class PrefsTool {
      */
     @NonNull
     public static IPrefsApply prefs(@NonNull String prefsName) {
-        if (!ModuleConfig.isXposed())
+        if (!ModuleConfig.isXposedEnvironment())
             throw new NonXposedException("[PrefsTool]: Not xposed environment!!");
         return createXspIfNeed(prefsName);
     }
@@ -101,7 +101,7 @@ public class PrefsTool {
      * Xposed 环境中异步获取寄生应用的共享首选项，非 Xposed 环境中使用会引发异常
      */
     public static void asyncPrefs(@NonNull String prefsName, @NonNull IAsyncPrefs asyncPrefs) {
-        if (!ModuleConfig.isXposed())
+        if (!ModuleConfig.isXposedEnvironment())
             throw new NonXposedException("[PrefsTool]: Not xposed environment!!");
 
         ContextTool.getAsyncContext(context ->

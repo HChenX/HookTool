@@ -18,7 +18,8 @@
  */
 package com.hchen.hooktool.utils;
 
-import static com.hchen.hooktool.core.CoreTool.getParamTypes;
+
+import static com.hchen.hooktool.core.CoreTool.getParameterTypes;
 
 import androidx.annotation.NonNull;
 
@@ -49,28 +50,28 @@ public class InvokeTool {
      * 调用指定方法
      */
     public static <T> T callMethod(@NonNull Object instance, @NonNull String methodName, @NonNull Object[] paramTypes, @NonNull Object... params) {
-        return baseInvokeMethod(null, instance, methodName, getParamTypes(instance.getClass().getClassLoader(), paramTypes), params);
+        return baseInvokeMethod(null, instance, methodName, getParameterTypes(instance.getClass().getClassLoader(), paramTypes), params);
     }
 
     /**
      * 调用静态方法
      */
     public static <T> T callStaticMethod(@NonNull Class<?> clazz, @NonNull String methodName, @NonNull Object[] paramTypes, @NonNull Object... params) {
-        return baseInvokeMethod(clazz, null, methodName, getParamTypes(clazz.getClassLoader(), paramTypes), params);
+        return baseInvokeMethod(clazz, null, methodName, getParameterTypes(clazz.getClassLoader(), paramTypes), params);
     }
 
     /**
      * 调用静态方法
      */
     public static <T> T callStaticMethod(@NonNull String classPath, @NonNull String methodName, @NonNull Object[] paramTypes, @NonNull Object... params) {
-        return baseInvokeMethod(findClass(classPath), null, methodName, getParamTypes(null, paramTypes), params);
+        return baseInvokeMethod(findClass(classPath), null, methodName, getParameterTypes(null, paramTypes), params);
     }
 
     /**
      * 调用静态方法
      */
     public static <T> T callStaticMethod(@NonNull String classPath, ClassLoader classLoader, @NonNull String methodName, @NonNull Object[] paramTypes, @NonNull Object... params) {
-        return baseInvokeMethod(findClass(classPath, classLoader), null, methodName, getParamTypes(classLoader, paramTypes), params);
+        return baseInvokeMethod(findClass(classPath, classLoader), null, methodName, getParameterTypes(classLoader, paramTypes), params);
     }
 
     // ---------------------------- 设置字段 --------------------------------

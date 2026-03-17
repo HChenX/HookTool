@@ -6,6 +6,7 @@ import androidx.annotation.IdRes
 import com.hchen.hooktool.ModuleData
 import com.hchen.hooktool.callback.IAsyncPrefs
 import com.hchen.hooktool.callback.IPrefsApply
+import com.hchen.hooktool.exception.UnexpectedException
 import com.hchen.hooktool.hook.AbsHook
 import com.hchen.hooktool.hook.HookBridge
 import com.hchen.hooktool.log.LogExpand
@@ -60,9 +61,9 @@ open class CoreTool : XposedLog() {
             classLoader: ClassLoader? = ModuleData.getClassLoader(),
             methodName: String,
             exactMatch: Boolean = true,
-            vararg params: Any = emptyArray()
+            vararg parameterTypes: Any = emptyArray()
         ): Boolean {
-            return this.findClassIfExists(classLoader)?.hasMethod(methodName, exactMatch, params) ?: false
+            return this.findClassIfExists(classLoader)?.hasMethod(methodName, exactMatch, parameterTypes) ?: false
         }
 
         @JvmStatic
@@ -70,11 +71,11 @@ open class CoreTool : XposedLog() {
         fun Class<*>.hasMethod(
             methodName: String,
             exactMatch: Boolean = true,
-            vararg params: Any = emptyArray()
+            vararg parameterTypes: Any = emptyArray()
         ): Boolean {
             return if (exactMatch) {
                 Objects.nonNull(
-                    XposedHelpers.findMethodExactIfExists(this, methodName, params)
+                    XposedHelpers.findMethodExactIfExists(this, methodName, parameterTypes)
                 )
             } else {
                 this.declaredMethods.any { method ->
@@ -86,43 +87,43 @@ open class CoreTool : XposedLog() {
         @JvmStatic
         @JvmOverloads
         fun String.findMethod(
-            classLoader: ClassLoader = ModuleData.getClassLoader(),
+            classLoader: ClassLoader? = ModuleData.getClassLoader(),
             methodName: String,
-            vararg params: Any
+            vararg parameterTypes: Any
         ): Method {
-            return XposedHelpers.findMethodExact(this, classLoader, methodName, params)
+            return XposedHelpers.findMethodExact(this, classLoader, methodName, parameterTypes)
         }
 
         @JvmStatic
         fun Class<*>.findMethod(
             methodName: String,
-            vararg params: Any
+            vararg parameterTypes: Any
         ): Method {
-            return XposedHelpers.findMethodExact(this, methodName, params)
+            return XposedHelpers.findMethodExact(this, methodName, parameterTypes)
         }
 
         @JvmStatic
         @JvmOverloads
         fun String.findMethodIfExists(
-            classLoader: ClassLoader = ModuleData.getClassLoader(),
+            classLoader: ClassLoader? = ModuleData.getClassLoader(),
             methodName: String,
-            vararg params: Any
+            vararg parameterTypes: Any
         ): Method? {
-            return XposedHelpers.findMethodExactIfExists(this, classLoader, methodName, params)
+            return XposedHelpers.findMethodExactIfExists(this, classLoader, methodName, parameterTypes)
         }
 
         @JvmStatic
         fun Class<*>.findMethodIfExists(
             methodName: String,
-            vararg params: Any
+            vararg parameterTypes: Any
         ): Method? {
-            return XposedHelpers.findMethodExactIfExists(this, methodName, params)
+            return XposedHelpers.findMethodExactIfExists(this, methodName, parameterTypes)
         }
 
         @JvmStatic
         @JvmOverloads
         fun String.findAllMethod(
-            classLoader: ClassLoader = ModuleData.getClassLoader(),
+            classLoader: ClassLoader? = ModuleData.getClassLoader(),
             methodName: String? = null
         ): Array<Method> {
             return this.findClass(classLoader).findAllMethod(methodName)
@@ -142,59 +143,59 @@ open class CoreTool : XposedLog() {
         @JvmStatic
         @JvmOverloads
         fun String.hasConstructor(
-            classLoader: ClassLoader = ModuleData.getClassLoader(),
-            vararg params: Any
+            classLoader: ClassLoader? = ModuleData.getClassLoader(),
+            vararg parameterTypes: Any
         ): Boolean {
             return Objects.nonNull(
-                XposedHelpers.findConstructorExactIfExists(this, classLoader, params)
+                XposedHelpers.findConstructorExactIfExists(this, classLoader, parameterTypes)
             )
         }
 
         @JvmStatic
         fun Class<*>.hasConstructor(
-            vararg params: Any
+            vararg parameterTypes: Any
         ): Boolean {
             return Objects.nonNull(
-                XposedHelpers.findConstructorExactIfExists(this, params)
+                XposedHelpers.findConstructorExactIfExists(this, parameterTypes)
             )
         }
 
         @JvmStatic
         @JvmOverloads
         fun String.findConstructor(
-            classLoader: ClassLoader = ModuleData.getClassLoader(),
-            vararg params: Any
+            classLoader: ClassLoader? = ModuleData.getClassLoader(),
+            vararg parameterTypes: Any
         ): Constructor<*> {
-            return XposedHelpers.findConstructorExact(this, classLoader, params)
+            return XposedHelpers.findConstructorExact(this, classLoader, parameterTypes)
         }
 
         @JvmStatic
         fun Class<*>.findConstructor(
-            vararg params: Any
+            vararg parameterTypes: Any
         ): Constructor<*> {
-            return XposedHelpers.findConstructorExact(this, params)
+            return XposedHelpers.findConstructorExact(this, parameterTypes)
         }
 
         @JvmStatic
         @JvmOverloads
         fun String.findConstructorIfExists(
-            classLoader: ClassLoader = ModuleData.getClassLoader(),
-            vararg params: Any
+            classLoader: ClassLoader? = ModuleData.getClassLoader(),
+            vararg parameterTypes: Any
         ): Constructor<*> {
-            return XposedHelpers.findConstructorExactIfExists(this, classLoader, params)
+            return XposedHelpers.findConstructorExactIfExists(this, classLoader, parameterTypes)
         }
 
         @JvmStatic
         fun Class<*>.findConstructorIfExists(
-            vararg params: Any
+            vararg parameterTypes: Any
         ): Constructor<*>? {
-            return XposedHelpers.findConstructorExactIfExists(this, params)
+            return XposedHelpers.findConstructorExactIfExists(this, parameterTypes)
         }
 
         @JvmStatic
         @JvmOverloads
         fun String.findAllConstructor(
-            classLoader: ClassLoader = ModuleData.getClassLoader()
+            classLoader: ClassLoader? = ModuleData.getClassLoader()
         ): Array<Constructor<*>> {
             return this.findClass(classLoader).findAllConstructor()
         }
@@ -209,7 +210,7 @@ open class CoreTool : XposedLog() {
         @JvmStatic
         @JvmOverloads
         fun String.hasField(
-            classLoader: ClassLoader = ModuleData.getClassLoader(),
+            classLoader: ClassLoader? = ModuleData.getClassLoader(),
             fieldName: String
         ): Boolean {
             return Objects.nonNull(
@@ -229,7 +230,7 @@ open class CoreTool : XposedLog() {
         @JvmStatic
         @JvmOverloads
         fun String.findField(
-            classLoader: ClassLoader = ModuleData.getClassLoader(),
+            classLoader: ClassLoader? = ModuleData.getClassLoader(),
             fieldName: String
         ): Field {
             return this.findClass(classLoader).findField(fieldName)
@@ -245,7 +246,7 @@ open class CoreTool : XposedLog() {
         @JvmStatic
         @JvmOverloads
         fun String.findFieldIfExists(
-            classLoader: ClassLoader = ModuleData.getClassLoader(),
+            classLoader: ClassLoader? = ModuleData.getClassLoader(),
             fieldName: String
         ): Field? {
             return this.findClassIfExists(classLoader)?.findFieldIfExists(fieldName)
@@ -263,14 +264,23 @@ open class CoreTool : XposedLog() {
         @JvmOverloads
         fun Any.callMethod(
             methodName: String,
-            paramTypes: Array<Class<*>> = emptyArray(),
-            vararg params: Any
+            parameterTypes: Array<Class<*>> = emptyArray(),
+            vararg args: Any
         ): Any? {
-            return if (paramTypes.isEmpty()) {
-                XposedHelpers.callMethod(this, methodName, params)
+            return if (parameterTypes.isEmpty()) {
+                XposedHelpers.callMethod(this, methodName, args)
             } else {
-                XposedHelpers.callMethod(this, methodName, paramTypes, params)
+                XposedHelpers.callMethod(this, methodName, parameterTypes, args)
             }
+        }
+
+        @JvmStatic
+        fun Method.callMethod(
+            instance: Any,
+            vararg args: Any
+        ): Any? {
+            this.isAccessible = true
+            return this.getInvoker().invoke(instance, args)
         }
 
         @JvmStatic
@@ -281,13 +291,11 @@ open class CoreTool : XposedLog() {
         }
 
         @JvmStatic
-        fun Any.getField(
-            field: Field,
+        fun Field.getField(
+            instance: Any,
         ): Any? {
-            return field.run {
-                this.isAccessible = true
-                field.get(this@getField)
-            }
+            this.isAccessible = true
+            return this.get(instance)
         }
 
         @JvmStatic
@@ -299,12 +307,12 @@ open class CoreTool : XposedLog() {
         }
 
         @JvmStatic
-        fun Any.setField(
-            field: Field,
+        fun Field.setField(
+            instance: Any,
             value: Any?
         ) {
-            field.isAccessible = true
-            field.set(this, value)
+            this.isAccessible = true
+            this.set(instance, value)
         }
 
         @JvmStatic
@@ -334,55 +342,63 @@ open class CoreTool : XposedLog() {
         @JvmStatic
         @JvmOverloads
         fun String.newInstance(
-            classLoader: ClassLoader = ModuleData.getClassLoader(),
-            paramTypes: Array<Class<*>> = emptyArray(),
-            vararg params: Any
+            classLoader: ClassLoader? = ModuleData.getClassLoader(),
+            parameterTypes: Array<Class<*>> = emptyArray(),
+            vararg args: Any
         ): Any {
-            return this.findClass(classLoader).newInstance(paramTypes, params)
+            return this.findClass(classLoader).newInstance(parameterTypes, args)
         }
 
         @JvmStatic
         @JvmOverloads
         fun Class<*>.newInstance(
-            paramTypes: Array<Class<*>> = emptyArray(),
-            vararg params: Any
+            parameterTypes: Array<Class<*>> = emptyArray(),
+            vararg args: Any
         ): Any {
-            return if (paramTypes.isEmpty()) {
-                XposedHelpers.newInstance(this, params)
+            return if (parameterTypes.isEmpty()) {
+                XposedHelpers.newInstance(this, args)
             } else {
-                XposedHelpers.newInstance(this, paramTypes, params)
+                XposedHelpers.newInstance(this, parameterTypes, args)
             }
         }
 
         @JvmStatic
         @JvmOverloads
         fun String.callStaticMethod(
-            classLoader: ClassLoader = ModuleData.getClassLoader(),
+            classLoader: ClassLoader? = ModuleData.getClassLoader(),
             methodName: String,
-            paramTypes: Array<Class<*>> = emptyArray(),
-            vararg params: Any
+            parameterTypes: Array<Class<*>> = emptyArray(),
+            vararg args: Any
         ): Any? {
-            return this.findClass(classLoader).callStaticMethod(methodName, paramTypes, params)
+            return this.findClass(classLoader).callStaticMethod(methodName, parameterTypes, args)
         }
 
         @JvmStatic
         @JvmOverloads
         fun Class<*>.callStaticMethod(
             methodName: String,
-            paramTypes: Array<Class<*>> = emptyArray(),
-            vararg params: Any
+            parameterTypes: Array<Class<*>> = emptyArray(),
+            vararg args: Any
         ): Any? {
-            return if (paramTypes.isEmpty()) {
-                XposedHelpers.callStaticMethod(this, methodName, params)
+            return if (parameterTypes.isEmpty()) {
+                XposedHelpers.callStaticMethod(this, methodName, args)
             } else {
-                XposedHelpers.callStaticMethod(this, methodName, paramTypes, params)
+                XposedHelpers.callStaticMethod(this, methodName, parameterTypes, args)
             }
+        }
+
+        @JvmStatic
+        fun Method.callStaticMethod(
+            vararg args: Any
+        ): Any? {
+            this.isAccessible = true
+            return this.getInvoker().invoke(null, args)
         }
 
         @JvmStatic
         @JvmOverloads
         fun String.getStaticField(
-            classLoader: ClassLoader = ModuleData.getClassLoader(),
+            classLoader: ClassLoader? = ModuleData.getClassLoader(),
             fieldName: String
         ): Any? {
             return this.findClass(classLoader).getStaticField(fieldName)
@@ -404,7 +420,7 @@ open class CoreTool : XposedLog() {
         @JvmStatic
         @JvmOverloads
         fun String.setStaticField(
-            classLoader: ClassLoader = ModuleData.getClassLoader(),
+            classLoader: ClassLoader? = ModuleData.getClassLoader(),
             fieldName: String,
             value: Any?
         ) {
@@ -430,7 +446,7 @@ open class CoreTool : XposedLog() {
         @JvmStatic
         @JvmOverloads
         fun String.setAdditionalStaticField(
-            classLoader: ClassLoader = ModuleData.getClassLoader(),
+            classLoader: ClassLoader? = ModuleData.getClassLoader(),
             key: String,
             value: Any?
         ): Any? {
@@ -448,7 +464,7 @@ open class CoreTool : XposedLog() {
         @JvmStatic
         @JvmOverloads
         fun String.getAdditionalStaticField(
-            classLoader: ClassLoader = ModuleData.getClassLoader(),
+            classLoader: ClassLoader? = ModuleData.getClassLoader(),
             key: String,
         ): Any? {
             return this.findClass(classLoader).getAdditionalStaticField(key)
@@ -464,7 +480,7 @@ open class CoreTool : XposedLog() {
         @JvmStatic
         @JvmOverloads
         fun String.removeAdditionalStaticField(
-            classLoader: ClassLoader = ModuleData.getClassLoader(),
+            classLoader: ClassLoader? = ModuleData.getClassLoader(),
             key: String,
         ): Any? {
             return this.findClass(classLoader).removeAdditionalStaticField(key)
@@ -482,35 +498,35 @@ open class CoreTool : XposedLog() {
         @JvmStatic
         @JvmOverloads
         fun String.hook(
-            classLoader: ClassLoader = ModuleData.getClassLoader(),
+            classLoader: ClassLoader? = ModuleData.getClassLoader(),
             methodName: String,
-            vararg params: Any
+            vararg parameterTypes: Any
         ): HookBridge {
-            return this.findMethod(classLoader, methodName, params).hook()
+            return this.findMethod(classLoader, methodName, parameterTypes).hook()
         }
 
         @JvmStatic
         fun Class<*>.hook(
             methodName: String,
-            vararg params: Any
+            vararg parameterTypes: Any
         ): HookBridge {
-            return this.findMethod(methodName, params).hook()
+            return this.findMethod(methodName, parameterTypes).hook()
         }
 
         @JvmStatic
         @JvmOverloads
         fun String.hook(
-            classLoader: ClassLoader = ModuleData.getClassLoader(),
-            vararg params: Any
+            classLoader: ClassLoader? = ModuleData.getClassLoader(),
+            vararg parameterTypes: Any
         ): HookBridge {
-            return this.findConstructor(classLoader, params).hook()
+            return this.findConstructor(classLoader, parameterTypes).hook()
         }
 
         @JvmStatic
         fun Class<*>.hook(
-            vararg params: Any
+            vararg parameterTypes: Any
         ): HookBridge {
-            return this.findConstructor(params).hook()
+            return this.findConstructor(parameterTypes).hook()
         }
 
         @JvmStatic
@@ -521,7 +537,7 @@ open class CoreTool : XposedLog() {
         @JvmStatic
         @JvmOverloads
         fun String.hookClassInitializer(
-            classLoader: ClassLoader = ModuleData.getClassLoader()
+            classLoader: ClassLoader? = ModuleData.getClassLoader()
         ): HookBridge {
             return this.findClass(classLoader).hookClassInitializer()
         }
@@ -558,19 +574,19 @@ open class CoreTool : XposedLog() {
         @JvmStatic
         @JvmOverloads
         fun String.getInvoker(
-            classLoader: ClassLoader = ModuleData.getClassLoader(),
+            classLoader: ClassLoader? = ModuleData.getClassLoader(),
             methodName: String,
-            vararg params: Any
+            vararg parameterTypes: Any
         ): XposedInterface.Invoker<*, Method> {
-            return this.findMethod(classLoader, methodName, params).getInvoker()
+            return this.findMethod(classLoader, methodName, parameterTypes).getInvoker()
         }
 
         @JvmStatic
         fun Class<*>.getInvoker(
             methodName: String,
-            vararg params: Any
+            vararg parameterTypes: Any
         ): XposedInterface.Invoker<*, Method> {
-            return this.findMethod(methodName, params).getInvoker()
+            return this.findMethod(methodName, parameterTypes).getInvoker()
         }
 
         @JvmStatic
@@ -581,17 +597,17 @@ open class CoreTool : XposedLog() {
         @JvmStatic
         @JvmOverloads
         fun String.getInvoker(
-            classLoader: ClassLoader = ModuleData.getClassLoader(),
-            vararg params: Any
+            classLoader: ClassLoader? = ModuleData.getClassLoader(),
+            vararg parameterTypes: Any
         ): XposedInterface.CtorInvoker<*> {
-            return this.findConstructor(classLoader, params).getInvoker()
+            return this.findConstructor(classLoader, parameterTypes).getInvoker()
         }
 
         @JvmStatic
         fun Class<*>.getInvoker(
-            vararg params: Any
+            vararg parameterTypes: Any
         ): XposedInterface.CtorInvoker<*> {
-            return this.findConstructor(params).getInvoker()
+            return this.findConstructor(parameterTypes).getInvoker()
         }
 
         @JvmStatic
@@ -604,55 +620,40 @@ open class CoreTool : XposedLog() {
         @JvmStatic
         @JvmOverloads
         fun String.deoptimize(
-            classLoader: ClassLoader = ModuleData.getClassLoader(),
+            classLoader: ClassLoader? = ModuleData.getClassLoader(),
             methodName: String,
-            vararg params: Any
+            vararg parameterTypes: Any
         ) {
-            this.findMethod(classLoader, methodName, params).deoptimize()
+            this.findMethod(classLoader, methodName, parameterTypes).deoptimize()
         }
 
         @JvmStatic
         fun Class<*>.deoptimize(
             methodName: String,
-            vararg params: Any
+            vararg parameterTypes: Any
         ) {
-            this.findMethod(methodName, params).deoptimize()
+            this.findMethod(methodName, parameterTypes).deoptimize()
         }
 
         @JvmStatic
         @JvmOverloads
         fun String.deoptimize(
-            classLoader: ClassLoader = ModuleData.getClassLoader(),
-            vararg params: Any
+            classLoader: ClassLoader? = ModuleData.getClassLoader(),
+            vararg parameterTypes: Any
         ) {
-            this.findConstructor(classLoader, params).deoptimize()
+            this.findConstructor(classLoader, parameterTypes).deoptimize()
         }
 
         @JvmStatic
         fun Class<*>.deoptimize(
-            vararg params: Any
+            vararg parameterTypes: Any
         ) {
-            this.findConstructor(params).deoptimize()
+            this.findConstructor(parameterTypes).deoptimize()
         }
 
         @JvmStatic
         fun Executable.deoptimize() {
             ModuleData.getWrapper().deoptimize(this)
-        }
-
-        // --------------------------------- chain -----------------------------------
-
-        @JvmStatic
-        @JvmOverloads
-        fun String.buildChain(
-            classLoader: ClassLoader = ModuleData.getClassLoader()
-        ): ChainTool {
-            return ChainTool.buildChain(this, classLoader)
-        }
-
-        @JvmStatic
-        fun Class<*>.buildChain(): ChainTool {
-            return ChainTool.buildChain(this)
         }
 
         // ----------------------------------- res ---------------------------------------
@@ -723,6 +724,32 @@ open class CoreTool : XposedLog() {
             } catch (_: Throwable) {
                 return -1L
             }
+        }
+
+        @JvmStatic
+        @JvmOverloads
+        fun getParameterTypes(
+            classLoader: ClassLoader? = ModuleData.getClassLoader(),
+            vararg parameterTypes: Any
+        ): Array<Class<*>> {
+            val classes = mutableListOf<Class<*>>()
+            for (any in parameterTypes) {
+                Objects.requireNonNull(any, "parameter types must not be null.")
+                when (any) {
+                    is String -> {
+                        classes.add(any.findClass(classLoader))
+                    }
+
+                    is Class<*> -> {
+                        classes.add(any)
+                    }
+
+                    else -> {
+                        throw UnexpectedException("unknown parameter types.")
+                    }
+                }
+            }
+            return classes.toTypedArray()
         }
     }
 }

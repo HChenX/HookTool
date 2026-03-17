@@ -128,24 +128,24 @@ public class ConstructorHelper {
     /**
      * 获取查找到的对象，如果查找结果为空或不为单个则抛错
      */
-    public HookHelper<Constructor<?>> single() {
+    public Constructor<?> single() {
         List<Constructor<?>> constructors = matches();
         if (constructors.isEmpty())
             throw new NonSingletonException("[ConstructorHelper]: No result found for query!!");
         if (constructors.size() > 1)
             throw new NonSingletonException("[ConstructorHelper]: Query did not return a unique result: " + constructors.size());
 
-        return new HookHelper<>(constructors.get(0));
+        return constructors.get(0);
     }
 
     /**
      * 获取查找到的对象，如果查找结果为空或不为单个则返回 null
      */
     @Nullable
-    public HookHelper<Constructor<?>> singleOrNull() {
+    public Constructor<?> singleOrNull() {
         List<Constructor<?>> constructors = matches();
         if (constructors.size() == 1)
-            return new HookHelper<>(constructors.get(0));
+            return constructors.get(0);
 
         return null;
     }
@@ -153,12 +153,12 @@ public class ConstructorHelper {
     /**
      * 获取查找到的对象，如果查找结果为空或不为单个则抛错
      */
-    public HookHelper<Constructor<?>> singleOrThrow(@NonNull Supplier<NonSingletonException> throwableSupplier) {
+    public Constructor<?> singleOrThrow(@NonNull Supplier<NonSingletonException> throwableSupplier) {
         List<Constructor<?>> constructors = matches();
         if (constructors.size() != 1)
             throw throwableSupplier.get();
 
-        return new HookHelper<>(constructors.get(0));
+        return constructors.get(0);
     }
 
     /**

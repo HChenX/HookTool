@@ -31,7 +31,8 @@ import android.util.TypedValue;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.hchen.hooktool.ModuleConfig;
+import com.hchen.hooktool.ModuleData;
+import com.hchen.hooktool.core.CoreTool;
 import com.hchen.hooktool.exception.InjectResourcesException;
 import com.hchen.hooktool.hook.AbsHook;
 import com.hchen.hooktool.log.XposedLog;
@@ -86,13 +87,12 @@ public class ResInjectTool {
      */
     public static void injectModuleRes() {
         if (isInjected) return;
-        if (ModuleConfig.getModulePath() == null)
+        if (ModuleData.getModuleApplicationInfo().sourceDir == null)
             throw new NullPointerException("[ResInjectTool]: Module path must not be null!!");
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             if (resourcesLoader == null) {
-                assert ModuleConfig.getModulePath() != null;
-                try (ParcelFileDescriptor pfd = ParcelFileDescriptor.open(new File(ModuleConfig.getModulePath()), ParcelFileDescriptor.MODE_READ_ONLY)) {
+                try (ParcelFileDescriptor pfd = ParcelFileDescriptor.open(new File(ModuleData.getModuleApplicationInfo().sourceDir), ParcelFileDescriptor.MODE_READ_ONLY)) {
                     ResourcesProvider provider = ResourcesProvider.loadFromApk(pfd);
                     ResourcesLoader loader = new ResourcesLoader();
                     loader.addProvider(provider);
@@ -102,7 +102,7 @@ public class ResInjectTool {
                 }
             }
 
-            CoreTool.hookConstructor("android.content.res.ResourcesKey",
+            CoreTool.hook("android.content.res.ResourcesKey",
                 String.class /* resDir */, String[].class /* splitResDirs */, String[].class /* overlayPaths */,
                 String[].class,/* libDirs */ int.class /* overrideDisplayId */, Configuration.class /* overrideConfig */,
                 "android.content.res.CompatibilityInfo" /* compatInfo */, ResourcesLoader[].class /* loader */,
@@ -123,7 +123,7 @@ public class ResInjectTool {
                 }
             );
         } else {
-            CoreTool.hookConstructor("android.content.res.ResourcesKey",
+            CoreTool.hook("android.content.res.ResourcesKey",
                 String.class /* resDir */, String[].class /* splitResDirs */, String[].class /* overlayDirs */,
                 String[].class,/* libDirs */ int.class /* displayId */, Configuration.class /* overrideConfig */,
                 "android.content.res.CompatibilityInfo" /* compatInfo */,
@@ -132,13 +132,13 @@ public class ResInjectTool {
                     public void before() {
                         String[] splitResDirs = (String[]) getArg(1);
                         if (splitResDirs != null) {
-                            if (Arrays.stream(splitResDirs).noneMatch(s -> Objects.equals(s, ModuleConfig.getModulePath()))) {
+                            if (Arrays.stream(splitResDirs).noneMatch(s -> Objects.equals(s, ModuleData.getModuleApplicationInfo().sourceDir))) {
                                 List<String> loaders = new ArrayList<>(Arrays.asList(splitResDirs));
-                                loaders.add(ModuleConfig.getModulePath());
+                                loaders.add(ModuleData.getModuleApplicationInfo().sourceDir);
                                 setArg(1, loaders.toArray(new String[0]));
                             }
                         } else {
-                            setArg(1, new String[]{ModuleConfig.getModulePath()});
+                            setArg(1, new String[]{ModuleData.getModuleApplicationInfo().sourceDir});
                         }
                     }
                 }
@@ -200,45 +200,45 @@ public class ResInjectTool {
             throw new InjectResourcesException("[ResInjectTool]: You should inject module res first!!");
         }
 
-        CoreTool.hookMethod(Resources.class, "loadXmlResourceParser", int.class, String.class, hookResBefore); // XmlResourceParser
-        CoreTool.hookMethod(Resources.class, "getDimension", int.class, hookResBefore); // float
-        CoreTool.hookMethod(Resources.class, "getDimensionPixelOffset", int.class, hookResBefore); // int
-        CoreTool.hookMethod(Resources.class, "getDimensionPixelSize", int.class, hookResBefore); // int
-        CoreTool.hookMethod(Resources.class, "getBoolean", int.class, hookResBefore); // boolean
-        CoreTool.hookMethod(Resources.class, "getInteger", int.class, hookResBefore); // int
-        CoreTool.hookMethod(Resources.class, "getFloat", int.class, hookResBefore); // float
-        CoreTool.hookMethod(Resources.class, "getText", int.class, hookResBefore); // CharSequence
-        CoreTool.hookMethod(Resources.class, "getText", int.class, CharSequence.class, hookResBefore); // CharSequence
-        CoreTool.hookMethod(Resources.class, "getQuantityText", int.class, int.class, hookResBefore); // CharSequence
-        CoreTool.hookMethod(Resources.class, "getIntArray", int.class, hookResBefore); // int[]
-        CoreTool.hookMethod(Resources.class, "getStringArray", int.class, hookResBefore); // String[]
-        CoreTool.hookMethod(Resources.class, "getTextArray", int.class, hookResBefore); // CharSequence[]
-        CoreTool.hookMethod(Resources.class, "getFont", int.class, hookResBefore); // Typeface
-        CoreTool.hookMethod(Resources.class, "getMovie", int.class, hookResBefore); // Movie
-        CoreTool.hookMethod(Resources.class, "getColor", int.class, Resources.Theme.class, hookResBefore); // int
-        CoreTool.hookMethod(Resources.class, "getColorStateList", int.class, Resources.Theme.class, hookResBefore); // ColorStateList
-        CoreTool.hookMethod(Resources.class, "getFraction", int.class, int.class, int.class, hookResBefore); // float
-        CoreTool.hookMethod(Resources.class, "getDrawableForDensity", int.class, int.class, Resources.Theme.class, hookResBefore); // Drawable
+        CoreTool.hook(Resources.class, "loadXmlResourceParser", int.class, String.class).intercept(hookResBefore); // XmlResourceParser
+        CoreTool.hook(Resources.class, "getDimension", int.class).intercept(hookResBefore); // float
+        CoreTool.hook(Resources.class, "getDimensionPixelOffset", int.class).intercept(hookResBefore); // int
+        CoreTool.hook(Resources.class, "getDimensionPixelSize", int.class).intercept(hookResBefore); // int
+        CoreTool.hook(Resources.class, "getBoolean", int.class).intercept(hookResBefore); // boolean
+        CoreTool.hook(Resources.class, "getInteger", int.class).intercept(hookResBefore); // int
+        CoreTool.hook(Resources.class, "getFloat", int.class).intercept(hookResBefore); // float
+        CoreTool.hook(Resources.class, "getText", int.class).intercept(hookResBefore); // CharSequence
+        CoreTool.hook(Resources.class, "getText", int.class, CharSequence.class).intercept(hookResBefore); // CharSequence
+        CoreTool.hook(Resources.class, "getQuantityText", int.class, int.class).intercept(hookResBefore); // CharSequence
+        CoreTool.hook(Resources.class, "getIntArray", int.class).intercept(hookResBefore); // int[]
+        CoreTool.hook(Resources.class, "getStringArray", int.class).intercept(hookResBefore); // String[]
+        CoreTool.hook(Resources.class, "getTextArray", int.class).intercept(hookResBefore); // CharSequence[]
+        CoreTool.hook(Resources.class, "getFont", int.class).intercept(hookResBefore); // Typeface
+        CoreTool.hook(Resources.class, "getMovie", int.class).intercept(hookResBefore); // Movie
+        CoreTool.hook(Resources.class, "getColor", int.class, Resources.Theme.class).intercept(hookResBefore); // int
+        CoreTool.hook(Resources.class, "getColorStateList", int.class, Resources.Theme.class).intercept(hookResBefore); // ColorStateList
+        CoreTool.hook(Resources.class, "getFraction", int.class, int.class, int.class).intercept(hookResBefore); // float
+        CoreTool.hook(Resources.class, "getDrawableForDensity", int.class, int.class, Resources.Theme.class).intercept(hookResBefore); // Drawable
 
         STYLE_NUM_ENTRIES = (int) CoreTool.getStaticField(TypedArray.class, "STYLE_NUM_ENTRIES");
         STYLE_TYPE = (int) CoreTool.getStaticField(TypedArray.class, "STYLE_TYPE");
         STYLE_RESOURCE_ID = (int) CoreTool.getStaticField(TypedArray.class, "STYLE_RESOURCE_ID");
-        CoreTool.hookMethod(TypedArray.class, "getColor", int.class, int.class, hookTypedBefore); // int
-        CoreTool.hookMethod(TypedArray.class, "getColorStateList", int.class, hookTypedBefore); // ColorStateList
-        CoreTool.hookMethod(TypedArray.class, "getBoolean", int.class, boolean.class, hookTypedBefore); // boolean
-        CoreTool.hookMethod(TypedArray.class, "getFloat", int.class, float.class, hookTypedBefore); // float
-        CoreTool.hookMethod(TypedArray.class, "getInt", int.class, int.class, hookTypedBefore); // int
-        CoreTool.hookMethod(TypedArray.class, "getInteger", int.class, int.class, hookTypedBefore); // int
-        CoreTool.hookMethod(TypedArray.class, "getString", int.class, hookTypedBefore); // String
-        CoreTool.hookMethod(TypedArray.class, "getText", int.class, hookTypedBefore); // CharSequence
-        CoreTool.hookMethod(TypedArray.class, "getFont", int.class, hookTypedBefore); // Typeface
-        CoreTool.hookMethod(TypedArray.class, "getDimension", int.class, float.class, hookTypedBefore); // float
-        CoreTool.hookMethod(TypedArray.class, "getDimensionPixelOffset", int.class, int.class, hookTypedBefore); // int
-        CoreTool.hookMethod(TypedArray.class, "getDimensionPixelSize", int.class, int.class, hookTypedBefore); // int
-        CoreTool.hookMethod(TypedArray.class, "getLayoutDimension", int.class, int.class, hookTypedBefore); // int
-        CoreTool.hookMethod(TypedArray.class, "getLayoutDimension", int.class, String.class, hookTypedBefore); // int
-        CoreTool.hookMethod(TypedArray.class, "getDrawableForDensity", int.class, int.class, hookTypedBefore); // Drawable
-        CoreTool.hookMethod(TypedArray.class, "getFraction", int.class, int.class, int.class, float.class, hookTypedBefore); // float
+        CoreTool.hook(TypedArray.class, "getColor", int.class, int.class).intercept(hookTypedBefore); // int
+        CoreTool.hook(TypedArray.class, "getColorStateList", int.class).intercept(hookTypedBefore); // ColorStateList
+        CoreTool.hook(TypedArray.class, "getBoolean", int.class, boolean.class).intercept(hookTypedBefore); // boolean
+        CoreTool.hook(TypedArray.class, "getFloat", int.class, float.class).intercept(hookTypedBefore); // float
+        CoreTool.hook(TypedArray.class, "getInt", int.class, int.class).intercept(hookTypedBefore); // int
+        CoreTool.hook(TypedArray.class, "getInteger", int.class, int.class).intercept(hookTypedBefore); // int
+        CoreTool.hook(TypedArray.class, "getString", int.class).intercept(hookTypedBefore); // String
+        CoreTool.hook(TypedArray.class, "getText", int.class).intercept(hookTypedBefore); // CharSequence
+        CoreTool.hook(TypedArray.class, "getFont", int.class).intercept(hookTypedBefore); // Typeface
+        CoreTool.hook(TypedArray.class, "getDimension", int.class, float.class).intercept(hookTypedBefore); // float
+        CoreTool.hook(TypedArray.class, "getDimensionPixelOffset", int.class, int.class).intercept(hookTypedBefore); // int
+        CoreTool.hook(TypedArray.class, "getDimensionPixelSize", int.class, int.class).intercept(hookTypedBefore); // int
+        CoreTool.hook(TypedArray.class, "getLayoutDimension", int.class, int.class).intercept(hookTypedBefore); // int
+        CoreTool.hook(TypedArray.class, "getLayoutDimension", int.class, String.class).intercept(hookTypedBefore); // int
+        CoreTool.hook(TypedArray.class, "getDrawableForDensity", int.class, int.class).intercept(hookTypedBefore); // Drawable
+        CoreTool.hook(TypedArray.class, "getFraction", int.class, int.class, int.class, float.class).intercept(hookTypedBefore); // float
 
         isHooked = true;
     }
@@ -250,8 +250,8 @@ public class ResInjectTool {
                 Integer resId = (Integer) getArg(0);
                 if (waitSet.contains(resId)) return;
 
-                String methodName = getMethod().getName();
-                Object value = getResourceReplacement((Method) getMethod(), (Resources) thisObject(), getArgs());
+                String methodName = getExecutable().getName();
+                Object value = getResourceReplacement((Method) getExecutable(), (Resources) getThisObject(), getArgs().toArray(new Object[0]));
                 if (value != null) {
                     if ("getDimensionPixelOffset".equals(methodName) || "getDimensionPixelSize".equals(methodName)) {
                         if (value instanceof Float) value = ((Float) value).intValue();
@@ -270,15 +270,15 @@ public class ResInjectTool {
             try {
                 int index = (int) getArg(0);
                 index *= STYLE_NUM_ENTRIES;
-                int[] data = (int[]) getThisField("mData");
+                int[] data = (int[]) CoreTool.getField(getThisObject(), "mData");
 
                 int type = data[index + STYLE_TYPE];
                 int id = data[index + STYLE_RESOURCE_ID];
                 if (type != TypedValue.TYPE_NULL /* 不为空数据 */ && id != 0 /* 储存的是资源 */) {
-                    String methodName = getMethod().getName();
-                    Resources resources = (Resources) getThisField("mResources");
-                    Resources.Theme theme = (Resources.Theme) getThisField("mTheme");
-                    Object value = getTypedArrayReplacement(resources, theme, id, methodName, getArgs());
+                    String methodName = getExecutable().getName();
+                    Resources resources = (Resources) CoreTool.getField(getThisObject(), "mResources");
+                    Resources.Theme theme = (Resources.Theme) CoreTool.getField(getThisObject(), "mTheme");
+                    Object value = getTypedArrayReplacement(resources, theme, id, methodName, getArgs().toArray(new Object[0]));
                     if (value != null) {
                         if (
                             "getDimensionPixelOffset".equals(methodName) ||
@@ -332,7 +332,7 @@ public class ResInjectTool {
                     try {
                         waitSet.add(resId);
                         params[0] = resId;
-                        return CoreTool.callMethod(res, method, params);
+                        return CoreTool.callMethod(method, res, params);
                     } finally {
                         waitSet.remove(resId);
                     }

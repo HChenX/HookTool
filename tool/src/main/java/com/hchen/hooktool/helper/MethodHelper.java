@@ -205,7 +205,7 @@ public class MethodHelper {
     /**
      * 获取查找到的对象，如果查找结果为空或不为单个则抛错
      */
-    public HookHelper<Method> single() {
+    public Method single() {
         List<Method> methods = matches();
         if (methods.isEmpty())
             throw new NonSingletonException("[MethodHelper]: No result found for query!!");
@@ -213,30 +213,30 @@ public class MethodHelper {
         if (methods.size() > 1)
             throw new NonSingletonException("[MethodHelper]: Query did not return a unique result: " + methods.size());
 
-        return new HookHelper<>(methods.get(0));
+        return methods.get(0);
     }
 
     /**
      * 获取查找到的对象，如果查找结果为空或不为单个则返回 null
      */
     @Nullable
-    public HookHelper<Method> singleOrNull() {
+    public Method singleOrNull() {
         List<Method> methods = matches();
         if (methods.isEmpty()) return null;
         if (methods.size() > 1) return null;
 
-        return new HookHelper<>(methods.get(0));
+        return methods.get(0);
     }
 
     /**
      * 获取查找到的对象，如果查找结果为空或不为单个则抛错
      */
-    public HookHelper<Method> singleOrThrow(@NonNull Supplier<NonSingletonException> throwableSupplier) {
+    public Method singleOrThrow(@NonNull Supplier<NonSingletonException> throwableSupplier) {
         List<Method> methods = matches();
         if (methods.isEmpty()) throw throwableSupplier.get();
         if (methods.size() > 1) throw throwableSupplier.get();
 
-        return new HookHelper<>(methods.get(0));
+        return methods.get(0);
     }
 
     /**
