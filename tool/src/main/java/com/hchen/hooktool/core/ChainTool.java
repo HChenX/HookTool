@@ -25,11 +25,12 @@ import androidx.annotation.NonNull;
 
 import com.hchen.hooktool.data.ChainData;
 import com.hchen.hooktool.data.ChainType;
-import com.hchen.hooktool.hook.IHook;
+import com.hchen.hooktool.hook.AbsHook;
 import com.hchen.hooktool.log.LogExpand;
 import com.hchen.hooktool.log.XposedLog;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
 import java.util.HashSet;
 import java.util.Objects;
@@ -61,93 +62,60 @@ public class ChainTool {
     private final HashSet<ChainData> chainDataSet = new HashSet<>();
 
     private ChainTool(@NonNull Class<?> clazz) {
-        Objects.requireNonNull(clazz, "[ChainTool]: Class must not be null!!");
-        chainHook = new ChainHook();
+        Objects.requireNonNull(clazz, "class must not be null.");
         this.clazz = clazz;
+        chainHook = new ChainHook();
     }
 
-    /**
-     * 构建链式
-     */
     public static ChainTool buildChain(@NonNull String classPath) {
         return new ChainTool(findClass(classPath));
     }
 
-    /**
-     * 构建链式
-     */
     public static ChainTool buildChain(@NonNull String classPath, ClassLoader classLoader) {
         return new ChainTool(findClass(classPath, classLoader));
     }
 
-    /**
-     * 构建链式
-     */
     public static ChainTool buildChain(@NonNull Class<?> clazz) {
         return new ChainTool(clazz);
     }
 
-    /**
-     * 查找方法
-     */
     public ChainHook findMethod(@NonNull String methodName, @NonNull Object... params) {
         chainData = new ChainData(methodName, params);
         return chainHook;
     }
 
-    /**
-     * 查找方法，如果存在
-     */
     public ChainHook findMethodIfExist(@NonNull String methodName, @NonNull Object... params) {
         chainData = new ChainData(methodName, params);
         chainData.setIfExist(true);
         return chainHook;
     }
 
-    /**
-     * 查找全部指定名称的方法
-     */
     public ChainHook findAllMethod(@NonNull String methodName) {
         chainData = new ChainData(methodName);
         return chainHook;
     }
 
-    /**
-     * 传入指定方法
-     */
     public ChainHook withMethod(@NonNull Method method) {
         chainData = new ChainData(method);
         return chainHook;
     }
 
-    /**
-     * 查找构造函数
-     */
     public ChainHook findConstructor(@NonNull Object... params) {
         chainData = new ChainData(params);
         return chainHook;
     }
 
-    /**
-     * 查找构造方法，如果存在
-     */
     public ChainHook findConstructorIfExist(@NonNull Object... params) {
         chainData = new ChainData(params);
         chainData.setIfExist(true);
         return chainHook;
     }
 
-    /**
-     * 查找全部构造函数
-     */
     public ChainHook findAllConstructor() {
         chainData = new ChainData();
         return chainHook;
     }
 
-    /**
-     * 传入指定构造函数
-     */
     public ChainHook withConstructor(@NonNull Constructor<?> constructor) {
         chainData = new ChainData(constructor);
         return chainHook;
@@ -161,7 +129,9 @@ public class ChainTool {
             runFind();
             if (shouldHook()) {
                 chainDataSet.add(tempChainData);
-                CoreTool.hookAll(chainData.members, chainData.iHook);
+                for (Executable executable : chainData.executables) {
+                    CoreTool.hook(executable).intercept(chainData.absHook);
+                }
             }
         } else {
             XposedLog.logW(LogExpand.getTag(), "Duplicate content will be skipped: " + chainData);
@@ -172,40 +142,40 @@ public class ChainTool {
     private void runFind() {
         switch (chainData.chainType) {
             case METHOD -> {
-                chainData.members[0] = chainData.method;
+                chainData.executables[0] = chainData.method;
             }
             case ChainType.FIND_METHOD -> {
                 if (chainData.ifExist) {
-                    chainData.members[0] = CoreTool.findMethodIfExists(clazz, chainData.methodName, chainData.methodParams);
+                    chainData.executables[0] = CoreTool.findMethodIfExists(clazz, chainData.methodName, chainData.methodParams);
                 } else {
-                    chainData.members[0] = CoreTool.findMethod(clazz, chainData.methodName, chainData.methodParams);
+                    chainData.executables[0] = CoreTool.findMethod(clazz, chainData.methodName, chainData.methodParams);
                 }
             }
             case FIND_ALL_METHOD -> {
-                chainData.members = CoreTool.findAllMethod(clazz, chainData.methodName);
+                chainData.executables = CoreTool.findAllMethod(clazz, chainData.methodName);
             }
             case CONSTRUCTOR -> {
-                chainData.members[0] = chainData.constructor;
+                chainData.executables[0] = chainData.constructor;
             }
             case FIND_CONSTRUCTOR -> {
                 if (chainData.ifExist) {
-                    chainData.members[0] = CoreTool.findConstructorIfExists(clazz, chainData.constructorParams);
+                    chainData.executables[0] = CoreTool.findConstructorIfExists(clazz, chainData.constructorParams);
                 } else {
-                    chainData.members[0] = CoreTool.findConstructor(clazz, chainData.constructorParams);
+                    chainData.executables[0] = CoreTool.findConstructor(clazz, chainData.constructorParams);
                 }
             }
             case FIND_ALL_CONSTRUCTOR -> {
-                chainData.members = CoreTool.findAllConstructor(clazz);
+                chainData.executables = CoreTool.findAllConstructor(clazz);
             }
         }
     }
 
     private boolean shouldHook() {
-        if (chainData.members.length == 0) {
+        if (chainData.executables.length == 0) {
             logW(LogExpand.getTag(), "Hook method list cannot be empty! chainData: " + chainData);
             return false;
         }
-        if (chainData.members[0] == null) {
+        if (chainData.executables[0] == null) {
             if (!chainData.ifExist)
                 logW(LogExpand.getTag(), "There is an abnormal null object in the member list, skip hook: " + chainData);
             return false;
@@ -220,8 +190,8 @@ public class ChainTool {
         /**
          * Hook
          */
-        public ChainTool hook(@NonNull IHook iHook) {
-            chainData.iHook = iHook;
+        public ChainTool hook(@NonNull AbsHook absHook) {
+            chainData.absHook = absHook;
             runChain();
             return ChainTool.this;
         }

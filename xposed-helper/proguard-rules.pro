@@ -14,16 +14,8 @@
 
 # Uncomment this to preserve the line number information for
 # debugging stack traces.
--keepattributes SourceFile,LineNumberTable
+#-keepattributes SourceFile,LineNumberTable
 
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
-
--keep class * extends com.hchen.hooktool.ModuleEntrance
--keep class * extends com.hchen.hooktool.AbsModule
--keep class com.hchen.hooktool.ModuleState {
-    public static boolean isXposedEnabled();
-    public static java.lang.String getFramework();
-    public static int getVersion();
-}

@@ -56,8 +56,8 @@ public void init() {
 public class HookInit extends HCEntrance /* 建议继承 HCEntrance 类作为入口 */ {
     @NonNull
     @Override
-    public HCInit.BasicData initHC(@NonNull HCInit.BasicData basicData) {
-        return basicData
+    public HCInit.BasicData initHC(@NonNull HCInit.BasicData moduleConfig) {
+        return moduleConfig
             .setModulePackageName("com.hchen.demo") // 模块包名
             .setTag("HChenDemo") // 日志 tag
             .setLogLevel(LOG_D) // 日志等级
@@ -183,10 +183,10 @@ public class HookDemo extends HCBase /* 建议继承 HCBase 使用 */ {
 - 混淆配置:
 
 ```text
--keep class * extends com.hchen.hooktool.HCEntrance
+-keep class * extends com.hchen.hooktool.ModuleEntrance
 
 // 如果你不需要使用日志增强功能，也可以只加入 (对于继承 HCBase 使用的情况):
--keep class * extends com.hchen.hooktool.HCBase
+-keep class * extends com.hchen.hooktool.AbsModule
  
 // 如果需要使用日志增强功能，那么建议加入混淆规则:
 // 假设存放 hook 类的目录为 com.hchen.demo.hook
@@ -195,7 +195,7 @@ public class HookDemo extends HCBase /* 建议继承 HCBase 使用 */ {
 -keep class com.hchen.demo.hook.**$*
 
 // 其他建议配置:
--keep class com.hchen.hooktool.HCState {
+-keep class com.hchen.hooktool.ModuleState {
        private final static boolean isXposedEnabled;
        private final static java.lang.String framework;
        private final static int version;

@@ -20,10 +20,10 @@ package com.hchen.hooktool.data;
 
 import androidx.annotation.NonNull;
 
-import com.hchen.hooktool.hook.IHook;
+import com.hchen.hooktool.hook.AbsHook;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Member;
+import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Objects;
@@ -37,9 +37,9 @@ public class ChainData {
     // -------------------------- Data ------------------------------
 
     public ChainType chainType;
-    public IHook iHook;
+    public AbsHook absHook;
     public boolean ifExist;
-    public Member[] members = new Member[1];
+    public Executable[] executables = new Executable[1];
 
     // -------------------------- Method ------------------------------
 
@@ -93,9 +93,9 @@ public class ChainData {
     public String toString() {
         return "ChainData{" +
             "chainType=" + chainType +
-            ", iHook=" + iHook +
+            ", iHook=" + absHook +
             ", ifExist=" + ifExist +
-            ", members=" + Arrays.toString(members) +
+            ", members=" + Arrays.toString(executables) +
             ", methodName='" + methodName + '\'' +
             ", methodParams=" + Arrays.toString(methodParams) +
             ", method=" + method +

@@ -32,16 +32,17 @@ import androidx.annotation.NonNull;
 import org.json.JSONObject;
 
 import java.util.HashMap;
+import java.util.Objects;
 
 import kotlin.text.Charsets;
 
 /**
- * 工具状态
+ * 模块状态
  * <p>
  * 记得配置混淆，否则不可用:
  * <p>
  * <pre>{@code
- * -keep class com.hchen.hooktool.HCState {
+ * -keep class com.hchen.hooktool.ModuleState {
  *    public static boolean isXposedEnabled();
  *    public static java.lang.String getFramework();
  *    public static int getVersion();
@@ -50,31 +51,16 @@ import kotlin.text.Charsets;
  *
  * @author 焕晨HChen
  */
-public class HCState {
-    private HCState() {
+public class ModuleState {
+    private ModuleState() {
     }
 
-    /**
-     * 模块是否被激活
-     */
-    public static boolean isXposedEnabled() {
-        return false;
-    }
-
-    /**
-     * 获取框架类型
-     */
+    public static boolean isXposedActivated = false;
     @NonNull
-    public static String getFramework() {
-        return "Unknown";
-    }
-
-    /**
-     * 获取框架版本
-     */
-    public static int getVersion() {
-        return -1;
-    }
+    public static String frameworkName = "unknown";
+    @NonNull
+    public static String frameworkVersion = "";
+    public static int frameworkVersionCode = -1;
 
     /**
      * 是否是太极环境
@@ -121,7 +107,7 @@ public class HCState {
     public static HashMap<String, String> isLSPatchActive(@NonNull Context context, @NonNull String packageName) {
         try {
             PackageInfo info = context.getPackageManager().getPackageInfo(packageName, PackageManager.GET_META_DATA);
-            String config = info.applicationInfo.metaData.getString("lspatch");
+            String config = Objects.requireNonNull(info.applicationInfo).metaData.getString("lspatch");
             if (config == null) return new HashMap<>();
 
             String json = new String(Base64.decode(config, Base64.DEFAULT), Charsets.UTF_8);

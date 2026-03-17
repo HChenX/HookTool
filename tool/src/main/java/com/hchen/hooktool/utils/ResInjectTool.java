@@ -31,10 +31,9 @@ import android.util.TypedValue;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.hchen.hooktool.HCData;
-import com.hchen.hooktool.core.CoreTool;
+import com.hchen.hooktool.ModuleConfig;
 import com.hchen.hooktool.exception.InjectResourcesException;
-import com.hchen.hooktool.hook.IHook;
+import com.hchen.hooktool.hook.AbsHook;
 import com.hchen.hooktool.log.XposedLog;
 
 import java.io.File;
@@ -87,13 +86,13 @@ public class ResInjectTool {
      */
     public static void injectModuleRes() {
         if (isInjected) return;
-        if (HCData.getModulePath() == null)
+        if (ModuleConfig.getModulePath() == null)
             throw new NullPointerException("[ResInjectTool]: Module path must not be null!!");
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             if (resourcesLoader == null) {
-                assert HCData.getModulePath() != null;
-                try (ParcelFileDescriptor pfd = ParcelFileDescriptor.open(new File(HCData.getModulePath()), ParcelFileDescriptor.MODE_READ_ONLY)) {
+                assert ModuleConfig.getModulePath() != null;
+                try (ParcelFileDescriptor pfd = ParcelFileDescriptor.open(new File(ModuleConfig.getModulePath()), ParcelFileDescriptor.MODE_READ_ONLY)) {
                     ResourcesProvider provider = ResourcesProvider.loadFromApk(pfd);
                     ResourcesLoader loader = new ResourcesLoader();
                     loader.addProvider(provider);
@@ -107,7 +106,7 @@ public class ResInjectTool {
                 String.class /* resDir */, String[].class /* splitResDirs */, String[].class /* overlayPaths */,
                 String[].class,/* libDirs */ int.class /* overrideDisplayId */, Configuration.class /* overrideConfig */,
                 "android.content.res.CompatibilityInfo" /* compatInfo */, ResourcesLoader[].class /* loader */,
-                new IHook() {
+                new AbsHook() {
                     @Override
                     public void before() {
                         ResourcesLoader[] loader = (ResourcesLoader[]) getArg(7);
@@ -128,18 +127,18 @@ public class ResInjectTool {
                 String.class /* resDir */, String[].class /* splitResDirs */, String[].class /* overlayDirs */,
                 String[].class,/* libDirs */ int.class /* displayId */, Configuration.class /* overrideConfig */,
                 "android.content.res.CompatibilityInfo" /* compatInfo */,
-                new IHook() {
+                new AbsHook() {
                     @Override
                     public void before() {
                         String[] splitResDirs = (String[]) getArg(1);
                         if (splitResDirs != null) {
-                            if (Arrays.stream(splitResDirs).noneMatch(s -> Objects.equals(s, HCData.getModulePath()))) {
+                            if (Arrays.stream(splitResDirs).noneMatch(s -> Objects.equals(s, ModuleConfig.getModulePath()))) {
                                 List<String> loaders = new ArrayList<>(Arrays.asList(splitResDirs));
-                                loaders.add(HCData.getModulePath());
+                                loaders.add(ModuleConfig.getModulePath());
                                 setArg(1, loaders.toArray(new String[0]));
                             }
                         } else {
-                            setArg(1, new String[]{HCData.getModulePath()});
+                            setArg(1, new String[]{ModuleConfig.getModulePath()});
                         }
                     }
                 }
@@ -244,7 +243,7 @@ public class ResInjectTool {
         isHooked = true;
     }
 
-    private static final IHook hookResBefore = new IHook() {
+    private static final AbsHook hookResBefore = new AbsHook() {
         @Override
         public void before() {
             try {
@@ -265,7 +264,7 @@ public class ResInjectTool {
         }
     };
 
-    private static final IHook hookTypedBefore = new IHook() {
+    private static final AbsHook hookTypedBefore = new AbsHook() {
         @Override
         public void before() {
             try {

@@ -1,1645 +1,728 @@
-/*
- * This file is part of HookTool.
- *
- * HookTool is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation; either version 2.1 of the License, or
- * (at your option) any later version.
- *
- * HookTool is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with HookTool. If not, see <https://www.gnu.org/licenses/lgpl-2.1>.
- *
- * Copyright (C) 2024–2026 HChenX
- */
-package com.hchen.hooktool.core;
-
-import static com.hchen.hooktool.helper.TryHelper.doTry;
-import static com.hchen.hooktool.log.LogExpand.getTag;
-
-import android.content.Context;
-import android.content.res.Resources;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
-import com.hchen.hooktool.HCData;
-import com.hchen.hooktool.callback.IAsyncPrefs;
-import com.hchen.hooktool.callback.IMemberFilter;
-import com.hchen.hooktool.callback.IPrefsApply;
-import com.hchen.hooktool.exception.HookException;
-import com.hchen.hooktool.exception.MissingParameterException;
-import com.hchen.hooktool.exception.UnexpectedException;
-import com.hchen.hooktool.helper.ClassHelper;
-import com.hchen.hooktool.helper.ConstructorHelper;
-import com.hchen.hooktool.helper.FieldHelper;
-import com.hchen.hooktool.helper.MethodHelper;
-import com.hchen.hooktool.hook.HookFactory;
-import com.hchen.hooktool.hook.IHook;
-import com.hchen.hooktool.log.AndroidLog;
-import com.hchen.hooktool.log.LogExpand;
-import com.hchen.hooktool.log.XposedLog;
-import com.hchen.hooktool.utils.InvokeTool;
-import com.hchen.hooktool.utils.PrefsTool;
-import com.hchen.hooktool.utils.ResInjectTool;
-
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Member;
-import java.lang.reflect.Method;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.function.Function;
-
-import de.robv.android.xposed.XC_MethodHook;
-import de.robv.android.xposed.XposedBridge;
-import de.robv.android.xposed.XposedHelpers;
-
-/**
- * 核心工具
- *
- * @author 焕晨HChen
- */
-public class CoreTool extends XposedLog {
-    // -------------------------- Class ------------------------------
-
-    /**
-     * 是否存在指定类
-     */
-    public static boolean existsClass(@NonNull String classPath) {
-        return existsClass(classPath, HCData.getClassLoader());
-    }
-
-    /**
-     * 是否存在指定类
-     */
-    public static boolean existsClass(@NonNull String classPath, ClassLoader classLoader) {
-        return doTry(
-            () -> Objects.nonNull(XposedHelpers.findClassIfExists(classPath, classLoader))
-        ).orElse(false);
-    }
-
-    /**
-     * 查找获取指定类
-     */
-    public static Class<?> findClass(@NonNull String classPath) {
-        return findClass(classPath, HCData.getClassLoader());
-    }
-
-    /**
-     * 查找获取指定类
-     */
-    public static Class<?> findClass(@NonNull String classPath, ClassLoader classLoader) {
-        return XposedHelpers.findClass(classPath, classLoader);
-    }
-
-    /**
-     * 使用 Pro 工具查找类
-     */
-    public static ClassHelper findClassPro() {
-        return findClassPro(HCData.getClassLoader());
-    }
-
-    /**
-     * 使用 Pro 工具查找类
-     */
-    public static ClassHelper findClassPro(ClassLoader classLoader) {
-        return new ClassHelper(classLoader);
-    }
-
-    /**
-     * 查找获取指定类，不存在返回 null，不会抛错
-     */
-    @Nullable
-    public static Class<?> findClassIfExists(@NonNull String classPath) {
-        return findClassIfExists(classPath, HCData.getClassLoader());
-    }
-
-    /**
-     * 查找获取指定类，不存在返回 null，不会抛错
-     */
-    @Nullable
-    public static Class<?> findClassIfExists(@NonNull String classPath, ClassLoader classLoader) {
-        return doTry(
-            () -> XposedHelpers.findClassIfExists(classPath, classLoader)
-        ).get();
-    }
-
-    // -------------------------- Method ------------------------------
-
-    /**
-     * 查找是否存在指定方法
-     */
-    public static boolean existsMethod(@NonNull String classPath, @NonNull String methodName, @NonNull Object... params) {
-        return existsMethod(classPath, HCData.getClassLoader(), methodName, params);
-    }
-
-    /**
-     * 查找是否存在指定方法
-     */
-    public static boolean existsMethod(@NonNull String classPath, ClassLoader classLoader, @NonNull String methodName, @NonNull Object... params) {
-        return doTry(
-            () -> Objects.nonNull(XposedHelpers.findMethodExactIfExists(classPath, classLoader, methodName, params))
-        ).orElse(false);
-    }
-
-    /**
-     * 查找是否存在指定方法
-     */
-    public static boolean existsMethod(@NonNull Class<?> clazz, @NonNull String methodName, @NonNull Object... params) {
-        return doTry(
-            () -> Objects.nonNull(XposedHelpers.findMethodExactIfExists(clazz, methodName, params))
-        ).orElse(false);
-    }
-
-    /**
-     * 查找是否存任意指定方法名的方法
-     */
-    public static boolean existsAnyMethod(@NonNull String classPath, @NonNull String methodName) {
-        return existsAnyMethod(classPath, HCData.getClassLoader(), methodName);
-    }
-
-    /**
-     * 查找是否存任意指定方法名的方法
-     */
-    public static boolean existsAnyMethod(@NonNull String classPath, ClassLoader classLoader, @NonNull String methodName) {
-        return doTry(() ->
-            existsAnyMethod(findClass(classPath, classLoader), methodName)
-        ).orElse(false);
-    }
-
-    /**
-     * 查找是否存任意指定方法名的方法
-     */
-    public static boolean existsAnyMethod(@NonNull Class<?> clazz, @NonNull String methodName) {
-        return doTry(() ->
-            Arrays.stream(clazz.getDeclaredMethods())
-                .anyMatch(method -> Objects.equals(method.getName(), methodName))
-        ).orElse(false);
-    }
-
-    /**
-     * 查找指定的方法
-     */
-    public static Method findMethod(@NonNull String classPath, @NonNull String methodName, @NonNull Object... params) {
-        return findMethod(classPath, HCData.getClassLoader(), methodName, params);
-    }
-
-    /**
-     * 查找指定的方法
-     */
-    public static Method findMethod(@NonNull String classPath, ClassLoader classLoader, @NonNull String methodName, @NonNull Object... params) {
-        return XposedHelpers.findMethodExact(classPath, classLoader, methodName, params);
-    }
-
-    /**
-     * 查找指定的方法
-     */
-    public static Method findMethod(@NonNull Class<?> clazz, @NonNull String methodName, @NonNull Object... params) {
-        return XposedHelpers.findMethodExact(clazz, methodName, params);
-    }
-
-    /**
-     * 使用 Pro 工具查找指定的方法
-     */
-    public static MethodHelper findMethodPro(@NonNull String classPath) {
-        return findMethodPro(classPath, HCData.getClassLoader());
-    }
-
-    /**
-     * 使用 Pro 工具查找指定的方法
-     */
-    public static MethodHelper findMethodPro(@NonNull String classPath, ClassLoader classLoader) {
-        return findMethodPro(findClass(classPath, classLoader));
-    }
-
-    /**
-     * 使用 Pro 工具查找指定的方法
-     */
-    public static MethodHelper findMethodPro(@NonNull Class<?> clazz) {
-        return new MethodHelper(clazz);
-    }
-
-    /**
-     * 查找指定的方法，不存在则返回 null，不会抛错
-     */
-    @Nullable
-    public static Method findMethodIfExists(@NonNull String classPath, @NonNull String methodName, @NonNull Object... params) {
-        return findMethodIfExists(classPath, HCData.getClassLoader(), methodName, params);
-    }
-
-    /**
-     * 查找指定的方法，不存在则返回 null，不会抛错
-     */
-    @Nullable
-    public static Method findMethodIfExists(@NonNull String classPath, ClassLoader classLoader, @NonNull String methodName, @NonNull Object... params) {
-        return doTry(
-            () -> XposedHelpers.findMethodExactIfExists(classPath, classLoader, methodName, params)
-        ).get();
-    }
-
-    /**
-     * 查找指定的方法，不存在则返回 null，不会抛错
-     */
-    @Nullable
-    public static Method findMethodIfExists(@NonNull Class<?> clazz, @NonNull String methodName, @NonNull Object... params) {
-        return doTry(
-            () -> XposedHelpers.findMethodExactIfExists(clazz, methodName, params)
-        ).get();
-    }
-
-    /**
-     * 查找全部指定名称的方法
-     */
-    public static Method[] findAllMethod(@NonNull String classPath, @NonNull String methodName) {
-        return findAllMethod(classPath, HCData.getClassLoader(), methodName);
-    }
-
-    /**
-     * 查找全部指定名称的方法
-     */
-    public static Method[] findAllMethod(@NonNull String classPath, ClassLoader classLoader, @NonNull String methodName) {
-        return findAllMethod(findClass(classPath, classLoader), methodName);
-    }
-
-    /**
-     * 查找全部指定名称的方法
-     */
-    public static Method[] findAllMethod(@NonNull Class<?> clazz, @NonNull String methodName) {
-        return Arrays.stream(clazz.getDeclaredMethods())
-            .filter(method -> Objects.equals(method.getName(), methodName))
-            .toArray(Method[]::new);
-    }
-
-    /**
-     * 查找全部方法
-     */
-    public static Method[] findAllMethod(@NonNull String classPath) {
-        return findAllMethod(classPath, HCData.getClassLoader());
-    }
-
-    /**
-     * 查找全部方法
-     */
-    public static Method[] findAllMethod(@NonNull String classPath, ClassLoader classLoader) {
-        return findAllMethod(findClass(classPath, classLoader));
-    }
-
-    /**
-     * 查找全部方法
-     */
-    public static Method[] findAllMethod(@NonNull Class<?> clazz) {
-        return clazz.getDeclaredMethods();
-    }
-
-    // -------------------------- Constructor ------------------------------
-
-    /**
-     * 是否存在指定的构造函数
-     */
-    public static boolean existsConstructor(@NonNull String classPath, @NonNull Object... params) {
-        return existsConstructor(classPath, HCData.getClassLoader(), params);
-    }
-
-    /**
-     * 是否存在指定的构造函数
-     */
-    public static boolean existsConstructor(@NonNull String classPath, ClassLoader classLoader, @NonNull Object... params) {
-        return doTry(
-            () -> Objects.nonNull(XposedHelpers.findConstructorExactIfExists(classPath, classLoader, params))
-        ).orElse(false);
-    }
-
-    /**
-     * 是否存在指定的构造函数
-     */
-    public static boolean existsConstructor(@NonNull Class<?> clazz, @NonNull Object... params) {
-        return doTry(
-            () -> Objects.nonNull(XposedHelpers.findConstructorExactIfExists(clazz, params))
-        ).orElse(false);
-    }
-
-    /**
-     * 查找指定类的构造函数
-     */
-    public static Constructor<?> findConstructor(@NonNull String classPath, @NonNull Object... params) {
-        return findConstructor(classPath, HCData.getClassLoader(), params);
-    }
-
-    /**
-     * 查找指定类的构造函数
-     */
-    public static Constructor<?> findConstructor(@NonNull String classPath, ClassLoader classLoader, @NonNull Object... params) {
-        return XposedHelpers.findConstructorExact(classPath, classLoader, params);
-    }
-
-    /**
-     * 查找指定类的构造函数
-     */
-    public static Constructor<?> findConstructor(@NonNull Class<?> clazz, @NonNull Object... params) {
-        return XposedHelpers.findConstructorExact(clazz, params);
-    }
-
-    /**
-     * 使用 Pro 工具查找指定的构造函数
-     */
-    public static ConstructorHelper findConstructorPro(@NonNull String classPath) {
-        return findConstructorPro(classPath, HCData.getClassLoader());
-    }
-
-
-    /**
-     * 使用 Pro 工具查找指定的构造函数
-     */
-    public static ConstructorHelper findConstructorPro(@NonNull String classPath, ClassLoader classLoader) {
-        return findConstructorPro(findClass(classPath, classLoader));
-    }
-
-    /**
-     * 使用 Pro 工具查找指定的构造函数
-     */
-    public static ConstructorHelper findConstructorPro(@NonNull Class<?> clazz) {
-        return new ConstructorHelper(clazz);
-    }
-
-    /**
-     * 查找指定类的构造函数，不存在则返回 null，不会抛错
-     */
-    @Nullable
-    public static Constructor<?> findConstructorIfExists(@NonNull String classPath, @NonNull Object... params) {
-        return findConstructorIfExists(classPath, HCData.getClassLoader(), params);
-    }
-
-    /**
-     * 查找指定类的构造函数，不存在则返回 null，不会抛错
-     */
-    @Nullable
-    public static Constructor<?> findConstructorIfExists(@NonNull String classPath, ClassLoader classLoader, @NonNull Object... params) {
-        return doTry(
-            () -> XposedHelpers.findConstructorExactIfExists(classPath, classLoader, params)
-        ).get();
-    }
-
-    /**
-     * 查找指定类的构造函数，不存在则返回 null，不会抛错
-     */
-    @Nullable
-    public static Constructor<?> findConstructorIfExists(@NonNull Class<?> clazz, @NonNull Object... params) {
-        return doTry(
-            () -> XposedHelpers.findConstructorExactIfExists(clazz, params)
-        ).get();
-    }
-
-    /**
-     * 查找指定类的所有构造函数
-     */
-    public static Constructor<?>[] findAllConstructor(@NonNull String classPath) {
-        return findAllConstructor(classPath, HCData.getClassLoader());
-    }
-
-    /**
-     * 查找指定类的所有构造函数
-     */
-    public static Constructor<?>[] findAllConstructor(@NonNull String classPath, ClassLoader classLoader) {
-        return findAllConstructor(findClass(classPath, classLoader));
-    }
-
-    /**
-     * 查找指定类的所有构造函数
-     */
-    public static Constructor<?>[] findAllConstructor(@NonNull Class<?> clazz) {
-        return clazz.getDeclaredConstructors();
-    }
-
-    // -------------------------- Field ------------------------------
-
-    /**
-     * 检查指定类的字段是否存在
-     */
-    public static boolean existsField(@NonNull String classPath, @NonNull String fieldName) {
-        return existsField(classPath, HCData.getClassLoader(), fieldName);
-    }
-
-    /**
-     * 检查指定类的字段是否存在
-     */
-    public static boolean existsField(@NonNull String classPath, ClassLoader classLoader, @NonNull String fieldName) {
-        return doTry(
-            () -> existsField(findClass(classPath, classLoader), fieldName)
-        ).orElse(false);
-    }
-
-    /**
-     * 检查指定类的字段是否存在
-     */
-    public static boolean existsField(@NonNull Class<?> clazz, @NonNull String fieldName) {
-        return doTry(
-            () -> Objects.nonNull(XposedHelpers.findFieldIfExists(clazz, fieldName))
-        ).orElse(false);
-    }
-
-    /**
-     * 查找指定类的字段
-     */
-    public static Field findField(@NonNull String classPath, @NonNull String fieldName) {
-        return findField(classPath, HCData.getClassLoader(), fieldName);
-    }
-
-    /**
-     * 查找指定类的字段
-     */
-    public static Field findField(@NonNull String classPath, ClassLoader classLoader, @NonNull String fieldName) {
-        return findField(findClass(classPath, classLoader), fieldName);
-    }
-
-    /**
-     * 查找指定类的字段
-     */
-    public static Field findField(@NonNull Class<?> clazz, @NonNull String fieldName) {
-        return XposedHelpers.findField(clazz, fieldName);
-    }
-
-    /**
-     * 使用 Pro 工具查找字段
-     */
-    public static FieldHelper findFieldPro(@NonNull String classPath) {
-        return findFieldPro(classPath, HCData.getClassLoader());
-    }
-
-    /**
-     * 使用 Pro 工具查找字段
-     */
-    public static FieldHelper findFieldPro(@NonNull String classPath, ClassLoader classLoader) {
-        return findFieldPro(findClass(classPath, classLoader));
-    }
-
-    /**
-     * 使用 Pro 工具查找字段
-     */
-    public static FieldHelper findFieldPro(@NonNull Class<?> clazz) {
-        return new FieldHelper(clazz);
-    }
-
-    /**
-     * 查找指定类的字段，不存在则返回 null，不会抛错
-     */
-    @Nullable
-    public static Field findFieldIfExists(@NonNull String classPath, @NonNull String fieldName) {
-        return findFieldIfExists(classPath, HCData.getClassLoader(), fieldName);
-    }
-
-    /**
-     * 查找指定类的字段，不存在则返回 null，不会抛错
-     */
-    @Nullable
-    public static Field findFieldIfExists(@NonNull String classPath, ClassLoader classLoader, @NonNull String fieldName) {
-        return doTry(
-            () -> findFieldIfExists(findClass(classPath, classLoader), fieldName)
-        ).get();
-    }
-
-    /**
-     * 查找指定类的字段，不存在则返回 null，不会抛错
-     */
-    @Nullable
-    public static Field findFieldIfExists(@NonNull Class<?> clazz, @NonNull String fieldName) {
-        return doTry(
-            () -> XposedHelpers.findFieldIfExists(clazz, fieldName)
-        ).get();
-    }
-
-    // -------------------------- Hook ------------------------------
-
-    /**
-     * Hook 指定类的方法
-     */
-    public static XC_MethodHook.Unhook hookMethod(@NonNull String classPath, @NonNull String methodName, @NonNull Object... params) {
-        return hookMethod(classPath, HCData.getClassLoader(), methodName, params);
-    }
-
-    /**
-     * Hook 指定类的方法
-     */
-    public static XC_MethodHook.Unhook hookMethod(@NonNull String classPath, ClassLoader classLoader, @NonNull String methodName, @NonNull Object... params) {
-        return hookMethod(findClass(classPath, classLoader), methodName, params);
-    }
-
-    /**
-     * Hook 指定类的方法
-     */
-    public static XC_MethodHook.Unhook hookMethod(@NonNull Class<?> clazz, @NonNull String methodName, @NonNull Object... params) {
-        return hook(findMethod(clazz, methodName, filterParams(params)), filterIHook(params));
-    }
-
-    /**
-     * 如果存在则 Hook 指定类的方法
-     */
-    @Nullable
-    public static XC_MethodHook.Unhook hookMethodIfExists(@NonNull String classPath, @NonNull String methodName, @NonNull Object... params) {
-        return hookMethodIfExists(classPath, HCData.getClassLoader(), methodName, params);
-    }
-
-    /**
-     * 如果存在则 Hook 指定类的方法
-     */
-    @Nullable
-    public static XC_MethodHook.Unhook hookMethodIfExists(@NonNull String classPath, ClassLoader classLoader, @NonNull String methodName, @NonNull Object... params) {
-        return doTry(
-            () -> hookMethodIfExists(findClass(classPath, classLoader), methodName, params)
-        ).get();
-    }
-
-    /**
-     * 如果存在则 Hook 指定类的方法
-     */
-    @Nullable
-    public static XC_MethodHook.Unhook hookMethodIfExists(@NonNull Class<?> clazz, @NonNull String methodName, @NonNull Object... params) {
-        return doTry(
-            () -> hook(findMethod(clazz, methodName, filterParams(params)), filterIHook(params))
-        ).get();
-    }
-
-    /**
-     * Hook 指定类的所有指定名称的方法
-     */
-    public static XC_MethodHook.Unhook[] hookAllMethod(@NonNull String classPath, @NonNull String methodName, @NonNull IHook iHook) {
-        return hookAllMethod(classPath, HCData.getClassLoader(), methodName, iHook);
-    }
-
-    /**
-     * Hook 指定类的所有指定名称的方法
-     */
-    public static XC_MethodHook.Unhook[] hookAllMethod(@NonNull String classPath, ClassLoader classLoader, @NonNull String methodName, @NonNull IHook iHook) {
-        return hookAllMethod(findClass(classPath, classLoader), methodName, iHook);
-    }
-
-    /**
-     * Hook 指定类的所有指定名称的方法
-     */
-    public static XC_MethodHook.Unhook[] hookAllMethod(@NonNull Class<?> clazz, @NonNull String methodName, @NonNull IHook iHook) {
-        return hookAll(findAllMethod(clazz, methodName), iHook);
-    }
-
-    /**
-     * Hook 指定类的所有方法
-     */
-    public static XC_MethodHook.Unhook[] hookAllMethod(@NonNull String classPath, @NonNull IHook iHook) {
-        return hookAllMethod(classPath, HCData.getClassLoader(), iHook);
-    }
-
-    /**
-     * Hook 指定类的所有方法
-     */
-    public static XC_MethodHook.Unhook[] hookAllMethod(@NonNull String classPath, ClassLoader classLoader, @NonNull IHook iHook) {
-        return hookAllMethod(findClass(classPath, classLoader), iHook);
-    }
-
-    /**
-     * Hook 指定类的所有方法
-     */
-    public static XC_MethodHook.Unhook[] hookAllMethod(@NonNull Class<?> clazz, @NonNull IHook iHook) {
-        return hookAll(findAllMethod(clazz), iHook);
-    }
-
-    /**
-     * Hook 指定类的构造函数
-     */
-    public static XC_MethodHook.Unhook hookConstructor(@NonNull String classPath, @NonNull Object... params) {
-        return hookConstructor(classPath, HCData.getClassLoader(), params);
-    }
-
-    /**
-     * Hook 指定类的构造函数
-     */
-    public static XC_MethodHook.Unhook hookConstructor(@NonNull String classPath, ClassLoader classLoader, @NonNull Object... params) {
-        return hookConstructor(findClass(classPath, classLoader), params);
-    }
-
-    /**
-     * Hook 指定类的构造函数
-     */
-    public static XC_MethodHook.Unhook hookConstructor(@NonNull Class<?> clazz, @NonNull Object... params) {
-        return hook(findConstructor(clazz, filterParams(params)), filterIHook(params));
-    }
-
-    /**
-     * 如果存在则 Hook 指定类的构造函数
-     */
-    @Nullable
-    public static XC_MethodHook.Unhook hookConstructorIfExists(@NonNull String classPath, @NonNull Object... params) {
-        return hookConstructorIfExists(classPath, HCData.getClassLoader(), params);
-    }
-
-    /**
-     * 如果存在则 Hook 指定类的构造函数
-     */
-    @Nullable
-    public static XC_MethodHook.Unhook hookConstructorIfExists(@NonNull String classPath, ClassLoader classLoader, @NonNull Object... params) {
-        return doTry(
-            () -> hookConstructorIfExists(findClass(classPath, classLoader), params)
-        ).get();
-    }
-
-    /**
-     * 如果存在则 Hook 指定类的构造函数
-     */
-    @Nullable
-    public static XC_MethodHook.Unhook hookConstructorIfExists(@NonNull Class<?> clazz, @NonNull Object... params) {
-        return doTry(
-            () -> hook(findConstructor(clazz, filterParams(params)), filterIHook(params))
-        ).get();
-    }
-
-    /**
-     * Hook 指定类的所有构造函数
-     */
-    public static XC_MethodHook.Unhook[] hookAllConstructor(@NonNull String classPath, @NonNull IHook iHook) {
-        return hookAllConstructor(classPath, HCData.getClassLoader(), iHook);
-    }
-
-    /**
-     * Hook 指定类的所有构造函数
-     */
-    public static XC_MethodHook.Unhook[] hookAllConstructor(@NonNull String classPath, ClassLoader classLoader, @NonNull IHook iHook) {
-        return hookAllConstructor(findClass(classPath, classLoader), iHook);
-    }
-
-    /**
-     * Hook 指定类的所有构造函数
-     */
-    public static XC_MethodHook.Unhook[] hookAllConstructor(@NonNull Class<?> clazz, @NonNull IHook iHook) {
-        return hookAll(findAllConstructor(clazz), iHook);
-    }
-
-    /**
-     * Hook 指定的方法或构造函数
-     */
-    public static XC_MethodHook.Unhook hook(@NonNull Member member, @NonNull IHook iHook) {
-        return hookAll(new Member[]{member}, iHook)[0];
-    }
-
-    /**
-     * Hook 指定的方法或构造函数数组
-     */
-    public static XC_MethodHook.Unhook[] hookAll(@NonNull Member[] members, @NonNull IHook iHook) {
-        String tag = getTag();
-        return Arrays.stream(members).map(new Function<Member, XC_MethodHook.Unhook>() {
-            @Override
-            public XC_MethodHook.Unhook apply(Member member) {
-                try {
-                    XC_MethodHook.Unhook unhook = XposedBridge.hookMethod(member, HookFactory.createHook(tag, iHook));
-                    XposedLog.logD(tag, "Success to hook: " + member);
-                    return unhook;
-                } catch (Throwable e) {
-                    throw new HookException("[CoreTool]: Failed to hook: " + member, e);
+package com.hchen.hooktool.core
+
+import android.content.Context
+import android.content.res.Resources
+import androidx.annotation.IdRes
+import com.hchen.hooktool.ModuleData
+import com.hchen.hooktool.callback.IAsyncPrefs
+import com.hchen.hooktool.callback.IPrefsApply
+import com.hchen.hooktool.hook.AbsHook
+import com.hchen.hooktool.hook.HookBridge
+import com.hchen.hooktool.log.LogExpand
+import com.hchen.hooktool.log.XposedLog
+import com.hchen.hooktool.utils.PrefsTool
+import com.hchen.hooktool.utils.ResInjectTool
+import de.robv.android.xposed.XposedHelpers
+import io.github.libxposed.api.XposedInterface
+import java.lang.reflect.Constructor
+import java.lang.reflect.Executable
+import java.lang.reflect.Field
+import java.lang.reflect.Method
+import java.time.Duration
+import java.time.Instant
+import java.util.Objects
+
+@Suppress("unused")
+open class CoreTool : XposedLog() {
+    private companion object {
+        // -------------------------------- class ---------------------------------
+        @JvmStatic
+        @JvmOverloads
+        fun String.hasClass(
+            classLoader: ClassLoader? = ModuleData.getClassLoader(),
+        ): Boolean {
+            return Objects.nonNull(
+                XposedHelpers.findClassIfExists(this, classLoader)
+            )
+        }
+
+        @JvmStatic
+        @JvmOverloads
+        fun String.findClass(
+            classLoader: ClassLoader? = ModuleData.getClassLoader()
+        ): Class<*> {
+            return XposedHelpers.findClass(this, classLoader)
+        }
+
+        @JvmStatic
+        @JvmOverloads
+        fun String.findClassIfExists(
+            classLoader: ClassLoader? = ModuleData.getClassLoader()
+        ): Class<*>? {
+            return XposedHelpers.findClassIfExists(this, classLoader)
+        }
+
+        // ---------------------------------- method -----------------------------------
+
+        @JvmStatic
+        @JvmOverloads
+        fun String.hasMethod(
+            classLoader: ClassLoader? = ModuleData.getClassLoader(),
+            methodName: String,
+            exactMatch: Boolean = true,
+            vararg params: Any = emptyArray()
+        ): Boolean {
+            return this.findClassIfExists(classLoader)?.hasMethod(methodName, exactMatch, params) ?: false
+        }
+
+        @JvmStatic
+        @JvmOverloads
+        fun Class<*>.hasMethod(
+            methodName: String,
+            exactMatch: Boolean = true,
+            vararg params: Any = emptyArray()
+        ): Boolean {
+            return if (exactMatch) {
+                Objects.nonNull(
+                    XposedHelpers.findMethodExactIfExists(this, methodName, params)
+                )
+            } else {
+                this.declaredMethods.any { method ->
+                    methodName.contentEquals(method.name)
                 }
             }
-        }).toArray(XC_MethodHook.Unhook[]::new);
-    }
+        }
 
-    /**
-     * 取消 Hook 指定的方法或构造函数
-     */
-    public static void unHook(@NonNull Member member, @NonNull XC_MethodHook xcMethodHook) {
-        XposedBridge.unhookMethod(member, xcMethodHook);
-    }
+        @JvmStatic
+        @JvmOverloads
+        fun String.findMethod(
+            classLoader: ClassLoader = ModuleData.getClassLoader(),
+            methodName: String,
+            vararg params: Any
+        ): Method {
+            return XposedHelpers.findMethodExact(this, classLoader, methodName, params)
+        }
 
-    /**
-     * 拦截方法执行并返回指定值
-     */
-    public static IHook returnResult(final Object result) {
-        return new IHook() {
-            @Override
-            public void before() {
-                setResult(result);
+        @JvmStatic
+        fun Class<*>.findMethod(
+            methodName: String,
+            vararg params: Any
+        ): Method {
+            return XposedHelpers.findMethodExact(this, methodName, params)
+        }
+
+        @JvmStatic
+        @JvmOverloads
+        fun String.findMethodIfExists(
+            classLoader: ClassLoader = ModuleData.getClassLoader(),
+            methodName: String,
+            vararg params: Any
+        ): Method? {
+            return XposedHelpers.findMethodExactIfExists(this, classLoader, methodName, params)
+        }
+
+        @JvmStatic
+        fun Class<*>.findMethodIfExists(
+            methodName: String,
+            vararg params: Any
+        ): Method? {
+            return XposedHelpers.findMethodExactIfExists(this, methodName, params)
+        }
+
+        @JvmStatic
+        @JvmOverloads
+        fun String.findAllMethod(
+            classLoader: ClassLoader = ModuleData.getClassLoader(),
+            methodName: String? = null
+        ): Array<Method> {
+            return this.findClass(classLoader).findAllMethod(methodName)
+        }
+
+        @JvmStatic
+        @JvmOverloads
+        fun Class<*>.findAllMethod(
+            methodName: String? = null
+        ): Array<Method> {
+            return this.declaredMethods.filter {
+                methodName?.contentEquals(it.name) ?: true
+            }.toTypedArray()
+        }
+
+        // -------------------------------- constructor ---------------------------------
+        @JvmStatic
+        @JvmOverloads
+        fun String.hasConstructor(
+            classLoader: ClassLoader = ModuleData.getClassLoader(),
+            vararg params: Any
+        ): Boolean {
+            return Objects.nonNull(
+                XposedHelpers.findConstructorExactIfExists(this, classLoader, params)
+            )
+        }
+
+        @JvmStatic
+        fun Class<*>.hasConstructor(
+            vararg params: Any
+        ): Boolean {
+            return Objects.nonNull(
+                XposedHelpers.findConstructorExactIfExists(this, params)
+            )
+        }
+
+        @JvmStatic
+        @JvmOverloads
+        fun String.findConstructor(
+            classLoader: ClassLoader = ModuleData.getClassLoader(),
+            vararg params: Any
+        ): Constructor<*> {
+            return XposedHelpers.findConstructorExact(this, classLoader, params)
+        }
+
+        @JvmStatic
+        fun Class<*>.findConstructor(
+            vararg params: Any
+        ): Constructor<*> {
+            return XposedHelpers.findConstructorExact(this, params)
+        }
+
+        @JvmStatic
+        @JvmOverloads
+        fun String.findConstructorIfExists(
+            classLoader: ClassLoader = ModuleData.getClassLoader(),
+            vararg params: Any
+        ): Constructor<*> {
+            return XposedHelpers.findConstructorExactIfExists(this, classLoader, params)
+        }
+
+        @JvmStatic
+        fun Class<*>.findConstructorIfExists(
+            vararg params: Any
+        ): Constructor<*>? {
+            return XposedHelpers.findConstructorExactIfExists(this, params)
+        }
+
+        @JvmStatic
+        @JvmOverloads
+        fun String.findAllConstructor(
+            classLoader: ClassLoader = ModuleData.getClassLoader()
+        ): Array<Constructor<*>> {
+            return this.findClass(classLoader).findAllConstructor()
+        }
+
+        @JvmStatic
+        fun Class<*>.findAllConstructor(): Array<Constructor<*>> {
+            return this.declaredConstructors
+        }
+
+        // --------------------------------- field ----------------------------------
+
+        @JvmStatic
+        @JvmOverloads
+        fun String.hasField(
+            classLoader: ClassLoader = ModuleData.getClassLoader(),
+            fieldName: String
+        ): Boolean {
+            return Objects.nonNull(
+                this.findClassIfExists(classLoader)?.hasField(fieldName)
+            )
+        }
+
+        @JvmStatic
+        fun Class<*>.hasField(
+            fieldName: String
+        ): Boolean {
+            return Objects.nonNull(
+                XposedHelpers.findFieldIfExists(this, fieldName)
+            )
+        }
+
+        @JvmStatic
+        @JvmOverloads
+        fun String.findField(
+            classLoader: ClassLoader = ModuleData.getClassLoader(),
+            fieldName: String
+        ): Field {
+            return this.findClass(classLoader).findField(fieldName)
+        }
+
+        @JvmStatic
+        fun Class<*>.findField(
+            fieldName: String
+        ): Field {
+            return XposedHelpers.findField(this, fieldName)
+        }
+
+        @JvmStatic
+        @JvmOverloads
+        fun String.findFieldIfExists(
+            classLoader: ClassLoader = ModuleData.getClassLoader(),
+            fieldName: String
+        ): Field? {
+            return this.findClassIfExists(classLoader)?.findFieldIfExists(fieldName)
+        }
+
+        @JvmStatic
+        fun Class<*>.findFieldIfExists(
+            fieldName: String
+        ): Field? {
+            return XposedHelpers.findFieldIfExists(this, fieldName)
+        }
+
+        // -------------------------------- non static ---------------------------------
+        @JvmStatic
+        @JvmOverloads
+        fun Any.callMethod(
+            methodName: String,
+            paramTypes: Array<Class<*>> = emptyArray(),
+            vararg params: Any
+        ): Any? {
+            return if (paramTypes.isEmpty()) {
+                XposedHelpers.callMethod(this, methodName, params)
+            } else {
+                XposedHelpers.callMethod(this, methodName, paramTypes, params)
             }
-        };
-    }
+        }
 
-    /**
-     * 拦截方法执行
-     */
-    public static IHook doNothing() {
-        return new IHook() {
-            @Override
-            public void before() {
-                returnNull();
+        @JvmStatic
+        fun Any.getField(
+            fieldName: String,
+        ): Any? {
+            return XposedHelpers.getObjectField(this, fieldName)
+        }
+
+        @JvmStatic
+        fun Any.getField(
+            field: Field,
+        ): Any? {
+            return field.run {
+                this.isAccessible = true
+                field.get(this@getField)
             }
-        };
-    }
+        }
 
-    /**
-     * 设置方法的指定参数为指定值
-     */
-    public static IHook setArg(int index, Object value) {
-        return new IHook() {
-            @Override
-            public void before() {
-                setArg(index, value);
+        @JvmStatic
+        fun Any.setField(
+            fieldName: String,
+            value: Any?
+        ) {
+            XposedHelpers.setObjectField(this, fieldName, value)
+        }
+
+        @JvmStatic
+        fun Any.setField(
+            field: Field,
+            value: Any?
+        ) {
+            field.isAccessible = true
+            field.set(this, value)
+        }
+
+        @JvmStatic
+        fun Any.setAdditionalInstanceField(
+            key: String,
+            value: Any?
+        ): Any? {
+            return XposedHelpers.setAdditionalInstanceField(this, key, value)
+        }
+
+        @JvmStatic
+        fun Any.getAdditionalInstanceField(
+            key: String
+        ): Any? {
+            return XposedHelpers.getAdditionalInstanceField(this, key)
+        }
+
+        @JvmStatic
+        fun Any.removeAdditionalInstanceField(
+            key: String
+        ): Any? {
+            return XposedHelpers.removeAdditionalInstanceField(this, key)
+        }
+
+        // ------------------------------- static ------------------------------------
+
+        @JvmStatic
+        @JvmOverloads
+        fun String.newInstance(
+            classLoader: ClassLoader = ModuleData.getClassLoader(),
+            paramTypes: Array<Class<*>> = emptyArray(),
+            vararg params: Any
+        ): Any {
+            return this.findClass(classLoader).newInstance(paramTypes, params)
+        }
+
+        @JvmStatic
+        @JvmOverloads
+        fun Class<*>.newInstance(
+            paramTypes: Array<Class<*>> = emptyArray(),
+            vararg params: Any
+        ): Any {
+            return if (paramTypes.isEmpty()) {
+                XposedHelpers.newInstance(this, params)
+            } else {
+                XposedHelpers.newInstance(this, paramTypes, params)
             }
-        };
-    }
-
-    private static Object[] filterParams(@NonNull Object... params) {
-        if (params.length == 0 || !(params[params.length - 1] instanceof IHook))
-            throw new MissingParameterException("[CoreTool]: Missing IHook parameter!!");
-
-        return Arrays.copyOf(params, params.length - 1);
-    }
-
-    private static IHook filterIHook(@NonNull Object... params) {
-        if (params.length == 0 || !(params[params.length - 1] instanceof IHook iHook))
-            throw new MissingParameterException("[CoreTool]: Missing IHook parameter!!");
-
-        return iHook;
-    }
-
-    // -------------------------- Non static ------------------------------
-
-    /**
-     * 调用指定对象的实例方法
-     */
-    public static Object callMethod(@NonNull Object instance, @NonNull String methodName, @NonNull Object... params) {
-        return XposedHelpers.callMethod(instance, methodName, params);
-    }
-
-    /**
-     * 调用指定对象的实例方法，不会抛错
-     */
-    public static Object callMethodIfExists(@NonNull Object instance, @NonNull String methodName, @NonNull Object... params) {
-        return doTry(
-            () -> XposedHelpers.callMethod(instance, methodName, params)
-        ).get();
-    }
-
-    /**
-     * 调用指定对象的实例方法
-     * <p>
-     * 允许指定方法参数，这将在存在多个同名方法的情况下有所帮助，特别是传递 null 参数时
-     */
-    public static Object callMethod(@NonNull Object instance, @NonNull String methodName, @NonNull Object[] paramTypes, @NonNull Object... params) {
-        return XposedHelpers.callMethod(instance, methodName, getParamTypes(instance.getClass().getClassLoader(), paramTypes), params);
-    }
-
-    /**
-     * 调用指定对象的实例方法，不会抛错
-     * <p>
-     * 允许指定方法参数，这将在存在多个同名方法的情况下有所帮助，特别是传递 null 参数时
-     */
-    public static Object callMethodIfExists(@NonNull Object instance, @NonNull String methodName, @NonNull Object[] paramTypes, @NonNull Object... params) {
-        return doTry(
-            () -> XposedHelpers.callMethod(instance, methodName, getParamTypes(instance.getClass().getClassLoader(), paramTypes), params)
-        ).get();
-    }
-
-    /**
-     * 调用指定对象的实例方法
-     */
-    public static Object callMethod(@NonNull Object instance, @NonNull Method method, @NonNull Object... params) {
-        try {
-            method.setAccessible(true);
-            return method.invoke(instance, params);
-        } catch (IllegalAccessException | InvocationTargetException e) {
-            throw new UnexpectedException(e);
         }
-    }
 
-    /**
-     * 获取指定对象的字段值
-     */
-    public static Object getField(@NonNull Object instance, @NonNull String fieldName) {
-        return XposedHelpers.getObjectField(instance, fieldName);
-    }
-
-    /**
-     * 获取指定对象的字段值，不会抛错
-     */
-    public static Object getFieldIfExists(@NonNull Object instance, @NonNull String fieldName) {
-        return doTry(
-            () -> XposedHelpers.getObjectField(instance, fieldName)
-        ).get();
-    }
-
-    /**
-     * 获取指定对象的字段值
-     */
-    public static Object getField(@NonNull Object instance, @NonNull Field field) {
-        try {
-            field.setAccessible(true);
-            return field.get(instance);
-        } catch (IllegalAccessException e) {
-            throw new UnexpectedException(e);
+        @JvmStatic
+        @JvmOverloads
+        fun String.callStaticMethod(
+            classLoader: ClassLoader = ModuleData.getClassLoader(),
+            methodName: String,
+            paramTypes: Array<Class<*>> = emptyArray(),
+            vararg params: Any
+        ): Any? {
+            return this.findClass(classLoader).callStaticMethod(methodName, paramTypes, params)
         }
-    }
 
-    /**
-     * 设置指定对象的字段值
-     */
-    public static void setField(@NonNull Object instance, @NonNull String fieldName, Object value) {
-        XposedHelpers.setObjectField(instance, fieldName, value);
-    }
-
-    /**
-     * 设置指定对象的字段值，不会抛错
-     */
-    public static void setFieldIfExists(@NonNull Object instance, @NonNull String fieldName, Object value) {
-        doTry(() -> {
-            XposedHelpers.setObjectField(instance, fieldName, value);
-            return null;
-        });
-    }
-
-    /**
-     * 设置指定对象的字段值
-     */
-    public static void setField(@NonNull Object instance, @NonNull Field field, Object value) {
-        try {
-            field.setAccessible(true);
-            field.set(instance, value);
-        } catch (IllegalAccessException e) {
-            throw new UnexpectedException(e);
-        }
-    }
-
-    /**
-     * 设置指定对象的附加字段值
-     */
-    public static Object setAdditionalInstanceField(@NonNull Object instance, @NonNull String key, Object value) {
-        return XposedHelpers.setAdditionalInstanceField(instance, key, value);
-    }
-
-    /**
-     * 获取指定对象的附加字段值
-     */
-    public static Object getAdditionalInstanceField(@NonNull Object instance, @NonNull String key) {
-        return XposedHelpers.getAdditionalInstanceField(instance, key);
-    }
-
-
-    /**
-     * 移除指定对象的附加字段
-     */
-    public static Object removeAdditionalInstanceField(@NonNull Object instance, @NonNull String key) {
-        return XposedHelpers.removeAdditionalInstanceField(instance, key);
-    }
-
-    // -------------------------- Static ------------------------------
-
-    /**
-     * 创建指定类的新实例
-     */
-    public static Object newInstance(@NonNull String classPath, @NonNull Object... params) {
-        return newInstance(classPath, HCData.getClassLoader(), params);
-    }
-
-    /**
-     * 创建指定类的新实例
-     */
-    public static Object newInstance(@NonNull String classPath, ClassLoader classLoader, @NonNull Object... params) {
-        return newInstance(findClass(classPath, classLoader), params);
-    }
-
-    /**
-     * 创建指定类的新实例
-     */
-    public static Object newInstance(@NonNull Class<?> clazz, @NonNull Object... params) {
-        return XposedHelpers.newInstance(clazz, params);
-    }
-
-    /**
-     * 创建指定类的新实例，不会抛错
-     */
-    public static Object newInstanceIfExists(@NonNull String classPath, @NonNull Object... params) {
-        return newInstanceIfExists(classPath, HCData.getClassLoader(), params);
-    }
-
-    /**
-     * 创建指定类的新实例，不会抛错
-     */
-    public static Object newInstanceIfExists(@NonNull String classPath, ClassLoader classLoader, @NonNull Object... params) {
-        return doTry(
-            () -> newInstanceIfExists(findClass(classPath, classLoader), params)
-        ).get();
-    }
-
-    /**
-     * 创建指定类的新实例，不会抛错
-     */
-    public static Object newInstanceIfExists(@NonNull Class<?> clazz, @NonNull Object... params) {
-        return doTry(
-            () -> XposedHelpers.newInstance(clazz, params)
-        ).get();
-    }
-
-    /**
-     * 创建指定类的新实例
-     */
-    public static Object newInstance(@NonNull String classPath, @NonNull Object[] paramTypes, @NonNull Object... params) {
-        return newInstance(classPath, HCData.getClassLoader(), paramTypes, params);
-    }
-
-    /**
-     * 创建指定类的新实例
-     */
-    public static Object newInstance(@NonNull String classPath, ClassLoader classLoader, @NonNull Object[] paramTypes, @NonNull Object... params) {
-        return newInstance(findClass(classPath, classLoader), paramTypes, params);
-    }
-
-    /**
-     * 创建指定类的新实例
-     */
-    public static Object newInstance(@NonNull Class<?> clazz, @NonNull Object[] paramTypes, @NonNull Object... params) {
-        return XposedHelpers.newInstance(clazz, getParamTypes(clazz.getClassLoader(), paramTypes), params);
-    }
-
-    /**
-     * 创建指定类的新实例，不会抛错
-     */
-    public static Object newInstanceIfExists(@NonNull String classPath, @NonNull Object[] paramTypes, @NonNull Object... params) {
-        return newInstanceIfExists(classPath, HCData.getClassLoader(), paramTypes, params);
-    }
-
-    /**
-     * 创建指定类的新实例，不会抛错
-     */
-    public static Object newInstanceIfExists(@NonNull String classPath, ClassLoader classLoader, @NonNull Object[] paramTypes, @NonNull Object... params) {
-        return doTry(
-            () -> newInstanceIfExists(findClass(classPath, classLoader), paramTypes, params)
-        ).get();
-    }
-
-    /**
-     * 创建指定类的新实例，不会抛错
-     */
-    public static Object newInstanceIfExists(@NonNull Class<?> clazz, @NonNull Object[] paramTypes, @NonNull Object... params) {
-        return doTry(
-            () -> XposedHelpers.newInstance(clazz, getParamTypes(clazz.getClassLoader(), paramTypes), params)
-        ).get();
-    }
-
-    /**
-     * 调用指定类的静态方法
-     */
-    public static Object callStaticMethod(@NonNull String classPath, @NonNull String methodName, @NonNull Object... params) {
-        return callStaticMethod(classPath, HCData.getClassLoader(), methodName, params);
-    }
-
-    /**
-     * 调用指定类的静态方法
-     */
-    public static Object callStaticMethod(@NonNull String classPath, ClassLoader classLoader, @NonNull String methodName, @NonNull Object... params) {
-        return callStaticMethod(findClass(classPath, classLoader), methodName, params);
-    }
-
-    /**
-     * 调用指定类的静态方法
-     */
-    public static Object callStaticMethod(@NonNull Class<?> clazz, @NonNull String methodName, @NonNull Object... params) {
-        return XposedHelpers.callStaticMethod(clazz, methodName, params);
-    }
-
-    /**
-     * 调用指定类的静态方法，不会抛错
-     */
-    public static Object callStaticMethodIfExists(@NonNull String classPath, @NonNull String methodName, @NonNull Object... params) {
-        return callStaticMethodIfExists(classPath, HCData.getClassLoader(), methodName, params);
-    }
-
-    /**
-     * 调用指定类的静态方法，不会抛错
-     */
-    public static Object callStaticMethodIfExists(@NonNull String classPath, ClassLoader classLoader, @NonNull String methodName, @NonNull Object... params) {
-        return doTry(
-            () -> callStaticMethodIfExists(findClass(classPath, classLoader), methodName, params)
-        ).get();
-    }
-
-    /**
-     * 调用指定类的静态方法，不会抛错
-     */
-    public static Object callStaticMethodIfExists(@NonNull Class<?> clazz, @NonNull String methodName, @NonNull Object... params) {
-        return doTry(
-            () -> XposedHelpers.callStaticMethod(clazz, methodName, params)
-        ).get();
-    }
-
-    /**
-     * 调用指定类的静态方法
-     */
-    public static Object callStaticMethod(@NonNull String classPath, @NonNull String methodName, @NonNull Object[] paramTypes, @NonNull Object... params) {
-        return callStaticMethod(classPath, HCData.getClassLoader(), methodName, paramTypes, params);
-    }
-
-    /**
-     * 调用指定类的静态方法
-     */
-    public static Object callStaticMethod(@NonNull String classPath, ClassLoader classLoader, @NonNull String methodName, @NonNull Object[] paramTypes, @NonNull Object... params) {
-        return callStaticMethod(findClass(classPath, classLoader), methodName, paramTypes, params);
-    }
-
-    /**
-     * 调用指定类的静态方法
-     */
-    public static Object callStaticMethod(@NonNull Class<?> clazz, @NonNull String methodName, @NonNull Object[] paramTypes, @NonNull Object... params) {
-        return XposedHelpers.callStaticMethod(clazz, methodName, getParamTypes(clazz.getClassLoader(), paramTypes), params);
-    }
-
-    /**
-     * 调用指定类的静态方法，不会抛错
-     */
-    public static Object callStaticMethodIfExists(@NonNull String classPath, @NonNull String methodName, @NonNull Object[] paramTypes, @NonNull Object... params) {
-        return callStaticMethodIfExists(classPath, HCData.getClassLoader(), methodName, paramTypes, params);
-    }
-
-    /**
-     * 调用指定类的静态方法，不会抛错
-     */
-    public static Object callStaticMethodIfExists(@NonNull String classPath, ClassLoader classLoader, @NonNull String methodName, @NonNull Object[] paramTypes, @NonNull Object... params) {
-        return doTry(
-            () -> callStaticMethodIfExists(findClass(classPath, classLoader), methodName, paramTypes, params)
-        ).get();
-    }
-
-    /**
-     * 调用指定类的静态方法，不会抛错
-     */
-    public static Object callStaticMethodIfExists(@NonNull Class<?> clazz, @NonNull String methodName, @NonNull Object[] paramTypes, @NonNull Object... params) {
-        return doTry(
-            () -> XposedHelpers.callStaticMethod(clazz, methodName, getParamTypes(clazz.getClassLoader(), paramTypes), params)
-        ).get();
-    }
-
-    /**
-     * 调用指定的静态方法
-     */
-    public static Object callStaticMethod(@NonNull Method method, @NonNull Object... params) {
-        try {
-            method.setAccessible(true);
-            return method.invoke(null, params);
-        } catch (IllegalAccessException | InvocationTargetException e) {
-            throw new UnexpectedException(e);
-        }
-    }
-
-    /**
-     * 获取指定类的静态字段值
-     */
-    public static Object getStaticField(@NonNull String classPath, @NonNull String fieldName) {
-        return getStaticField(classPath, HCData.getClassLoader(), fieldName);
-    }
-
-    /**
-     * 获取指定类的静态字段值
-     */
-    public static Object getStaticField(@NonNull String classPath, ClassLoader classLoader, @NonNull String fieldName) {
-        return getStaticField(findClass(classPath, classLoader), fieldName);
-    }
-
-    /**
-     * 获取指定类的静态字段值
-     */
-    public static Object getStaticField(@NonNull Class<?> clazz, @NonNull String fieldName) {
-        return XposedHelpers.getStaticObjectField(clazz, fieldName);
-    }
-
-    /**
-     * 获取指定类的静态字段值，不会抛错
-     */
-    public static Object getStaticFieldIfExists(@NonNull String classPath, @NonNull String fieldName) {
-        return getStaticFieldIfExists(classPath, HCData.getClassLoader(), fieldName);
-    }
-
-    /**
-     * 获取指定类的静态字段值，不会抛错
-     */
-    public static Object getStaticFieldIfExists(@NonNull String classPath, ClassLoader classLoader, @NonNull String fieldName) {
-        return doTry(
-            () -> getStaticFieldIfExists(findClass(classPath, classLoader), fieldName)
-        ).get();
-    }
-
-    /**
-     * 获取指定类的静态字段值，不会抛错
-     */
-    public static Object getStaticFieldIfExists(@NonNull Class<?> clazz, @NonNull String fieldName) {
-        return doTry(
-            () -> XposedHelpers.getStaticObjectField(clazz, fieldName)
-        ).get();
-    }
-
-    /**
-     * 获取指定的静态字段值
-     */
-    public static Object getStaticField(@NonNull Field field) {
-        try {
-            field.setAccessible(true);
-            return field.get(null);
-        } catch (IllegalAccessException e) {
-            throw new UnexpectedException(e);
-        }
-    }
-
-    /**
-     * 设置指定类的静态字段值
-     */
-    public static void setStaticField(@NonNull String classPath, @NonNull String fieldName, Object value) {
-        setStaticField(classPath, HCData.getClassLoader(), fieldName, value);
-    }
-
-    /**
-     * 设置指定类的静态字段值
-     */
-    public static void setStaticField(@NonNull String classPath, ClassLoader classLoader, @NonNull String fieldName, Object value) {
-        setStaticField(findClass(classPath, classLoader), fieldName, value);
-    }
-
-    /**
-     * 设置指定类的静态字段值
-     */
-    public static void setStaticField(@NonNull Class<?> clazz, @NonNull String fieldName, Object value) {
-        XposedHelpers.setStaticObjectField(clazz, fieldName, value);
-    }
-
-    /**
-     * 设置指定类的静态字段值，不会抛错
-     */
-    public static void setStaticFieldIfExists(@NonNull String classPath, @NonNull String fieldName, Object value) {
-        setStaticFieldIfExists(classPath, HCData.getClassLoader(), fieldName, value);
-    }
-
-    /**
-     * 设置指定类的静态字段值，不会抛错
-     */
-    public static void setStaticFieldIfExists(@NonNull String classPath, ClassLoader classLoader, @NonNull String fieldName, Object value) {
-        doTry(() -> {
-            setStaticFieldIfExists(findClass(classPath, classLoader), fieldName, value);
-            return null;
-        });
-    }
-
-    /**
-     * 设置指定类的静态字段值，不会抛错
-     */
-    public static void setStaticFieldIfExists(@NonNull Class<?> clazz, @NonNull String fieldName, Object value) {
-        doTry(() -> {
-            XposedHelpers.setStaticObjectField(clazz, fieldName, value);
-            return null;
-        });
-    }
-
-    /**
-     * 设置指定静态字段的值
-     */
-    public static void setStaticField(@NonNull Field field, Object value) {
-        try {
-            field.setAccessible(true);
-            field.set(null, value);
-        } catch (IllegalAccessException e) {
-            throw new UnexpectedException(e);
-        }
-    }
-
-    /**
-     * 设置指定类的附加静态字段值
-     */
-    public static Object setAdditionalStaticField(@NonNull String classPath, @NonNull String key, Object value) {
-        return setAdditionalStaticField(classPath, HCData.getClassLoader(), key, value);
-    }
-
-    /**
-     * 设置指定类的附加静态字段值
-     */
-    public static Object setAdditionalStaticField(@NonNull String classPath, ClassLoader classLoader, @NonNull String key, Object value) {
-        return setAdditionalStaticField(findClass(classPath, classLoader), key, value);
-    }
-
-    /**
-     * 设置指定类的附加静态字段值
-     */
-    public static Object setAdditionalStaticField(@NonNull Class<?> clazz, @NonNull String key, Object value) {
-        return XposedHelpers.setAdditionalStaticField(clazz, key, value);
-    }
-
-    /**
-     * 获取指定类的附加静态字段值
-     */
-    public static Object getAdditionalStaticField(@NonNull String classPath, @NonNull String key) {
-        return getAdditionalStaticField(classPath, HCData.getClassLoader(), key);
-    }
-
-    /**
-     * 获取指定类的附加静态字段值
-     */
-    public static Object getAdditionalStaticField(@NonNull String classPath, ClassLoader classLoader, @NonNull String key) {
-        return getAdditionalStaticField(findClass(classPath, classLoader), key);
-    }
-
-    /**
-     * 获取指定类的附加静态字段值
-     */
-    public static Object getAdditionalStaticField(@NonNull Class<?> clazz, @NonNull String key) {
-        return XposedHelpers.getAdditionalStaticField(clazz, key);
-    }
-
-    /**
-     * 移除指定类的附加静态字段
-     */
-    public static Object removeAdditionalStaticField(@NonNull String classPath, @NonNull String key) {
-        return removeAdditionalStaticField(classPath, HCData.getClassLoader(), key);
-    }
-
-    /**
-     * 移除指定类的附加静态字段
-     */
-    public static Object removeAdditionalStaticField(@NonNull String classPath, ClassLoader classLoader, @NonNull String key) {
-        return removeAdditionalStaticField(findClass(classPath, classLoader), key);
-    }
-
-    /**
-     * 移除指定类的附加静态字段
-     */
-    public static Object removeAdditionalStaticField(@NonNull Class<?> clazz, @NonNull String key) {
-        return XposedHelpers.removeAdditionalStaticField(clazz, key);
-    }
-
-    // -------------------------- Invoke ------------------------------
-
-    /**
-     * 调用原始方法
-     */
-    public static Object invokeOriginalMethod(@NonNull Member method, Object thisObject, @NonNull Object... params)
-        throws InvocationTargetException, IllegalAccessException {
-        return XposedBridge.invokeOriginalMethod(method, thisObject, params);
-    }
-
-    // ------------------------- DeoptimizeMethod ------------------------
-
-    // -------------------------- Method Deoptimize -------------------------------
-
-    /**
-     * 去优化指定方法
-     */
-    public static boolean deoptimizeMethod(@NonNull Class<?> clazz, @NonNull String methodName, @NonNull Object... params) {
-        return doTry(
-            () -> deoptimizeMethod(findMethod(clazz, methodName, params))
-        ).orElse(false);
-    }
-
-    /**
-     * 去优化指定方法
-     */
-    public static boolean deoptimizeMethod(@NonNull String classPath, @NonNull String methodName, @NonNull Object... params) {
-        return doTry(
-            () -> deoptimizeMethod(findMethod(classPath, methodName, params))
-        ).orElse(false);
-    }
-
-    /**
-     * 去优化指定方法
-     */
-    public static boolean deoptimizeMethod(@NonNull String classPath, ClassLoader classLoader, @NonNull String methodName, @NonNull Object... params) {
-        return doTry(
-            () -> deoptimizeMethod(findMethod(classPath, classLoader, methodName, params))
-        ).orElse(false);
-    }
-
-    /**
-     * 去优化全部指定名称的方法
-     */
-    public static boolean deoptimizeAllMethod(@NonNull Class<?> clazz, @NonNull String methodName) {
-        return doTry(
-            () -> deoptimizeMethod(findAllMethod(clazz, methodName))
-        ).orElse(false);
-    }
-
-    /**
-     * 去优化全部指定名称的方法
-     */
-    public static boolean deoptimizeAllMethod(@NonNull String classPath, @NonNull String methodName) {
-        return doTry(
-            () -> deoptimizeMethod(findAllMethod(classPath, methodName))
-        ).orElse(false);
-    }
-
-    /**
-     * 去优化全部指定名称的方法
-     */
-    public static boolean deoptimizeAllMethod(@NonNull String classPath, ClassLoader classLoader, @NonNull String methodName) {
-        return doTry(
-            () -> deoptimizeMethod(findAllMethod(classPath, classLoader, methodName))
-        ).orElse(false);
-    }
-
-    /**
-     * 去优化全部方法
-     */
-    public static boolean deoptimizeAllMethod(@NonNull Class<?> clazz) {
-        return doTry(
-            () -> deoptimizeMethod(findAllMethod(clazz))
-        ).orElse(false);
-    }
-
-    /**
-     * 去优化全部方法
-     */
-    public static boolean deoptimizeAllMethod(@NonNull String classPath) {
-        return doTry(
-            () -> deoptimizeMethod(findAllMethod(classPath))
-        ).orElse(false);
-    }
-
-    /**
-     * 去优化全部方法
-     */
-    public static boolean deoptimizeAllMethod(@NonNull String classPath, ClassLoader classLoader) {
-        return doTry(
-            () -> deoptimizeMethod(findAllMethod(classPath, classLoader))
-        ).orElse(false);
-    }
-
-    // -------------------------- Constructor Deoptimize ----------------------------
-
-    /**
-     * 去优化指定构造函数
-     */
-    public static boolean deoptimizeConstructor(@NonNull Class<?> clazz, @NonNull Object... params) {
-        return doTry(
-            () -> deoptimizeMethod(findConstructor(clazz, params))
-        ).orElse(false);
-    }
-
-    /**
-     * 去优化指定构造函数
-     */
-    public static boolean deoptimizeConstructor(@NonNull String classPath, @NonNull Object... params) {
-        return doTry(
-            () -> deoptimizeMethod(findConstructor(classPath, params))
-        ).orElse(false);
-    }
-
-    /**
-     * 去优化指定构造函数
-     */
-    public static boolean deoptimizeConstructor(@NonNull String classPath, ClassLoader classLoader, @NonNull Object... params) {
-        return doTry(
-            () -> deoptimizeMethod(findConstructor(classPath, classLoader, params))
-        ).orElse(false);
-    }
-
-    /**
-     * 去优化全部构造函数
-     */
-    public static boolean deoptimizeAllConstructor(@NonNull Class<?> clazz) {
-        return doTry(
-            () -> deoptimizeMethod(findAllConstructor(clazz))
-        ).orElse(false);
-    }
-
-    /**
-     * 去优化全部构造函数
-     */
-    public static boolean deoptimizeAllConstructor(@NonNull String classPath) {
-        return doTry(
-            () -> deoptimizeMethod(findAllConstructor(classPath))
-        ).orElse(false);
-    }
-
-    /**
-     * 去优化全部构造函数
-     */
-    public static boolean deoptimizeAllConstructor(@NonNull String classPath, ClassLoader classLoader) {
-        return doTry(
-            () -> deoptimizeMethod(findAllConstructor(classPath, classLoader))
-        ).orElse(false);
-    }
-
-    // -------------------------- Members Deoptimize ----------------------------
-
-    /**
-     * 去优化全部成员
-     */
-    public static boolean deoptimizeMethod(@NonNull Member... member) {
-        return doTry(() -> {
-            for (Member m : member) {
-                InvokeTool.callStaticMethod(XposedBridge.class, "deoptimizeMethod", new Class<?>[]{Member.class}, m);
+        @JvmStatic
+        @JvmOverloads
+        fun Class<*>.callStaticMethod(
+            methodName: String,
+            paramTypes: Array<Class<*>> = emptyArray(),
+            vararg params: Any
+        ): Any? {
+            return if (paramTypes.isEmpty()) {
+                XposedHelpers.callStaticMethod(this, methodName, params)
+            } else {
+                XposedHelpers.callStaticMethod(this, methodName, paramTypes, params)
             }
-            return true;
-        }).orElse(false);
-    }
-
-    // -------------------------- Chain ------------------------------
-
-    /**
-     * 构建一个链式工具对象
-     */
-    public static ChainTool buildChain(@NonNull String classPath) {
-        return ChainTool.buildChain(classPath);
-    }
-
-    /**
-     * 构建一个链式工具对象
-     */
-    public static ChainTool buildChain(@NonNull String classPath, ClassLoader classLoader) {
-        return ChainTool.buildChain(classPath, classLoader);
-    }
-
-    /**
-     * 构建一个链式工具对象
-     */
-    public static ChainTool buildChain(@NonNull Class<?> clazz) {
-        return ChainTool.buildChain(clazz);
-    }
-
-    // -------------------------- Filter ------------------------------
-
-    /**
-     * 过滤指定类的方法
-     */
-    public static Method[] filterMethod(@NonNull String classPath, @NonNull IMemberFilter<Method> iMemberFilter) {
-        return filterMethod(classPath, HCData.getClassLoader(), iMemberFilter);
-    }
-
-    /**
-     * 过滤指定类的方法
-     */
-    public static Method[] filterMethod(@NonNull String classPath, ClassLoader classLoader, @NonNull IMemberFilter<Method> iMemberFilter) {
-        return filterMethod(findClass(classPath, classLoader), iMemberFilter);
-    }
-
-    /**
-     * 过滤指定类的方法
-     */
-    public static Method[] filterMethod(@NonNull Class<?> clazz, @NonNull IMemberFilter<Method> iMemberFilter) {
-        return Arrays.stream(clazz.getDeclaredMethods())
-            .filter(iMemberFilter::test)
-            .toArray(Method[]::new);
-    }
-
-    /**
-     * 过滤指定类的构造函数
-     */
-    public static Constructor<?>[] filterConstructor(@NonNull String classPath, @NonNull IMemberFilter<Constructor<?>> iMemberFilter) {
-        return filterConstructor(classPath, HCData.getClassLoader(), iMemberFilter);
-    }
-
-    /**
-     * 过滤指定类的构造函数
-     */
-    public static Constructor<?>[] filterConstructor(@NonNull String classPath, ClassLoader classLoader, @NonNull IMemberFilter<Constructor<?>> iMemberFilter) {
-        return filterConstructor(findClass(classPath, classLoader), iMemberFilter);
-    }
-
-    /**
-     * 过滤指定类的构造函数
-     */
-    public static Constructor<?>[] filterConstructor(@NonNull Class<?> clazz, @NonNull IMemberFilter<Constructor<?>> iMemberFilter) {
-        return Arrays.stream(clazz.getDeclaredConstructors())
-            .filter(iMemberFilter::test)
-            .toArray(Constructor[]::new);
-    }
-
-    // -------------------------- ResTool ------------------------------
-
-    /**
-     * 创建一个假的资源 ID
-     */
-    public static int createFakeResId(@NonNull String resName) {
-        return ResInjectTool.createFakeResId(resName);
-    }
-
-    /**
-     * 创建一个假的资源 ID
-     */
-    public static int createFakeResId(@NonNull Resources res, int id) {
-        return ResInjectTool.createFakeResId(res, id);
-    }
-
-    /**
-     * 设置资源替换
-     */
-    public static void setResReplacement(@NonNull String packageName, @NonNull String type, @NonNull String resName, int replacementResId) {
-        ResInjectTool.setResReplacement(packageName, type, resName, replacementResId);
-    }
-
-    /**
-     * 设置密度资源替换
-     */
-    public static void setDensityReplacement(@NonNull String packageName, @NonNull String type, @NonNull String resName, float replacementResValue) {
-        ResInjectTool.setDensityReplacement(packageName, type, resName, replacementResValue);
-    }
-
-    /**
-     * 设置对象资源替换
-     */
-    public static void setObjectReplacement(@NonNull String packageName, @NonNull String type, @NonNull String resName, Object replacementResValue) {
-        ResInjectTool.setObjectReplacement(packageName, type, resName, replacementResValue);
-    }
-
-    // -------------------------- Prefs ------------------------------
-
-    /**
-     * 获取一个偏好设置应用对象
-     */
-    @NonNull
-    public static IPrefsApply prefs(@NonNull Context context) {
-        return PrefsTool.prefs(context);
-    }
-
-    /**
-     * 获取一个偏好设置应用对象
-     */
-    @NonNull
-    public static IPrefsApply prefs(@NonNull Context context, @NonNull String prefsName) {
-        return PrefsTool.prefs(context, prefsName);
-    }
-
-    /**
-     * 获取一个偏好设置应用对象
-     */
-    @NonNull
-    public static IPrefsApply prefs() {
-        return PrefsTool.prefs();
-    }
-
-    /**
-     * 获取一个偏好设置应用对象
-     */
-    @NonNull
-    public static IPrefsApply prefs(@NonNull String prefsName) {
-        return PrefsTool.prefs(prefsName);
-    }
-
-    /**
-     * 异步应用偏好设置
-     */
-    public static void asyncPrefs(@NonNull IAsyncPrefs asyncPrefs) {
-        PrefsTool.asyncPrefs(asyncPrefs);
-    }
-
-    /**
-     * 异步应用偏好设置
-     */
-    public static void asyncPrefs(@NonNull String prefsName, @NonNull IAsyncPrefs asyncPrefs) {
-        PrefsTool.asyncPrefs(prefsName, asyncPrefs);
-    }
-
-    // -------------------------- Other ------------------------------
-
-    /**
-     * 获取当前线程的堆栈跟踪信息
-     */
-    public static String getStackTrace(boolean print) {
-        String task = getStackTrace();
-        if (print)
-            AndroidLog.logD(getTag(), task);
-        return task;
-    }
-
-    /**
-     * 获取当前线程的堆栈跟踪信息
-     */
-    public static String getStackTrace() {
-        return LogExpand.getStackTrace();
-    }
-
-    /**
-     * 计算指定任务的执行时间
-     */
-    public static long timeConsumption(@NonNull Runnable runnable) {
-        return doTry(() -> {
-            Instant start = Instant.now();
-            runnable.run();
-            Instant end = Instant.now();
-            return Duration.between(start, end).toMillis();
-        }).orElse(-1L);
-    }
-
-    /**
-     * 将参数列表转换为类参数列表
-     *
-     * @noinspection IfCanBeSwitch
-     */
-    public static Class<?>[] getParamTypes(ClassLoader classLoader, @NonNull Object... paramTypes) {
-        List<Class<?>> classes = new ArrayList<>();
-        for (Object type : paramTypes) {
-            if (type == null)
-                throw new NullPointerException("Param type must not be null: " + Arrays.toString(paramTypes));
-            else if (type instanceof String strType)
-                classes.add(findClass(strType, classLoader));
-            else if (type instanceof Class<?> clazz)
-                classes.add(clazz);
-            else
-                throw new UnexpectedException("Unknown param type! param type must either be specified as Class or String: " + Arrays.toString(paramTypes));
         }
-        return classes.toArray(new Class[0]);
+
+        @JvmStatic
+        @JvmOverloads
+        fun String.getStaticField(
+            classLoader: ClassLoader = ModuleData.getClassLoader(),
+            fieldName: String
+        ): Any? {
+            return this.findClass(classLoader).getStaticField(fieldName)
+        }
+
+        @JvmStatic
+        fun Class<*>.getStaticField(
+            fieldName: String
+        ): Any? {
+            return XposedHelpers.getStaticObjectField(this, fieldName)
+        }
+
+        @JvmStatic
+        fun Field.getStaticField(): Any? {
+            this.isAccessible = true
+            return this.get(null)
+        }
+
+        @JvmStatic
+        @JvmOverloads
+        fun String.setStaticField(
+            classLoader: ClassLoader = ModuleData.getClassLoader(),
+            fieldName: String,
+            value: Any?
+        ) {
+            this.findClass(classLoader).setStaticField(fieldName, value)
+        }
+
+        @JvmStatic
+        fun Class<*>.setStaticField(
+            fieldName: String,
+            value: Any?
+        ) {
+            XposedHelpers.setStaticObjectField(this, fieldName, value)
+        }
+
+        @JvmStatic
+        fun Field.setStaticField(
+            value: Any?
+        ) {
+            this.isAccessible = true
+            this.set(null, value)
+        }
+
+        @JvmStatic
+        @JvmOverloads
+        fun String.setAdditionalStaticField(
+            classLoader: ClassLoader = ModuleData.getClassLoader(),
+            key: String,
+            value: Any?
+        ): Any? {
+            return this.findClass(classLoader).setAdditionalStaticField(key, value)
+        }
+
+        @JvmStatic
+        fun Class<*>.setAdditionalStaticField(
+            key: String,
+            value: Any?
+        ): Any? {
+            return XposedHelpers.setAdditionalStaticField(this, key, value)
+        }
+
+        @JvmStatic
+        @JvmOverloads
+        fun String.getAdditionalStaticField(
+            classLoader: ClassLoader = ModuleData.getClassLoader(),
+            key: String,
+        ): Any? {
+            return this.findClass(classLoader).getAdditionalStaticField(key)
+        }
+
+        @JvmStatic
+        fun Class<*>.getAdditionalStaticField(
+            key: String,
+        ): Any? {
+            return XposedHelpers.getAdditionalStaticField(this, key)
+        }
+
+        @JvmStatic
+        @JvmOverloads
+        fun String.removeAdditionalStaticField(
+            classLoader: ClassLoader = ModuleData.getClassLoader(),
+            key: String,
+        ): Any? {
+            return this.findClass(classLoader).removeAdditionalStaticField(key)
+        }
+
+        @JvmStatic
+        fun Class<*>.removeAdditionalStaticField(
+            key: String,
+        ): Any? {
+            return XposedHelpers.removeAdditionalStaticField(this, key)
+        }
+
+        // --------------------------------- hook ------------------------------------
+
+        @JvmStatic
+        @JvmOverloads
+        fun String.hook(
+            classLoader: ClassLoader = ModuleData.getClassLoader(),
+            methodName: String,
+            vararg params: Any
+        ): HookBridge {
+            return this.findMethod(classLoader, methodName, params).hook()
+        }
+
+        @JvmStatic
+        fun Class<*>.hook(
+            methodName: String,
+            vararg params: Any
+        ): HookBridge {
+            return this.findMethod(methodName, params).hook()
+        }
+
+        @JvmStatic
+        @JvmOverloads
+        fun String.hook(
+            classLoader: ClassLoader = ModuleData.getClassLoader(),
+            vararg params: Any
+        ): HookBridge {
+            return this.findConstructor(classLoader, params).hook()
+        }
+
+        @JvmStatic
+        fun Class<*>.hook(
+            vararg params: Any
+        ): HookBridge {
+            return this.findConstructor(params).hook()
+        }
+
+        @JvmStatic
+        fun Executable.hook(): HookBridge {
+            return HookBridge(ModuleData.getWrapper().hook(this))
+        }
+
+        @JvmStatic
+        @JvmOverloads
+        fun String.hookClassInitializer(
+            classLoader: ClassLoader = ModuleData.getClassLoader()
+        ): HookBridge {
+            return this.findClass(classLoader).hookClassInitializer()
+        }
+
+        @JvmStatic
+        fun Class<*>.hookClassInitializer(): HookBridge {
+            return HookBridge(ModuleData.getWrapper().hookClassInitializer(this))
+        }
+
+        @JvmStatic
+        fun returnResult(result: Any?): AbsHook {
+            return object : AbsHook() {
+                override fun before() {
+                    this.result = result
+                }
+            }
+        }
+
+        @JvmStatic
+        fun doNothing(): AbsHook {
+            return returnResult(null)
+        }
+
+        @JvmStatic
+        fun setArg(index: Int, value: Any?): AbsHook {
+            return object : AbsHook() {
+                override fun before() {
+                    setArg(index, value)
+                }
+            }
+        }
+
+        // ------------------------------- invoker -----------------------------------
+        @JvmStatic
+        @JvmOverloads
+        fun String.getInvoker(
+            classLoader: ClassLoader = ModuleData.getClassLoader(),
+            methodName: String,
+            vararg params: Any
+        ): XposedInterface.Invoker<*, Method> {
+            return this.findMethod(classLoader, methodName, params).getInvoker()
+        }
+
+        @JvmStatic
+        fun Class<*>.getInvoker(
+            methodName: String,
+            vararg params: Any
+        ): XposedInterface.Invoker<*, Method> {
+            return this.findMethod(methodName, params).getInvoker()
+        }
+
+        @JvmStatic
+        fun Method.getInvoker(): XposedInterface.Invoker<*, Method> {
+            return ModuleData.getWrapper().getInvoker(this)
+        }
+
+        @JvmStatic
+        @JvmOverloads
+        fun String.getInvoker(
+            classLoader: ClassLoader = ModuleData.getClassLoader(),
+            vararg params: Any
+        ): XposedInterface.CtorInvoker<*> {
+            return this.findConstructor(classLoader, params).getInvoker()
+        }
+
+        @JvmStatic
+        fun Class<*>.getInvoker(
+            vararg params: Any
+        ): XposedInterface.CtorInvoker<*> {
+            return this.findConstructor(params).getInvoker()
+        }
+
+        @JvmStatic
+        fun Constructor<*>.getInvoker(): XposedInterface.CtorInvoker<*> {
+            return ModuleData.getWrapper().getInvoker(this)
+        }
+
+        // ------------------------------ deoptimize --------------------------------
+
+        @JvmStatic
+        @JvmOverloads
+        fun String.deoptimize(
+            classLoader: ClassLoader = ModuleData.getClassLoader(),
+            methodName: String,
+            vararg params: Any
+        ) {
+            this.findMethod(classLoader, methodName, params).deoptimize()
+        }
+
+        @JvmStatic
+        fun Class<*>.deoptimize(
+            methodName: String,
+            vararg params: Any
+        ) {
+            this.findMethod(methodName, params).deoptimize()
+        }
+
+        @JvmStatic
+        @JvmOverloads
+        fun String.deoptimize(
+            classLoader: ClassLoader = ModuleData.getClassLoader(),
+            vararg params: Any
+        ) {
+            this.findConstructor(classLoader, params).deoptimize()
+        }
+
+        @JvmStatic
+        fun Class<*>.deoptimize(
+            vararg params: Any
+        ) {
+            this.findConstructor(params).deoptimize()
+        }
+
+        @JvmStatic
+        fun Executable.deoptimize() {
+            ModuleData.getWrapper().deoptimize(this)
+        }
+
+        // --------------------------------- chain -----------------------------------
+
+        @JvmStatic
+        @JvmOverloads
+        fun String.buildChain(
+            classLoader: ClassLoader = ModuleData.getClassLoader()
+        ): ChainTool {
+            return ChainTool.buildChain(this, classLoader)
+        }
+
+        @JvmStatic
+        fun Class<*>.buildChain(): ChainTool {
+            return ChainTool.buildChain(this)
+        }
+
+        // ----------------------------------- res ---------------------------------------
+        @JvmStatic
+        fun createFakeResId(resName: String): Int {
+            return ResInjectTool.createFakeResId(resName)
+        }
+
+        @JvmStatic
+        fun createFakeResId(resources: Resources, @IdRes resId: Int): Int {
+            return ResInjectTool.createFakeResId(resources, resId)
+        }
+
+        @JvmStatic
+        fun setResReplacement(packageName: String, type: String, resName: String, replacementResId: Int) {
+            ResInjectTool.setResReplacement(packageName, type, resName, replacementResId)
+        }
+
+        @JvmStatic
+        fun setDensityReplacement(packageName: String, type: String, resName: String, replacementResValue: Float) {
+            ResInjectTool.setDensityReplacement(packageName, type, resName, replacementResValue)
+        }
+
+        @JvmStatic
+        fun setObjectReplacement(packageName: String, type: String, resName: String, replacementResValue: Any?) {
+            ResInjectTool.setObjectReplacement(packageName, type, resName, replacementResValue)
+        }
+        // -------------------------------- prefs --------------------------------------
+
+        @JvmStatic
+        @JvmOverloads
+        fun Context.prefs(
+            prefsName: String = ""
+        ): IPrefsApply {
+            return PrefsTool.prefs(this, prefsName)
+        }
+
+        @JvmStatic
+        @JvmOverloads
+        fun prefs(
+            prefsName: String = ""
+        ): IPrefsApply {
+            return PrefsTool.prefs(prefsName)
+        }
+
+        @JvmStatic
+        @JvmOverloads
+        fun asyncPrefs(
+            prefsName: String = "",
+            asyncPrefs: IAsyncPrefs
+        ) {
+            PrefsTool.asyncPrefs(prefsName, asyncPrefs)
+        }
+
+        // -------------------------------- other -------------------------------
+        @JvmStatic
+        fun getStackTrace(): String {
+            return LogExpand.getStackTrace()
+        }
+
+        @JvmStatic
+        fun timeConsumption(runnable: Runnable): Long {
+            try {
+                val start = Instant.now()
+                runnable.run()
+                val end = Instant.now()
+                return Duration.between(start, end).toMillis()
+            } catch (_: Throwable) {
+                return -1L
+            }
+        }
     }
 }

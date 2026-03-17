@@ -22,8 +22,8 @@ import android.content.Context;
 
 import androidx.annotation.NonNull;
 
-import com.hchen.hooktool.HCBase;
-import com.hchen.hooktool.hook.IHook;
+import com.hchen.hooktool.AbsModule;
+import com.hchen.hooktool.hook.AbsHook;
 
 import de.robv.android.xposed.IXposedHookZygoteInit;
 
@@ -32,19 +32,19 @@ import de.robv.android.xposed.IXposedHookZygoteInit;
  *
  * @author 焕晨HChen
  */
-public class HookDemo extends HCBase /* 建议继承 HCBase 使用 */ {
+public class HookDemo extends AbsModule /* 建议继承 HCBase 使用 */ {
     @Override
-    protected boolean isEnabled() {
+     boolean isEnabled() {
         // 是否启用本 Hook
         return super.isEnabled();
     }
 
     @Override
-    protected void init() { // loadPackage 阶段
+    protected void onLoaded() { // loadPackage 阶段
         boolean isExists = existsClass("com.hchen.demo.Demo"); // 是否存在类
         Class<?> clazz = findClass("com.hchen.demo.Demo"); // 查找类
 
-        hookMethod("com.hchen.demo.Demo", "demo", boolean.class, new IHook() {
+        hookMethod("com.hchen.demo.Demo", "demo", boolean.class, new AbsHook() {
             @Override
             public void before() {
                 // 在 demo 方法调用前执行
@@ -70,13 +70,13 @@ public class HookDemo extends HCBase /* 建议继承 HCBase 使用 */ {
     }
 
     @Override
-    protected void init(@NonNull ClassLoader classLoader) { // loadPackage 阶段
+    protected void onLoaded(@NonNull ClassLoader classLoader) { // loadPackage 阶段
         // 区别是可以指定自定义的 classloader
         findClass("com.hchen.demo.Demo", classLoader);
     }
 
     @Override
-    protected void initZygote(@NonNull IXposedHookZygoteInit.StartupParam startupParam) { // zygote 阶段
+    protected void onSystemLoaded(@NonNull IXposedHookZygoteInit.StartupParam startupParam) { // zygote 阶段
         findClass("com.hchen.demo.Demo", startupParam.getClass().getClassLoader()); // 可以这样写
     }
 
@@ -86,7 +86,7 @@ public class HookDemo extends HCBase /* 建议继承 HCBase 使用 */ {
     }
 
     @Override
-    protected void initApplicationAfter(@NonNull Context context) {
+    protected void onApplicationCreated(@NonNull Context context) {
         // 目标应用创建 Context 后回调
     }
 

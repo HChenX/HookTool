@@ -20,8 +20,6 @@ package com.hchen.app;
 
 import static com.hchen.hooktool.HCInit.LOG_D;
 
-import com.hchen.hooktool.HCInit;
-
 /**
  * Application
  *
@@ -32,9 +30,9 @@ public class Application extends android.app.Application {
     public void onCreate() {
         super.onCreate();
 
-        HCInit.initBasicData(new HCInit.BasicData()
+        HCInit.initBasicData(new ModuleConfig()
             .setModulePackageName("com.hchen.demo") // 模块包名
-            .setTag("HChenDemo") // 日志 tag
+            .setLogTag("HChenDemo") // 日志 tag
             .setLogLevel(LOG_D) // 日志等级
             .setPrefsName("hchen_prefs") // prefs 存储文件名 (可选)
         );

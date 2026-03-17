@@ -1,11 +1,12 @@
 [versions]
 agp = "9.1.0"
 annotation = "1.9.1"
-xposed = "82"
+xposed = "101.0.0"
 
 [libraries]
 annotation = { module = "androidx.annotation:annotation-jvm", version.ref = "annotation" }
-xposed = { group = "de.robv.android.xposed", name = "api", version.ref = "xposed" }
+service = { module = "io.github.libxposed:service", version.ref = "xposed" }
+xposed = { group = "io.github.libxposed", name = "api", version.ref = "xposed" }
 
 [plugins]
 androidLibrary = { id = "com.android.library", version.ref = "agp" }

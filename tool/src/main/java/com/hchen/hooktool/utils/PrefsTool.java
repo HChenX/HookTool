@@ -27,7 +27,7 @@ import android.content.SharedPreferences;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.hchen.hooktool.HCData;
+import com.hchen.hooktool.ModuleConfig;
 import com.hchen.hooktool.callback.IAsyncPrefs;
 import com.hchen.hooktool.callback.IPrefsApply;
 import com.hchen.hooktool.exception.NonXposedException;
@@ -75,7 +75,7 @@ public class PrefsTool {
      */
     @NonNull
     public static IPrefsApply prefs() {
-        if (!HCData.isXposed())
+        if (!ModuleConfig.isXposed())
             throw new NonXposedException("[PrefsTool]: Not xposed environment!!");
         return prefs("");
     }
@@ -85,7 +85,7 @@ public class PrefsTool {
      */
     @NonNull
     public static IPrefsApply prefs(@NonNull String prefsName) {
-        if (!HCData.isXposed())
+        if (!ModuleConfig.isXposed())
             throw new NonXposedException("[PrefsTool]: Not xposed environment!!");
         return createXspIfNeed(prefsName);
     }
@@ -101,7 +101,7 @@ public class PrefsTool {
      * Xposed 环境中异步获取寄生应用的共享首选项，非 Xposed 环境中使用会引发异常
      */
     public static void asyncPrefs(@NonNull String prefsName, @NonNull IAsyncPrefs asyncPrefs) {
-        if (!HCData.isXposed())
+        if (!ModuleConfig.isXposed())
             throw new NonXposedException("[PrefsTool]: Not xposed environment!!");
 
         ContextTool.getAsyncContext(context ->
@@ -111,20 +111,20 @@ public class PrefsTool {
     }
 
     private static IPrefsApply createXspIfNeed(@NonNull String prefsName) {
-        if (HCData.getModulePackageName().isEmpty())
+        if (ModuleConfig.getModulePackageName().isEmpty())
             throw new UnexpectedException("[PrefsTool]: Module package name is empty, Please set module package name!!");
 
         prefsName = initPrefsName(prefsName);
-        if (xPrefsMap.get(HCData.getModulePackageName() + prefsName) == null) {
-            XSharedPreferences x = new XSharedPreferences(HCData.getModulePackageName(), prefsName);
+        if (xPrefsMap.get(ModuleConfig.getModulePackageName() + prefsName) == null) {
+            XSharedPreferences x = new XSharedPreferences(ModuleConfig.getModulePackageName(), prefsName);
             x.makeWorldReadable();
             x.reload();
 
             Xprefs xprefs = new Xprefs(x);
-            xPrefsMap.put(HCData.getModulePackageName() + prefsName, xprefs);
+            xPrefsMap.put(ModuleConfig.getModulePackageName() + prefsName, xprefs);
             return xprefs;
         } else {
-            return xPrefsMap.get(HCData.getModulePackageName() + prefsName);
+            return xPrefsMap.get(ModuleConfig.getModulePackageName() + prefsName);
         }
     }
 
@@ -156,13 +156,13 @@ public class PrefsTool {
         Objects.requireNonNull(name, "[PrefsTool]: prefs name must not be null!!");
 
         if (name.isEmpty()) {
-            if (HCData.getPrefsName().isEmpty()) {
-                if (HCData.getModulePackageName().isEmpty())
+            if (ModuleConfig.getPrefsName().isEmpty()) {
+                if (ModuleConfig.getModulePackageName().isEmpty())
                     throw new UnexpectedException("[PrefsTool]: What prefs name you want use?");
 
-                return HCData.getModulePackageName() + "_prefs";
+                return ModuleConfig.getModulePackageName() + "_prefs";
             }
-            return HCData.getPrefsName();
+            return ModuleConfig.getPrefsName();
         } else return name;
     }
 
@@ -258,7 +258,7 @@ public class PrefsTool {
         }
 
         private void reload() {
-            if (HCData.isAutoReload()) {
+            if (ModuleConfig.isAutoReload()) {
                 xSharedPreferences.reload();
             }
         }

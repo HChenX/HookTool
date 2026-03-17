@@ -22,8 +22,7 @@ import static com.hchen.hooktool.HCInit.LOG_D;
 
 import androidx.annotation.NonNull;
 
-import com.hchen.hooktool.HCEntrance;
-import com.hchen.hooktool.HCInit;
+import com.hchen.hooktool.ModuleEntrance;
 
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
@@ -32,13 +31,13 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
  *
  * @author 焕晨HChen
  */
-public class HookInit extends HCEntrance /* 建议继承 HCEntrance 类作为入口 */ {
+public class HookInit extends ModuleEntrance /* 建议继承 HCEntrance 类作为入口 */ {
     @NonNull
     @Override
-    public HCInit.BasicData initHC(@NonNull HCInit.BasicData basicData) {
-        return basicData
+    public ModuleConfig initHC(@NonNull ModuleConfig moduleConfig) {
+        return moduleConfig
             .setModulePackageName("com.hchen.demo") // 模块包名
-            .setTag("HChenDemo") // 日志 tag
+            .setLogTag("HChenDemo") // 日志 tag
             .setLogLevel(LOG_D) // 日志等级
             .setPrefsName("hchen_prefs") // prefs 文件名 (可选)
             .setAutoReload(true) // 是否自动更新共享首选项，默认开启 (可选)
@@ -63,7 +62,7 @@ public class HookInit extends HCEntrance /* 建议继承 HCEntrance 类作为入
     @Override
     public void onLoadPackage(@NonNull XC_LoadPackage.LoadPackageParam loadPackageParam) throws Throwable {
         HCInit.initLoadPackageParam(loadPackageParam); // 必须，初始化工具
-        new HookDemo().onApplication().onLoadPackage(); // 添加 onApplication 后才会执行 onApplication() 回调
+        new HookDemo().handleApplication().onLoadPackage(); // 添加 onApplication 后才会执行 onApplication() 回调
     }
 
     @Override

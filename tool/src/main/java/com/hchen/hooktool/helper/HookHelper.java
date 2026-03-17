@@ -20,8 +20,7 @@ package com.hchen.hooktool.helper;
 
 import androidx.annotation.NonNull;
 
-import com.hchen.hooktool.core.CoreTool;
-import com.hchen.hooktool.hook.IHook;
+import com.hchen.hooktool.hook.AbsHook;
 
 import java.lang.reflect.Member;
 
@@ -42,8 +41,8 @@ public class HookHelper<T extends Member> {
     /**
      * Hook 成员
      */
-    public XC_MethodHook.Unhook hook(@NonNull IHook iHook) {
-        return CoreTool.hook(member, iHook);
+    public XC_MethodHook.Unhook hook(@NonNull AbsHook absHook) {
+        return CoreTool.hook(member, absHook);
     }
 
     /**
