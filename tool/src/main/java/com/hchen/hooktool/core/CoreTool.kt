@@ -316,7 +316,7 @@ open class CoreTool : XposedLog() {
         fun String.findConstructorIfExists(
             classLoader: ClassLoader? = ModuleData.getClassLoader(),
             vararg parameterTypes: Any
-        ): Constructor<*> {
+        ): Constructor<*>? {
             return XposedHelpers.findConstructorExactIfExists(this, classLoader, parameterTypes)
         }
 

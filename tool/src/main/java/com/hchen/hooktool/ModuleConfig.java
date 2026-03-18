@@ -122,7 +122,7 @@ public class ModuleConfig {
     @NonNull
     public static String getModulePackageName() {
         if (modulePackageName.isEmpty()) {
-            throw new UnexpectedException("module package name Must not be empty.");
+            throw new UnexpectedException("Module package name must not be empty.");
         }
 
         return modulePackageName;

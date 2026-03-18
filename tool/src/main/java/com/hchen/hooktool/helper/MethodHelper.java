@@ -208,10 +208,10 @@ public class MethodHelper {
     public Method single() {
         List<Method> methods = matches();
         if (methods.isEmpty())
-            throw new NonSingletonException("[MethodHelper]: No result found for query!!");
+            throw new NonSingletonException("No result found for query.");
 
         if (methods.size() > 1)
-            throw new NonSingletonException("[MethodHelper]: Query did not return a unique result: " + methods.size());
+            throw new NonSingletonException("Query did not return a unique result: " + methods.size());
 
         return methods.get(0);
     }

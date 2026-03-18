@@ -62,7 +62,7 @@ public class ContextTool {
     public static Context getContext(@ContextFlag int flag) {
         Context context = invokeMethod(flag);
         if (context == null)
-            throw new NullPointerException("[ContextTool]: Failed to get context!!");
+            throw new NullPointerException("Context must not be null.");
         return context;
     }
 
@@ -139,7 +139,7 @@ public class ContextTool {
                 context = getAndroidContext(clazz);
             }
             default -> {
-                throw new UnexpectedException("[ContextTool]: Unexpected flag: " + flag);
+                throw new UnexpectedException("Unexpected flag: " + flag);
             }
         }
         return context;

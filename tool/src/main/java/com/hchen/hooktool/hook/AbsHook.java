@@ -227,7 +227,7 @@ public abstract class AbsHook {
     final void callProceed() throws Throwable {
         Objects.requireNonNull(chain);
         if (isProceedCalled) {
-            throw new RuntimeException("The 'proceed/proceedWith' method can only be called once!!");
+            throw new RuntimeException("The 'proceed/proceedWith' method can only be called once.");
         }
         if (isResultChanged) {
             return;

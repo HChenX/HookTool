@@ -137,7 +137,7 @@ public class InvokeTool {
      */
     private static <T> T baseInvokeMethod(Class<?> clazz, Object instance, String methodName, Class<?>[] paramTypes, Object... params) {
         if (clazz == null && instance == null) {
-            throw new NullPointerException("[InvokeTool]: Class or Instance must not be null, can't invoke method: " + methodName);
+            throw new NullPointerException("Class or instance must not be null, can't invoke method: " + methodName);
         } else if (clazz == null) {
             clazz = instance.getClass();
         }
@@ -177,7 +177,7 @@ public class InvokeTool {
      */
     private static <T> T baseInvokeField(Class<?> clazz, Object instance, String fieldName, boolean isSetter, Object value) {
         if (clazz == null && instance == null) {
-            throw new NullPointerException("[InvokeTool]: Class or Instance must not be null, can't invoke field: " + fieldName);
+            throw new NullPointerException("Class or instance must not be null, can't invoke field: " + fieldName);
         } else if (clazz == null) {
             clazz = instance.getClass();
         }

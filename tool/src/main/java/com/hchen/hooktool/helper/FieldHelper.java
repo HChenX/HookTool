@@ -139,9 +139,9 @@ public class FieldHelper {
     public Field single() {
         List<Field> list = matches();
         if (list.isEmpty())
-            throw new NonSingletonException("[FieldHelper]: No result found for query!!");
+            throw new NonSingletonException("No result found for query.");
         if (list.size() > 1)
-            throw new NonSingletonException("[FieldHelper]: Query did not return a unique result: " + list.size());
+            throw new NonSingletonException("Query did not return a unique result: " + list.size());
         return list.get(0);
     }
 

@@ -76,7 +76,7 @@ public class PrefsTool {
     @NonNull
     public static IPrefsApply prefs() {
         if (!ModuleConfig.isXposedEnvironment())
-            throw new NonXposedException("must be in the xposed environment.");
+            throw new NonXposedException("Must be in the xposed environment.");
         return prefs("");
     }
 
@@ -86,7 +86,7 @@ public class PrefsTool {
     @NonNull
     public static IPrefsApply prefs(@NonNull String prefsName) {
         if (!ModuleConfig.isXposedEnvironment())
-            throw new NonXposedException("must be in the xposed environment.");
+            throw new NonXposedException("Must be in the xposed environment.");
         return createXSPrefsIfNeed(prefsName);
     }
 
@@ -102,7 +102,7 @@ public class PrefsTool {
      */
     public static void asyncPrefs(@NonNull String prefsName, @NonNull IAsyncPrefs asyncPrefs) {
         if (!ModuleConfig.isXposedEnvironment())
-            throw new NonXposedException("must be in the xposed environment.");
+            throw new NonXposedException("Must be in the xposed environment.");
 
         ContextTool.getAsyncContext(
             new IContextGetter() {
@@ -158,7 +158,7 @@ public class PrefsTool {
         if (name.isEmpty()) {
             if (ModuleConfig.getPrefsName().isEmpty()) {
                 if (ModuleConfig.getModulePackageName().isEmpty())
-                    throw new UnexpectedException("what prefs name you want use?");
+                    throw new UnexpectedException("What prefs name you want use?");
 
                 return ModuleConfig.getModulePackageName().toLowerCase() + "_prefs";
             }
@@ -217,7 +217,7 @@ public class PrefsTool {
             } else if (def instanceof Long l) {
                 return getLong(key, l);
             }
-            throw new UnexpectedException("unknown type value: " + def);
+            throw new UnexpectedException("Unknown type value: " + def);
         }
 
         @Override

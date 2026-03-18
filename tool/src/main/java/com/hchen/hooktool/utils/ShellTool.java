@@ -318,7 +318,7 @@ public class ShellTool {
                 streamThread = new StreamThread(this, process.getInputStream(), process.getErrorStream());
                 streamThread.run();
             } catch (IOException e) {
-                throw new UnexpectedException("Error initializing shell stream!!");
+                throw new UnexpectedException("Error initializing shell stream.");
             } finally {
                 notify();
             }
@@ -333,7 +333,7 @@ public class ShellTool {
         @NonNull
         private synchronized ShellTool cmd(@NonNull String cmd) {
             if (!isActive())
-                throw new UnexpectedException("Shell stream is dead!");
+                throw new UnexpectedException("Shell stream is dead.");
 
             if (isSplicingMode) waitSplicingCommandList.add(cmd);
             else command = cmd;
@@ -343,7 +343,7 @@ public class ShellTool {
         @Nullable
         private synchronized ShellResult exec() {
             if (!isActive())
-                throw new UnexpectedException("Shell stream is dead!");
+                throw new UnexpectedException("Shell stream is dead.");
 
             splicingCommandIfNeed();
             callbackCommandListener();
@@ -372,7 +372,7 @@ public class ShellTool {
 
         private synchronized void async(@Nullable IExecListener iExecListener) {
             if (!isActive())
-                throw new UnexpectedException("Shell stream is dead!");
+                throw new UnexpectedException("Shell stream is dead.");
 
             splicingCommandIfNeed();
             callbackCommandListener();

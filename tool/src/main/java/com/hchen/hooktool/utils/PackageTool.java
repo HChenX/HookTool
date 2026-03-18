@@ -244,6 +244,6 @@ public class PackageTool {
         if (resolveInfo.activityInfo != null) return resolveInfo.activityInfo;
         if (resolveInfo.serviceInfo != null) return resolveInfo.serviceInfo;
         if (resolveInfo.providerInfo != null) return resolveInfo.providerInfo;
-        throw new UnexpectedException("[PackageTool]: Unable to obtain application information!!");
+        throw new UnexpectedException("Unable to obtain application information.");
     }
 }

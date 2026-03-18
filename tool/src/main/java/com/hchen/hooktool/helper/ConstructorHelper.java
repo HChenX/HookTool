@@ -131,9 +131,9 @@ public class ConstructorHelper {
     public Constructor<?> single() {
         List<Constructor<?>> constructors = matches();
         if (constructors.isEmpty())
-            throw new NonSingletonException("[ConstructorHelper]: No result found for query!!");
+            throw new NonSingletonException("No result found for query.");
         if (constructors.size() > 1)
-            throw new NonSingletonException("[ConstructorHelper]: Query did not return a unique result: " + constructors.size());
+            throw new NonSingletonException("Query did not return a unique result: " + constructors.size());
 
         return constructors.get(0);
     }

@@ -97,7 +97,7 @@ public class ResInjectTool {
                     loader.addProvider(provider);
                     resourcesLoader = loader;
                 } catch (IOException e) {
-                    throw new InjectResourcesException("failed to create res loader.", e);
+                    throw new InjectResourcesException("Failed to create res loader.", e);
                 }
             }
 
@@ -201,7 +201,7 @@ public class ResInjectTool {
     private static void applyHooks() {
         if (isHooked) return;
         if (!isInjected) {
-            throw new InjectResourcesException("should inject module res first.");
+            throw new InjectResourcesException("Should inject module res first.");
         }
 
         CoreTool.hook(Resources.class, "loadXmlResourceParser", int.class, String.class).intercept(hookResBefore); // XmlResourceParser
