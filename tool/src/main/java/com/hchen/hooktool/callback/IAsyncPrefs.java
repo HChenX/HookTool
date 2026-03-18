@@ -21,7 +21,7 @@ package com.hchen.hooktool.callback;
 import androidx.annotation.NonNull;
 
 /**
- * 异步 Prefs 接口
+ * 异步 Prefs 回调
  *
  * @author 焕晨HChen
  */

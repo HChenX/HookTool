@@ -27,7 +27,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Prefs 实现接口
+ * Prefs 接口
  *
  * @author 焕晨HChen
  */

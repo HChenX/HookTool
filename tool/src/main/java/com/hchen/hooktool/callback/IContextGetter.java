@@ -23,7 +23,7 @@ import android.content.Context;
 import androidx.annotation.Nullable;
 
 /**
- * Context 获取器
+ * 异步 Context 获取器回调
  *
  * @author 焕晨HChen
  */

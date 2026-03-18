@@ -43,9 +43,10 @@ import kotlin.text.Charsets;
  * <p>
  * <pre>{@code
  * -keep class com.hchen.hooktool.ModuleState {
- *    public static boolean isXposedEnabled();
- *    public static java.lang.String getFramework();
- *    public static int getVersion();
+ *    public static boolean isXposedActivated;
+ *    public static java.lang.String frameworkName;
+ *    public static java.lang.String frameworkVersion;
+ *    public static int frameworkVersionCode;
  * }
  * }
  *
