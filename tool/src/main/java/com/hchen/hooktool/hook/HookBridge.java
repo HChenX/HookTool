@@ -36,12 +36,25 @@ public class HookBridge {
         this.builder = builder;
     }
 
+    /**
+     * 设置钩子优先级
+     *
+     * @param priority 优先级值
+     */
     public HookBridge setPriority(int priority) {
         Objects.requireNonNull(builder);
         builder.setPriority(priority);
         return this;
     }
 
+    /**
+     * 设置钩子拦截器
+     * <p>
+     * 将自定义的 AbsHook 实现与 Xposed API 连接起来
+     *
+     * @param absHook 自定义的钩子实现
+     * @return 钩子句柄，可用于后续操作（如解除钩子）
+     */
     public XposedInterface.HookHandle intercept(@NonNull AbsHook absHook) {
         Objects.requireNonNull(builder);
         XposedInterface.HookHandle handle = builder.intercept(new XposedInterface.Hooker() {
@@ -51,6 +64,7 @@ public class HookBridge {
                 absHook.reset();
 
                 try {
+                    absHook.setCurrentStage(AbsHook.StageEnum.BEFORE);
                     absHook.before();
                 } catch (Throwable throwable) {
                     if (!absHook.onThrow(AbsHook.StageEnum.BEFORE, throwable)) {
@@ -59,6 +73,7 @@ public class HookBridge {
                 }
 
                 try {
+                    absHook.setCurrentStage(AbsHook.StageEnum.PROCEED);
                     absHook.callProceed();
                 } catch (Throwable throwable) {
                     if (!absHook.onThrow(AbsHook.StageEnum.PROCEED, throwable)) {
@@ -67,6 +82,7 @@ public class HookBridge {
                 }
 
                 try {
+                    absHook.setCurrentStage(AbsHook.StageEnum.AFTER);
                     absHook.after();
                 } catch (Throwable throwable) {
                     if (!absHook.onThrow(AbsHook.StageEnum.AFTER, throwable)) {

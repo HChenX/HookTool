@@ -28,7 +28,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.hchen.hooktool.ModuleConfig;
+import com.hchen.hooktool.ModuleData;
 import com.hchen.hooktool.callback.IAsyncPrefs;
+import com.hchen.hooktool.callback.IContextGetter;
 import com.hchen.hooktool.callback.IPrefsApply;
 import com.hchen.hooktool.exception.NonXposedException;
 import com.hchen.hooktool.exception.UnexpectedException;
@@ -39,8 +41,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import de.robv.android.xposed.XSharedPreferences;
-
 /**
  * 共享首选项工具
  *
@@ -48,8 +48,8 @@ import de.robv.android.xposed.XSharedPreferences;
  */
 public class PrefsTool {
     private static final String TAG = "PrefsTool";
-    private final static ConcurrentHashMap<String, Xprefs> xPrefsMap = new ConcurrentHashMap<>();
-    private final static ConcurrentHashMap<String, Sprefs> sPrefsMap = new ConcurrentHashMap<>();
+    private final static ConcurrentHashMap<String, SPrefs> xSPrefsMap = new ConcurrentHashMap<>(); // 宿主端
+    private final static ConcurrentHashMap<String, SPrefs> sPrefsMap = new ConcurrentHashMap<>(); // 模块端
 
     private PrefsTool() {
     }
@@ -67,7 +67,7 @@ public class PrefsTool {
      */
     @NonNull
     public static IPrefsApply prefs(@NonNull Context context, @NonNull String prefsName) {
-        return createSpIfNeed(context, prefsName);
+        return createSPrefsIfNeed(context, prefsName);
     }
 
     /**
@@ -76,7 +76,7 @@ public class PrefsTool {
     @NonNull
     public static IPrefsApply prefs() {
         if (!ModuleConfig.isXposedEnvironment())
-            throw new NonXposedException("[PrefsTool]: Not xposed environment!!");
+            throw new NonXposedException("must be in the xposed environment.");
         return prefs("");
     }
 
@@ -86,8 +86,8 @@ public class PrefsTool {
     @NonNull
     public static IPrefsApply prefs(@NonNull String prefsName) {
         if (!ModuleConfig.isXposedEnvironment())
-            throw new NonXposedException("[PrefsTool]: Not xposed environment!!");
-        return createXspIfNeed(prefsName);
+            throw new NonXposedException("must be in the xposed environment.");
+        return createXSPrefsIfNeed(prefsName);
     }
 
     /**
@@ -102,29 +102,29 @@ public class PrefsTool {
      */
     public static void asyncPrefs(@NonNull String prefsName, @NonNull IAsyncPrefs asyncPrefs) {
         if (!ModuleConfig.isXposedEnvironment())
-            throw new NonXposedException("[PrefsTool]: Not xposed environment!!");
+            throw new NonXposedException("must be in the xposed environment.");
 
-        ContextTool.getAsyncContext(context ->
-                asyncPrefs.async(createSpIfNeed(Objects.requireNonNull(context), prefsName)),
+        ContextTool.getAsyncContext(
+            new IContextGetter() {
+                @Override
+                public void onContext(@Nullable Context context) {
+                    asyncPrefs.async(createSPrefsIfNeed(Objects.requireNonNull(context), prefsName));
+                }
+            },
             ContextTool.FLAG_CURRENT_APP
         );
     }
 
-    private static IPrefsApply createXspIfNeed(@NonNull String prefsName) {
-        if (ModuleConfig.getModulePackageName().isEmpty())
-            throw new UnexpectedException("[PrefsTool]: Module package name is empty, Please set module package name!!");
-
+    private static IPrefsApply createXSPrefsIfNeed(@NonNull String prefsName) {
         prefsName = initPrefsName(prefsName);
-        if (xPrefsMap.get(ModuleConfig.getModulePackageName() + prefsName) == null) {
-            XSharedPreferences x = new XSharedPreferences(ModuleConfig.getModulePackageName(), prefsName);
-            x.makeWorldReadable();
-            x.reload();
+        if (xSPrefsMap.get(ModuleConfig.getModulePackageName() + prefsName) == null) {
+            Objects.requireNonNull(ModuleData.getWrapper());
 
-            Xprefs xprefs = new Xprefs(x);
-            xPrefsMap.put(ModuleConfig.getModulePackageName() + prefsName, xprefs);
-            return xprefs;
+            SPrefs sPrefs = new SPrefs(ModuleData.getRemotePreferences(prefsName));
+            xSPrefsMap.put(ModuleConfig.getModulePackageName() + prefsName, sPrefs);
+            return sPrefs;
         } else {
-            return xPrefsMap.get(ModuleConfig.getModulePackageName() + prefsName);
+            return xSPrefsMap.get(ModuleConfig.getModulePackageName() + prefsName);
         }
     }
 
@@ -132,7 +132,7 @@ public class PrefsTool {
      * @noinspection deprecation
      */
     @SuppressLint("WorldReadableFiles")
-    private static IPrefsApply createSpIfNeed(@NonNull Context context, @NonNull String prefsName) {
+    private static IPrefsApply createSPrefsIfNeed(@NonNull Context context, @NonNull String prefsName) {
         prefsName = initPrefsName(prefsName);
         if (sPrefsMap.get(context.getPackageName() + prefsName) == null) {
             SharedPreferences s;
@@ -140,10 +140,10 @@ public class PrefsTool {
                 s = context.getSharedPreferences(prefsName, Context.MODE_WORLD_READABLE);
             } catch (Throwable ignored) {
                 s = context.getSharedPreferences(prefsName, Context.MODE_PRIVATE);
-                AndroidLog.logW(TAG, "Maybe unsupported xSharedPreferences!!", getStackTrace());
+                AndroidLog.logW(TAG, "maybe unsupported prefs.", getStackTrace());
             }
 
-            Sprefs sprefs = new Sprefs(s);
+            SPrefs sprefs = new SPrefs(s);
             sPrefsMap.put(context.getPackageName() + prefsName, sprefs);
             return sprefs;
         } else {
@@ -153,121 +153,23 @@ public class PrefsTool {
 
     @NonNull
     private static String initPrefsName(@NonNull String name) {
-        Objects.requireNonNull(name, "[PrefsTool]: prefs name must not be null!!");
+        Objects.requireNonNull(name, "prefs name must not be null.");
 
         if (name.isEmpty()) {
             if (ModuleConfig.getPrefsName().isEmpty()) {
                 if (ModuleConfig.getModulePackageName().isEmpty())
-                    throw new UnexpectedException("[PrefsTool]: What prefs name you want use?");
+                    throw new UnexpectedException("what prefs name you want use?");
 
-                return ModuleConfig.getModulePackageName() + "_prefs";
+                return ModuleConfig.getModulePackageName().toLowerCase() + "_prefs";
             }
             return ModuleConfig.getPrefsName();
         } else return name;
     }
 
     /**
-     * @noinspection unchecked, DataFlowIssue
-     */
-    private record Xprefs(@NonNull XSharedPreferences xSharedPreferences) implements IPrefsApply {
-        @Override
-        @Nullable
-        public String getString(String key, @Nullable String def) {
-            reload();
-            return xSharedPreferences.getString(key, def);
-        }
-
-        @Override
-        @Nullable
-        public Set<String> getStringSet(String key, @Nullable Set<String> def) {
-            reload();
-            return xSharedPreferences.getStringSet(key, def);
-        }
-
-        @Override
-        public boolean getBoolean(String key, boolean def) {
-            reload();
-            return xSharedPreferences.getBoolean(key, def);
-        }
-
-        @Override
-        public int getInt(String key, int def) {
-            reload();
-            return xSharedPreferences.getInt(key, def);
-        }
-
-        @Override
-        public float getFloat(String key, float def) {
-            reload();
-            return xSharedPreferences.getFloat(key, def);
-        }
-
-        @Override
-        public long getLong(String key, long def) {
-            reload();
-            return xSharedPreferences.getLong(key, def);
-        }
-
-        @Override
-        public Object get(String key, Object def) {
-            if (def instanceof String s) {
-                return getString(key, s);
-            } else if (def instanceof Set<?> set) {
-                return getStringSet(key, (Set<String>) set);
-            } else if (def instanceof Integer i) {
-                return getInt(key, i);
-            } else if (def instanceof Boolean b) {
-                return getBoolean(key, b);
-            } else if (def instanceof Float f) {
-                return getFloat(key, f);
-            } else if (def instanceof Long l) {
-                return getLong(key, l);
-            }
-            throw new UnexpectedException("[PrefsTool]: Unknown type value: " + def);
-        }
-
-        @Override
-        public boolean contains(String key) {
-            reload();
-            return xSharedPreferences.contains(key);
-        }
-
-        @Override
-        public Map<String, ?> getAll() {
-            reload();
-            return xSharedPreferences.getAll();
-        }
-
-        /**
-         * Xprefs 不支持修改！
-         */
-        @Override
-        @NonNull
-        public SharedPreferences.Editor editor() {
-            throw new UnsupportedOperationException("[PrefsTool]: Xposed unsupported edit prefs!!");
-        }
-
-        @Override
-        public void registerOnSharedPreferenceChangeListener(SharedPreferences.OnSharedPreferenceChangeListener listener) {
-            xSharedPreferences.registerOnSharedPreferenceChangeListener(listener);
-        }
-
-        @Override
-        public void unregisterOnSharedPreferenceChangeListener(SharedPreferences.OnSharedPreferenceChangeListener listener) {
-            xSharedPreferences.unregisterOnSharedPreferenceChangeListener(listener);
-        }
-
-        private void reload() {
-            if (ModuleConfig.isAutoReload()) {
-                xSharedPreferences.reload();
-            }
-        }
-    }
-
-    /**
      * @noinspection unchecked
      */
-    private record Sprefs(@NonNull SharedPreferences preferences) implements IPrefsApply {
+    private record SPrefs(@NonNull SharedPreferences preferences) implements IPrefsApply {
         @Override
         @Nullable
         public String getString(String key, @Nullable String def) {
@@ -315,7 +217,7 @@ public class PrefsTool {
             } else if (def instanceof Long l) {
                 return getLong(key, l);
             }
-            throw new UnexpectedException("[PrefsTool]: Unknown type value: " + def);
+            throw new UnexpectedException("unknown type value: " + def);
         }
 
         @Override
@@ -328,8 +230,8 @@ public class PrefsTool {
             return preferences.getAll();
         }
 
-        @Override
         @NonNull
+        @Override
         public SharedPreferences.Editor editor() {
             return preferences.edit();
         }

@@ -22,11 +22,13 @@ import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.hchen.hooktool.exception.UnexpectedException;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 /**
- * 模块配置
+ * ModuleConfig
  * <p>
  * 此类存储模块的基本配置
  *
@@ -119,6 +121,10 @@ public class ModuleConfig {
 
     @NonNull
     public static String getModulePackageName() {
+        if (modulePackageName.isEmpty()) {
+            throw new UnexpectedException("module package name Must not be empty.");
+        }
+
         return modulePackageName;
     }
 

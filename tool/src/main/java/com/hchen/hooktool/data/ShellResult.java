@@ -18,6 +18,8 @@
  */
 package com.hchen.hooktool.data;
 
+import android.text.TextUtils;
+
 import androidx.annotation.NonNull;
 
 import java.util.Arrays;
@@ -35,7 +37,7 @@ public record ShellResult(@NonNull String command, @NonNull String exitCode,
      * 是否成功执行
      */
     public boolean isSuccess() {
-        return "0".equals(exitCode);
+        return TextUtils.equals("0", exitCode);
     }
 
     @Override
