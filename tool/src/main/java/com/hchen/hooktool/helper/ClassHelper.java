@@ -37,17 +37,15 @@ import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import dalvik.system.BaseDexClassLoader;
 import dalvik.system.DexFile;
 
 /**
- * 类查找
+ * 类查找工具
+ * 用于根据各种条件查找和筛选类
  *
  * @author 焕晨HChen
  * @noinspection SequencedCollectionMethodCanBeUsed, unused
@@ -63,13 +61,13 @@ public class ClassHelper {
     // ----------- field -------------
     private Class<?>[] fieldClasses;
     private String[] fieldNames;
-    private int fieldCount = -1;
+    private int expectedFieldCount = -1;
     // ------------ method ----------------
     private String[] methodNames;
-    private int methodCount = -1;
+    private int expectedMethodCount = -1;
     // ------------- constructor ---------------
     private Class<?>[] constructorClasses;
-    private int constructorCount = -1;
+    private int expectedConstructorCount = -1;
     // -------------- other --------------------
     private Class<? extends Annotation>[] annotations;
     private Class<?>[] interfaceClasses;
@@ -84,119 +82,133 @@ public class ClassHelper {
     }
 
     /**
-     * 查找指定类名
+     * 设置要查找的类名
      */
     public ClassHelper withClassName(@NonNull String className) {
+        Objects.requireNonNull(className, "ClassName must not be null.");
         this.className = className;
         return this;
     }
 
     /**
-     * 类名包含的字段
+     * 设置类名中要包含的子字符串
      */
     public ClassHelper withSubstring(@NonNull String substring) {
+        Objects.requireNonNull(substring, "Substring must not be null.");
         this.substring = substring;
         return this;
     }
 
     /**
-     * 正则匹配查找类名
+     * 设置用于匹配类名的正则表达式
      */
     public ClassHelper withPattern(@NonNull Pattern pattern) {
+        Objects.requireNonNull(pattern, "Pattern must not be null.");
         this.pattern = pattern;
         return this;
     }
 
     /**
-     * 查找指定包内的类
+     * 设置要查找的包路径
      */
     public ClassHelper withPackage(@NonNull String packagePath) {
+        Objects.requireNonNull(packagePath, "PackagePath must not be null.");
         this.packagePath = packagePath;
         return this;
     }
 
     /**
-     * 查找包含指定字段集的类
+     * 设置要查找的字段类型
      */
     public ClassHelper withFieldClasses(@NonNull Class<?>... fieldClasses) {
+        Objects.requireNonNull(fieldClasses, "FieldClasses must not be null.");
         this.fieldClasses = fieldClasses;
         return this;
     }
 
     /**
-     * 查找包含指定字段集的类
+     * 设置要查找的字段名称
      */
     public ClassHelper withFieldNames(@NonNull String... fieldNames) {
+        Objects.requireNonNull(fieldNames, "FieldNames must not be null.");
         this.fieldNames = fieldNames;
         return this;
     }
 
     /**
-     * 查找包含指定数量字段的类
+     * 设置要查找的字段数量
      */
     public ClassHelper withFieldCount(int count) {
-        this.fieldCount = count;
+        this.expectedFieldCount = count;
         return this;
     }
 
     /**
-     * 查找包含指定方法集的类
+     * 设置要查找的方法名称
      */
     public ClassHelper withMethodNames(@NonNull String... methodNames) {
+        Objects.requireNonNull(methodNames, "MethodNames must not be null.");
         this.methodNames = methodNames;
         return this;
     }
 
     /**
-     * 查找包含指定方法数量的类
+     * 设置要查找的方法数量
      */
     public ClassHelper withMethodCount(int count) {
-        this.methodCount = count;
+        this.expectedMethodCount = count;
         return this;
     }
 
     /**
-     * 查找包含指定构造函数参数集的类
+     * 设置要查找的构造函数参数类型
      */
     public ClassHelper withConstructorClasses(@NonNull Class<?>... classes) {
+        Objects.requireNonNull(classes, "Classes must not be null.");
         this.constructorClasses = classes;
         return this;
     }
 
     /**
-     * 查找包含指定构造函数数量的类
+     * 设置要查找的构造函数数量
      */
     public ClassHelper withConstructorCount(int count) {
-        this.constructorCount = count;
+        this.expectedConstructorCount = count;
         return this;
     }
 
     /**
-     * 查找使用了指定注解的类
+     * 设置要查找的注解
      */
+    @SuppressWarnings("unchecked")
     public ClassHelper withAnnotations(@NonNull Class<? extends Annotation>... annotations) {
+        Objects.requireNonNull(annotations, "Annotations must not be null.");
         this.annotations = annotations;
         return this;
     }
 
     /**
-     * 查找实现了指定接口的类
+     * 设置要查找的接口
      */
     public ClassHelper withInterfaces(@NonNull Class<?>... interfaceClasses) {
+        Objects.requireNonNull(interfaceClasses, "InterfaceClasses must not be null.");
         this.interfaceClasses = interfaceClasses;
         return this;
     }
 
     /**
-     * 查找继承了指定类的类
+     * 设置要查找的父类
      */
     public ClassHelper withSuperClass(@NonNull Class<?> superClass) {
+        Objects.requireNonNull(superClass, "SuperClass must not be null.");
         this.superClass = superClass;
         return this;
     }
 
     /**
-     * 查找并返回唯一匹配，否则抛出异常
+     * 查找并返回唯一匹配的类
+     * <p>
+     * 如果没有找到匹配的类或找到多个匹配的类，则抛出异常
      */
     public Class<?> single() {
         List<Class<?>> list = matches();
@@ -208,7 +220,9 @@ public class ClassHelper {
     }
 
     /**
-     * 查找并返回唯一匹配，否则返回 null
+     * 查找并返回唯一匹配的类
+     * <p>
+     * 如果没有找到匹配的类或找到多个匹配的类，则返回 null
      */
     @Nullable
     public Class<?> singleOrNull() {
@@ -218,9 +232,12 @@ public class ClassHelper {
     }
 
     /**
-     * 获取查找到的对象，如果查找结果为空或不为单个则抛错
+     * 查找并返回唯一匹配的类
+     * <p>
+     * 如果没有找到匹配的类或找到多个匹配的类，则抛出由供应商提供的异常
      */
     public Class<?> singleOrThrow(@NonNull Supplier<NonSingletonException> supplier) {
+        Objects.requireNonNull(supplier, "Supplier must not be null.");
         List<Class<?>> list = matches();
         if (list.size() != 1) throw supplier.get();
 
@@ -228,7 +245,7 @@ public class ClassHelper {
     }
 
     /**
-     * 返回查找到的全部对象
+     * 返回所有匹配的类
      */
     public Class<?>[] toArray() {
         return matches().toArray(new Class[0]);
@@ -237,7 +254,7 @@ public class ClassHelper {
     /**
      * 重置查找器
      * <p>
-     * 不会重置类路径的缓存列表
+     * 清除所有查找条件，但不会重置类路径的缓存列表
      */
     public void reset() {
         className = null;
@@ -245,109 +262,215 @@ public class ClassHelper {
         pattern = null;
         packagePath = null;
         fieldNames = null;
-        fieldCount = -1;
+        expectedFieldCount = -1;
         fieldClasses = null;
         methodNames = null;
-        methodCount = -1;
+        expectedMethodCount = -1;
         constructorClasses = null;
-        constructorCount = -1;
+        expectedConstructorCount = -1;
         annotations = null;
         superClass = null;
         interfaceClasses = null;
     }
 
     /**
-     * 查找所有匹配
+     * 查找所有匹配的类
+     * <p>
+     * 根据设置的条件筛选出符合要求的类
      */
     private List<Class<?>> matches() {
         List<String> paths = getAllClassPath();
-        return paths.stream().filter(path -> {
-            try {
-                if (packagePath != null && !path.startsWith(packagePath)) {
-                    return false;
-                }
+        List<Class<?>> result = new ArrayList<>(paths.size());
 
-                Class<?> cls = loader.loadClass(path);
-                if (className != null && !TextUtils.equals(cls.getSimpleName(), className))
-                    return false;
-                else if (substring != null && !cls.getSimpleName().contains(substring))
-                    return false;
-                else if (pattern != null && !pattern.matcher(cls.getSimpleName()).matches())
-                    return false;
-
-                if (fieldCount != -1 && cls.getDeclaredFields().length != fieldCount)
-                    return false;
-                if (fieldClasses != null) {
-                    Set<Class<?>> fieldTypeSet = Arrays.stream(cls.getDeclaredFields()).map(Field::getType).collect(Collectors.toSet());
-                    if (!Arrays.stream(fieldClasses).allMatch(c -> Objects.equals(c, null) || fieldTypeSet.contains(c)))
-                        return false;
-                }
-                if (fieldNames != null) {
-                    Set<String> fieldNameSet = Arrays.stream(cls.getDeclaredFields()).map(Field::getName).collect(Collectors.toSet());
-                    if (!Arrays.stream(fieldNames).allMatch(fieldNameSet::contains))
-                        return false;
-                }
-
-                if (methodCount != -1 && cls.getDeclaredMethods().length != methodCount)
-                    return false;
-                if (methodNames != null) {
-                    Set<String> methodNameSet = Arrays.stream(cls.getDeclaredMethods()).map(Method::getName).collect(Collectors.toSet());
-                    if (!Arrays.stream(methodNames).allMatch(methodNameSet::contains))
-                        return false;
-                }
-
-                if (annotations != null && !Arrays.stream(annotations).allMatch(cls::isAnnotationPresent))
-                    return false;
-                if (superClass != null && !superClass.isAssignableFrom(cls)) return false;
-                if (interfaceClasses != null) {
-                    List<Class<?>> list = Arrays.asList(cls.getInterfaces());
-                    if (!Arrays.stream(interfaceClasses).allMatch(list::contains))
-                        return false;
-                }
-
-                if (constructorCount != -1 && cls.getDeclaredConstructors().length != constructorCount)
-                    return false;
-                if (constructorClasses != null) {
-                    boolean foundMatchingConstructor = false;
-                    Constructor<?>[] constructors = cls.getDeclaredConstructors();
-                    for (Constructor<?> constructor : constructors) {
-                        if (constructor.getParameterCount() != constructorClasses.length) {
-                            continue;
-                        }
-
-                        boolean currentConstructorMatches = true;
-                        Class<?>[] parameterTypes = constructor.getParameterTypes();
-                        for (int i = 0; i < parameterTypes.length; i++) {
-                            Class<?> want = constructorClasses[i];
-                            if (Objects.equals(want, null)) continue;
-                            if (!Objects.equals(parameterTypes[i], want)) {
-                                currentConstructorMatches = false;
-                                break;
-                            }
-                        }
-
-                        if (currentConstructorMatches) {
-                            foundMatchingConstructor = true;
-                            break;
-                        }
-                    }
-                    if (!foundMatchingConstructor) return false;
-                }
-            } catch (Throwable ignore) {
-                return false;
+        for (String path : paths) {
+            if (!filterByPackage(path)) {
+                continue;
             }
-            return true;
-        }).map((Function<String, Class<?>>) path -> {
-            try {
-                return loader.loadClass(path);
-            } catch (ClassNotFoundException e) {
-                throw new UnexpectedException(e);
+
+            Class<?> cls = loadClassSafely(path);
+            if (cls == null) {
+                continue;
             }
-        }).collect(Collectors.toCollection(ArrayList::new));
+
+            if (filterByClassInfo(cls) &&
+                filterByFields(cls) &&
+                filterByMethods(cls) &&
+                filterByAnnotations(cls) &&
+                filterBySuperClass(cls) &&
+                filterByInterfaces(cls) &&
+                filterByConstructors(cls)) {
+                result.add(cls);
+            }
+        }
+
+        return result;
     }
 
     /**
-     * @noinspection JavaReflectionMemberAccess
+     * 按包路径筛选
+     */
+    private boolean filterByPackage(String path) {
+        return packagePath == null || path.startsWith(packagePath);
+    }
+
+    /**
+     * 安全加载类
+     */
+    private Class<?> loadClassSafely(String path) {
+        try {
+            return loader.loadClass(path);
+        } catch (Throwable ignore) {
+            return null;
+        }
+    }
+
+    /**
+     * 按类信息筛选
+     */
+    private boolean filterByClassInfo(Class<?> cls) {
+        if (className != null && !TextUtils.equals(cls.getSimpleName(), className)) {
+            return false;
+        }
+        if (substring != null && !cls.getSimpleName().contains(substring)) {
+            return false;
+        }
+        return pattern == null || pattern.matcher(cls.getSimpleName()).matches();
+    }
+
+    /**
+     * 按字段相关条件筛选
+     */
+    private boolean filterByFields(Class<?> cls) {
+        Field[] declaredFields = cls.getDeclaredFields();
+        if (expectedFieldCount != -1 && declaredFields.length != expectedFieldCount) {
+            return false;
+        }
+        if (fieldClasses != null) {
+            boolean[] found = new boolean[fieldClasses.length];
+            for (Field field : declaredFields) {
+                Class<?> fieldType = field.getType();
+                for (int i = 0; i < fieldClasses.length; i++) {
+                    Class<?> c = fieldClasses[i];
+                    if (c != null && c.equals(fieldType)) {
+                        found[i] = true;
+                    }
+                }
+            }
+            for (boolean b : found) {
+                if (!b) {
+                    return false;
+                }
+            }
+        }
+        if (fieldNames != null) {
+            boolean[] found = new boolean[fieldNames.length];
+            for (Field field : declaredFields) {
+                String fieldName = field.getName();
+                for (int i = 0; i < fieldNames.length; i++) {
+                    if (fieldNames[i].equals(fieldName)) {
+                        found[i] = true;
+                    }
+                }
+            }
+            for (boolean b : found) {
+                if (!b) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    /**
+     * 按方法相关条件筛选
+     */
+    private boolean filterByMethods(Class<?> cls) {
+        Method[] declaredMethods = cls.getDeclaredMethods();
+        if (expectedMethodCount != -1 && declaredMethods.length != expectedMethodCount) {
+            return false;
+        }
+        if (methodNames != null) {
+            boolean[] found = new boolean[methodNames.length];
+            for (Method method : declaredMethods) {
+                String methodName = method.getName();
+                for (int i = 0; i < methodNames.length; i++) {
+                    if (methodNames[i].equals(methodName)) {
+                        found[i] = true;
+                    }
+                }
+            }
+            for (boolean b : found) {
+                if (!b) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    /**
+     * 按注解筛选
+     */
+    private boolean filterByAnnotations(Class<?> cls) {
+        return annotations == null || Arrays.stream(annotations).allMatch(cls::isAnnotationPresent);
+    }
+
+    /**
+     * 按父类筛选
+     */
+    private boolean filterBySuperClass(Class<?> cls) {
+        return superClass == null || superClass.isAssignableFrom(cls);
+    }
+
+    /**
+     * 按接口筛选
+     */
+    private boolean filterByInterfaces(Class<?> cls) {
+        if (interfaceClasses == null) {
+            return true;
+        }
+        List<Class<?>> list = Arrays.asList(cls.getInterfaces());
+        return Arrays.stream(interfaceClasses).allMatch(list::contains);
+    }
+
+    /**
+     * 按构造函数相关条件筛选
+     */
+    private boolean filterByConstructors(Class<?> cls) {
+        if (expectedConstructorCount != -1 && cls.getDeclaredConstructors().length != expectedConstructorCount) {
+            return false;
+        }
+        if (constructorClasses != null) {
+            boolean foundMatchingConstructor = false;
+            Constructor<?>[] constructors = cls.getDeclaredConstructors();
+            for (Constructor<?> constructor : constructors) {
+                if (constructor.getParameterCount() != constructorClasses.length) {
+                    continue;
+                }
+
+                boolean currentConstructorMatches = true;
+                Class<?>[] parameterTypes = constructor.getParameterTypes();
+                for (int i = 0; i < parameterTypes.length; i++) {
+                    Class<?> want = constructorClasses[i];
+                    if (Objects.equals(want, null)) continue;
+                    if (!Objects.equals(parameterTypes[i], want)) {
+                        currentConstructorMatches = false;
+                        break;
+                    }
+                }
+
+                if (currentConstructorMatches) {
+                    foundMatchingConstructor = true;
+                    break;
+                }
+            }
+            return foundMatchingConstructor;
+        }
+        return true;
+    }
+
+    /**
+     * 获取所有类路径
      */
     private List<String> getAllClassPath() {
         if (cacheBuilt) return classPathsCache;
@@ -355,36 +478,60 @@ public class ClassHelper {
         List<String> paths = new ArrayList<>();
         try {
             if (loader instanceof BaseDexClassLoader) {
+                @SuppressWarnings("JavaReflectionMemberAccess")
                 @SuppressLint("DiscouragedPrivateApi")
                 Field pathListField = BaseDexClassLoader.class.getDeclaredField("pathList");
                 pathListField.setAccessible(true);
                 Object pathList = pathListField.get(loader);
-                assert pathList != null;
+                if (pathList == null) {
+                    return paths;
+                }
+
                 Field dexElementsField = pathList.getClass().getDeclaredField("dexElements");
                 dexElementsField.setAccessible(true);
                 Object[] dexElements = (Object[]) dexElementsField.get(pathList);
-                assert dexElements != null;
+                if (dexElements == null) {
+                    return paths;
+                }
+
                 for (Object element : dexElements) {
-                    DexFile dex;
-                    Field dexFileField = element.getClass().getDeclaredField("dexFile");
-                    dexFileField.setAccessible(true);
-                    dex = (DexFile) dexFileField.get(element);
-                    if (dex == null) {
-                        Field pathField = element.getClass().getDeclaredField("path");
-                        pathField.setAccessible(true);
-                        File apk = (File) pathField.get(element);
-                        dex = new DexFile(apk);
-                    }
-                    for (Enumeration<String> iter = dex.entries(); iter.hasMoreElements(); ) {
-                        paths.add(iter.nextElement());
-                    }
+                    DexFile dex = getDexFileFromElement(element);
+                    addDexEntriesToPaths(dex, paths);
                 }
             }
-        } catch (Throwable ignored) {
+        } catch (Throwable e) {
+            throw new UnexpectedException(e);
         }
 
         cacheBuilt = true;
         classPathsCache = paths;
         return paths;
+    }
+
+    /**
+     * 从 dexElements 中的元素获取 DexFile
+     */
+    private DexFile getDexFileFromElement(Object element) throws Exception {
+        Field dexFileField = element.getClass().getDeclaredField("dexFile");
+        dexFileField.setAccessible(true);
+        DexFile dex = (DexFile) dexFileField.get(element);
+
+        if (dex == null) {
+            Field pathField = element.getClass().getDeclaredField("path");
+            pathField.setAccessible(true);
+            File apk = (File) pathField.get(element);
+            dex = new DexFile(apk);
+        }
+
+        return dex;
+    }
+
+    /**
+     * 将 DexFile 中的所有类名添加到 paths 列表中
+     */
+    private void addDexEntriesToPaths(DexFile dex, List<String> paths) {
+        for (Enumeration<String> iter = dex.entries(); iter.hasMoreElements(); ) {
+            paths.add(iter.nextElement());
+        }
     }
 }

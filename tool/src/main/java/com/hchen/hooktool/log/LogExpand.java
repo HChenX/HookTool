@@ -102,7 +102,7 @@ public class LogExpand {
     }
 
     public static String observeCall(@NonNull AbsHook hook) {
-        if (hook.getArgs().isEmpty()) {
+        if (hook.getArgs().length == 0) {
             return "→ Called Method\n"
                 + "├─ Class:  " + hook.getExecutable().getDeclaringClass().getName() + "\n"
                 + "├─ Method: " + hook.getExecutable().getName() + "\n"
@@ -111,8 +111,8 @@ public class LogExpand {
         }
 
         StringBuilder log = new StringBuilder();
-        for (int i = 0; i < hook.getArgs().size(); i++) {
-            Object arg = hook.getArgs().get(i);
+        for (int i = 0; i < hook.getArgs().length; i++) {
+            Object arg = hook.getArgs()[i];
             log.append("    [").append(i).append("] ");
             log.append(arg == null ? "(null)" : arg.getClass().getSimpleName());
             log.append(" = ").append(paramToString(arg)).append("\n");

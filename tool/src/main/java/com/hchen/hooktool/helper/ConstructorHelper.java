@@ -38,7 +38,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 /**
  * 构造函数查找
@@ -68,9 +67,10 @@ public class ConstructorHelper {
     }
 
     /**
-     * 构造函数的参数类型，可使用 Any.class 占位，表示任意类型
+     * 构造函数的参数类型，可使用 null 占位，表示任意类型
      */
     public ConstructorHelper withParamClasses(@NonNull Class<?>... paramClasses) {
+        Objects.requireNonNull(paramClasses, "ParamClasses must not be null.");
         this.paramClasses = paramClasses;
         return this;
     }
@@ -84,7 +84,7 @@ public class ConstructorHelper {
     }
 
     /**
-     * Public
+     * 设置构造函数为 public 修饰符
      */
     public ConstructorHelper withPublic() {
         this.mods = Modifier.PUBLIC;
@@ -92,7 +92,7 @@ public class ConstructorHelper {
     }
 
     /**
-     * Private
+     * 设置构造函数为 private 修饰符
      */
     public ConstructorHelper withPrivate() {
         this.mods = Modifier.PRIVATE;
@@ -100,7 +100,7 @@ public class ConstructorHelper {
     }
 
     /**
-     * Protected
+     * 设置构造函数为 protected 修饰符
      */
     public ConstructorHelper withProtected() {
         this.mods = Modifier.PROTECTED;
@@ -108,9 +108,11 @@ public class ConstructorHelper {
     }
 
     /**
-     * 构造函数的注释
+     * 构造函数的注解
      */
+    @SuppressWarnings("unchecked")
     public ConstructorHelper withAnnotations(@NonNull Class<? extends Annotation>... annotations) {
+        Objects.requireNonNull(annotations, "Annotations must not be null.");
         this.annotations = annotations;
         return this;
     }
@@ -121,12 +123,13 @@ public class ConstructorHelper {
      * @noinspection unchecked
      */
     public ConstructorHelper withExceptionClasses(@NonNull Class<? extends Throwable>... exceptionClasses) {
+        Objects.requireNonNull(exceptionClasses, "ExceptionClasses must not be null.");
         this.exceptionClasses = exceptionClasses;
         return this;
     }
 
     /**
-     * 获取查找到的对象，如果查找结果为空或不为单个则抛错
+     * 获取查找到的构造函数，如果查找结果为空或不为单个则抛错
      */
     public Constructor<?> single() {
         List<Constructor<?>> constructors = matches();
@@ -139,7 +142,7 @@ public class ConstructorHelper {
     }
 
     /**
-     * 获取查找到的对象，如果查找结果为空或不为单个则返回 null
+     * 获取查找到的构造函数，如果查找结果为空或不为单个则返回 null
      */
     @Nullable
     public Constructor<?> singleOrNull() {
@@ -151,7 +154,7 @@ public class ConstructorHelper {
     }
 
     /**
-     * 获取查找到的对象，如果查找结果为空或不为单个则抛错
+     * 获取查找到的构造函数，如果查找结果为空或不为单个则抛错
      */
     public Constructor<?> singleOrThrow(@NonNull Supplier<NonSingletonException> throwableSupplier) {
         List<Constructor<?>> constructors = matches();
@@ -162,14 +165,14 @@ public class ConstructorHelper {
     }
 
     /**
-     * 返回查找到的全部对象
+     * 返回查找到的所有构造函数
      */
     public Constructor<?>[] toArray() {
         return matches().toArray(new Constructor[0]);
     }
 
     /**
-     * 重置查找器
+     * 重置查找器，清除所有设置的条件
      */
     public void reset() {
         mods = -1;
@@ -181,70 +184,111 @@ public class ConstructorHelper {
 
     /**
      * 核心过滤逻辑
-     *
-     * @noinspection RedundantIfStatement
      */
     private List<Constructor<?>> matches() {
-        List<Constructor<?>> constructors = new ArrayList<>(Arrays.asList(clazz.getDeclaredConstructors()));
+        Constructor<?>[] declaredConstructors = clazz.getDeclaredConstructors();
+        List<Constructor<?>> result = new ArrayList<>(declaredConstructors.length);
 
-        return constructors.stream()
-            .filter(constructor -> {
-                if (paramClasses != null) {
-                    if (paramClasses.length != constructor.getParameterCount()) {
-                        return false;
-                    } else {
-                        for (int i = 0; i < paramClasses.length; i++) {
-                            Class<?> want = paramClasses[i];
-                            Class<?> actual = constructor.getParameterTypes()[i];
-                            if (Objects.equals(want, null)) continue;
-                            if (!Objects.equals(want, actual)) {
-                                return false;
-                            }
-                        }
-                    }
+        for (Constructor<?> constructor : declaredConstructors) {
+            if (matchesParamClasses(constructor) &&
+                matchesParamCount(constructor) &&
+                matchesModifiers(constructor) &&
+                matchesAnnotations(constructor) &&
+                matchesExceptions(constructor)) {
+                result.add(constructor);
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * 匹配参数类型
+     */
+    private boolean matchesParamClasses(Constructor<?> constructor) {
+        if (paramClasses == null) {
+            return true;
+        }
+
+        if (paramClasses.length != constructor.getParameterCount()) {
+            return false;
+        }
+
+        for (int i = 0; i < paramClasses.length; i++) {
+            Class<?> want = paramClasses[i];
+            Class<?> actual = constructor.getParameterTypes()[i];
+            if (want != null && !want.equals(actual)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * 匹配参数数量
+     */
+    private boolean matchesParamCount(Constructor<?> constructor) {
+        if (paramCountVarMap.isEmpty()) {
+            return true;
+        }
+
+        if (paramCountVarMap.containsKey(EQ)) {
+            // noinspection DataFlowIssue
+            return constructor.getParameterCount() == paramCountVarMap.get(EQ);
+        }
+
+        for (int mode : paramCountVarMap.keySet()) {
+            Integer count = paramCountVarMap.get(mode);
+            if (count == null) {
+                return false;
+            }
+
+            switch (mode) {
+                case GT -> {
+                    if (!(constructor.getParameterCount() > count)) return false;
                 }
-
-                if (!paramCountVarMap.isEmpty()) {
-                    if (paramCountVarMap.containsKey(EQ)) {
-                        if (!Objects.equals(constructor.getParameterCount(), paramCountVarMap.get(EQ)))
-                            return false;
-                    } else {
-                        for (int mode : paramCountVarMap.keySet()) {
-                            Integer count = paramCountVarMap.get(mode);
-                            if (count == null) return false;
-
-                            switch (mode) {
-                                case GT -> {
-                                    if (!(constructor.getParameterCount() > count)) return false;
-                                }
-                                case LT -> {
-                                    if (!(constructor.getParameterCount() < count)) return false;
-                                }
-                                case GE -> {
-                                    if (!(constructor.getParameterCount() >= count)) return false;
-                                }
-                                case LE -> {
-                                    if (!(constructor.getParameterCount() <= count)) return false;
-                                }
-                                default -> {
-                                    return false;
-                                }
-                            }
-                        }
-                    }
+                case LT -> {
+                    if (!(constructor.getParameterCount() < count)) return false;
                 }
-                if (mods != -1 && (constructor.getModifiers() & mods) != mods)
+                case GE -> {
+                    if (!(constructor.getParameterCount() >= count)) return false;
+                }
+                case LE -> {
+                    if (!(constructor.getParameterCount() <= count)) return false;
+                }
+                default -> {
                     return false;
-                if (annotations != null && !Arrays.stream(annotations).allMatch(constructor::isAnnotationPresent))
-                    return false;
-                if (exceptionClasses != null) {
-                    List<Class<?>> list = Arrays.asList(constructor.getExceptionTypes());
-                    if (!Arrays.stream(exceptionClasses).allMatch(list::contains))
-                        return false;
                 }
+            }
+        }
 
-                return true;
-            })
-            .collect(Collectors.toList());
+        return true;
+    }
+
+    /**
+     * 匹配修饰符
+     */
+    private boolean matchesModifiers(Constructor<?> constructor) {
+        return mods == -1 || (constructor.getModifiers() & mods) == mods;
+    }
+
+    /**
+     * 匹配注解
+     */
+    private boolean matchesAnnotations(Constructor<?> constructor) {
+        return annotations == null || Arrays.stream(annotations).allMatch(constructor::isAnnotationPresent);
+    }
+
+    /**
+     * 匹配异常
+     */
+    private boolean matchesExceptions(Constructor<?> constructor) {
+        if (exceptionClasses == null) {
+            return true;
+        }
+
+        List<Class<?>> declaredExceptions = Arrays.asList(constructor.getExceptionTypes());
+        return Arrays.stream(exceptionClasses).allMatch(declaredExceptions::contains);
     }
 }

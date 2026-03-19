@@ -32,7 +32,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * 字段查找
@@ -59,6 +58,7 @@ public class FieldHelper {
      * 精确字段名
      */
     public FieldHelper withFieldName(@NonNull String fieldName) {
+        Objects.requireNonNull(fieldName, "FieldName must not be null.");
         this.fieldName = fieldName;
         return this;
     }
@@ -67,6 +67,7 @@ public class FieldHelper {
      * 字段名包含子串
      */
     public FieldHelper withSubstring(@NonNull String substring) {
+        Objects.requireNonNull(substring, "Substring must not be null.");
         this.substring = substring;
         return this;
     }
@@ -75,6 +76,7 @@ public class FieldHelper {
      * 字段名匹配正则
      */
     public FieldHelper withPattern(@NonNull Pattern pattern) {
+        Objects.requireNonNull(pattern, "Pattern must not be null.");
         this.pattern = pattern;
         return this;
     }
@@ -83,6 +85,7 @@ public class FieldHelper {
      * 字段类型
      */
     public FieldHelper withFieldClass(@NonNull Class<?> fieldClass) {
+        Objects.requireNonNull(fieldClass, "FieldClass must not be null.");
         this.fieldClass = fieldClass;
         return this;
     }
@@ -91,28 +94,44 @@ public class FieldHelper {
      * 字段修饰符
      */
     public FieldHelper withMods(@NonNull int... modsFlags) {
+        Objects.requireNonNull(modsFlags, "ModsFlags must not be null.");
         int combined = 0;
         for (int f : modsFlags) combined |= f;
         this.mods = combined;
         return this;
     }
 
+    /**
+     * 设置字段为 public 修饰符
+     */
     public FieldHelper withPublic() {
         return withMods(Modifier.PUBLIC);
     }
 
+    /**
+     * 设置字段为 private 修饰符
+     */
     public FieldHelper withPrivate() {
         return withMods(Modifier.PRIVATE);
     }
 
+    /**
+     * 设置字段为 protected 修饰符
+     */
     public FieldHelper withProtected() {
         return withMods(Modifier.PROTECTED);
     }
 
+    /**
+     * 设置字段为 static 修饰符
+     */
     public FieldHelper withStatic() {
         return withMods(Modifier.STATIC);
     }
 
+    /**
+     * 设置字段为 final 修饰符
+     */
     public FieldHelper withFinal() {
         return withMods(Modifier.FINAL);
     }
@@ -120,7 +139,9 @@ public class FieldHelper {
     /**
      * 字段注解
      */
+    @SuppressWarnings("unchecked")
     public FieldHelper withAnnotations(@NonNull Class<? extends Annotation>... annotations) {
+        Objects.requireNonNull(annotations, "Annotations must not be null.");
         this.annotations = annotations;
         return this;
     }
@@ -134,7 +155,7 @@ public class FieldHelper {
     }
 
     /**
-     * 单个匹配, 无结果或多于一个抛异常
+     * 单个匹配，无结果或多于一个抛异常
      */
     public Field single() {
         List<Field> list = matches();
@@ -165,14 +186,14 @@ public class FieldHelper {
     }
 
     /**
-     * 返回查找到的全部对象
+     * 返回查找到的所有字段
      */
     public Field[] toArray() {
         return matches().toArray(new Field[0]);
     }
 
     /**
-     * 重置查找器
+     * 重置查找器，清除所有设置的条件
      */
     public void reset() {
         mods = -1;
@@ -186,29 +207,70 @@ public class FieldHelper {
 
     /**
      * 查找核心逻辑
-     *
-     * @noinspection RedundantIfStatement
      */
     private List<Field> matches() {
-        List<Field> fields = new ArrayList<>(Arrays.asList(clazz.getDeclaredFields()));
+        Field[] declaredFields = clazz.getDeclaredFields();
+        ArrayList<Field> fields = new ArrayList<>(Arrays.asList(declaredFields));
+        
         if (withSuper) {
-            Class<?> sup = clazz.getSuperclass();
-            while (sup != null) {
-                fields.addAll(Arrays.asList(sup.getDeclaredFields()));
-                sup = sup.getSuperclass();
+            addSuperClassFields(fields);
+        }
+
+        ArrayList<Field> result = new ArrayList<>(fields.size());
+        for (Field field : fields) {
+            if (matchesFieldName(field) &&
+                matchesModifiers(field) &&
+                matchesFieldClass(field) &&
+                matchesAnnotations(field)) {
+                result.add(field);
             }
         }
 
-        return fields.stream().filter(field -> {
-            if (fieldName != null && !Objects.equals(field.getName(), fieldName)) return false;
-            else if (substring != null && !field.getName().contains(substring)) return false;
-            else if (pattern != null && !pattern.matcher(field.getName()).matches()) return false;
+        return result;
+    }
 
-            if (mods != -1 && (field.getModifiers() & mods) != mods) return false;
-            if (fieldClass != null && !Objects.equals(field.getType(), fieldClass)) return false;
-            if (annotations != null && !Arrays.stream(annotations).allMatch(field::isAnnotationPresent)) return false;
+    /**
+     * 添加父类字段
+     */
+    private void addSuperClassFields(List<Field> fields) {
+        Class<?> sup = clazz.getSuperclass();
+        while (sup != null) {
+            fields.addAll(Arrays.asList(sup.getDeclaredFields()));
+            sup = sup.getSuperclass();
+        }
+    }
 
-            return true;
-        }).collect(Collectors.toCollection(ArrayList::new));
+    /**
+     * 匹配字段名
+     */
+    private boolean matchesFieldName(Field field) {
+        if (fieldName != null && !fieldName.equals(field.getName())) {
+            return false;
+        }
+        if (pattern != null && !pattern.matcher(field.getName()).matches()) {
+            return false;
+        }
+        return substring == null || field.getName().contains(substring);
+    }
+
+    /**
+     * 匹配修饰符
+     */
+    private boolean matchesModifiers(Field field) {
+        return mods == -1 || (field.getModifiers() & mods) == mods;
+    }
+
+    /**
+     * 匹配字段类型
+     */
+    private boolean matchesFieldClass(Field field) {
+        return fieldClass == null || fieldClass.equals(field.getType());
+    }
+
+    /**
+     * 匹配注解
+     */
+    private boolean matchesAnnotations(Field field) {
+        return annotations == null || Arrays.stream(annotations).allMatch(field::isAnnotationPresent);
     }
 }

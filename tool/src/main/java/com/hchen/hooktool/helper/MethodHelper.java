@@ -39,7 +39,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * 方法查找
@@ -71,14 +70,16 @@ public class MethodHelper {
      * 方法名
      */
     public MethodHelper withMethodName(@NonNull String methodName) {
+        Objects.requireNonNull(methodName, "MethodName must not be null.");
         this.methodName = methodName;
         return this;
     }
 
     /**
-     * 方法名包含的字段
+     * 方法名包含的子串
      */
     public MethodHelper withSubstring(@NonNull String substring) {
+        Objects.requireNonNull(substring, "Substring must not be null.");
         this.substring = substring;
         return this;
     }
@@ -87,6 +88,7 @@ public class MethodHelper {
      * 匹配方法名
      */
     public MethodHelper withPattern(@NonNull Pattern pattern) {
+        Objects.requireNonNull(pattern, "Pattern must not be null.");
         this.pattern = pattern;
         return this;
     }
@@ -100,9 +102,10 @@ public class MethodHelper {
     }
 
     /**
-     * 方法参数类型，可使用 Any.class 占位，表示任意类型
+     * 方法参数类型，可使用 null 占位，表示任意类型
      */
     public MethodHelper withParamClasses(@NonNull Class<?>... paramClasses) {
+        Objects.requireNonNull(paramClasses, "ParamClasses must not be null.");
         this.paramClasses = paramClasses;
         return this;
     }
@@ -111,6 +114,7 @@ public class MethodHelper {
      * 方法返回类型
      */
     public MethodHelper withReturnClass(@NonNull Class<?> returnClass) {
+        Objects.requireNonNull(returnClass, "ReturnClass must not be null.");
         this.returnClass = returnClass;
         return this;
     }
@@ -119,6 +123,7 @@ public class MethodHelper {
      * 方法的修饰符
      */
     public MethodHelper withMods(@NonNull int... modsFlags) {
+        Objects.requireNonNull(modsFlags, "ModsFlags must not be null.");
         int combined = 0;
         for (int f : modsFlags) {
             combined |= f;
@@ -128,49 +133,49 @@ public class MethodHelper {
     }
 
     /**
-     * Public
+     * 设置方法为 public 修饰符
      */
     public MethodHelper withPublic() {
         return withMods(Modifier.PUBLIC);
     }
 
     /**
-     * Private
+     * 设置方法为 private 修饰符
      */
     public MethodHelper withPrivate() {
         return withMods(Modifier.PRIVATE);
     }
 
     /**
-     * Protected
+     * 设置方法为 protected 修饰符
      */
     public MethodHelper withProtected() {
         return withMods(Modifier.PROTECTED);
     }
 
     /**
-     * Static
+     * 设置方法为 static 修饰符
      */
     public MethodHelper withStatic() {
         return withMods(Modifier.STATIC);
     }
 
     /**
-     * Synchronized
+     * 设置方法为 synchronized 修饰符
      */
     public MethodHelper withSynchronized() {
         return withMods(Modifier.SYNCHRONIZED);
     }
 
     /**
-     * Native
+     * 设置方法为 native 修饰符
      */
     public MethodHelper withNative() {
         return withMods(Modifier.NATIVE);
     }
 
     /**
-     * Abstract
+     * 设置方法为 abstract 修饰符
      */
     public MethodHelper withAbstract() {
         return withMods(Modifier.ABSTRACT);
@@ -179,7 +184,9 @@ public class MethodHelper {
     /**
      * 方法的注解
      */
+    @SuppressWarnings("unchecked")
     public MethodHelper withAnnotations(@NonNull Class<? extends Annotation>... annotations) {
+        Objects.requireNonNull(annotations, "Annotations must not be null.");
         this.annotations = annotations;
         return this;
     }
@@ -190,6 +197,7 @@ public class MethodHelper {
      * @noinspection unchecked
      */
     public MethodHelper withExceptionClasses(@NonNull Class<? extends Throwable>... exceptionClasses) {
+        Objects.requireNonNull(exceptionClasses, "ExceptionClasses must not be null.");
         this.exceptionClasses = exceptionClasses;
         return this;
     }
@@ -203,7 +211,7 @@ public class MethodHelper {
     }
 
     /**
-     * 获取查找到的对象，如果查找结果为空或不为单个则抛错
+     * 获取查找到的方法，如果查找结果为空或不为单个则抛错
      */
     public Method single() {
         List<Method> methods = matches();
@@ -217,7 +225,7 @@ public class MethodHelper {
     }
 
     /**
-     * 获取查找到的对象，如果查找结果为空或不为单个则返回 null
+     * 获取查找到的方法，如果查找结果为空或不为单个则返回 null
      */
     @Nullable
     public Method singleOrNull() {
@@ -229,7 +237,7 @@ public class MethodHelper {
     }
 
     /**
-     * 获取查找到的对象，如果查找结果为空或不为单个则抛错
+     * 获取查找到的方法，如果查找结果为空或不为单个则抛错
      */
     public Method singleOrThrow(@NonNull Supplier<NonSingletonException> throwableSupplier) {
         List<Method> methods = matches();
@@ -240,14 +248,14 @@ public class MethodHelper {
     }
 
     /**
-     * 返回查找到的全部对象
+     * 返回查找到的所有方法
      */
     public Method[] toArray() {
         return matches().toArray(new Method[0]);
     }
 
     /**
-     * 重置查找器
+     * 重置查找器，清除所有设置的条件
      */
     public void reset() {
         mods = -1;
@@ -264,85 +272,154 @@ public class MethodHelper {
 
     /**
      * 核心过滤逻辑
-     *
-     * @noinspection RedundantIfStatement
      */
     private List<Method> matches() {
-        ArrayList<Method> methods = new ArrayList<>(Arrays.asList(clazz.getDeclaredMethods()));
+        Method[] declaredMethods = clazz.getDeclaredMethods();
+        ArrayList<Method> methods = new ArrayList<>(Arrays.asList(declaredMethods));
+        
         if (withSuper) {
-            Class<?> clazzWithSuper = clazz.getSuperclass();
-            do {
-                if (clazzWithSuper == null) break;
-                methods.addAll(Arrays.asList(clazzWithSuper.getDeclaredMethods()));
-            } while ((clazzWithSuper = clazzWithSuper.getSuperclass()) != null);
+            addSuperClassMethods(methods);
         }
 
-        return methods.stream().filter(method -> {
-            if (methodName != null && !Objects.equals(methodName, method.getName()))
-                return false;
-            else if (pattern != null && !pattern.matcher(method.getName()).matches())
-                return false;
-            else if (substring != null && !method.getName().contains(substring))
-                return false;
-
-            if (paramClasses != null) {
-                if (paramClasses.length != method.getParameterCount()) {
-                    return false;
-                }
-                for (int i = 0; i < method.getParameterCount(); i++) {
-                    Class<?> actual = method.getParameterTypes()[i];
-                    Class<?> want = paramClasses[i];
-                    if (Objects.equals(want, null)) continue;
-                    if (!Objects.equals(actual, want)) {
-                        return false;
-                    }
-                }
+        ArrayList<Method> result = new ArrayList<>(methods.size());
+        for (Method method : methods) {
+            if (matchesMethodName(method) &&
+                matchesParamClasses(method) &&
+                matchesParamCount(method) &&
+                matchesModifiers(method) &&
+                matchesReturnType(method) &&
+                matchesAnnotations(method) &&
+                matchesExceptions(method)) {
+                result.add(method);
             }
+        }
 
-            if (!paramCountVarMap.isEmpty()) {
-                if (paramCountVarMap.containsKey(EQ)) {
-                    if (!Objects.equals(method.getParameterCount(), paramCountVarMap.get(EQ)))
-                        return false;
-                } else {
-                    for (int mode : paramCountVarMap.keySet()) {
-                        Integer count = paramCountVarMap.get(mode);
-                        if (count == null) return false;
+        return result;
+    }
 
-                        switch (mode) {
-                            case GT -> {
-                                if (!(method.getParameterCount() > count)) return false;
-                            }
-                            case LT -> {
-                                if (!(method.getParameterCount() < count)) return false;
-                            }
-                            case GE -> {
-                                if (!(method.getParameterCount() >= count)) return false;
-                            }
-                            case LE -> {
-                                if (!(method.getParameterCount() <= count)) return false;
-                            }
-                            default -> {
-                                return false;
-                            }
-                        }
-                    }
-                }
-            }
+    /**
+     * 添加父类方法
+     */
+    private void addSuperClassMethods(ArrayList<Method> methods) {
+        Class<?> clazzWithSuper = clazz.getSuperclass();
+        while (clazzWithSuper != null) {
+            methods.addAll(Arrays.asList(clazzWithSuper.getDeclaredMethods()));
+            clazzWithSuper = clazzWithSuper.getSuperclass();
+        }
+    }
 
-            if (mods != -1 && (method.getModifiers() & mods) != mods)
-                return false;
-            if (returnClass != null &&
-                !(Objects.equals(method.getReturnType(), returnClass) || returnClass.isAssignableFrom(method.getReturnType())))
-                return false;
-            if (annotations != null && !Arrays.stream(annotations).allMatch(method::isAnnotationPresent))
-                return false;
-            if (exceptionClasses != null) {
-                List<Class<?>> list = Arrays.asList(method.getExceptionTypes());
-                if (!Arrays.stream(exceptionClasses).allMatch(list::contains))
-                    return false;
-            }
+    /**
+     * 匹配方法名
+     */
+    private boolean matchesMethodName(Method method) {
+        if (methodName != null && !methodName.equals(method.getName())) {
+            return false;
+        }
+        if (pattern != null && !pattern.matcher(method.getName()).matches()) {
+            return false;
+        }
+        return substring == null || method.getName().contains(substring);
+    }
 
+    /**
+     * 匹配参数类型
+     */
+    private boolean matchesParamClasses(Method method) {
+        if (paramClasses == null) {
             return true;
-        }).collect(Collectors.toList());
+        }
+
+        if (paramClasses.length != method.getParameterCount()) {
+            return false;
+        }
+
+        for (int i = 0; i < paramClasses.length; i++) {
+            Class<?> want = paramClasses[i];
+            Class<?> actual = method.getParameterTypes()[i];
+            if (want != null && !want.equals(actual)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * 匹配参数数量
+     */
+    private boolean matchesParamCount(Method method) {
+        if (paramCountVarMap.isEmpty()) {
+            return true;
+        }
+
+        if (paramCountVarMap.containsKey(EQ)) {
+            // noinspection DataFlowIssue
+            return method.getParameterCount() == paramCountVarMap.get(EQ);
+        }
+
+        for (int mode : paramCountVarMap.keySet()) {
+            Integer count = paramCountVarMap.get(mode);
+            if (count == null) {
+                return false;
+            }
+
+            switch (mode) {
+                case GT -> {
+                    if (!(method.getParameterCount() > count)) return false;
+                }
+                case LT -> {
+                    if (!(method.getParameterCount() < count)) return false;
+                }
+                case GE -> {
+                    if (!(method.getParameterCount() >= count)) return false;
+                }
+                case LE -> {
+                    if (!(method.getParameterCount() <= count)) return false;
+                }
+                default -> {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * 匹配修饰符
+     */
+    private boolean matchesModifiers(Method method) {
+        return mods == -1 || (method.getModifiers() & mods) == mods;
+    }
+
+    /**
+     * 匹配返回类型
+     */
+    private boolean matchesReturnType(Method method) {
+        if (returnClass == null) {
+            return true;
+        }
+
+        Class<?> methodReturnType = method.getReturnType();
+        return returnClass.equals(methodReturnType) || returnClass.isAssignableFrom(methodReturnType);
+    }
+
+    /**
+     * 匹配注解
+     */
+    private boolean matchesAnnotations(Method method) {
+        return annotations == null || Arrays.stream(annotations).allMatch(method::isAnnotationPresent);
+    }
+
+    /**
+     * 匹配异常
+     */
+    private boolean matchesExceptions(Method method) {
+        if (exceptionClasses == null) {
+            return true;
+        }
+
+        List<Class<?>> declaredExceptions = Arrays.asList(method.getExceptionTypes());
+        return Arrays.stream(exceptionClasses).allMatch(declaredExceptions::contains);
     }
 }
