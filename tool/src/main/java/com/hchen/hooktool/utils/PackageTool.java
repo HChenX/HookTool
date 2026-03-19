@@ -37,8 +37,6 @@ import com.hchen.hooktool.data.AppData;
 import com.hchen.hooktool.exception.UnexpectedException;
 import com.hchen.hooktool.helper.TryHelper;
 
-import java.util.Arrays;
-import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -71,11 +69,10 @@ public class PackageTool {
     public static boolean isDisable(@NonNull Context context, @NonNull String packageName) {
         try {
             ApplicationInfo result = context.getPackageManager().getApplicationInfo(packageName, 0);
-            if (!result.enabled) return true;
+            return !result.enabled;
         } catch (PackageManager.NameNotFoundException e) {
-            throw new UnexpectedException(e);
+            throw new UnexpectedException("Failed to get application info for package: " + packageName, e);
         }
-        return false;
     }
 
     /**
@@ -84,23 +81,24 @@ public class PackageTool {
      * 获取失败则返回 -1
      */
     public static int getUserId(int uid) {
-        return TryHelper.doTry(() ->
-            (int) Optional.ofNullable(
-                InvokeTool.callStaticMethod(
-                    UserHandle.class,
-                    "getUserId",
-                    new Class[]{int.class},
-                    uid
-                )
-            ).orElse(-1)
-        ).orElse(-1);
+        return TryHelper.doTry(() -> {
+            Object result = InvokeTool.callStaticMethod(
+                UserHandle.class,
+                "getUserId",
+                new Class[]{int.class},
+                uid
+            );
+            return result != null ? (int) result : -1;
+        }).orElse(-1);
     }
 
     /**
      * 判断是否是系统应用
      */
     public static boolean isSystem(@NonNull ApplicationInfo app) {
-        if (app.uid < 10000) return true;
+        if (app.uid < 10000) {
+            return true;
+        }
         return (app.flags & (ApplicationInfo.FLAG_SYSTEM | ApplicationInfo.FLAG_UPDATED_SYSTEM_APP)) != 0;
     }
 
@@ -151,28 +149,38 @@ public class PackageTool {
         PackageManager packageManager = context.getPackageManager();
         try {
             if (async) {
-                @SuppressWarnings("resource")
-                ExecutorService service = Executors.newSingleThreadExecutor();
-                service.execute(() -> {
-                    try {
-                        iAppDataGetter.getAsyncAppData(
-                            Arrays.stream(iAppDataGetter.getPackages(packageManager))
-                                .map(parcelable -> createAppData(parcelable, packageManager))
-                                .toArray(AppData[]::new)
-                        );
+                ExecutorService service = null;
+                try {
+                    // noinspection resource
+                    service = Executors.newSingleThreadExecutor();
+                    service.execute(() -> {
+                        try {
+                            Parcelable[] packages = iAppDataGetter.getPackages(packageManager);
+                            AppData[] appDataArray = new AppData[packages.length];
+                            for (int i = 0; i < packages.length; i++) {
+                                appDataArray[i] = createAppData(packages[i], packageManager);
+                            }
+                            iAppDataGetter.getAsyncAppData(appDataArray);
+                        } catch (PackageManager.NameNotFoundException e) {
+                            throw new UnexpectedException("Failed to get packages", e);
+                        }
+                    });
+                } finally {
+                    if (service != null) {
                         service.shutdown();
-                    } catch (PackageManager.NameNotFoundException e) {
-                        throw new UnexpectedException(e);
                     }
-                });
+                }
                 return null;
             } else {
-                return Arrays.stream(iAppDataGetter.getPackages(packageManager))
-                    .map(parcelable -> createAppData(parcelable, packageManager))
-                    .toArray(AppData[]::new);
+                Parcelable[] packages = iAppDataGetter.getPackages(packageManager);
+                AppData[] appDataArray = new AppData[packages.length];
+                for (int i = 0; i < packages.length; i++) {
+                    appDataArray[i] = createAppData(packages[i], packageManager);
+                }
+                return appDataArray;
             }
         } catch (PackageManager.NameNotFoundException e) {
-            throw new UnexpectedException(e);
+            throw new UnexpectedException("Failed to get packages", e);
         }
     }
 
@@ -182,9 +190,10 @@ public class PackageTool {
     public static AppData getTargetAppData(@NonNull Context context, @NonNull String packageName) {
         try {
             PackageManager packageManager = context.getPackageManager();
-            return createAppData(packageManager.getApplicationInfo(packageName, 0), packageManager);
+            ApplicationInfo applicationInfo = packageManager.getApplicationInfo(packageName, 0);
+            return createAppData(applicationInfo, packageManager);
         } catch (PackageManager.NameNotFoundException e) {
-            throw new UnexpectedException(e);
+            throw new UnexpectedException("Failed to get application info for package: " + packageName, e);
         }
     }
 
@@ -194,52 +203,38 @@ public class PackageTool {
     @NonNull
     public static AppData createAppData(@NonNull Parcelable parcelable, @NonNull PackageManager pm) {
         AppData appData = new AppData();
+        ApplicationInfo applicationInfo = null;
+        
+        // 根据不同类型的 Parcelable 对象获取 ApplicationInfo
         if (parcelable instanceof PackageInfo packageInfo) {
-            appData.icon = BitmapTool.drawableToBitmap(packageInfo.applicationInfo.loadIcon(pm));
-            appData.label = packageInfo.applicationInfo.loadLabel(pm).toString();
-            appData.packageName = packageInfo.applicationInfo.packageName;
-            appData.versionName = packageInfo.versionName;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
-                appData.versionCode = Long.toString(packageInfo.getLongVersionCode());
-            else appData.versionCode = Integer.toString(packageInfo.versionCode);
-            appData.isSystemApp = isSystem(packageInfo.applicationInfo);
-            appData.isEnabled = packageInfo.applicationInfo.enabled;
-            appData.user = getUserId(packageInfo.applicationInfo.uid);
-            appData.uid = packageInfo.applicationInfo.uid;
+            applicationInfo = packageInfo.applicationInfo;
+            appData.setVersionName(packageInfo.versionName);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                appData.setVersionCode(Long.toString(packageInfo.getLongVersionCode()));
+            } else {
+                appData.setVersionCode(Integer.toString(packageInfo.versionCode));
+            }
         } else if (parcelable instanceof ResolveInfo resolveInfo) {
-            ApplicationInfo applicationInfo = aboutResolveInfo(resolveInfo).applicationInfo;
-            appData.icon = BitmapTool.drawableToBitmap(applicationInfo.loadIcon(pm));
-            appData.label = applicationInfo.loadLabel(pm).toString();
-            appData.packageName = applicationInfo.packageName;
-            appData.isSystemApp = isSystem(applicationInfo);
-            appData.isEnabled = applicationInfo.enabled;
-            appData.user = getUserId(applicationInfo.uid);
-            appData.uid = applicationInfo.uid;
+            applicationInfo = aboutResolveInfo(resolveInfo).applicationInfo;
         } else if (parcelable instanceof ActivityInfo activityInfo) {
-            appData.icon = BitmapTool.drawableToBitmap(activityInfo.applicationInfo.loadIcon(pm));
-            appData.label = activityInfo.applicationInfo.loadLabel(pm).toString();
-            appData.packageName = activityInfo.applicationInfo.packageName;
-            appData.isSystemApp = isSystem(activityInfo.applicationInfo);
-            appData.isEnabled = activityInfo.applicationInfo.enabled;
-            appData.user = getUserId(activityInfo.applicationInfo.uid);
-            appData.uid = activityInfo.applicationInfo.uid;
-        } else if (parcelable instanceof ApplicationInfo applicationInfo) {
-            appData.icon = BitmapTool.drawableToBitmap(applicationInfo.loadIcon(pm));
-            appData.label = applicationInfo.loadLabel(pm).toString();
-            appData.packageName = applicationInfo.packageName;
-            appData.isSystemApp = isSystem(applicationInfo);
-            appData.isEnabled = applicationInfo.enabled;
-            appData.user = getUserId(applicationInfo.uid);
-            appData.uid = applicationInfo.uid;
+            applicationInfo = activityInfo.applicationInfo;
+        } else if (parcelable instanceof ApplicationInfo appInfo) {
+            applicationInfo = appInfo;
         } else if (parcelable instanceof ProviderInfo providerInfo) {
-            appData.icon = BitmapTool.drawableToBitmap(providerInfo.applicationInfo.loadIcon(pm));
-            appData.label = providerInfo.applicationInfo.loadLabel(pm).toString();
-            appData.packageName = providerInfo.applicationInfo.packageName;
-            appData.isSystemApp = isSystem(providerInfo.applicationInfo);
-            appData.isEnabled = providerInfo.applicationInfo.enabled;
-            appData.user = getUserId(providerInfo.applicationInfo.uid);
-            appData.uid = providerInfo.applicationInfo.uid;
+            applicationInfo = providerInfo.applicationInfo;
         }
+        
+        // 填充应用数据
+        if (applicationInfo != null) {
+            appData.setIcon(BitmapTool.drawableToBitmap(applicationInfo.loadIcon(pm)));
+            appData.setLabel(applicationInfo.loadLabel(pm).toString());
+            appData.setPackageName(applicationInfo.packageName);
+            appData.setSystemApp(isSystem(applicationInfo));
+            appData.setEnabled(applicationInfo.enabled);
+            appData.setUser(getUserId(applicationInfo.uid));
+            appData.setUid(applicationInfo.uid);
+        }
+        
         return appData;
     }
 

@@ -28,7 +28,6 @@ import com.hchen.hooktool.exception.UnexpectedException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Arrays;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -49,29 +48,29 @@ public class InvokeTool {
     /**
      * 调用指定方法
      */
-    public static <T> T callMethod(@NonNull Object instance, @NonNull String methodName, @NonNull Object[] paramTypes, @NonNull Object... params) {
-        return baseInvokeMethod(null, instance, methodName, getParameterTypes(instance.getClass().getClassLoader(), paramTypes), params);
+    public static <T> T callMethod(@NonNull Object instance, @NonNull String methodName, @NonNull Object[] parameterTypes, @NonNull Object... args) {
+        return baseInvokeMethod(null, instance, methodName, getParameterTypes(instance.getClass().getClassLoader(), parameterTypes), args);
     }
 
     /**
      * 调用静态方法
      */
-    public static <T> T callStaticMethod(@NonNull Class<?> clazz, @NonNull String methodName, @NonNull Object[] paramTypes, @NonNull Object... params) {
-        return baseInvokeMethod(clazz, null, methodName, getParameterTypes(clazz.getClassLoader(), paramTypes), params);
+    public static <T> T callStaticMethod(@NonNull Class<?> clazz, @NonNull String methodName, @NonNull Object[] parameterTypes, @NonNull Object... args) {
+        return baseInvokeMethod(clazz, null, methodName, getParameterTypes(clazz.getClassLoader(), parameterTypes), args);
     }
 
     /**
      * 调用静态方法
      */
-    public static <T> T callStaticMethod(@NonNull String classPath, @NonNull String methodName, @NonNull Object[] paramTypes, @NonNull Object... params) {
-        return baseInvokeMethod(findClass(classPath), null, methodName, getParameterTypes(null, paramTypes), params);
+    public static <T> T callStaticMethod(@NonNull String classPath, @NonNull String methodName, @NonNull Object[] parameterTypes, @NonNull Object... args) {
+        return baseInvokeMethod(findClass(classPath), null, methodName, getParameterTypes(null, parameterTypes), args);
     }
 
     /**
      * 调用静态方法
      */
-    public static <T> T callStaticMethod(@NonNull String classPath, ClassLoader classLoader, @NonNull String methodName, @NonNull Object[] paramTypes, @NonNull Object... params) {
-        return baseInvokeMethod(findClass(classPath, classLoader), null, methodName, getParameterTypes(classLoader, paramTypes), params);
+    public static <T> T callStaticMethod(@NonNull String classPath, ClassLoader classLoader, @NonNull String methodName, @NonNull Object[] parameterTypes, @NonNull Object... args) {
+        return baseInvokeMethod(findClass(classPath, classLoader), null, methodName, getParameterTypes(classLoader, parameterTypes), args);
     }
 
     // ---------------------------- 设置字段 --------------------------------
@@ -135,7 +134,7 @@ public class InvokeTool {
     /**
      * @noinspection unchecked
      */
-    private static <T> T baseInvokeMethod(Class<?> clazz, Object instance, String methodName, Class<?>[] paramTypes, Object... params) {
+    private static <T> T baseInvokeMethod(Class<?> clazz, Object instance, String methodName, Class<?>[] parameterTypes, Object... args) {
         if (clazz == null && instance == null) {
             throw new NullPointerException("Class or instance must not be null, can't invoke method: " + methodName);
         } else if (clazz == null) {
@@ -143,33 +142,50 @@ public class InvokeTool {
         }
 
         try {
-            Method declaredMethod;
-            String id = clazz.getName() + "#" + methodName + "#" + Arrays.toString(paramTypes);
-            declaredMethod = mMethodCache.get(id);
-            if (declaredMethod == null) {
-                try {
-                    declaredMethod = clazz.getDeclaredMethod(methodName, paramTypes);
-                } catch (NoSuchMethodException e) {
-                    while (true) {
-                        clazz = clazz.getSuperclass();
-                        if (clazz == null || clazz.equals(Object.class))
-                            break;
-
-                        try {
-                            declaredMethod = clazz.getDeclaredMethod(methodName, paramTypes);
-                            break;
-                        } catch (NoSuchMethodException ignored) {
-                        }
-                    }
-                    if (declaredMethod == null) throw e;
-                }
-                declaredMethod.setAccessible(true);
-                mMethodCache.put(id, declaredMethod);
+            Method method;
+            String cacheKey = generateMethodCacheKey(clazz, methodName, parameterTypes);
+            method = mMethodCache.get(cacheKey);
+            if (method == null) {
+                method = findMethod(clazz, methodName, parameterTypes);
+                method.setAccessible(true);
+                mMethodCache.put(cacheKey, method);
             }
-            return (T) declaredMethod.invoke(instance, params);
+            return (T) method.invoke(instance, args);
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-            throw new UnexpectedException(e);
+            throw new UnexpectedException("Failed to invoke method: " + methodName, e);
         }
+    }
+
+    /**
+     * 查找指定的方法，包括父类中的方法
+     */
+    private static Method findMethod(Class<?> clazz, String methodName, Class<?>[] parameterTypes) throws NoSuchMethodException {
+        try {
+            return clazz.getDeclaredMethod(methodName, parameterTypes);
+        } catch (NoSuchMethodException e) {
+            Class<?> superClass = clazz.getSuperclass();
+            while (superClass != null && !superClass.equals(Object.class)) {
+                try {
+                    return superClass.getDeclaredMethod(methodName, parameterTypes);
+                } catch (NoSuchMethodException ignored) {
+                    superClass = superClass.getSuperclass();
+                }
+            }
+            throw e;
+        }
+    }
+
+    /**
+     * 生成方法缓存的键
+     */
+    private static String generateMethodCacheKey(Class<?> clazz, String methodName, Class<?>[] parameterTypes) {
+        StringBuilder keyBuilder = new StringBuilder();
+        keyBuilder.append(clazz.getName());
+        keyBuilder.append("#").append(methodName);
+        for (Class<?> paramType : parameterTypes) {
+            keyBuilder.append("#").append(paramType.getName());
+        }
+        return keyBuilder.toString();
     }
 
     /**
@@ -183,38 +199,50 @@ public class InvokeTool {
         }
 
         try {
-            Field declaredField;
-            String id = clazz.getName() + "#" + fieldName;
-            declaredField = mFieldCache.get(id);
-            if (declaredField == null) {
-                try {
-                    declaredField = clazz.getDeclaredField(fieldName);
-                } catch (NoSuchFieldException e) {
-                    while (true) {
-                        clazz = clazz.getSuperclass();
-                        if (clazz == null || clazz.equals(Object.class))
-                            break;
-
-                        try {
-                            declaredField = clazz.getDeclaredField(fieldName);
-                            break;
-                        } catch (NoSuchFieldException ignored) {
-                        }
-                    }
-                    if (declaredField == null) throw e;
-                }
-                declaredField.setAccessible(true);
-                mFieldCache.put(id, declaredField);
+            Field field;
+            String cacheKey = generateFieldCacheKey(clazz, fieldName);
+            field = mFieldCache.get(cacheKey);
+            if (field == null) {
+                field = findField(clazz, fieldName);
+                field.setAccessible(true);
+                mFieldCache.put(cacheKey, field);
             }
 
             if (isSetter) {
-                declaredField.set(instance, value);
+                field.set(instance, value);
                 return null;
-            } else
-                return (T) declaredField.get(instance);
+            } else {
+                return (T) field.get(instance);
+            }
         } catch (NoSuchFieldException | IllegalAccessException e) {
-            throw new UnexpectedException(e);
+            throw new UnexpectedException("Failed to access field: " + fieldName, e);
         }
+    }
+
+    /**
+     * 查找指定的字段，包括父类中的字段
+     */
+    private static Field findField(Class<?> clazz, String fieldName) throws NoSuchFieldException {
+        try {
+            return clazz.getDeclaredField(fieldName);
+        } catch (NoSuchFieldException e) {
+            Class<?> superClass = clazz.getSuperclass();
+            while (superClass != null && !superClass.equals(Object.class)) {
+                try {
+                    return superClass.getDeclaredField(fieldName);
+                } catch (NoSuchFieldException ignored) {
+                    superClass = superClass.getSuperclass();
+                }
+            }
+            throw e;
+        }
+    }
+
+    /**
+     * 生成字段缓存的键
+     */
+    private static String generateFieldCacheKey(Class<?> clazz, String fieldName) {
+        return clazz.getName() + "#" + fieldName;
     }
 
     /**

@@ -32,17 +32,90 @@ import java.util.Objects;
  * @author 焕晨HChen
  */
 public class AppData implements Parcelable {
-    public int user = -1;
-    public int uid = -1;
-    public Bitmap icon;
-    public String label;
-    public String packageName;
-    public String versionName;
-    public String versionCode;
-    public boolean isSystemApp;
-    public boolean isEnabled;
+    private int user = -1;
+    private int uid = -1;
+    private Bitmap icon;
+    private String label;
+    private String packageName;
+    private String versionName;
+    private String versionCode;
+    private boolean isSystemApp;
+    private boolean isEnabled;
 
     public AppData() {
+    }
+
+    // Getter and Setter methods
+    public int getUser() {
+        return user;
+    }
+
+    public void setUser(int user) {
+        this.user = user;
+    }
+
+    public int getUid() {
+        return uid;
+    }
+
+    public void setUid(int uid) {
+        this.uid = uid;
+    }
+
+    public Bitmap getIcon() {
+        return icon;
+    }
+
+    public void setIcon(Bitmap icon) {
+        this.icon = icon;
+    }
+
+    public String getLabel() {
+        return label;
+    }
+
+    public void setLabel(String label) {
+        this.label = label;
+    }
+
+    public String getPackageName() {
+        return packageName;
+    }
+
+    public void setPackageName(String packageName) {
+        this.packageName = packageName;
+    }
+
+    public String getVersionName() {
+        return versionName;
+    }
+
+    public void setVersionName(String versionName) {
+        this.versionName = versionName;
+    }
+
+    public String getVersionCode() {
+        return versionCode;
+    }
+
+    public void setVersionCode(String versionCode) {
+        this.versionCode = versionCode;
+    }
+
+    public boolean isSystemApp() {
+        return isSystemApp;
+    }
+
+    public void setSystemApp(boolean systemApp) {
+        isSystemApp = systemApp;
+    }
+
+    public boolean isEnabled() {
+        return isEnabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        isEnabled = enabled;
     }
 
     @NonNull
