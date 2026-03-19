@@ -63,7 +63,7 @@ public class MethodHelper {
     private boolean withSuper = false;
 
     public MethodHelper(@NonNull Class<?> clazz) {
-        Objects.requireNonNull(clazz, "[MethodHelper]: Class must not be null!!");
+        Objects.requireNonNull(clazz, "Class must not be null.");
         this.clazz = clazz;
     }
 
@@ -292,7 +292,7 @@ public class MethodHelper {
                 for (int i = 0; i < method.getParameterCount(); i++) {
                     Class<?> actual = method.getParameterTypes()[i];
                     Class<?> want = paramClasses[i];
-                    if (Objects.equals(want, Any.class)) continue;
+                    if (Objects.equals(want, null)) continue;
                     if (!Objects.equals(actual, want)) {
                         return false;
                     }

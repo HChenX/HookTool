@@ -60,37 +60,53 @@ public class HookBridge {
         XposedInterface.HookHandle handle = builder.intercept(new XposedInterface.Hooker() {
             @Override
             public Object intercept(@NonNull XposedInterface.Chain chain) throws Throwable {
-                absHook.setChain(chain);
-                absHook.reset();
+                absHook.enter(chain);
 
                 try {
-                    absHook.setCurrentStage(AbsHook.StageEnum.BEFORE);
-                    absHook.before();
-                } catch (Throwable throwable) {
-                    if (!absHook.onThrow(AbsHook.StageEnum.BEFORE, throwable)) {
-                        throw throwable;
+                    try {
+                        absHook.before();
+                    } catch (Throwable throwable) {
+                        if (!absHook.onThrow(AbsHook.StageEnum.BEFORE, throwable)) {
+                            absHook.setThrowable(throwable);
+                            throw throwable;
+                        }
                     }
-                }
 
-                try {
-                    absHook.setCurrentStage(AbsHook.StageEnum.PROCEED);
-                    absHook.callProceed();
-                } catch (Throwable throwable) {
-                    if (!absHook.onThrow(AbsHook.StageEnum.PROCEED, throwable)) {
-                        throw throwable;
+                    if (Objects.nonNull(absHook.getThrowable())) {
+                        throw absHook.getThrowable();
                     }
-                }
 
-                try {
-                    absHook.setCurrentStage(AbsHook.StageEnum.AFTER);
-                    absHook.after();
-                } catch (Throwable throwable) {
-                    if (!absHook.onThrow(AbsHook.StageEnum.AFTER, throwable)) {
-                        throw throwable;
+                    if (absHook.isResultChanged()) {
+                        return absHook.getResult();
                     }
-                }
 
-                return absHook.getResult();
+                    try {
+                        Object result = absHook.proceed(absHook.getChain());
+                        absHook.setOriginalResult(result);
+                    } catch (Throwable throwable) {
+                        if (!absHook.onThrow(AbsHook.StageEnum.PROCEED, throwable)) {
+                            absHook.setThrowable(throwable);
+                            throw throwable;
+                        }
+                    }
+
+                    try {
+                        absHook.after();
+                    } catch (Throwable throwable) {
+                        if (!absHook.onThrow(AbsHook.StageEnum.AFTER, throwable)) {
+                            absHook.setThrowable(throwable);
+                            throw throwable;
+                        }
+                    }
+
+                    if (Objects.nonNull(absHook.getThrowable())) {
+                        throw absHook.getThrowable();
+                    }
+
+                    return absHook.getResult();
+                } finally {
+                    absHook.exit();
+                }
             }
         });
         absHook.setHandle(handle);

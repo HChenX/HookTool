@@ -23,8 +23,8 @@ import androidx.annotation.NonNull;
 import com.hchen.hooktool.log.LogExpand;
 
 import java.lang.reflect.Executable;
-import java.lang.reflect.Modifier;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 
 import io.github.libxposed.api.XposedInterface;
@@ -35,16 +35,27 @@ import io.github.libxposed.api.XposedInterface;
  * @author 焕晨HChen
  */
 public abstract class AbsHook {
+    private static class CallState {
+        final XposedInterface.Chain originalChain;
+        final InnerChain innerChain;
+        final CallState previous;
+
+        Object[] args;
+        Object originalResult;
+        Object replaceResult;
+        Throwable throwable;
+        boolean isArgsChanged = false;
+        boolean isResultChanged = false;
+
+        CallState(XposedInterface.Chain chain, CallState previous) {
+            this.originalChain = chain;
+            this.previous = previous;
+            this.innerChain = new InnerChain(this);
+        }
+    }
+
+    private final ThreadLocal<CallState> stateLocal = new ThreadLocal<>();
     private XposedInterface.HookHandle handle;
-    private XposedInterface.Chain chain;
-    private Object[] args;
-    private Object oriResult;
-    private Object newResult;
-    private Object replaceObject;
-    private StageEnum currentStage;
-    private boolean isProceedCalled = false;
-    private boolean isArgsChanged = false;
-    private boolean isResultChanged = false;
 
     public enum StageEnum {
         BEFORE,
@@ -55,15 +66,25 @@ public abstract class AbsHook {
     /**
      * 钩子执行前的回调方法
      * <p>
-     * 子类可以重写此方法来在目标方法执行前进行处理
+     * 在原始方法执行前被调用，可用于修改参数或执行前置逻辑
      */
     public void before() {
     }
 
     /**
-     * 钩子执行后的回调方法
+     * 桥接新 API 的特殊方法
      * <p>
-     * 子类可以重写此方法来在目标方法执行后进行处理
+     * 重写此方法可以自由调用 proceed 呼叫原方法
+     * <p>
+     * 此方法的返回值将作为原方法的默认返回值使用，除非设置了 setResult
+     */
+    public Object proceed(@NonNull XposedInterface.Chain chain) throws Throwable {
+        return callProceed();
+    }
+
+    /**
+     * 钩子执行后的回调方法
+     * 在原始方法执行后被调用，可用于修改返回值或执行后置逻辑
      */
     public void after() {
     }
@@ -71,214 +92,224 @@ public abstract class AbsHook {
     /**
      * 异常处理回调方法
      * <p>
-     * 子类可以重写此方法来处理钩子执行过程中的异常
+     * 当钩子执行过程中发生异常时被调用
      *
      * @param stage 异常发生的阶段
      * @param e     发生的异常
-     * @return 是否已经处理了该异常，返回 true 表示已处理，false 表示未处理
+     * @return 是否处理了异常
      */
     public boolean onThrow(@NonNull StageEnum stage, @NonNull Throwable e) {
         return false;
     }
 
+    @NonNull
+    private CallState getState() {
+        CallState state = stateLocal.get();
+        if (state == null) {
+            throw new IllegalStateException("Hook state has been lost or is not being called within the interception lifecycle.");
+        }
+        return state;
+    }
+
     /**
-     * 获取被钩子的可执行对象（方法或构造函数）
+     * 获取当前被钩住的可执行对象
      *
-     * @return 被钩子的可执行对象
+     * @return 当前被钩住的可执行对象（方法或构造函数）
      */
     @NonNull
     public final Executable getExecutable() {
-        Objects.requireNonNull(chain);
-        return chain.getExecutable();
+        return getState().originalChain.getExecutable();
     }
 
     /**
-     * 获取被钩子方法的 this 对象
-     * <p>
-     * 对于静态方法，返回 null
+     * 获取当前被钩住方法的 this 对象
      *
-     * @return this 对象
+     * @return 当前被钩住方法的 this 对象
      */
     public final Object getThisObject() {
-        Objects.requireNonNull(chain);
-        return chain.getThisObject();
+        return getState().originalChain.getThisObject();
     }
 
     /**
-     * 获取被钩子方法的参数列表
+     * 获取当前被钩住方法的参数数组
      * <p>
-     * 为保持与旧 API 一致，将返回 Array 数组
-     * <p>
-     * 提醒：修改此数组内容无效，请使用 setArg 或 setArgs
+     * 如果参数已被修改，则返回修改后的值
      *
-     * @return 参数列表
+     * @return 当前被钩住方法的参数数组
      */
     @NonNull
     public final Object[] getArgs() {
-        Objects.requireNonNull(chain);
-        return chain.getArgs().toArray(new Object[0]);
+        CallState state = getState();
+        if (state.args == null) {
+            state.args = state.originalChain.getArgs().toArray(new Object[0]);
+        }
+        return state.args;
     }
 
     /**
-     * 获取指定索引的参数
+     * 获取当前被钩住方法的指定索引参数
+     * <p>
+     * 如果参数已被修改，则返回修改后的值
      *
      * @param index 参数索引
-     * @return 参数值
-     * @throws IndexOutOfBoundsException 如果索引超出范围
-     * @throws ClassCastException        如果参数类型转换失败
+     * @return 指定索引的参数值
+     * @throws IndexOutOfBoundsException 当索引超出范围时抛出
+     * @throws ClassCastException        当参数类型转换失败时抛出
      */
     public final Object getArg(int index) throws IndexOutOfBoundsException, ClassCastException {
-        Objects.requireNonNull(chain);
-        return chain.getArg(index);
+        CallState state = getState();
+        if (state.args == null) {
+            state.args = state.originalChain.getArgs().toArray(new Object[0]);
+        }
+        if (state.isArgsChanged) {
+            return state.args[index];
+        }
+        return state.originalChain.getArg(index);
     }
 
     /**
-     * 设置指定索引的参数值
+     * 设置当前被钩住方法的指定索引参数
      *
      * @param index 参数索引
      * @param value 新的参数值
      */
     public final void setArg(int index, Object value) {
-        Objects.requireNonNull(chain);
-        if (args == null) {
-            args = getArgs();
+        CallState state = getState();
+        if (state.args == null) {
+            state.args = state.originalChain.getArgs().toArray(new Object[0]);
         }
-
-        args[index] = value;
-        isArgsChanged = true;
+        state.args[index] = value;
+        state.isArgsChanged = true;
     }
 
     /**
-     * 设置所有参数
+     * 设置当前被钩住方法的所有参数
      *
      * @param args 新的参数数组
+     * @throws IndexOutOfBoundsException 当参数数量不匹配时抛出
      */
     public final void setArgs(Object... args) {
-        Objects.requireNonNull(chain);
-        this.args = args;
-        isArgsChanged = true;
+        CallState state = getState();
+        if (state.args == null) {
+            state.args = state.originalChain.getArgs().toArray(new Object[0]);
+        }
+        if (state.args.length != args.length) {
+            throw new IndexOutOfBoundsException("Parameter quantity mismatch. " +
+                "Target length:" + state.args.length + ", Actual length: " + args.length);
+        }
+        state.args = args;
+        state.isArgsChanged = true;
     }
 
     /**
-     * 获取方法执行结果
+     * 获取当前被钩住方法的返回值
      * <p>
-     * 如果通过 setResult 设置了新结果，则返回新结果，否则返回原始结果
-     * <p>
-     * 在 Before 阶段始终返回 null，保持和旧 API 逻辑一致
+     * 如果返回值已被修改，则返回修改后的值
      *
-     * @return 方法执行结果
+     * @return 当前被钩住方法的返回值
      */
     public final Object getResult() {
-        Objects.requireNonNull(chain);
-
-        if (currentStage == StageEnum.BEFORE) {
-            return null;
-        }
-
-        if (isResultChanged) {
-            return newResult;
-        }
-
-        return oriResult;
+        CallState state = getState();
+        return state.isResultChanged ? state.replaceResult : state.originalResult;
     }
 
     /**
-     * 设置方法执行结果
-     * <p>
-     * 设置后 getResult 将返回此结果
+     * 设置当前被钩住方法的返回值
      *
-     * @param result 新的方法执行结果
+     * @param result 新的返回值
      */
     public final void setResult(Object result) {
-        Objects.requireNonNull(chain);
-        newResult = result;
-        isResultChanged = true;
+        CallState state = getState();
+        state.replaceResult = result;
+        state.isResultChanged = true;
     }
 
     /**
-     * 设置替换对象
-     * <p>
-     * 用于在非静态方法中替换 this 对象
+     * 设置当前被钩住方法的异常
      *
-     * @param replaceObject 替换的对象
+     * @param throwable 要抛出的异常
      */
-    public final void setReplaceObject(@NonNull Object replaceObject) {
-        Objects.requireNonNull(chain);
-        Objects.requireNonNull(replaceObject);
-        this.replaceObject = replaceObject;
+    public void setThrowable(@NonNull Throwable throwable) {
+        getState().throwable = throwable;
+    }
+
+    /**
+     * 获取当前被钩住方法的异常
+     *
+     * @return 当前被钩住方法的异常
+     */
+    public Throwable getThrowable() {
+        return getState().throwable;
+    }
+
+    /**
+     * 获取结果或抛出异常
+     * <p>
+     * 如果存在异常，则抛出异常；否则返回结果
+     *
+     * @return 当前被钩住方法的返回值
+     * @throws Throwable 如果存在异常，则抛出该异常
+     */
+    public Object getResultOrThrowable() throws Throwable {
+        Throwable t = getThrowable();
+        if (t != null) throw t;
+        return getResult();
     }
 
     final void setHandle(@NonNull XposedInterface.HookHandle handle) {
         this.handle = handle;
     }
 
-    final void setChain(@NonNull XposedInterface.Chain chain) {
-        this.chain = chain;
+    // --- 生命周期管理 ---
+
+    final void enter(@NonNull XposedInterface.Chain chain) {
+        stateLocal.set(new CallState(chain, stateLocal.get()));
+    }
+
+    final void exit() {
+        CallState current = stateLocal.get();
+        if (current != null) {
+            if (current.previous == null) {
+                stateLocal.remove();
+            } else {
+                stateLocal.set(current.previous);
+            }
+        }
+    }
+
+    final XposedInterface.Chain getChain() {
+        return getState().innerChain;
     }
 
     /**
      * 调用原始方法
      * <p>
-     * 此方法只能调用一次，多次调用将抛出异常
-     * 如果已经通过 setResult 设置了结果，则此方法不会执行原始方法
+     * 根据参数是否修改，决定使用修改后的参数还是原始参数调用原始方法
      *
-     * @throws Throwable 原始方法可能抛出的异常
+     * @return 原始方法的返回值
+     * @throws Throwable 执行过程中可能抛出的异常
      */
-    final void callProceed() throws Throwable {
-        Objects.requireNonNull(chain);
-        if (isProceedCalled) {
-            throw new RuntimeException("The 'proceed/proceedWith' method can only be called once.");
-        }
-        if (isResultChanged) {
-            return;
-        }
-
-        isProceedCalled = true;
-        if (Modifier.isStatic(getExecutable().getModifiers())) {
-            if (isArgsChanged) {
-                oriResult = chain.proceed(args);
-            } else {
-                oriResult = chain.proceed();
-            }
+    final Object callProceed() throws Throwable {
+        CallState state = getState();
+        if (state.isArgsChanged && state.args != null) {
+            return state.originalChain.proceed(state.args);
         } else {
-            if (isArgsChanged) {
-                if (replaceObject != null) {
-                    oriResult = chain.proceedWith(replaceObject, args);
-                } else {
-                    oriResult = chain.proceed(args);
-                }
-            } else {
-                if (replaceObject != null) {
-                    oriResult = chain.proceedWith(replaceObject);
-                } else {
-                    oriResult = chain.proceed();
-                }
-            }
+            return state.originalChain.proceed();
         }
     }
 
-    final void setCurrentStage(@NonNull StageEnum currentStage) {
-        this.currentStage = currentStage;
+    final void setOriginalResult(Object originalResult) {
+        getState().originalResult = originalResult;
+    }
+
+    final boolean isResultChanged() {
+        return getState().isResultChanged;
     }
 
     /**
-     * 重置钩子状态
+     * 解除自身钩子
      * <p>
-     * 清除所有状态变量，准备下一次钩子执行
-     */
-    final void reset() {
-        args = null;
-        oriResult = null;
-        newResult = null;
-        replaceObject = null;
-        isProceedCalled = false;
-        isResultChanged = false;
-        isArgsChanged = false;
-        currentStage = null;
-    }
-
-    /**
-     * 解除自身的钩子
+     * 移除当前钩子的所有拦截
      */
     final public void unHookSelf() {
         Objects.requireNonNull(handle);
@@ -286,29 +317,66 @@ public abstract class AbsHook {
     }
 
     /**
-     * 观察方法调用
+     * 观察调用信息
      * <p>
-     * 返回方法调用的详细信息
-     *
-     * @return 方法调用的详细信息
+     * 生成当前调用的详细信息字符串
      */
     final public String observeCall() {
         return LogExpand.observeCall(this);
     }
 
-    @NonNull
-    @Override
-    public String toString() {
-        return "AbsHook{" +
-            "handle=" + handle +
-            ", chain=" + chain +
-            ", args=" + Arrays.toString(args) +
-            ", oriResult=" + oriResult +
-            ", newResult=" + newResult +
-            ", replaceObject=" + replaceObject +
-            ", isProceedCalled=" + isProceedCalled +
-            ", isArgsChanged=" + isArgsChanged +
-            ", isResultChanged=" + isResultChanged +
-            '}';
+    /**
+     * 内部调用链实现
+     * <p>
+     * 用于包装原始调用链，处理参数和返回值的修改
+     */
+    private static class InnerChain implements XposedInterface.Chain {
+        private final CallState state;
+
+        InnerChain(CallState state) {
+            this.state = state;
+        }
+
+        @NonNull
+        @Override
+        public Executable getExecutable() {
+            return state.originalChain.getExecutable();
+        }
+
+        @Override
+        public Object getThisObject() {
+            return state.originalChain.getThisObject();
+        }
+
+        @NonNull
+        @Override
+        public List<Object> getArgs() {
+            return state.isArgsChanged ? Arrays.asList(state.args) : state.originalChain.getArgs();
+        }
+
+        @Override
+        public Object getArg(int index) throws IndexOutOfBoundsException, ClassCastException {
+            return state.isArgsChanged ? state.args[index] : state.originalChain.getArg(index);
+        }
+
+        @Override
+        public Object proceed() throws Throwable {
+            return state.originalChain.proceed();
+        }
+
+        @Override
+        public Object proceed(@NonNull Object[] args) throws Throwable {
+            return state.originalChain.proceed(args);
+        }
+
+        @Override
+        public Object proceedWith(@NonNull Object thisObject) throws Throwable {
+            return state.originalChain.proceedWith(thisObject);
+        }
+
+        @Override
+        public Object proceedWith(@NonNull Object thisObject, @NonNull Object[] args) throws Throwable {
+            return state.originalChain.proceedWith(thisObject, args);
+        }
     }
 }

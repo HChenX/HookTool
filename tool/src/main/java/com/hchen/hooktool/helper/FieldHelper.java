@@ -51,7 +51,7 @@ public class FieldHelper {
     private boolean withSuper = false;
 
     public FieldHelper(@NonNull Class<?> clazz) {
-        Objects.requireNonNull(clazz, "[FieldHelper]: Class must not be null!!");
+        Objects.requireNonNull(clazz, "Class must not be null.");
         this.clazz = clazz;
     }
 

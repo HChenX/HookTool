@@ -19,6 +19,7 @@
 package com.hchen.hooktool.helper;
 
 import android.annotation.SuppressLint;
+import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -31,8 +32,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -41,8 +40,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -266,21 +263,23 @@ public class ClassHelper {
         List<String> paths = getAllClassPath();
         return paths.stream().filter(path -> {
             try {
+                if (packagePath != null && !path.startsWith(packagePath)) {
+                    return false;
+                }
+
                 Class<?> cls = loader.loadClass(path);
-                if (className != null && !Objects.equals(cls.getSimpleName(), className))
+                if (className != null && !TextUtils.equals(cls.getSimpleName(), className))
                     return false;
                 else if (substring != null && !cls.getSimpleName().contains(substring))
                     return false;
                 else if (pattern != null && !pattern.matcher(cls.getSimpleName()).matches())
                     return false;
 
-                if (packagePath != null && cls.getPackage() != null && !cls.getPackage().getName().startsWith(packagePath))
+                if (fieldCount != -1 && cls.getDeclaredFields().length != fieldCount)
                     return false;
-
-                if (fieldCount != -1 && cls.getDeclaredFields().length != fieldCount) return false;
                 if (fieldClasses != null) {
                     Set<Class<?>> fieldTypeSet = Arrays.stream(cls.getDeclaredFields()).map(Field::getType).collect(Collectors.toSet());
-                    if (!Arrays.stream(fieldClasses).allMatch(c -> Objects.equals(c, Any.class) || fieldTypeSet.contains(c)))
+                    if (!Arrays.stream(fieldClasses).allMatch(c -> Objects.equals(c, null) || fieldTypeSet.contains(c)))
                         return false;
                 }
                 if (fieldNames != null) {
@@ -320,7 +319,7 @@ public class ClassHelper {
                         Class<?>[] parameterTypes = constructor.getParameterTypes();
                         for (int i = 0; i < parameterTypes.length; i++) {
                             Class<?> want = constructorClasses[i];
-                            if (Objects.equals(want, Any.class)) continue;
+                            if (Objects.equals(want, null)) continue;
                             if (!Objects.equals(parameterTypes[i], want)) {
                                 currentConstructorMatches = false;
                                 break;
@@ -354,7 +353,6 @@ public class ClassHelper {
         if (cacheBuilt) return classPathsCache;
 
         List<String> paths = new ArrayList<>();
-        // Android Dex
         try {
             if (loader instanceof BaseDexClassLoader) {
                 @SuppressLint("DiscouragedPrivateApi")
@@ -379,28 +377,6 @@ public class ClassHelper {
                     }
                     for (Enumeration<String> iter = dex.entries(); iter.hasMoreElements(); ) {
                         paths.add(iter.nextElement());
-                    }
-                }
-            }
-        } catch (Throwable ignored) {
-        }
-
-        // URLClassLoader
-        try {
-            // fallback: scan jars from classpath if URLClassLoader
-            if (loader instanceof URLClassLoader urlClassLoader) {
-                for (URL url : urlClassLoader.getURLs()) {
-                    String path = url.getPath();
-                    if (path.endsWith(".jar")) {
-                        JarFile jar = new JarFile(path);
-                        Enumeration<JarEntry> entries = jar.entries();
-                        while (entries.hasMoreElements()) {
-                            String name = entries.nextElement().getName();
-                            if (name.endsWith(".class")) {
-                                paths.add(name.replace('/', '.').substring(0, name.length() - 6));
-                            }
-                        }
-                        jar.close();
                     }
                 }
             }

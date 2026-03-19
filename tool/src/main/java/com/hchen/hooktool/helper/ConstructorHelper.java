@@ -55,7 +55,7 @@ public class ConstructorHelper {
     private Class<? extends Throwable>[] exceptionClasses;
 
     public ConstructorHelper(@NonNull Class<?> clazz) {
-        Objects.requireNonNull(clazz, "[ConstructorHelper]: Class must not be null!!");
+        Objects.requireNonNull(clazz, "Class must not be null.");
         this.clazz = clazz;
     }
 
@@ -196,7 +196,7 @@ public class ConstructorHelper {
                         for (int i = 0; i < paramClasses.length; i++) {
                             Class<?> want = paramClasses[i];
                             Class<?> actual = constructor.getParameterTypes()[i];
-                            if (Objects.equals(want, Any.class)) continue;
+                            if (Objects.equals(want, null)) continue;
                             if (!Objects.equals(want, actual)) {
                                 return false;
                             }

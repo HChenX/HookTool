@@ -153,7 +153,7 @@ public class PrefsTool {
 
     @NonNull
     private static String initPrefsName(@NonNull String name) {
-        Objects.requireNonNull(name, "prefs name must not be null.");
+        Objects.requireNonNull(name, "Prefs name must not be null.");
 
         if (name.isEmpty()) {
             if (ModuleConfig.getPrefsName().isEmpty()) {

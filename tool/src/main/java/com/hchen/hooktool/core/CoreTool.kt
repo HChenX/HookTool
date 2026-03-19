@@ -1299,7 +1299,7 @@ open class CoreTool : XposedLog() {
         ): Array<Class<*>> {
             val classes = mutableListOf<Class<*>>()
             for (any in parameterTypes) {
-                Objects.requireNonNull(any, "parameter types must not be null.")
+                Objects.requireNonNull(any, "Parameter types must not be null.")
                 when (any) {
                     is String -> {
                         classes.add(any.findClass(classLoader))
