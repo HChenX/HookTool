@@ -39,6 +39,7 @@ import com.hchen.hooktool.helper.TryHelper;
 
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
@@ -150,13 +151,16 @@ public class PackageTool {
         PackageManager packageManager = context.getPackageManager();
         try {
             if (async) {
-                Executors.newSingleThreadExecutor().execute(() -> {
+                @SuppressWarnings("resource")
+                ExecutorService service = Executors.newSingleThreadExecutor();
+                service.execute(() -> {
                     try {
                         iAppDataGetter.getAsyncAppData(
                             Arrays.stream(iAppDataGetter.getPackages(packageManager))
                                 .map(parcelable -> createAppData(parcelable, packageManager))
                                 .toArray(AppData[]::new)
                         );
+                        service.shutdown();
                     } catch (PackageManager.NameNotFoundException e) {
                         throw new UnexpectedException(e);
                     }

@@ -22,9 +22,7 @@ import android.content.Context
 import android.content.res.Resources
 import androidx.annotation.IdRes
 import com.hchen.hooktool.ModuleData
-import com.hchen.hooktool.callback.IAsyncPrefs
 import com.hchen.hooktool.callback.IPrefsApply
-import com.hchen.hooktool.core.CoreTool.Companion.asyncPrefs
 import com.hchen.hooktool.exception.UnexpectedException
 import com.hchen.hooktool.hook.AbsHook
 import com.hchen.hooktool.hook.HookBridge
@@ -1237,21 +1235,6 @@ open class CoreTool : XposedLog() {
             prefsName: String = ""
         ): IPrefsApply {
             return PrefsTool.prefs(prefsName)
-        }
-
-        /**
-         * 异步获取 SharedPreferences
-         *
-         * @param prefsName 偏好设置名称，默认为空
-         * @param asyncPrefs 异步回调接口
-         */
-        @JvmStatic
-        @JvmOverloads
-        fun asyncPrefs(
-            prefsName: String = "",
-            asyncPrefs: IAsyncPrefs
-        ) {
-            PrefsTool.asyncPrefs(prefsName, asyncPrefs)
         }
 
         // -------------------------------- other -------------------------------

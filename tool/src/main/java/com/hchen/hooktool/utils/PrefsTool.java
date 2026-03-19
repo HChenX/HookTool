@@ -29,10 +29,8 @@ import androidx.annotation.Nullable;
 
 import com.hchen.hooktool.ModuleConfig;
 import com.hchen.hooktool.ModuleData;
-import com.hchen.hooktool.callback.IAsyncPrefs;
-import com.hchen.hooktool.callback.IContextGetter;
 import com.hchen.hooktool.callback.IPrefsApply;
-import com.hchen.hooktool.exception.NonXposedException;
+import com.hchen.hooktool.exception.NoXposedEnvironmentException;
 import com.hchen.hooktool.exception.UnexpectedException;
 import com.hchen.hooktool.log.AndroidLog;
 
@@ -76,7 +74,7 @@ public class PrefsTool {
     @NonNull
     public static IPrefsApply prefs() {
         if (!ModuleConfig.isXposedEnvironment())
-            throw new NonXposedException("Must be in the xposed environment.");
+            throw new NoXposedEnvironmentException("Must be in the xposed environment.");
         return prefs("");
     }
 
@@ -86,33 +84,8 @@ public class PrefsTool {
     @NonNull
     public static IPrefsApply prefs(@NonNull String prefsName) {
         if (!ModuleConfig.isXposedEnvironment())
-            throw new NonXposedException("Must be in the xposed environment.");
+            throw new NoXposedEnvironmentException("Must be in the xposed environment.");
         return createXSPrefsIfNeed(prefsName);
-    }
-
-    /**
-     * Xposed 环境中异步获取寄生应用的共享首选项，非 Xposed 环境中使用会引发异常
-     */
-    public static void asyncPrefs(@NonNull IAsyncPrefs asyncPrefs) {
-        asyncPrefs("", asyncPrefs);
-    }
-
-    /**
-     * Xposed 环境中异步获取寄生应用的共享首选项，非 Xposed 环境中使用会引发异常
-     */
-    public static void asyncPrefs(@NonNull String prefsName, @NonNull IAsyncPrefs asyncPrefs) {
-        if (!ModuleConfig.isXposedEnvironment())
-            throw new NonXposedException("Must be in the xposed environment.");
-
-        ContextTool.getAsyncContext(
-            new IContextGetter() {
-                @Override
-                public void onContext(@Nullable Context context) {
-                    asyncPrefs.async(createSPrefsIfNeed(Objects.requireNonNull(context), prefsName));
-                }
-            },
-            ContextTool.FLAG_CURRENT_APP
-        );
     }
 
     private static IPrefsApply createXSPrefsIfNeed(@NonNull String prefsName) {

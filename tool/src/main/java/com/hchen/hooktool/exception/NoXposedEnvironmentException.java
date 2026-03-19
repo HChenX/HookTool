@@ -16,18 +16,26 @@
  *
  * Copyright (C) 2024–2026 HChenX
  */
-package com.hchen.hooktool.callback;
-
-import androidx.annotation.NonNull;
+package com.hchen.hooktool.exception;
 
 /**
- * 异步 Prefs 回调
+ * 非 Xposed 环境异常
  *
  * @author 焕晨HChen
  */
-public interface IAsyncPrefs {
-    /**
-     * 获取寄生应用的共享首选项实例，你可以在此处读取/写入值
-     */
-    void async(@NonNull IPrefsApply sPrefs);
+public class NoXposedEnvironmentException extends RuntimeException {
+    public NoXposedEnvironmentException() {
+    }
+
+    public NoXposedEnvironmentException(String message) {
+        super(message);
+    }
+
+    public NoXposedEnvironmentException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public NoXposedEnvironmentException(Throwable cause) {
+        super(cause);
+    }
 }
