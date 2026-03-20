@@ -873,8 +873,14 @@ open class CoreTool : XposedLog() {
             classLoader: ClassLoader? = ModuleData.getClassLoader(),
             methodName: String,
             vararg parameterTypes: Any
-        ): HookBridge {
-            return this.findMethod(classLoader, methodName, *parameterTypes).hook()
+        ): XposedInterface.HookHandle {
+            require(parameterTypes.isNotEmpty() && parameterTypes.last() is AbsHook) {
+                "The last element of parameterTypes must be an instance of AbsHook"
+            }
+
+            val absHook = parameterTypes.last() as AbsHook
+            val realParameterTypes = parameterTypes.dropLast(1).toTypedArray()
+            return this.findMethod(classLoader, methodName, *realParameterTypes).hook(absHook)
         }
 
         /**
@@ -888,8 +894,14 @@ open class CoreTool : XposedLog() {
         fun Class<*>.hook(
             methodName: String,
             vararg parameterTypes: Any
-        ): HookBridge {
-            return this.findMethod(methodName, *parameterTypes).hook()
+        ): XposedInterface.HookHandle {
+            require(parameterTypes.isNotEmpty() && parameterTypes.last() is AbsHook) {
+                "The last element of parameterTypes must be an instance of AbsHook"
+            }
+
+            val absHook = parameterTypes.last() as AbsHook
+            val realParameterTypes = parameterTypes.dropLast(1).toTypedArray()
+            return this.findMethod(methodName, *realParameterTypes).hook(absHook)
         }
 
         /**
@@ -904,8 +916,14 @@ open class CoreTool : XposedLog() {
         fun String.hook(
             classLoader: ClassLoader? = ModuleData.getClassLoader(),
             vararg parameterTypes: Any
-        ): HookBridge {
-            return this.findConstructor(classLoader, *parameterTypes).hook()
+        ): XposedInterface.HookHandle {
+            require(parameterTypes.isNotEmpty() && parameterTypes.last() is AbsHook) {
+                "The last element of parameterTypes must be an instance of AbsHook"
+            }
+
+            val absHook = parameterTypes.last() as AbsHook
+            val realParameterTypes = parameterTypes.dropLast(1).toTypedArray()
+            return this.findConstructor(classLoader, *realParameterTypes).hook(absHook)
         }
 
         /**
@@ -917,8 +935,14 @@ open class CoreTool : XposedLog() {
         @JvmStatic
         fun Class<*>.hook(
             vararg parameterTypes: Any
-        ): HookBridge {
-            return this.findConstructor(*parameterTypes).hook()
+        ): XposedInterface.HookHandle {
+            require(parameterTypes.isNotEmpty() && parameterTypes.last() is AbsHook) {
+                "The last element of parameterTypes must be an instance of AbsHook"
+            }
+
+            val absHook = parameterTypes.last() as AbsHook
+            val realParameterTypes = parameterTypes.dropLast(1).toTypedArray()
+            return this.findConstructor(*realParameterTypes).hook(absHook)
         }
 
         /**
@@ -927,9 +951,9 @@ open class CoreTool : XposedLog() {
          * @return HookBridge 实例
          */
         @JvmStatic
-        fun Executable.hook(): HookBridge {
+        fun Executable.hook(absHook: AbsHook): XposedInterface.HookHandle {
             return runCatching {
-                HookBridge(ModuleData.getWrapper().hook(this))
+                HookBridge(ModuleData.getWrapper().hook(this)).intercept(absHook)
             }.onSuccess {
                 if (ModuleConfig.isShowHookSuccessLog()) {
                     logI(getTag(), "Success to hook: $this")
@@ -946,9 +970,10 @@ open class CoreTool : XposedLog() {
         @JvmStatic
         @JvmOverloads
         fun String.hookClassInitializer(
-            classLoader: ClassLoader? = ModuleData.getClassLoader()
-        ): HookBridge {
-            return this.findClass(classLoader).hookClassInitializer()
+            classLoader: ClassLoader? = ModuleData.getClassLoader(),
+            absHook: AbsHook,
+        ): XposedInterface.HookHandle {
+            return this.findClass(classLoader).hookClassInitializer(absHook)
         }
 
         /**
@@ -957,9 +982,9 @@ open class CoreTool : XposedLog() {
          * @return HookBridge 实例
          */
         @JvmStatic
-        fun Class<*>.hookClassInitializer(): HookBridge {
+        fun Class<*>.hookClassInitializer(absHook: AbsHook): XposedInterface.HookHandle {
             return runCatching {
-                HookBridge(ModuleData.getWrapper().hookClassInitializer(this))
+                HookBridge(ModuleData.getWrapper().hookClassInitializer(this)).intercept(absHook)
             }.onSuccess {
                 if (ModuleConfig.isShowHookSuccessLog()) {
                     logI(getTag(), "Success to hook: $this")

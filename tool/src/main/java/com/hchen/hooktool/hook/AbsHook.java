@@ -18,6 +18,8 @@
  */
 package com.hchen.hooktool.hook;
 
+import static io.github.libxposed.api.XposedInterface.PRIORITY_DEFAULT;
+
 import androidx.annotation.NonNull;
 
 import com.hchen.hooktool.log.LogExpand;
@@ -35,6 +37,8 @@ import io.github.libxposed.api.XposedInterface;
  * @author 焕晨HChen
  */
 public abstract class AbsHook {
+    int priority; // 钩子优先级
+
     private static class CallState {
         XposedInterface.Chain originalChain;
         final InnerChain innerChain;
@@ -122,6 +126,14 @@ public abstract class AbsHook {
         BEFORE,
         PROCEED,
         AFTER
+    }
+
+    public AbsHook() {
+        this(PRIORITY_DEFAULT);
+    }
+
+    public AbsHook(int priority) {
+        this.priority = priority;
     }
 
     /**

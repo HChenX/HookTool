@@ -41,10 +41,9 @@ public class HookBridge {
      *
      * @param priority 优先级值
      */
-    public HookBridge setPriority(int priority) {
+    private void setPriority(int priority) {
         Objects.requireNonNull(builder);
         builder.setPriority(priority);
-        return this;
     }
 
     /**
@@ -57,6 +56,7 @@ public class HookBridge {
      */
     public XposedInterface.HookHandle intercept(@NonNull AbsHook absHook) {
         Objects.requireNonNull(builder);
+        setPriority(absHook.priority);
         XposedInterface.HookHandle handle = builder.intercept(new XposedInterface.Hooker() {
             @Override
             public Object intercept(@NonNull XposedInterface.Chain chain) throws Throwable {

@@ -105,8 +105,7 @@ public class ResInjectTool {
                 "android.content.res.ResourcesKey",
                 String.class /* resDir */, String[].class /* splitResDirs */, String[].class /* overlayPaths */,
                 String[].class,/* libDirs */ int.class /* overrideDisplayId */, Configuration.class /* overrideConfig */,
-                "android.content.res.CompatibilityInfo" /* compatInfo */, ResourcesLoader[].class /* loader */
-            ).intercept(
+                "android.content.res.CompatibilityInfo" /* compatInfo */, ResourcesLoader[].class /* loader */,
                 new AbsHook() {
                     @Override
                     public void before() {
@@ -128,8 +127,7 @@ public class ResInjectTool {
                 "android.content.res.ResourcesKey",
                 String.class /* resDir */, String[].class /* splitResDirs */, String[].class /* overlayDirs */,
                 String[].class,/* libDirs */ int.class /* displayId */, Configuration.class /* overrideConfig */,
-                "android.content.res.CompatibilityInfo" /* compatInfo */
-            ).intercept(
+                "android.content.res.CompatibilityInfo" /* compatInfo */,
                 new AbsHook() {
                     @Override
                     public void before() {
@@ -204,45 +202,45 @@ public class ResInjectTool {
             throw new InjectResourcesException("Should inject module res first.");
         }
 
-        CoreTool.hook(Resources.class, "loadXmlResourceParser", int.class, String.class).intercept(hookResBefore); // XmlResourceParser
-        CoreTool.hook(Resources.class, "getDimension", int.class).intercept(hookResBefore); // float
-        CoreTool.hook(Resources.class, "getDimensionPixelOffset", int.class).intercept(hookResBefore); // int
-        CoreTool.hook(Resources.class, "getDimensionPixelSize", int.class).intercept(hookResBefore); // int
-        CoreTool.hook(Resources.class, "getBoolean", int.class).intercept(hookResBefore); // boolean
-        CoreTool.hook(Resources.class, "getInteger", int.class).intercept(hookResBefore); // int
-        CoreTool.hook(Resources.class, "getFloat", int.class).intercept(hookResBefore); // float
-        CoreTool.hook(Resources.class, "getText", int.class).intercept(hookResBefore); // CharSequence
-        CoreTool.hook(Resources.class, "getText", int.class, CharSequence.class).intercept(hookResBefore); // CharSequence
-        CoreTool.hook(Resources.class, "getQuantityText", int.class, int.class).intercept(hookResBefore); // CharSequence
-        CoreTool.hook(Resources.class, "getIntArray", int.class).intercept(hookResBefore); // int[]
-        CoreTool.hook(Resources.class, "getStringArray", int.class).intercept(hookResBefore); // String[]
-        CoreTool.hook(Resources.class, "getTextArray", int.class).intercept(hookResBefore); // CharSequence[]
-        CoreTool.hook(Resources.class, "getFont", int.class).intercept(hookResBefore); // Typeface
-        CoreTool.hook(Resources.class, "getMovie", int.class).intercept(hookResBefore); // Movie
-        CoreTool.hook(Resources.class, "getColor", int.class, Resources.Theme.class).intercept(hookResBefore); // int
-        CoreTool.hook(Resources.class, "getColorStateList", int.class, Resources.Theme.class).intercept(hookResBefore); // ColorStateList
-        CoreTool.hook(Resources.class, "getFraction", int.class, int.class, int.class).intercept(hookResBefore); // float
-        CoreTool.hook(Resources.class, "getDrawableForDensity", int.class, int.class, Resources.Theme.class).intercept(hookResBefore); // Drawable
+        CoreTool.hook(Resources.class, "loadXmlResourceParser", int.class, String.class, hookResBefore); // XmlResourceParser
+        CoreTool.hook(Resources.class, "getDimension", int.class, hookResBefore); // float
+        CoreTool.hook(Resources.class, "getDimensionPixelOffset", int.class, hookResBefore); // int
+        CoreTool.hook(Resources.class, "getDimensionPixelSize", int.class, hookResBefore); // int
+        CoreTool.hook(Resources.class, "getBoolean", int.class, hookResBefore); // boolean
+        CoreTool.hook(Resources.class, "getInteger", int.class, hookResBefore); // int
+        CoreTool.hook(Resources.class, "getFloat", int.class, hookResBefore); // float
+        CoreTool.hook(Resources.class, "getText", int.class, hookResBefore); // CharSequence
+        CoreTool.hook(Resources.class, "getText", int.class, CharSequence.class, hookResBefore); // CharSequence
+        CoreTool.hook(Resources.class, "getQuantityText", int.class, int.class, hookResBefore); // CharSequence
+        CoreTool.hook(Resources.class, "getIntArray", int.class, hookResBefore); // int[]
+        CoreTool.hook(Resources.class, "getStringArray", int.class, hookResBefore); // String[]
+        CoreTool.hook(Resources.class, "getTextArray", int.class, hookResBefore); // CharSequence[]
+        CoreTool.hook(Resources.class, "getFont", int.class, hookResBefore); // Typeface
+        CoreTool.hook(Resources.class, "getMovie", int.class, hookResBefore); // Movie
+        CoreTool.hook(Resources.class, "getColor", int.class, Resources.Theme.class, hookResBefore); // int
+        CoreTool.hook(Resources.class, "getColorStateList", int.class, Resources.Theme.class, hookResBefore); // ColorStateList
+        CoreTool.hook(Resources.class, "getFraction", int.class, int.class, int.class, hookResBefore); // float
+        CoreTool.hook(Resources.class, "getDrawableForDensity", int.class, int.class, Resources.Theme.class, hookResBefore); // Drawable
 
         STYLE_NUM_ENTRIES = (int) CoreTool.getStaticField(TypedArray.class, "STYLE_NUM_ENTRIES");
         STYLE_TYPE = (int) CoreTool.getStaticField(TypedArray.class, "STYLE_TYPE");
         STYLE_RESOURCE_ID = (int) CoreTool.getStaticField(TypedArray.class, "STYLE_RESOURCE_ID");
-        CoreTool.hook(TypedArray.class, "getColor", int.class, int.class).intercept(hookTypedBefore); // int
-        CoreTool.hook(TypedArray.class, "getColorStateList", int.class).intercept(hookTypedBefore); // ColorStateList
-        CoreTool.hook(TypedArray.class, "getBoolean", int.class, boolean.class).intercept(hookTypedBefore); // boolean
-        CoreTool.hook(TypedArray.class, "getFloat", int.class, float.class).intercept(hookTypedBefore); // float
-        CoreTool.hook(TypedArray.class, "getInt", int.class, int.class).intercept(hookTypedBefore); // int
-        CoreTool.hook(TypedArray.class, "getInteger", int.class, int.class).intercept(hookTypedBefore); // int
-        CoreTool.hook(TypedArray.class, "getString", int.class).intercept(hookTypedBefore); // String
-        CoreTool.hook(TypedArray.class, "getText", int.class).intercept(hookTypedBefore); // CharSequence
-        CoreTool.hook(TypedArray.class, "getFont", int.class).intercept(hookTypedBefore); // Typeface
-        CoreTool.hook(TypedArray.class, "getDimension", int.class, float.class).intercept(hookTypedBefore); // float
-        CoreTool.hook(TypedArray.class, "getDimensionPixelOffset", int.class, int.class).intercept(hookTypedBefore); // int
-        CoreTool.hook(TypedArray.class, "getDimensionPixelSize", int.class, int.class).intercept(hookTypedBefore); // int
-        CoreTool.hook(TypedArray.class, "getLayoutDimension", int.class, int.class).intercept(hookTypedBefore); // int
-        CoreTool.hook(TypedArray.class, "getLayoutDimension", int.class, String.class).intercept(hookTypedBefore); // int
-        CoreTool.hook(TypedArray.class, "getDrawableForDensity", int.class, int.class).intercept(hookTypedBefore); // Drawable
-        CoreTool.hook(TypedArray.class, "getFraction", int.class, int.class, int.class, float.class).intercept(hookTypedBefore); // float
+        CoreTool.hook(TypedArray.class, "getColor", int.class, int.class, hookTypedBefore); // int
+        CoreTool.hook(TypedArray.class, "getColorStateList", int.class, hookTypedBefore); // ColorStateList
+        CoreTool.hook(TypedArray.class, "getBoolean", int.class, boolean.class, hookTypedBefore); // boolean
+        CoreTool.hook(TypedArray.class, "getFloat", int.class, float.class, hookTypedBefore); // float
+        CoreTool.hook(TypedArray.class, "getInt", int.class, int.class, hookTypedBefore); // int
+        CoreTool.hook(TypedArray.class, "getInteger", int.class, int.class, hookTypedBefore); // int
+        CoreTool.hook(TypedArray.class, "getString", int.class, hookTypedBefore); // String
+        CoreTool.hook(TypedArray.class, "getText", int.class, hookTypedBefore); // CharSequence
+        CoreTool.hook(TypedArray.class, "getFont", int.class, hookTypedBefore); // Typeface
+        CoreTool.hook(TypedArray.class, "getDimension", int.class, float.class, hookTypedBefore); // float
+        CoreTool.hook(TypedArray.class, "getDimensionPixelOffset", int.class, int.class, hookTypedBefore); // int
+        CoreTool.hook(TypedArray.class, "getDimensionPixelSize", int.class, int.class, hookTypedBefore); // int
+        CoreTool.hook(TypedArray.class, "getLayoutDimension", int.class, int.class, hookTypedBefore); // int
+        CoreTool.hook(TypedArray.class, "getLayoutDimension", int.class, String.class, hookTypedBefore); // int
+        CoreTool.hook(TypedArray.class, "getDrawableForDensity", int.class, int.class, hookTypedBefore); // Drawable
+        CoreTool.hook(TypedArray.class, "getFraction", int.class, int.class, int.class, float.class, hookTypedBefore); // float
 
         isHooked = true;
     }
