@@ -47,6 +47,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -262,21 +263,24 @@ public class ShellTool {
      * 检查是否支持 Root
      */
     public static boolean isRootAvailable(boolean sync, @Nullable IExecListener iExecListener) {
-        Callable<Integer> callable = () -> {
-            Process process = null;
-            try {
-                process = Runtime.getRuntime().exec("su -c true");
-                int exitCode = process.waitFor();
-                if (iExecListener != null) {
-                    iExecListener.rootResult(exitCode == 0, String.valueOf(exitCode));
+        Callable<Integer> callable = new Callable<Integer>() {
+            @Override
+            public Integer call() throws Exception {
+                Process process = null;
+                try {
+                    process = Runtime.getRuntime().exec("su -c true");
+                    int exitCode = process.waitFor();
+                    if (iExecListener != null) {
+                        iExecListener.rootResult(exitCode == 0, String.valueOf(exitCode));
+                    }
+                    return exitCode;
+                } catch (IOException | InterruptedException e) {
+                    AndroidLog.logE(TAG, "Error checking if root permission is supported!!", e);
+                    return -1;
+                } finally {
+                    if (process != null)
+                        process.destroy();
                 }
-                return exitCode;
-            } catch (IOException | InterruptedException e) {
-                AndroidLog.logE(TAG, "Error checking if root permission is supported!!", e);
-                return -1;
-            } finally {
-                if (process != null)
-                    process.destroy();
             }
         };
 
@@ -508,44 +512,50 @@ public class ShellTool {
 
         private void run() {
             outputFuture = outputService.submit(
-                () -> {
-                    try (BufferedReader br = new BufferedReader(new InputStreamReader(input))) {
-                        String line;
-                        while ((line = br.readLine()) != null) {
-                            if (filterContent(line, SHELL_ID_OUTPUT)) {
-                                continue;
-                            }
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        try (BufferedReader br = new BufferedReader(new InputStreamReader(input))) {
+                            String line;
+                            while ((line = br.readLine()) != null) {
+                                if (filterContent(line, SHELL_ID_OUTPUT)) {
+                                    continue;
+                                }
 
-                            outputList.add(line);
+                                outputList.add(line);
+                            }
+                        } catch (Throwable e) {
+                            AndroidLog.logE(TAG, "Error reading shell standard output stream!!", e);
                         }
-                    } catch (Throwable e) {
-                        AndroidLog.logE(TAG, "Error reading shell standard output stream!!", e);
                     }
                 }
             );
 
             errorFuture = errorService.submit(
-                () -> {
-                    try (BufferedReader br = new BufferedReader(new InputStreamReader(error))) {
-                        String line;
-                        while ((line = br.readLine()) != null) {
-                            if (filterContent(line, SHELL_ID_ERROR)) {
-                                continue;
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        try (BufferedReader br = new BufferedReader(new InputStreamReader(error))) {
+                            String line;
+                            while ((line = br.readLine()) != null) {
+                                if (filterContent(line, SHELL_ID_ERROR)) {
+                                    continue;
+                                }
+
+                                errorList.add(line);
                             }
 
-                            errorList.add(line);
-                        }
+                            // Shell 管道异常破裂
+                            if (!errorList.isEmpty()) {
+                                isAbnormalExit = true;
 
-                        // Shell 管道异常破裂
-                        if (!errorList.isEmpty()) {
-                            isAbnormalExit = true;
-
-                            onBrokenPip();
-                            shellImpl.close();
-                            shellImpl.init();
+                                onBrokenPip();
+                                shellImpl.close();
+                                shellImpl.init();
+                            }
+                        } catch (Throwable e) {
+                            AndroidLog.logE(TAG, "Error reading shell standard error stream!!", e);
                         }
-                    } catch (Throwable e) {
-                        AndroidLog.logE(TAG, "Error reading shell standard error stream!!", e);
                     }
                 }
             );
@@ -627,7 +637,15 @@ public class ShellTool {
                 iGlobalExecListeners.brokenPip(
                     "Incorrect shell code causing pipeline rupture!!" +
                         " Shell code list: sync: " + shellSyncMap.values()
-                        + ", async: " + shellAsyncMap.values().stream().map(p -> p.first).collect(Collectors.toCollection(ArrayList::new)),
+                        + ", async: " +
+                        shellAsyncMap.values()
+                            .stream()
+                            .map(new Function<Pair<String, IExecListener>, String>() {
+                                @Override
+                                public String apply(Pair<String, IExecListener> p) {
+                                    return p.first;
+                                }
+                            }).collect(Collectors.toCollection(ArrayList::new)),
                     toArray(errorList)
                 );
             } catch (Throwable e) {

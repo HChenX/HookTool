@@ -32,6 +32,7 @@ import android.os.UserHandle;
 import androidx.annotation.NonNull;
 
 import com.hchen.hooktool.callback.IAppDataGetter;
+import com.hchen.hooktool.callback.IDecomposer;
 import com.hchen.hooktool.data.AppData;
 import com.hchen.hooktool.exception.UnexpectedException;
 import com.hchen.hooktool.helper.TryHelper;
@@ -81,14 +82,17 @@ public class PackageTool {
      * 获取失败则返回 -1
      */
     public static int getUserId(int uid) {
-        return TryHelper.doTry(() -> {
-            Object result = InvokeTool.callStaticMethod(
-                UserHandle.class,
-                "getUserId",
-                new Class[]{int.class},
-                uid
-            );
-            return result != null ? (int) result : -1;
+        return TryHelper.doTry(new IDecomposer<Integer>() {
+            @Override
+            public Integer get() throws Throwable {
+                Object result = InvokeTool.callStaticMethod(
+                    UserHandle.class,
+                    "getUserId",
+                    new Class[]{int.class},
+                    uid
+                );
+                return result != null ? (int) result : -1;
+            }
         }).orElse(-1);
     }
 
@@ -153,16 +157,19 @@ public class PackageTool {
                 try {
                     // noinspection resource
                     service = Executors.newSingleThreadExecutor();
-                    service.execute(() -> {
-                        try {
-                            List<T> ts = iAppDataGetter.getPackages(packageManager);
-                            AppData[] appDataArray = new AppData[ts.size()];
-                            for (int i = 0; i < ts.size(); i++) {
-                                appDataArray[i] = createAppData(packageManager, ts.get(i));
+                    service.execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                List<T> ts = iAppDataGetter.getPackages(packageManager);
+                                AppData[] appDataArray = new AppData[ts.size()];
+                                for (int i = 0; i < ts.size(); i++) {
+                                    appDataArray[i] = createAppData(packageManager, ts.get(i));
+                                }
+                                iAppDataGetter.getAsyncAppData(appDataArray);
+                            } catch (PackageManager.NameNotFoundException e) {
+                                throw new UnexpectedException("Failed to get packages", e);
                             }
-                            iAppDataGetter.getAsyncAppData(appDataArray);
-                        } catch (PackageManager.NameNotFoundException e) {
-                            throw new UnexpectedException("Failed to get packages", e);
                         }
                     });
                 } finally {
