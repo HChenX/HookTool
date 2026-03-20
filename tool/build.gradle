@@ -1,5 +1,5 @@
 plugins {
-    alias(libs.plugins.androidLibrary)
+    alias(libs.plugins.android.library)
     id 'maven-publish'
 }
 
@@ -65,7 +65,7 @@ dependencies {
     implementation libs.service
     implementation libs.annotation
 
-    implementation(project(':xposed-helper'))
+    compileOnly(project(':xposed-helper'))
     // implementation 'org.apache.commons:commons-lang3:3.14.0'
 }
 

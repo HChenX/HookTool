@@ -1,5 +1,5 @@
 plugins {
-    alias(libs.plugins.androidApplication)
+    alias(libs.plugins.android.application)
 }
 
 android {
@@ -23,6 +23,10 @@ android {
         }
     }
 
+    buildFeatures {
+        buildConfig true
+    }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_21
         targetCompatibility JavaVersion.VERSION_21
@@ -31,7 +35,12 @@ android {
 
 dependencies {
     compileOnly libs.xposed
+    implementation libs.service
     implementation libs.annotation
+
+    implementation libs.appcompat
+    implementation libs.activity
+    implementation libs.constraintlayout
 
     implementation(project(':tool'))
 }

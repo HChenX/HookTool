@@ -1,5 +1,5 @@
 plugins {
-    alias(libs.plugins.androidLibrary)
+    alias(libs.plugins.android.library)
 }
 
 android {
@@ -9,7 +9,7 @@ android {
     }
 
     defaultConfig {
-        minSdk 35
+        minSdk 26
         consumerProguardFiles "consumer-rules.pro"
     }
 

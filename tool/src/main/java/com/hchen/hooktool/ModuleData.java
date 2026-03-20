@@ -35,6 +35,7 @@ import io.github.libxposed.api.XposedInterfaceWrapper;
  * @author 焕晨HChen
  */
 public class ModuleData {
+    private static boolean isXposedEnvironment;
     private static XposedInterfaceWrapper wrapper;
     private static ClassLoader classLoader;
 
@@ -50,6 +51,28 @@ public class ModuleData {
     public static XposedInterfaceWrapper getWrapper() {
         Objects.requireNonNull(wrapper);
         return wrapper;
+    }
+
+    public static int getApiVersion() {
+        return getWrapper().getApiVersion();
+    }
+
+    @NonNull
+    public static String getFrameworkName() {
+        return getWrapper().getFrameworkName();
+    }
+
+    @NonNull
+    public static String getFrameworkVersion() {
+        return getWrapper().getFrameworkVersion();
+    }
+
+    public static long getFrameworkVersionCode() {
+        return getWrapper().getFrameworkVersionCode();
+    }
+
+    public static long getFrameworkProperties() {
+        return getWrapper().getFrameworkProperties();
     }
 
     @NonNull
@@ -81,5 +104,15 @@ public class ModuleData {
     @NonNull
     public static ClassLoader getSystemClassLoader() {
         return ClassLoader.getSystemClassLoader();
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    static void setXposedEnvironment(boolean isXposedEnvironment) {
+        ModuleData.isXposedEnvironment = isXposedEnvironment;
+    }
+
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
+    public static boolean isXposedEnvironment() {
+        return isXposedEnvironment;
     }
 }

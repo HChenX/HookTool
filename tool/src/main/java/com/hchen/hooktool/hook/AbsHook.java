@@ -36,9 +36,8 @@ import io.github.libxposed.api.XposedInterface;
  */
 public abstract class AbsHook {
     private static class CallState {
-        final XposedInterface.Chain originalChain;
+        XposedInterface.Chain originalChain;
         final InnerChain innerChain;
-        final CallState previous;
 
         Object[] args;
         Object originalResult;
@@ -47,14 +46,76 @@ public abstract class AbsHook {
         boolean isArgsChanged = false;
         boolean isResultChanged = false;
 
-        CallState(XposedInterface.Chain chain, CallState previous) {
-            this.originalChain = chain;
-            this.previous = previous;
+        CallState() {
             this.innerChain = new InnerChain(this);
+        }
+
+        void reset(@NonNull XposedInterface.Chain chain) {
+            this.originalChain = chain;
+            this.args = null;
+            this.originalResult = null;
+            this.replaceResult = null;
+            this.throwable = null;
+            this.isArgsChanged = false;
+            this.isResultChanged = false;
+        }
+
+        @Override
+        @NonNull
+        public String toString() {
+            return "CallState{" +
+                "originalChain=" + originalChain +
+                ", innerChain=" + innerChain +
+                ", args=" + Arrays.toString(args) +
+                ", originalResult=" + originalResult +
+                ", replaceResult=" + replaceResult +
+                ", throwable=" + throwable +
+                ", isArgsChanged=" + isArgsChanged +
+                ", isResultChanged=" + isResultChanged +
+                '}';
         }
     }
 
-    private final ThreadLocal<CallState> stateLocal = new ThreadLocal<>();
+    private static class StateStack {
+        private CallState[] states = new CallState[4];
+        private int depth = -1;
+
+        void push(@NonNull XposedInterface.Chain chain) {
+            depth++;
+            if (depth >= states.length) {
+                states = Arrays.copyOf(states, states.length * 2);
+            }
+            if (states[depth] == null) {
+                states[depth] = new CallState();
+            }
+            states[depth].reset(chain);
+        }
+
+        void pop() {
+            if (depth >= 0) {
+                states[depth].originalChain = null;
+                states[depth].args = null;
+                states[depth].originalResult = null;
+                states[depth].replaceResult = null;
+                states[depth].throwable = null;
+                states[depth].isArgsChanged = false;
+                states[depth].isResultChanged = false;
+                depth--;
+            }
+        }
+
+        CallState current() {
+            if (depth < 0) return null;
+            return states[depth];
+        }
+    }
+
+    private final ThreadLocal<StateStack> stackLocal = new ThreadLocal<StateStack>() {
+        @Override
+        protected StateStack initialValue() {
+            return new StateStack();
+        }
+    };
     private XposedInterface.HookHandle handle;
 
     public enum StageEnum {
@@ -104,7 +165,8 @@ public abstract class AbsHook {
 
     @NonNull
     private CallState getState() {
-        CallState state = stateLocal.get();
+        StateStack stack = stackLocal.get();
+        CallState state = stack != null ? stack.current() : null;
         if (state == null) {
             throw new IllegalStateException("Hook state has been lost or is not being called within the interception lifecycle.");
         }
@@ -263,17 +325,13 @@ public abstract class AbsHook {
     // --- 生命周期管理 ---
 
     final void enter(@NonNull XposedInterface.Chain chain) {
-        stateLocal.set(new CallState(chain, stateLocal.get()));
+        Objects.requireNonNull(stackLocal.get()).push(chain);
     }
 
     final void exit() {
-        CallState current = stateLocal.get();
-        if (current != null) {
-            if (current.previous == null) {
-                stateLocal.remove();
-            } else {
-                stateLocal.set(current.previous);
-            }
+        StateStack stack = stackLocal.get();
+        if (stack != null) {
+            stack.pop();
         }
     }
 
@@ -313,6 +371,7 @@ public abstract class AbsHook {
      */
     final public void unHookSelf() {
         Objects.requireNonNull(handle);
+        stackLocal.remove();
         handle.unhook();
     }
 
@@ -325,11 +384,23 @@ public abstract class AbsHook {
         return LogExpand.observeCall(this);
     }
 
+    @Override
+    @NonNull
+    public String toString() {
+        StateStack stack = stackLocal.get();
+        CallState state = stack != null ? stack.current() : null;
+        return "AbsHook{" +
+            "handle=" + handle +
+            ", callState=" + (state != null ? state.toString() : "null") +
+            '}';
+    }
+
     /**
      * 内部调用链实现
      * <p>
      * 用于包装原始调用链，处理参数和返回值的修改
      */
+    @SuppressWarnings("ClassCanBeRecord")
     private static class InnerChain implements XposedInterface.Chain {
         private final CallState state;
 
@@ -351,11 +422,13 @@ public abstract class AbsHook {
         @NonNull
         @Override
         public List<Object> getArgs() {
+            // 保持与旧 API 逻辑同步
             return state.isArgsChanged ? Arrays.asList(state.args) : state.originalChain.getArgs();
         }
 
         @Override
         public Object getArg(int index) throws IndexOutOfBoundsException, ClassCastException {
+            // 保持与旧 API 逻辑同步
             return state.isArgsChanged ? state.args[index] : state.originalChain.getArg(index);
         }
 

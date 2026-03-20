@@ -32,7 +32,7 @@ import java.util.Objects;
  * @author 焕晨HChen
  */
 public abstract class AbsModule extends CoreTool {
-    public String TAG = getClass().getSimpleName();
+    protected String TAG = getClass().getSimpleName();
 
     public enum StageEnum {
         MODULE_LOADED,

@@ -43,12 +43,10 @@ public class ModuleConfig {
     private static String modulePackageName;
     @NonNull
     private static String prefsName;
-    private static boolean isAutoReload;
     @Nullable
     private static String[] logExpandPaths;
     @Nullable
     private static String[] logExpandIgnoreClassNames;
-    private static boolean isXposedEnvironment;
 
     // -------- 可选日志等级 --------
     public static final int LOG_E = 1;
@@ -71,11 +69,11 @@ public class ModuleConfig {
         logLevel = LOG_I;
         modulePackageName = "";
         prefsName = "";
-        isAutoReload = true;
         logExpandPaths = null;
         logExpandIgnoreClassNames = null;
-        isXposedEnvironment = false;
     }
+
+    // ------------------------ setter ------------------------
 
     public static void setLogTag(@NonNull String logTag) {
         ModuleConfig.logTag = logTag;
@@ -93,10 +91,6 @@ public class ModuleConfig {
         ModuleConfig.prefsName = prefsName;
     }
 
-    public static void setAutoReload(boolean isAutoReload) {
-        ModuleConfig.isAutoReload = isAutoReload;
-    }
-
     public static void setLogExpandPaths(@Nullable String[] logExpandPaths) {
         ModuleConfig.logExpandPaths = logExpandPaths;
     }
@@ -105,9 +99,7 @@ public class ModuleConfig {
         ModuleConfig.logExpandIgnoreClassNames = logExpandIgnoreClassNames;
     }
 
-    public static void setXposedEnvironment(boolean isXposedEnvironment) {
-        ModuleConfig.isXposedEnvironment = isXposedEnvironment;
-    }
+    // -------------------- getter ----------------------
 
     @NonNull
     public static String getLogTag() {
@@ -133,10 +125,6 @@ public class ModuleConfig {
         return prefsName;
     }
 
-    public static boolean isAutoReload() {
-        return isAutoReload;
-    }
-
     @Nullable
     public static String[] getLogExpandPaths() {
         return logExpandPaths;
@@ -145,9 +133,5 @@ public class ModuleConfig {
     @Nullable
     public static String[] getLogExpandIgnoreClassNames() {
         return logExpandIgnoreClassNames;
-    }
-
-    public static boolean isXposedEnvironment() {
-        return isXposedEnvironment;
     }
 }

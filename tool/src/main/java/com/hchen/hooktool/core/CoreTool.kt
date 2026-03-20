@@ -112,7 +112,7 @@ open class CoreTool : XposedLog() {
             exactMatch: Boolean = true,
             vararg parameterTypes: Any
         ): Boolean {
-            return this.findClassIfExists(classLoader)?.hasMethod(methodName, exactMatch, parameterTypes) ?: false
+            return this.findClassIfExists(classLoader)?.hasMethod(methodName, exactMatch, *parameterTypes) ?: false
         }
 
         /**
@@ -132,7 +132,7 @@ open class CoreTool : XposedLog() {
         ): Boolean {
             return if (exactMatch) {
                 Objects.nonNull(
-                    XposedHelpers.findMethodExactIfExists(this, methodName, parameterTypes)
+                    XposedHelpers.findMethodExactIfExists(this, methodName, *parameterTypes)
                 )
             } else {
                 this.declaredMethods.any { method ->
@@ -156,7 +156,7 @@ open class CoreTool : XposedLog() {
             methodName: String,
             vararg parameterTypes: Any
         ): Method {
-            return XposedHelpers.findMethodExact(this, classLoader, methodName, parameterTypes)
+            return XposedHelpers.findMethodExact(this, classLoader, methodName, *parameterTypes)
         }
 
         /**
@@ -171,7 +171,7 @@ open class CoreTool : XposedLog() {
             methodName: String,
             vararg parameterTypes: Any
         ): Method {
-            return XposedHelpers.findMethodExact(this, methodName, parameterTypes)
+            return XposedHelpers.findMethodExact(this, methodName, *parameterTypes)
         }
 
         /**
@@ -189,7 +189,7 @@ open class CoreTool : XposedLog() {
             methodName: String,
             vararg parameterTypes: Any
         ): Method? {
-            return XposedHelpers.findMethodExactIfExists(this, classLoader, methodName, parameterTypes)
+            return XposedHelpers.findMethodExactIfExists(this, classLoader, methodName, *parameterTypes)
         }
 
         /**
@@ -204,7 +204,7 @@ open class CoreTool : XposedLog() {
             methodName: String,
             vararg parameterTypes: Any
         ): Method? {
-            return XposedHelpers.findMethodExactIfExists(this, methodName, parameterTypes)
+            return XposedHelpers.findMethodExactIfExists(this, methodName, *parameterTypes)
         }
 
         /**
@@ -254,7 +254,7 @@ open class CoreTool : XposedLog() {
             vararg parameterTypes: Any
         ): Boolean {
             return Objects.nonNull(
-                XposedHelpers.findConstructorExactIfExists(this, classLoader, parameterTypes)
+                XposedHelpers.findConstructorExactIfExists(this, classLoader, *parameterTypes)
             )
         }
 
@@ -269,7 +269,7 @@ open class CoreTool : XposedLog() {
             vararg parameterTypes: Any
         ): Boolean {
             return Objects.nonNull(
-                XposedHelpers.findConstructorExactIfExists(this, parameterTypes)
+                XposedHelpers.findConstructorExactIfExists(this, *parameterTypes)
             )
         }
 
@@ -286,7 +286,7 @@ open class CoreTool : XposedLog() {
             classLoader: ClassLoader? = ModuleData.getClassLoader(),
             vararg parameterTypes: Any
         ): Constructor<*> {
-            return XposedHelpers.findConstructorExact(this, classLoader, parameterTypes)
+            return XposedHelpers.findConstructorExact(this, classLoader, *parameterTypes)
         }
 
         /**
@@ -299,7 +299,7 @@ open class CoreTool : XposedLog() {
         fun Class<*>.findConstructor(
             vararg parameterTypes: Any
         ): Constructor<*> {
-            return XposedHelpers.findConstructorExact(this, parameterTypes)
+            return XposedHelpers.findConstructorExact(this, *parameterTypes)
         }
 
         /**
@@ -315,7 +315,7 @@ open class CoreTool : XposedLog() {
             classLoader: ClassLoader? = ModuleData.getClassLoader(),
             vararg parameterTypes: Any
         ): Constructor<*>? {
-            return XposedHelpers.findConstructorExactIfExists(this, classLoader, parameterTypes)
+            return XposedHelpers.findConstructorExactIfExists(this, classLoader, *parameterTypes)
         }
 
         /**
@@ -328,7 +328,7 @@ open class CoreTool : XposedLog() {
         fun Class<*>.findConstructorIfExists(
             vararg parameterTypes: Any
         ): Constructor<*>? {
-            return XposedHelpers.findConstructorExactIfExists(this, parameterTypes)
+            return XposedHelpers.findConstructorExactIfExists(this, *parameterTypes)
         }
 
         /**
@@ -465,9 +465,9 @@ open class CoreTool : XposedLog() {
             vararg args: Any?
         ): Any? {
             return if (parameterTypes.isEmpty()) {
-                XposedHelpers.callMethod(this, methodName, args)
+                XposedHelpers.callMethod(this, methodName, *args)
             } else {
-                XposedHelpers.callMethod(this, methodName, parameterTypes, args)
+                XposedHelpers.callMethod(this, methodName, parameterTypes, *args)
             }
         }
 
@@ -484,7 +484,7 @@ open class CoreTool : XposedLog() {
             vararg args: Any?
         ): Any? {
             this.isAccessible = true
-            return this.getInvoker().invoke(instance, args)
+            return this.getInvoker().invoke(instance, *args)
         }
 
         /**
@@ -601,7 +601,7 @@ open class CoreTool : XposedLog() {
             parameterTypes: Array<Class<*>> = emptyArray(),
             vararg args: Any?
         ): Any {
-            return this.findClass(classLoader).newInstance(parameterTypes, args)
+            return this.findClass(classLoader).newInstance(parameterTypes, *args)
         }
 
         /**
@@ -618,9 +618,9 @@ open class CoreTool : XposedLog() {
             vararg args: Any?
         ): Any {
             return if (parameterTypes.isEmpty()) {
-                XposedHelpers.newInstance(this, args)
+                XposedHelpers.newInstance(this, *args)
             } else {
-                XposedHelpers.newInstance(this, parameterTypes, args)
+                XposedHelpers.newInstance(this, parameterTypes, *args)
             }
         }
 
@@ -641,7 +641,7 @@ open class CoreTool : XposedLog() {
             parameterTypes: Array<Class<*>> = emptyArray(),
             vararg args: Any?
         ): Any? {
-            return this.findClass(classLoader).callStaticMethod(methodName, parameterTypes, args)
+            return this.findClass(classLoader).callStaticMethod(methodName, parameterTypes, *args)
         }
 
         /**
@@ -660,9 +660,9 @@ open class CoreTool : XposedLog() {
             vararg args: Any?
         ): Any? {
             return if (parameterTypes.isEmpty()) {
-                XposedHelpers.callStaticMethod(this, methodName, args)
+                XposedHelpers.callStaticMethod(this, methodName, *args)
             } else {
-                XposedHelpers.callStaticMethod(this, methodName, parameterTypes, args)
+                XposedHelpers.callStaticMethod(this, methodName, parameterTypes, *args)
             }
         }
 
@@ -677,7 +677,7 @@ open class CoreTool : XposedLog() {
             vararg args: Any?
         ): Any? {
             this.isAccessible = true
-            return this.getInvoker().invoke(null, args)
+            return this.getInvoker().invoke(null, *args)
         }
 
         /**
@@ -872,7 +872,7 @@ open class CoreTool : XposedLog() {
             methodName: String,
             vararg parameterTypes: Any
         ): HookBridge {
-            return this.findMethod(classLoader, methodName, parameterTypes).hook()
+            return this.findMethod(classLoader, methodName, *parameterTypes).hook()
         }
 
         /**
@@ -887,7 +887,7 @@ open class CoreTool : XposedLog() {
             methodName: String,
             vararg parameterTypes: Any
         ): HookBridge {
-            return this.findMethod(methodName, parameterTypes).hook()
+            return this.findMethod(methodName, *parameterTypes).hook()
         }
 
         /**
@@ -903,7 +903,7 @@ open class CoreTool : XposedLog() {
             classLoader: ClassLoader? = ModuleData.getClassLoader(),
             vararg parameterTypes: Any
         ): HookBridge {
-            return this.findConstructor(classLoader, parameterTypes).hook()
+            return this.findConstructor(classLoader, *parameterTypes).hook()
         }
 
         /**
@@ -916,7 +916,7 @@ open class CoreTool : XposedLog() {
         fun Class<*>.hook(
             vararg parameterTypes: Any
         ): HookBridge {
-            return this.findConstructor(parameterTypes).hook()
+            return this.findConstructor(*parameterTypes).hook()
         }
 
         /**
@@ -1010,7 +1010,7 @@ open class CoreTool : XposedLog() {
             methodName: String,
             vararg parameterTypes: Any
         ): XposedInterface.Invoker<*, Method> {
-            return this.findMethod(classLoader, methodName, parameterTypes).getInvoker()
+            return this.findMethod(classLoader, methodName, *parameterTypes).getInvoker()
         }
 
         /**
@@ -1025,7 +1025,7 @@ open class CoreTool : XposedLog() {
             methodName: String,
             vararg parameterTypes: Any
         ): XposedInterface.Invoker<*, Method> {
-            return this.findMethod(methodName, parameterTypes).getInvoker()
+            return this.findMethod(methodName, *parameterTypes).getInvoker()
         }
 
         /**
@@ -1051,7 +1051,7 @@ open class CoreTool : XposedLog() {
             classLoader: ClassLoader? = ModuleData.getClassLoader(),
             vararg parameterTypes: Any
         ): XposedInterface.CtorInvoker<*> {
-            return this.findConstructor(classLoader, parameterTypes).getInvoker()
+            return this.findConstructor(classLoader, *parameterTypes).getInvoker()
         }
 
         /**
@@ -1064,7 +1064,7 @@ open class CoreTool : XposedLog() {
         fun Class<*>.getInvoker(
             vararg parameterTypes: Any
         ): XposedInterface.CtorInvoker<*> {
-            return this.findConstructor(parameterTypes).getInvoker()
+            return this.findConstructor(*parameterTypes).getInvoker()
         }
 
         /**
@@ -1093,7 +1093,7 @@ open class CoreTool : XposedLog() {
             methodName: String,
             vararg parameterTypes: Any
         ) {
-            this.findMethod(classLoader, methodName, parameterTypes).deoptimize()
+            this.findMethod(classLoader, methodName, *parameterTypes).deoptimize()
         }
 
         /**
@@ -1107,7 +1107,7 @@ open class CoreTool : XposedLog() {
             methodName: String,
             vararg parameterTypes: Any
         ) {
-            this.findMethod(methodName, parameterTypes).deoptimize()
+            this.findMethod(methodName, *parameterTypes).deoptimize()
         }
 
         /**
@@ -1122,7 +1122,7 @@ open class CoreTool : XposedLog() {
             classLoader: ClassLoader? = ModuleData.getClassLoader(),
             vararg parameterTypes: Any
         ) {
-            this.findConstructor(classLoader, parameterTypes).deoptimize()
+            this.findConstructor(classLoader, *parameterTypes).deoptimize()
         }
 
         /**
@@ -1134,7 +1134,7 @@ open class CoreTool : XposedLog() {
         fun Class<*>.deoptimize(
             vararg parameterTypes: Any
         ) {
-            this.findConstructor(parameterTypes).deoptimize()
+            this.findConstructor(*parameterTypes).deoptimize()
         }
 
         /**

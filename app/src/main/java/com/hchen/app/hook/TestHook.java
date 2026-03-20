@@ -16,31 +16,14 @@
  *
  * Copyright (C) 2024–2026 HChenX
  */
-package com.hchen.hooktool.callback;
-
-import android.content.pm.PackageManager;
+package com.hchen.app.hook;
 
 import androidx.annotation.NonNull;
 
-import com.hchen.hooktool.data.AppData;
+import com.hchen.hooktool.AbsModule;
 
-import java.util.List;
-
-/**
- * 包信息获取器
- *
- * @author 焕晨HChen
- */
-public interface IAppDataGetter<T> {
-    /**
-     * 需要获取 AppData 信息的包列表
-     */
-    @NonNull
-    List<T> getPackages(@NonNull PackageManager pm) throws PackageManager.NameNotFoundException;
-
-    /**
-     * 异步获取到的 AppData 信息
-     */
-    default void getAsyncAppData(@NonNull AppData[] appData) {
+public class TestHook extends AbsModule {
+    @Override
+    protected void onLoaded(@NonNull StageEnum stage) {
     }
 }

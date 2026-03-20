@@ -38,30 +38,12 @@ import kotlin.text.Charsets;
 
 /**
  * 模块状态
- * <p>
- * 记得配置混淆，否则不可用:
- * <p>
- * <pre>{@code
- * -keep class com.hchen.hooktool.ModuleState {
- *    public static boolean isXposedActivated;
- *    public static java.lang.String frameworkName;
- *    public static java.lang.String frameworkVersion;
- *    public static int frameworkVersionCode;
- * }
- * }
  *
  * @author 焕晨HChen
  */
 public class ModuleState {
     private ModuleState() {
     }
-
-    public static boolean isXposedActivated = false;
-    @NonNull
-    public static String frameworkName = "unknown";
-    @NonNull
-    public static String frameworkVersion = "";
-    public static int frameworkVersionCode = -1;
 
     /**
      * 是否是太极环境

@@ -62,6 +62,7 @@ public abstract class ModuleEntrance extends XposedModule {
     @Override
     public final void onModuleLoaded(@NonNull ModuleLoadedParam param) {
         initModuleConfig(); // 初始化工具
+        ModuleData.setXposedEnvironment(true);
         ModuleData.setWrapper(this);
 
         handleModuleLoaded(param);

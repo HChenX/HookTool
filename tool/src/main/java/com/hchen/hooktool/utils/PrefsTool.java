@@ -73,7 +73,7 @@ public class PrefsTool {
      */
     @NonNull
     public static IPrefsApply prefs() {
-        if (!ModuleConfig.isXposedEnvironment())
+        if (!ModuleData.isXposedEnvironment())
             throw new NoXposedEnvironmentException("Must be in the xposed environment.");
         return prefs("");
     }
@@ -83,7 +83,7 @@ public class PrefsTool {
      */
     @NonNull
     public static IPrefsApply prefs(@NonNull String prefsName) {
-        if (!ModuleConfig.isXposedEnvironment())
+        if (!ModuleData.isXposedEnvironment())
             throw new NoXposedEnvironmentException("Must be in the xposed environment.");
         return createXSPrefsIfNeed(prefsName);
     }
