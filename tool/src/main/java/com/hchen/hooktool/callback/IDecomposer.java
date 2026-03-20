@@ -16,24 +16,16 @@
  *
  * Copyright (C) 2024–2026 HChenX
  */
-package com.hchen.hooktool.helper;
-
-import androidx.annotation.NonNull;
-
-import com.hchen.hooktool.callback.IDecomposer;
-import com.hchen.hooktool.data.ResultData;
+package com.hchen.hooktool.callback;
 
 /**
- * TryHelper
+ * 消费者
  *
  * @author 焕晨HChen
  */
-public class TryHelper {
-    private TryHelper() {
-    }
-
-    @NonNull
-    public static <R> ResultData<R> doTry(@NonNull IDecomposer<R> supplier) {
-        return new ResultData<R>(supplier);
-    }
+public interface IDecomposer<R> {
+    /**
+     * 获取执行的结果，并主动抛出错误（如果有）
+     */
+    R get() throws Throwable;
 }

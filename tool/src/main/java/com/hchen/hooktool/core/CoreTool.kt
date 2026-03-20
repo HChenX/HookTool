@@ -21,12 +21,14 @@ package com.hchen.hooktool.core
 import android.content.Context
 import android.content.res.Resources
 import androidx.annotation.IdRes
+import com.hchen.hooktool.ModuleConfig
 import com.hchen.hooktool.ModuleData
-import com.hchen.hooktool.callback.IPrefsApply
+import com.hchen.hooktool.callback.IPreferences
 import com.hchen.hooktool.exception.UnexpectedException
 import com.hchen.hooktool.hook.AbsHook
 import com.hchen.hooktool.hook.HookBridge
 import com.hchen.hooktool.log.LogExpand
+import com.hchen.hooktool.log.LogExpand.getTag
 import com.hchen.hooktool.log.XposedLog
 import com.hchen.hooktool.utils.PrefsTool
 import com.hchen.hooktool.utils.ResInjectTool
@@ -926,7 +928,13 @@ open class CoreTool : XposedLog() {
          */
         @JvmStatic
         fun Executable.hook(): HookBridge {
-            return HookBridge(ModuleData.getWrapper().hook(this))
+            return runCatching {
+                HookBridge(ModuleData.getWrapper().hook(this))
+            }.onSuccess {
+                if (ModuleConfig.isShowHookSuccessLog()) {
+                    logI(getTag(), "Success to hook: $this")
+                }
+            }.getOrThrow()
         }
 
         /**
@@ -950,7 +958,13 @@ open class CoreTool : XposedLog() {
          */
         @JvmStatic
         fun Class<*>.hookClassInitializer(): HookBridge {
-            return HookBridge(ModuleData.getWrapper().hookClassInitializer(this))
+            return runCatching {
+                HookBridge(ModuleData.getWrapper().hookClassInitializer(this))
+            }.onSuccess {
+                if (ModuleConfig.isShowHookSuccessLog()) {
+                    logI(getTag(), "Success to hook: $this")
+                }
+            }.getOrThrow()
         }
 
         /**
@@ -1219,7 +1233,7 @@ open class CoreTool : XposedLog() {
         @JvmOverloads
         fun Context.prefs(
             prefsName: String = ""
-        ): IPrefsApply {
+        ): IPreferences {
             return PrefsTool.prefs(this, prefsName)
         }
 
@@ -1233,7 +1247,7 @@ open class CoreTool : XposedLog() {
         @JvmOverloads
         fun prefs(
             prefsName: String = ""
-        ): IPrefsApply {
+        ): IPreferences {
             return PrefsTool.prefs(prefsName)
         }
 

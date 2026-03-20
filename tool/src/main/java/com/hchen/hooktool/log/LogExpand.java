@@ -25,9 +25,7 @@ import com.hchen.hooktool.hook.AbsHook;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.lang.reflect.Array;
-import java.util.ArrayDeque;
-import java.util.Deque;
+import java.util.Arrays;
 
 /**
  * 日志扩展
@@ -61,16 +59,10 @@ public class LogExpand {
         String[] ignoreClassNames = ModuleConfig.getLogExpandIgnoreClassNames();
         if (logExpandPaths == null || logExpandPaths.length == 0) return ModuleConfig.getLogTag();
 
-        String tag = null;
         StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
 
         main:
-        for (int i = stackTraceElements.length - 1; i >= 0; i--) {
-            if (tag != null) {
-                break;
-            }
-
-            StackTraceElement element = stackTraceElements[i];
+        for (StackTraceElement element : stackTraceElements) {
             String className = element.getClassName();
             if (ignoreClassNames != null) {
                 for (String name : ignoreClassNames) {
@@ -82,49 +74,55 @@ public class LogExpand {
 
             for (String path : logExpandPaths) {
                 if (className.contains(path)) {
-                    int index = className.lastIndexOf(".");
-                    if (index == -1) {
-                        continue main;
-                    }
+                    int dotIndex = className.lastIndexOf(".");
+                    if (dotIndex == -1) continue main;
 
-                    tag = className.substring(index + 1);
-                    if (tag.contains("$")) {
-                        while (tag.lastIndexOf("$") != -1) {
-                            index = tag.lastIndexOf("$");
-                            tag = tag.substring(0, index);
-                        }
+                    String tag = className.substring(dotIndex + 1);
+                    int dollarIndex = tag.indexOf('$');
+                    if (dollarIndex != -1) {
+                        tag = tag.substring(0, dollarIndex);
                     }
+                    return tag;
                 }
             }
         }
 
-        return tag != null ? tag : ModuleConfig.getLogTag();
+        return ModuleConfig.getLogTag();
     }
 
+    @SuppressWarnings("StringBufferReplaceableByString")
     public static String observeCall(@NonNull AbsHook hook) {
-        if (hook.getArgs().length == 0) {
-            return "→ Called Method\n"
-                + "├─ Class:  " + hook.getExecutable().getDeclaringClass().getName() + "\n"
-                + "├─ Method: " + hook.getExecutable().getName() + "\n"
-                + "├─ Params: { }\n"
-                + "└─ Return: " + hook.getResult();
+        Object[] args = hook.getArgs();
+        String declaringClass = hook.getExecutable().getDeclaringClass().getName();
+        String methodName = hook.getExecutable().getName();
+
+        if (args.length == 0) {
+            StringBuilder sb = new StringBuilder(128);
+            sb.append("→ Called Method\n")
+                .append("├─ Class:  ").append(declaringClass).append("\n")
+                .append("├─ Method: ").append(methodName).append("\n")
+                .append("├─ Params: { }\n")
+                .append("└─ Return: ").append(hook.getResult());
+            return sb.toString();
         }
 
-        StringBuilder log = new StringBuilder();
-        for (int i = 0; i < hook.getArgs().length; i++) {
-            Object arg = hook.getArgs()[i];
+        StringBuilder log = new StringBuilder(256);
+        log.append("→ Called Method\n")
+            .append("├─ Class:  ").append(declaringClass).append("\n")
+            .append("├─ Method: ").append(methodName).append("\n")
+            .append("├─ Params: {\n");
+
+        for (int i = 0; i < args.length; i++) {
+            Object arg = args[i];
             log.append("    [").append(i).append("] ");
             log.append(arg == null ? "(null)" : arg.getClass().getSimpleName());
             log.append(" = ").append(paramToString(arg)).append("\n");
         }
 
-        return "→ Called Method\n"
-            + "├─ Class:  " + hook.getExecutable().getDeclaringClass().getName() + "\n"
-            + "├─ Method: " + hook.getExecutable().getName() + "\n"
-            + "├─ Params: {\n"
-            + log
-            + "├─ }\n"
-            + "└─ Return: " + hook.getResult();
+        log.append("├─ }\n")
+            .append("└─ Return: ").append(hook.getResult());
+
+        return log.toString();
     }
 
     private static String paramToString(Object param) {
@@ -137,53 +135,20 @@ public class LogExpand {
             return param.toString();
         }
 
-        class Frame {
-            final Object array;
-            final int length;
-            int index;
-
-            Frame(Object array) {
-                this.array = array;
-                this.length = Array.getLength(array);
-                this.index = 0;
-            }
+        // noinspection IfCanBeSwitch
+        if (param instanceof Object[]) {
+            return Arrays.deepToString((Object[]) param);
         }
 
-        StringBuilder sb = new StringBuilder();
-        Deque<Frame> stack = new ArrayDeque<>();
-        stack.push(new Frame(param));
-        sb.append("[");
+        if (param instanceof int[]) return Arrays.toString((int[]) param);
+        if (param instanceof byte[]) return Arrays.toString((byte[]) param);
+        if (param instanceof boolean[]) return Arrays.toString((boolean[]) param);
+        if (param instanceof long[]) return Arrays.toString((long[]) param);
+        if (param instanceof float[]) return Arrays.toString((float[]) param);
+        if (param instanceof double[]) return Arrays.toString((double[]) param);
+        if (param instanceof char[]) return Arrays.toString((char[]) param);
+        if (param instanceof short[]) return Arrays.toString((short[]) param);
 
-        while (!stack.isEmpty()) {
-            Frame top = stack.peek();
-            assert top != null;
-            if (top.index >= top.length) {
-                stack.pop();
-                sb.append("]");
-                if (!stack.isEmpty()) {
-                    Frame parent = stack.peek();
-                    assert parent != null;
-                    if (parent.index < parent.length) {
-                        sb.append(", ");
-                    }
-                }
-                continue;
-            }
-
-            Object element = Array.get(top.array, top.index);
-            top.index++;
-
-            if (element != null && element.getClass().isArray()) {
-                sb.append("[");
-                stack.push(new Frame(element));
-            } else {
-                sb.append(element == null ? "null" : element.toString());
-                if (top.index < top.length) {
-                    sb.append(", ");
-                }
-            }
-        }
-
-        return sb.toString();
+        return param.toString();
     }
 }

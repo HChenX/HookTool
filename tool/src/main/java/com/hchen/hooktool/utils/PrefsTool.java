@@ -29,7 +29,7 @@ import androidx.annotation.Nullable;
 
 import com.hchen.hooktool.ModuleConfig;
 import com.hchen.hooktool.ModuleData;
-import com.hchen.hooktool.callback.IPrefsApply;
+import com.hchen.hooktool.callback.IPreferences;
 import com.hchen.hooktool.exception.NoXposedEnvironmentException;
 import com.hchen.hooktool.exception.UnexpectedException;
 import com.hchen.hooktool.log.AndroidLog;
@@ -56,7 +56,7 @@ public class PrefsTool {
      * 从应用私有目录读取/写入共享首选项数据
      */
     @NonNull
-    public static IPrefsApply prefs(@NonNull Context context) {
+    public static IPreferences prefs(@NonNull Context context) {
         return prefs(context, "");
     }
 
@@ -64,7 +64,7 @@ public class PrefsTool {
      * 从应用私有目录读取/写入共享首选项数据
      */
     @NonNull
-    public static IPrefsApply prefs(@NonNull Context context, @NonNull String prefsName) {
+    public static IPreferences prefs(@NonNull Context context, @NonNull String prefsName) {
         return createSPrefsIfNeed(context, prefsName);
     }
 
@@ -72,7 +72,7 @@ public class PrefsTool {
      * Xposed 环境中读取模块的共享首选项，非 Xposed 环境中使用会引发异常
      */
     @NonNull
-    public static IPrefsApply prefs() {
+    public static IPreferences prefs() {
         if (!ModuleData.isXposedEnvironment())
             throw new NoXposedEnvironmentException("Must be in the xposed environment.");
         return prefs("");
@@ -82,13 +82,13 @@ public class PrefsTool {
      * Xposed 环境中读取模块的共享首选项，非 Xposed 环境中使用会引发异常
      */
     @NonNull
-    public static IPrefsApply prefs(@NonNull String prefsName) {
+    public static IPreferences prefs(@NonNull String prefsName) {
         if (!ModuleData.isXposedEnvironment())
             throw new NoXposedEnvironmentException("Must be in the xposed environment.");
         return createXSPrefsIfNeed(prefsName);
     }
 
-    private static IPrefsApply createXSPrefsIfNeed(@NonNull String prefsName) {
+    private static IPreferences createXSPrefsIfNeed(@NonNull String prefsName) {
         prefsName = initPrefsName(prefsName);
         if (xSPrefsMap.get(ModuleConfig.getModulePackageName() + prefsName) == null) {
             Objects.requireNonNull(ModuleData.getWrapper());
@@ -105,7 +105,7 @@ public class PrefsTool {
      * @noinspection deprecation
      */
     @SuppressLint("WorldReadableFiles")
-    private static IPrefsApply createSPrefsIfNeed(@NonNull Context context, @NonNull String prefsName) {
+    private static IPreferences createSPrefsIfNeed(@NonNull Context context, @NonNull String prefsName) {
         prefsName = initPrefsName(prefsName);
         if (sPrefsMap.get(context.getPackageName() + prefsName) == null) {
             SharedPreferences s;
@@ -142,7 +142,7 @@ public class PrefsTool {
     /**
      * @noinspection unchecked
      */
-    private record SPrefs(@NonNull SharedPreferences preferences) implements IPrefsApply {
+    private record SPrefs(@NonNull SharedPreferences preferences) implements IPreferences {
         @Override
         @Nullable
         public String getString(String key, @Nullable String def) {

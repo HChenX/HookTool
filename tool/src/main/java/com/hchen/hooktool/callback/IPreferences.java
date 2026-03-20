@@ -31,7 +31,7 @@ import java.util.Set;
  *
  * @author 焕晨HChen
  */
-public interface IPrefsApply {
+public interface IPreferences {
     /**
      * 根据 key，获取 String
      */

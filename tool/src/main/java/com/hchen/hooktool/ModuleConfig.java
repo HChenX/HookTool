@@ -47,6 +47,7 @@ public class ModuleConfig {
     private static String[] logExpandPaths;
     @Nullable
     private static String[] logExpandIgnoreClassNames;
+    private static boolean isShowHookSuccessLog;
 
     // -------- 可选日志等级 --------
     public static final int LOG_E = 1;
@@ -71,32 +72,71 @@ public class ModuleConfig {
         prefsName = "";
         logExpandPaths = null;
         logExpandIgnoreClassNames = null;
+        isShowHookSuccessLog = false;
     }
 
     // ------------------------ setter ------------------------
 
+    /**
+     * 设置模块日志 tag，推荐设置
+     */
     public static void setLogTag(@NonNull String logTag) {
         ModuleConfig.logTag = logTag;
     }
 
+    /**
+     * 设置模块可输出日志等级，推荐设置
+     */
     public static void setLogLevel(@LogLevel int logLevel) {
         ModuleConfig.logLevel = logLevel;
     }
 
+    /**
+     * 设置模块包名，推荐设置
+     */
     public static void setModulePackageName(@NonNull String modulePackageName) {
         ModuleConfig.modulePackageName = modulePackageName;
     }
 
+    /**
+     * 设置模块默认的共享首选项名称，推荐设置
+     */
     public static void setPrefsName(@NonNull String prefsName) {
         ModuleConfig.prefsName = prefsName;
     }
 
+    /**
+     * 设置日志增强功能，将帮助工具在代码被混淆时正确获取日志 tag
+     * <p>
+     * 此功能可能带来性能影响，请谨慎使用
+     * <p>
+     * 需要配置如下混淆规则：
+     * <pre>{@code
+     * // 包名改成自己的，此配置的含义就是不混淆指定目录下的文件名
+     * -keepnames class com.hchen.demo.hook.**
+     * -keepnames class com.hchen.demo.hook.**$*
+     * }
+     */
     public static void setLogExpandPaths(@Nullable String[] logExpandPaths) {
         ModuleConfig.logExpandPaths = logExpandPaths;
     }
 
+    /**
+     * 使用日志增强功能时应该忽略的类目列表
+     * <p>
+     * 帮助工具忽略干扰项
+     */
     public static void setLogExpandIgnoreClassNames(@Nullable String[] logExpandIgnoreClassNames) {
         ModuleConfig.logExpandIgnoreClassNames = logExpandIgnoreClassNames;
+    }
+
+    /**
+     * 是否在 Hook 成功时打印日志，默认关闭
+     * <p>
+     * 使用此功能时务必设置 {@link ModuleConfig#setLogExpandPaths(String[])}
+     */
+    public static void setShowHookSuccessLog(boolean isShowHookSuccessLog) {
+        ModuleConfig.isShowHookSuccessLog = isShowHookSuccessLog;
     }
 
     // -------------------- getter ----------------------
@@ -133,5 +173,9 @@ public class ModuleConfig {
     @Nullable
     public static String[] getLogExpandIgnoreClassNames() {
         return logExpandIgnoreClassNames;
+    }
+
+    public static boolean isShowHookSuccessLog() {
+        return isShowHookSuccessLog;
     }
 }
