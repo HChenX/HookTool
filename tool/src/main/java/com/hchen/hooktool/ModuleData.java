@@ -42,11 +42,11 @@ public final class ModuleData {
     private ModuleData() {
     }
 
-    static void setWrapper(XposedInterfaceWrapper wrapper) {
+    static void setWrapper(@NonNull XposedInterfaceWrapper wrapper) {
         ModuleData.wrapper = wrapper;
     }
 
-    public static void setClassLoader(ClassLoader classLoader) {
+    public static void setClassLoader(@NonNull ClassLoader classLoader) {
         ModuleData.classLoader = classLoader;
     }
 

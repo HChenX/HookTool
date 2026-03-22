@@ -21,7 +21,6 @@ package com.hchen.app;
 import androidx.annotation.NonNull;
 
 import com.hchen.app.hook.TestHook;
-import com.hchen.hooktool.AbsModule;
 import com.hchen.hooktool.ModuleConfig;
 import com.hchen.hooktool.ModuleData;
 import com.hchen.hooktool.ModuleEntrance;
@@ -67,7 +66,7 @@ public class InitHook extends ModuleEntrance {
         super.handlePackageReady(param);
 
         ModuleData.setClassLoader(param.getClassLoader());
-        new TestHook().handleLoaded(AbsModule.StageEnum.PACKAGE_READY);
+        new TestHook().handlePackageReady(param);
     }
 
     @Override

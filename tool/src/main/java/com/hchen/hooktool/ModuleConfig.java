@@ -20,7 +20,6 @@ package com.hchen.hooktool;
 
 import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.hchen.hooktool.exception.UnexpectedException;
 
@@ -43,9 +42,9 @@ public final class ModuleConfig {
     private static String modulePackageName;
     @NonNull
     private static String prefsName;
-    @Nullable
+    @NonNull
     private static String[] logExpandPaths;
-    @Nullable
+    @NonNull
     private static String[] logExpandIgnoreClassNames;
     private static boolean isShowHookSuccessLog;
 
@@ -70,8 +69,8 @@ public final class ModuleConfig {
         logLevel = LOG_I;
         modulePackageName = "";
         prefsName = "";
-        logExpandPaths = null;
-        logExpandIgnoreClassNames = null;
+        logExpandPaths = new String[]{};
+        logExpandIgnoreClassNames = new String[]{};
         isShowHookSuccessLog = false;
     }
 
@@ -120,7 +119,7 @@ public final class ModuleConfig {
      * -keepnames class com.hchen.demo.hook.**$*
      * }
      */
-    public static void setLogExpandPaths(@Nullable String... logExpandPaths) {
+    public static void setLogExpandPaths(@NonNull String... logExpandPaths) {
         ModuleConfig.logExpandPaths = logExpandPaths;
     }
 
@@ -129,7 +128,7 @@ public final class ModuleConfig {
      * <p>
      * 帮助工具忽略干扰项
      */
-    public static void setLogExpandIgnoreClassNames(@Nullable String... logExpandIgnoreClassNames) {
+    public static void setLogExpandIgnoreClassNames(@NonNull String... logExpandIgnoreClassNames) {
         ModuleConfig.logExpandIgnoreClassNames = logExpandIgnoreClassNames;
     }
 
@@ -168,12 +167,12 @@ public final class ModuleConfig {
         return prefsName;
     }
 
-    @Nullable
+    @NonNull
     public static String[] getLogExpandPaths() {
         return logExpandPaths;
     }
 
-    @Nullable
+    @NonNull
     public static String[] getLogExpandIgnoreClassNames() {
         return logExpandIgnoreClassNames;
     }

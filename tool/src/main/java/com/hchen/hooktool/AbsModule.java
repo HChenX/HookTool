@@ -18,11 +18,15 @@
  */
 package com.hchen.hooktool;
 
+import android.content.Context;
+
 import androidx.annotation.NonNull;
 
 import com.hchen.hooktool.core.CoreTool;
 
 import java.util.Objects;
+
+import io.github.libxposed.api.XposedModuleInterface;
 
 /**
  * AbsModule
@@ -32,46 +36,115 @@ import java.util.Objects;
  * @author 焕晨HChen
  */
 public abstract class AbsModule extends CoreTool {
-    protected String TAG = getClass().getSimpleName();
 
-    public enum StageEnum {
-        MODULE_LOADED,
-        PACKAGE_LOADED,
-        PACKAGE_READY,
-        SYSTEM_SERVER_STARTING
-    }
+    // -------------------------- hook 类内使用 -----------------------------
+
+    protected String TAG = getClass().getSimpleName();
 
     protected boolean isEnabled() {
         return true;
     }
 
-    protected abstract void onLoaded(@NonNull StageEnum stage);
-
-    protected void onLoaded(@NonNull ClassLoader classLoader) {
+    /**
+     * 模块加载时调用
+     */
+    protected void onModuleLoaded(@NonNull XposedModuleInterface.ModuleLoadedParam param) {
     }
 
-    protected void onThrowable(@NonNull Throwable e) {
+    /**
+     * 目标应用加载包时调用
+     */
+    protected void onPackageLoaded(@NonNull XposedModuleInterface.PackageLoadedParam param) {
     }
 
-    final public void handleLoaded(@NonNull StageEnum stage) {
+    /**
+     * 目标应用包加载完毕时调用
+     * <p>
+     * 推荐在此时编写 Hook
+     */
+    protected abstract void onPackageReady(@NonNull XposedModuleInterface.PackageReadyParam param);
+
+    /**
+     * 传入自定义 ClassLoader 参数时调用
+     * <p>
+     * 请勿直接使用此方法传入 ClassLoader 参数，因为不受 isEnabled 控制
+     */
+    protected void onClassLoader(@NonNull ClassLoader classLoader) {
+    }
+
+    /**
+     * 目标应用 Application 创建时调用
+     */
+    protected void onApplicationCreated(@NonNull Context context) {
+    }
+
+    /**
+     * 以上所有阶段发生崩溃时调用
+     * <p>
+     * 请勿在此处继续执行任何任务，请执行清理工作
+     */
+    protected void onThrow(@NonNull Throwable e) {
+    }
+
+    // ------------------------------ 入口类内统一调用 ------------------------------------
+
+    final public void handleModuleLoaded(@NonNull XposedModuleInterface.ModuleLoadedParam param) {
         try {
             if (!isEnabled()) return;
 
-            Objects.requireNonNull(stage);
-            onLoaded(stage);
+            Objects.requireNonNull(param);
+            onModuleLoaded(param);
         } catch (Throwable e) {
-            onThrowable(e);
-            logE(TAG, "[handleLoaded]: Will stop hook process!!", e);
+            onThrow(e);
+            logE(TAG, e);
         }
     }
 
-    final public void handleLoaded(@NonNull ClassLoader classLoader) {
+    final public void handlePackageLoaded(@NonNull XposedModuleInterface.PackageLoadedParam param) {
         try {
             if (!isEnabled()) return;
-            onLoaded(classLoader);
+
+            Objects.requireNonNull(param);
+            onPackageLoaded(param);
         } catch (Throwable e) {
-            onThrowable(e);
-            logE(TAG, "[handleLoaded/classLoader]: Will stop hook process!!", e);
+            onThrow(e);
+            logE(TAG, e);
+        }
+    }
+
+    final public void handlePackageReady(@NonNull XposedModuleInterface.PackageReadyParam param) {
+        try {
+            if (!isEnabled()) return;
+
+            Objects.requireNonNull(param);
+            onPackageReady(param);
+        } catch (Throwable e) {
+            onThrow(e);
+            logE(TAG, e);
+        }
+    }
+
+    final public void handleClassLoader(@NonNull ClassLoader classLoader) {
+        try {
+            if (!isEnabled()) return;
+
+            Objects.requireNonNull(classLoader);
+            onClassLoader(classLoader);
+        } catch (Throwable e) {
+            onThrow(e);
+            logE(TAG, e);
+        }
+    }
+
+    final public void handleApplicationCreated(@NonNull Context context) {
+        try {
+            if (!isEnabled()) return;
+
+            Objects.requireNonNull(context);
+            onApplicationCreated(context);
+        } catch (Throwable e) {
+            onThrow(e);
+            logE(TAG, e);
         }
     }
 }

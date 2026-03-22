@@ -57,18 +57,16 @@ public final class LogExpand {
     public static String getTag() {
         String[] logExpandPaths = ModuleConfig.getLogExpandPaths();
         String[] ignoreClassNames = ModuleConfig.getLogExpandIgnoreClassNames();
-        if (logExpandPaths == null || logExpandPaths.length == 0) return ModuleConfig.getLogTag();
+        if (logExpandPaths.length == 0) return ModuleConfig.getLogTag();
 
         StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
 
         main:
         for (StackTraceElement element : stackTraceElements) {
             String className = element.getClassName();
-            if (ignoreClassNames != null) {
-                for (String name : ignoreClassNames) {
-                    if (className.contains(name)) {
-                        continue main;
-                    }
+            for (String name : ignoreClassNames) {
+                if (className.contains(name)) {
+                    continue main;
                 }
             }
 
