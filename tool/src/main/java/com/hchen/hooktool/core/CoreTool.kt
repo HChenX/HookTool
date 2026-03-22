@@ -865,7 +865,7 @@ open class CoreTool : XposedLog() {
          * @param classLoader 类加载器，默认为 ModuleData.getClassLoader()
          * @param methodName 方法名
          * @param parameterTypes 参数类型
-         * @return HookBridge 实例
+         * @return XposedInterface.HookHandle 实例
          */
         @JvmStatic
         @JvmOverloads
@@ -888,7 +888,7 @@ open class CoreTool : XposedLog() {
          *
          * @param methodName 方法名
          * @param parameterTypes 参数类型
-         * @return HookBridge 实例
+         * @return XposedInterface.HookHandle 实例
          */
         @JvmStatic
         fun Class<*>.hook(
@@ -909,7 +909,7 @@ open class CoreTool : XposedLog() {
          *
          * @param classLoader 类加载器，默认为 ModuleData.getClassLoader()
          * @param parameterTypes 参数类型
-         * @return HookBridge 实例
+         * @return XposedInterface.HookHandle 实例
          */
         @JvmStatic
         @JvmOverloads
@@ -930,7 +930,7 @@ open class CoreTool : XposedLog() {
          * 钩子当前类的指定构造函数
          *
          * @param parameterTypes 参数类型
-         * @return HookBridge 实例
+         * @return XposedInterface.HookHandle 实例
          */
         @JvmStatic
         fun Class<*>.hook(
@@ -948,7 +948,7 @@ open class CoreTool : XposedLog() {
         /**
          * 钩子可执行对象
          *
-         * @return HookBridge 实例
+         * @return XposedInterface.HookHandle 实例
          */
         @JvmStatic
         fun Executable.hook(absHook: AbsHook): XposedInterface.HookHandle {
@@ -962,10 +962,78 @@ open class CoreTool : XposedLog() {
         }
 
         /**
+         * 钩子指定类的指定名称的全部方法
+         *
+         * @param classLoader 类加载器，默认为 ModuleData.getClassLoader()
+         * @param methodName 方法名
+         * @return XposedInterface.HookHandle 实例
+         */
+        @JvmStatic
+        @JvmOverloads
+        fun String.hookAll(
+            classLoader: ClassLoader? = ModuleData.getClassLoader(),
+            methodName: String,
+            absHook: AbsHook
+        ): Array<XposedInterface.HookHandle> {
+            return this.findAllMethod(classLoader, methodName).hookAll(absHook)
+        }
+
+        /**
+         * 钩子指定类的指定名称的全部方法
+         *
+         * @param methodName 方法名
+         * @return XposedInterface.HookHandle 实例
+         */
+        @JvmStatic
+        fun Class<*>.hookAll(
+            methodName: String,
+            absHook: AbsHook
+        ): Array<XposedInterface.HookHandle> {
+            return this.findAllMethod(methodName).hookAll(absHook)
+        }
+
+        /**
+         * 钩子指定类的全部构造函数
+         *
+         * @param classLoader 类加载器，默认为 ModuleData.getClassLoader()
+         * @return XposedInterface.HookHandle 实例
+         */
+        @JvmStatic
+        @JvmOverloads
+        fun String.hookAll(
+            classLoader: ClassLoader? = ModuleData.getClassLoader(),
+            absHook: AbsHook
+        ): Array<XposedInterface.HookHandle> {
+            return this.findAllConstructor(classLoader).hookAll(absHook)
+        }
+
+        /**
+         * 钩子指定类的全部构造函数
+         *
+         * @return XposedInterface.HookHandle 实例
+         */
+        @JvmStatic
+        fun Class<*>.hookAll(absHook: AbsHook): Array<XposedInterface.HookHandle> {
+            return this.findAllConstructor().hookAll(absHook)
+        }
+
+        /**
+         * 钩子指定类的全部方法
+         *
+         * @return XposedInterface.HookHandle 实例
+         */
+        @JvmStatic
+        fun Array<out Executable>.hookAll(absHook: AbsHook): Array<XposedInterface.HookHandle> {
+            return this.map {
+                it.hook(absHook)
+            }.toTypedArray()
+        }
+
+        /**
          * 钩子指定类的类初始化器
          *
          * @param classLoader 类加载器，默认为 ModuleData.getClassLoader()
-         * @return HookBridge 实例
+         * @return XposedInterface.HookHandle 实例
          */
         @JvmStatic
         @JvmOverloads
@@ -979,7 +1047,7 @@ open class CoreTool : XposedLog() {
         /**
          * 钩子当前类的类初始化器
          *
-         * @return HookBridge 实例
+         * @return XposedInterface.HookHandle 实例
          */
         @JvmStatic
         fun Class<*>.hookClassInitializer(absHook: AbsHook): XposedInterface.HookHandle {
@@ -1182,6 +1250,32 @@ open class CoreTool : XposedLog() {
         @JvmStatic
         fun Executable.deoptimize() {
             ModuleData.getWrapper().deoptimize(this)
+        }
+
+        // --------------------------------- chain -----------------------------------
+
+        /**
+         * 创建链式钩子
+         *
+         * @param classLoader 类加载器，默认为 ModuleData.getClassLoader()
+         * @return ChainTool 实例
+         */
+        @JvmStatic
+        @JvmOverloads
+        fun String.buildChain(
+            classLoader: ClassLoader = ModuleData.getClassLoader()
+        ): ChainTool {
+            return ChainTool.buildChain(this, classLoader)
+        }
+
+        /**
+         * 创建链式钩子
+         *
+         * @return ChainTool 实例
+         */
+        @JvmStatic
+        fun Class<*>.buildChain(): ChainTool {
+            return ChainTool.buildChain(this)
         }
 
         // ----------------------------------- res ---------------------------------------

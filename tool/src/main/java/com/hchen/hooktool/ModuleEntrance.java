@@ -18,12 +18,18 @@
  */
 package com.hchen.hooktool;
 
+import android.app.Application;
+import android.content.Context;
 import android.os.Build;
 import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 
+import com.hchen.hooktool.core.CoreTool;
+import com.hchen.hooktool.hook.AbsHook;
+
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.function.Predicate;
 
 import io.github.libxposed.api.XposedModule;
@@ -53,6 +59,9 @@ public abstract class ModuleEntrance extends XposedModule {
     }
 
     public void handlePackageReady(@NonNull PackageReadyParam param) {
+    }
+
+    public void handleApplicationCreated(@NonNull Context context) {
     }
 
     public void handleSystemServerStarting(@NonNull SystemServerStartingParam param) {
@@ -98,6 +107,7 @@ public abstract class ModuleEntrance extends XposedModule {
         }
 
         ModuleData.setClassLoader(param.getClassLoader());
+        hookApplication();
         handlePackageReady(param);
     }
 
@@ -105,5 +115,31 @@ public abstract class ModuleEntrance extends XposedModule {
     public final void onSystemServerStarting(@NonNull SystemServerStartingParam param) {
         ModuleData.setClassLoader(param.getClassLoader());
         handleSystemServerStarting(param);
+    }
+
+    private HookHandle handle;
+
+    private void hookApplication() {
+        if (handle != null) {
+            handle.unhook();
+            handle = null;
+        }
+
+        try {
+            handle = CoreTool.hook(
+                Application.class,
+                "attach",
+                Context.class,
+                new AbsHook() {
+                    @Override
+                    public void before() {
+                        Context context = (Context) getArg(0);
+                        Objects.requireNonNull(context);
+                        handleApplicationCreated(context);
+                    }
+                }
+            );
+        } catch (Throwable ignore) {
+        }
     }
 }
