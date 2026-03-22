@@ -34,7 +34,7 @@ import java.lang.annotation.RetentionPolicy;
  *
  * @author 焕晨HChen
  */
-public class ModuleConfig {
+public final class ModuleConfig {
     @NonNull
     private static String logTag;
     @LogLevel
@@ -73,6 +73,9 @@ public class ModuleConfig {
         logExpandPaths = null;
         logExpandIgnoreClassNames = null;
         isShowHookSuccessLog = false;
+    }
+
+    private ModuleConfig() {
     }
 
     // ------------------------ setter ------------------------
@@ -117,7 +120,7 @@ public class ModuleConfig {
      * -keepnames class com.hchen.demo.hook.**$*
      * }
      */
-    public static void setLogExpandPaths(@Nullable String[] logExpandPaths) {
+    public static void setLogExpandPaths(@Nullable String... logExpandPaths) {
         ModuleConfig.logExpandPaths = logExpandPaths;
     }
 
@@ -126,7 +129,7 @@ public class ModuleConfig {
      * <p>
      * 帮助工具忽略干扰项
      */
-    public static void setLogExpandIgnoreClassNames(@Nullable String[] logExpandIgnoreClassNames) {
+    public static void setLogExpandIgnoreClassNames(@Nullable String... logExpandIgnoreClassNames) {
         ModuleConfig.logExpandIgnoreClassNames = logExpandIgnoreClassNames;
     }
 

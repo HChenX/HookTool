@@ -54,7 +54,7 @@ import io.github.libxposed.api.XposedInterface;
  *
  * @author 焕晨HChen
  */
-public class ResInjectTool {
+public final class ResInjectTool {
     private static final String TAG = "ResInjectTool";
     private static ResourcesLoader resourcesLoader = null;
     private static final ConcurrentHashMap<String, Pair<ReplacementType, Object>> replacements = new ConcurrentHashMap<>();

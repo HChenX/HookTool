@@ -41,7 +41,7 @@ import kotlin.text.Charsets;
  *
  * @author 焕晨HChen
  */
-public class ModuleState {
+public final class ModuleState {
     private ModuleState() {
     }
 

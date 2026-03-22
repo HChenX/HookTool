@@ -41,7 +41,7 @@ import java.io.ByteArrayOutputStream;
  *
  * @author 焕晨HChen
  */
-public class BitmapTool {
+public final class BitmapTool {
     private BitmapTool() {
     }
 

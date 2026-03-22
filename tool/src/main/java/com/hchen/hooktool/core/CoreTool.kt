@@ -1432,5 +1432,13 @@ open class CoreTool : XposedLog() {
             }
             return classes.toTypedArray()
         }
+
+        /**
+         * 抛出指定错误
+         * */
+        @JvmStatic
+        fun Throwable.throwIt() {
+            throw this
+        }
     }
 }

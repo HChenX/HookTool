@@ -23,7 +23,7 @@ package com.hchen.hooktool.exception;
  *
  * @author 焕晨HChen
  */
-public class NoXposedEnvironmentException extends RuntimeException {
+public final class NoXposedEnvironmentException extends RuntimeException {
     public NoXposedEnvironmentException() {
     }
 

@@ -31,7 +31,7 @@ import java.util.Objects;
  *
  * @author 焕晨HChen
  */
-public class AppData implements Parcelable {
+public final class AppData implements Parcelable {
     private int user = -1;
     private int uid = -1;
     private Bitmap icon;

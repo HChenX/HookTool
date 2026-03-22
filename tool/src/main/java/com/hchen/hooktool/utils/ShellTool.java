@@ -105,7 +105,7 @@ import java.util.stream.Collectors;
  * }
  * @author 焕晨HChen
  */
-public class ShellTool {
+public final class ShellTool {
     private static final String TAG = "ShellTool";
     private static final String END_UUID = UUID.randomUUID().toString();
     private static final byte[] LINE_BREAK = "\n".getBytes(StandardCharsets.UTF_8);

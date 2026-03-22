@@ -23,7 +23,7 @@ package com.hchen.hooktool.exception;
  *
  * @author 焕晨HChen
  */
-public class InjectResourcesException extends RuntimeException {
+public final class InjectResourcesException extends RuntimeException {
     public InjectResourcesException() {
     }
 

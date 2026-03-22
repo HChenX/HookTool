@@ -49,7 +49,7 @@ import com.hchen.hooktool.helper.TryHelper;
  *
  * @author 焕晨HChen
  */
-public class DeviceTool {
+public final class DeviceTool {
     private DeviceTool() {
     }
 

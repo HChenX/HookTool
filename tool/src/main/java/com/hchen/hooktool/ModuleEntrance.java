@@ -107,7 +107,7 @@ public abstract class ModuleEntrance extends XposedModule {
         }
 
         ModuleData.setClassLoader(param.getClassLoader());
-        hookApplication();
+        hookApplication(param);
         handlePackageReady(param);
     }
 
@@ -119,27 +119,29 @@ public abstract class ModuleEntrance extends XposedModule {
 
     private HookHandle handle;
 
-    private void hookApplication() {
-        if (handle != null) {
-            handle.unhook();
-            handle = null;
-        }
+    private void hookApplication(PackageLoadedParam param) {
+        if (param.isFirstPackage()) {
+            if (handle != null) {
+                handle.unhook();
+                handle = null;
+            }
 
-        try {
-            handle = CoreTool.hook(
-                Application.class,
-                "attach",
-                Context.class,
-                new AbsHook() {
-                    @Override
-                    public void before() {
-                        Context context = (Context) getArg(0);
-                        Objects.requireNonNull(context);
-                        handleApplicationCreated(context);
+            try {
+                handle = CoreTool.hook(
+                    Application.class,
+                    "attach",
+                    Context.class,
+                    new AbsHook() {
+                        @Override
+                        public void before() {
+                            Context context = (Context) getArg(0);
+                            Objects.requireNonNull(context);
+                            handleApplicationCreated(context);
+                        }
                     }
-                }
-            );
-        } catch (Throwable ignore) {
+                );
+            } catch (Throwable ignore) {
+            }
         }
     }
 }

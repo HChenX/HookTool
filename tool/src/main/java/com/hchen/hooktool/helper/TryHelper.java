@@ -28,7 +28,7 @@ import com.hchen.hooktool.data.ResultData;
  *
  * @author 焕晨HChen
  */
-public class TryHelper {
+public final class TryHelper {
     private TryHelper() {
     }
 

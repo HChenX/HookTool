@@ -32,7 +32,7 @@ import java.util.Arrays;
  *
  * @author 焕晨HChen
  */
-public class LogExpand {
+public final class LogExpand {
     private LogExpand() {
     }
 

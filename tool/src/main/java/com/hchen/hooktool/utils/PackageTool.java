@@ -33,6 +33,7 @@ import androidx.annotation.NonNull;
 
 import com.hchen.hooktool.callback.IAppDataGetter;
 import com.hchen.hooktool.callback.IDecomposer;
+import com.hchen.hooktool.core.CoreTool;
 import com.hchen.hooktool.data.AppData;
 import com.hchen.hooktool.exception.UnexpectedException;
 import com.hchen.hooktool.helper.TryHelper;
@@ -46,7 +47,7 @@ import java.util.concurrent.Executors;
  *
  * @author 焕晨HChen
  */
-public class PackageTool {
+public final class PackageTool {
     private static final String TAG = "PackageTool";
 
     private PackageTool() {
@@ -72,7 +73,8 @@ public class PackageTool {
             ApplicationInfo result = context.getPackageManager().getApplicationInfo(packageName, 0);
             return !result.enabled;
         } catch (PackageManager.NameNotFoundException e) {
-            throw new UnexpectedException("Failed to get application info for package: " + packageName, e);
+            CoreTool.throwIt(e);
+            return false; // Not actually executed
         }
     }
 
@@ -168,7 +170,7 @@ public class PackageTool {
                                 }
                                 iAppDataGetter.getAsyncAppData(appDataArray);
                             } catch (PackageManager.NameNotFoundException e) {
-                                throw new UnexpectedException("Failed to get packages", e);
+                                CoreTool.throwIt(e);
                             }
                         }
                     });
@@ -187,7 +189,8 @@ public class PackageTool {
                 return appDataArray;
             }
         } catch (PackageManager.NameNotFoundException e) {
-            throw new UnexpectedException("Failed to get packages", e);
+            CoreTool.throwIt(e);
+            return null; // Not actually executed
         }
     }
 

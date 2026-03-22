@@ -22,6 +22,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.hchen.hooktool.callback.IDecomposer;
+import com.hchen.hooktool.core.CoreTool;
 
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -36,7 +37,6 @@ public final class ResultData<R> {
     private final IDecomposer<R> decomposer;
     private boolean isExecuted;
     private R result;
-    @Nullable
     private Throwable throwable;
 
     public ResultData(@NonNull IDecomposer<R> decomposer) {
@@ -51,18 +51,28 @@ public final class ResultData<R> {
 
     public R orElse(R or) {
         runIfNeed();
-        if (isSuccess())
+        if (isSuccess()) {
             return result;
+        }
         return or;
     }
 
-    public void onThrowable(@NonNull Consumer<Throwable> consumer) {
+    public R getOrThrow() {
+        runIfNeed();
+        if (isSuccess()) {
+            return result;
+        }
+        CoreTool.throwIt(throwable);
+        return null; // Not actually executed
+    }
+
+    public void onThrow(@NonNull Consumer<Throwable> consumer) {
         runIfNeed();
         if (isSuccess()) return;
         consumer.accept(throwable);
     }
 
-    public R onThrowable(@NonNull Function<Throwable, R> consumer) {
+    public R onThrow(@NonNull Function<Throwable, R> consumer) {
         runIfNeed();
         if (isSuccess()) return result;
         return consumer.apply(throwable);

@@ -29,7 +29,7 @@ import io.github.libxposed.api.XposedInterface;
  *
  * @author 焕晨HChen
  */
-public class HookBridge {
+public final class HookBridge {
     private final XposedInterface.HookBuilder builder;
 
     public HookBridge(@NonNull XposedInterface.HookBuilder builder) {
@@ -54,6 +54,7 @@ public class HookBridge {
      * @param absHook 自定义的钩子实现
      * @return 钩子句柄，可用于后续操作（如解除钩子）
      */
+    @NonNull
     public XposedInterface.HookHandle intercept(@NonNull AbsHook absHook) {
         Objects.requireNonNull(builder);
         setPriority(absHook.priority);

@@ -34,10 +34,13 @@ import io.github.libxposed.api.XposedInterfaceWrapper;
  *
  * @author 焕晨HChen
  */
-public class ModuleData {
+public final class ModuleData {
     private static boolean isXposedEnvironment;
     private static XposedInterfaceWrapper wrapper;
     private static ClassLoader classLoader;
+
+    private ModuleData() {
+    }
 
     static void setWrapper(XposedInterfaceWrapper wrapper) {
         ModuleData.wrapper = wrapper;

@@ -23,7 +23,7 @@ import static com.hchen.hooktool.core.CoreTool.getParameterTypes;
 
 import androidx.annotation.NonNull;
 
-import com.hchen.hooktool.exception.UnexpectedException;
+import com.hchen.hooktool.core.CoreTool;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -35,7 +35,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * @author 焕晨HChen
  */
-public class InvokeTool {
+public final class InvokeTool {
     private static final String TAG = "InvokeTool";
     private static final ConcurrentHashMap<String, Method> mMethodCache = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<String, Field> mFieldCache = new ConcurrentHashMap<>();
@@ -152,7 +152,8 @@ public class InvokeTool {
             }
             return (T) method.invoke(instance, args);
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-            throw new UnexpectedException("Failed to invoke method: " + methodName, e);
+            CoreTool.throwIt(e);
+            return null; // Not actually executed
         }
     }
 
@@ -215,7 +216,8 @@ public class InvokeTool {
                 return (T) field.get(instance);
             }
         } catch (NoSuchFieldException | IllegalAccessException e) {
-            throw new UnexpectedException("Failed to access field: " + fieldName, e);
+            CoreTool.throwIt(e);
+            return null; // Not actually executed
         }
     }
 
@@ -264,7 +266,9 @@ public class InvokeTool {
 
             return classLoader.loadClass(classPath);
         } catch (ClassNotFoundException e) {
-            throw new UnexpectedException(e);
+            CoreTool.throwIt(e);
+            // noinspection DataFlowIssue
+            return null; // Not actually executed
         }
     }
 }

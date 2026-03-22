@@ -23,7 +23,6 @@ import static com.hchen.hooktool.core.CoreTool.findClass;
 import androidx.annotation.NonNull;
 
 import com.hchen.hooktool.data.ChainData;
-import com.hchen.hooktool.exception.UnexpectedException;
 import com.hchen.hooktool.hook.AbsHook;
 import com.hchen.hooktool.log.LogExpand;
 import com.hchen.hooktool.log.XposedLog;
@@ -38,24 +37,24 @@ import java.util.function.Function;
  *
  * @author 焕晨HChen
  */
-public class ChainTool {
+public final class ChainTool {
     /**
      * 目标类
      */
     @NonNull
     private final Class<?> clazz;
-    
+
     /**
      * 链式钩子对象
      */
     @NonNull
     private final ChainHook chainHook;
-    
+
     /**
      * 链式数据对象
      */
     private ChainData chainData;
-    
+
     /**
      * 链式数据集合，用于去重
      */
@@ -85,7 +84,7 @@ public class ChainTool {
     /**
      * 构建链式工具实例
      *
-     * @param classPath 类路径
+     * @param classPath   类路径
      * @param classLoader 类加载器
      * @return 链式工具实例
      */
@@ -106,7 +105,7 @@ public class ChainTool {
     /**
      * 查找指定方法
      *
-     * @param methodName 方法名
+     * @param methodName     方法名
      * @param parameterTypes 参数类型
      * @return 链式钩子对象
      */
@@ -175,10 +174,10 @@ public class ChainTool {
                         if (Boolean.TRUE.equals(chainData.function.apply(chainData.throwable))) {
                             return;
                         } else {
-                            throw new UnexpectedException(chainData.throwable);
+                            CoreTool.throwIt(chainData.throwable);
                         }
                     } else {
-                        throw new UnexpectedException(chainData.throwable);
+                        CoreTool.throwIt(chainData.throwable);
                     }
                 }
 
@@ -225,7 +224,7 @@ public class ChainTool {
     /**
      * 链式钩子类，用于执行钩子操作
      */
-    public class ChainHook {
+    public final class ChainHook {
         /**
          * 构造方法
          */

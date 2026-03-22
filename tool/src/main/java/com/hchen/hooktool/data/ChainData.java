@@ -32,7 +32,7 @@ import java.util.function.Function;
  *
  * @author 焕晨HChen
  */
-public class ChainData {
+public final class ChainData {
     // -------------------------- Data ------------------------------
 
     /**

@@ -44,7 +44,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * @author 焕晨HChen
  */
-public class PrefsTool {
+public final class PrefsTool {
     private static final String TAG = "PrefsTool";
     private final static ConcurrentHashMap<String, SPrefs> xSPrefsMap = new ConcurrentHashMap<>(); // 宿主端
     private final static ConcurrentHashMap<String, SPrefs> sPrefsMap = new ConcurrentHashMap<>(); // 模块端
