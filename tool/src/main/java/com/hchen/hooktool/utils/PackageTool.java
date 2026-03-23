@@ -26,6 +26,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ProviderInfo;
 import android.content.pm.ResolveInfo;
+import android.content.pm.ServiceInfo;
 import android.os.Build;
 import android.os.UserHandle;
 
@@ -95,7 +96,7 @@ public final class PackageTool {
                 );
                 return result != null ? (int) result : -1;
             }
-        }).orElse(-1);
+        }).getOrDefault(-1);
     }
 
     /**
@@ -142,8 +143,8 @@ public final class PackageTool {
      *      }
      *
      *      @Override
-     *      public void getAsyncAppData(@NonNull AppData[] appData) {
-     *          IAppDataGetter.super.getAsyncAppData(appData);
+     *      public void getAsyncAppData(@NonNull AppData[] appData, @Nullable PackageManager.NameNotFoundException e) {
+     *          IAppDataGetter.super.getAsyncAppData(appData, e);
      *      }
      * });
      * }
@@ -168,8 +169,9 @@ public final class PackageTool {
                                 for (int i = 0; i < ts.size(); i++) {
                                     appDataArray[i] = createAppData(packageManager, ts.get(i));
                                 }
-                                iAppDataGetter.getAsyncAppData(appDataArray);
+                                iAppDataGetter.getAsyncAppData(appDataArray, null);
                             } catch (PackageManager.NameNotFoundException e) {
+                                iAppDataGetter.getAsyncAppData(new AppData[]{}, e);
                                 CoreTool.throwIt(e);
                             }
                         }
@@ -202,7 +204,7 @@ public final class PackageTool {
         AppData appData = new AppData();
         ApplicationInfo applicationInfo = null;
 
-        // 根据不同类型的 Parcelable 对象获取 ApplicationInfo
+        // 根据不同类型的 T 对象获取 ApplicationInfo
         if (t instanceof PackageInfo packageInfo) {
             applicationInfo = packageInfo.applicationInfo;
             appData.setVersionName(packageInfo.versionName);
@@ -211,18 +213,23 @@ public final class PackageTool {
             } else {
                 appData.setVersionCode(Integer.toString(packageInfo.versionCode));
             }
+        } else if (t instanceof ApplicationInfo appInfo) {
+            applicationInfo = appInfo;
         } else if (t instanceof ResolveInfo resolveInfo) {
             applicationInfo = aboutResolveInfo(resolveInfo).applicationInfo;
         } else if (t instanceof ActivityInfo activityInfo) {
             applicationInfo = activityInfo.applicationInfo;
-        } else if (t instanceof ApplicationInfo appInfo) {
-            applicationInfo = appInfo;
+        } else if (t instanceof ServiceInfo serviceInfo) {
+            applicationInfo = serviceInfo.applicationInfo;
         } else if (t instanceof ProviderInfo providerInfo) {
             applicationInfo = providerInfo.applicationInfo;
+        } else {
+            throw new UnexpectedException("Unknown type: " + t);
         }
 
         // 填充应用数据
         if (applicationInfo != null) {
+            appData.setInfo(applicationInfo);
             appData.setIcon(BitmapTool.drawableToBitmap(applicationInfo.loadIcon(pm)));
             appData.setLabel(applicationInfo.loadLabel(pm).toString());
             appData.setPackageName(applicationInfo.packageName);
@@ -236,7 +243,7 @@ public final class PackageTool {
     }
 
     @NonNull
-    private static ComponentInfo aboutResolveInfo(ResolveInfo resolveInfo) {
+    private static ComponentInfo aboutResolveInfo(@NonNull ResolveInfo resolveInfo) {
         if (resolveInfo.activityInfo != null) return resolveInfo.activityInfo;
         if (resolveInfo.serviceInfo != null) return resolveInfo.serviceInfo;
         if (resolveInfo.providerInfo != null) return resolveInfo.providerInfo;

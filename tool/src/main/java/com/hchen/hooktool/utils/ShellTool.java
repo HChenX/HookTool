@@ -202,7 +202,7 @@ public final class ShellTool {
      * <p>
      * 请注意：请务必在 {@link ShellTool#cmd(String)} 前调用！
      * <p>
-     * 使用此模式后，在调用 {@link ShellTool#exec()} 或 {@link ShellTool#async()} 之前都会保持在拼接模式
+     * 使用此模式后，在下次调用 {@link ShellTool#exec()} 或 {@link ShellTool#async()} 之前都会保持在拼接模式
      * <pre>{@code
      *     ShellTool.obtain().enableSplicingMode()
      *          .cmd("if [[ hello == world ]]; then")
@@ -291,7 +291,16 @@ public final class ShellTool {
                 return false;
             }
         } else {
-            Executors.newSingleThreadExecutor().submit(callable);
+            ExecutorService service = null;
+            try {
+                // noinspection resource
+                service = Executors.newSingleThreadExecutor();
+                service.submit(callable);
+            } finally {
+                if (service != null) {
+                    service.shutdown();
+                }
+            }
             return false;
         }
     }

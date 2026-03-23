@@ -83,6 +83,11 @@ public class XposedLog {
         ModuleData.getWrapper().log(getLogLevel(), tag, "[I]: " + log + "\n[Stack Info]: " + stackTrace);
     }
 
+    public static void logI(String tag, Throwable e) {
+        if (ModuleConfig.getLogLevel() < ModuleConfig.LOG_I) return;
+        ModuleData.getWrapper().log(getLogLevel(), tag, "[I]: ", e);
+    }
+
     public static void logI(String tag, String log, Throwable e) {
         if (ModuleConfig.getLogLevel() < ModuleConfig.LOG_I) return;
         ModuleData.getWrapper().log(getLogLevel(), tag, "[I]: " + log, e);

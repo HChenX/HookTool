@@ -21,6 +21,7 @@ package com.hchen.hooktool.callback;
 import android.content.pm.PackageManager;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.hchen.hooktool.data.AppData;
 
@@ -39,8 +40,8 @@ public interface IAppDataGetter<T> {
     List<T> getPackages(@NonNull PackageManager pm) throws PackageManager.NameNotFoundException;
 
     /**
-     * 异步获取到的 AppData 信息
+     * 异步获取 AppData 数据或抛出错误
      */
-    default void getAsyncAppData(@NonNull AppData[] appData) {
+    default void getAsyncAppData(@NonNull AppData[] appData, @Nullable PackageManager.NameNotFoundException e) {
     }
 }

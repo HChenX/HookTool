@@ -74,14 +74,15 @@ public class AndroidLog {
     }
 
     // ------------ logI -------------
-    public static void logI(String tag, String pkg, String log) {
-        if (ModuleConfig.getLogLevel() < ModuleConfig.LOG_I) return;
-        Log.i(ModuleConfig.getLogTag(), "[" + tag + "]" + "[" + pkg + "][I]: " + log);
-    }
 
     public static void logI(String tag, String log) {
         if (ModuleConfig.getLogLevel() < ModuleConfig.LOG_I) return;
         Log.i(ModuleConfig.getLogTag(), "[" + tag + "]" + "[I]: " + log);
+    }
+
+    public static void logI(String tag, String log, String stackTrace) {
+        if (ModuleConfig.getLogLevel() < ModuleConfig.LOG_I) return;
+        Log.i(ModuleConfig.getLogTag(), "[" + tag + "]" + "[I]: " + log + "\n[Stack Info]: " + stackTrace);
     }
 
     public static void logI(String tag, Throwable throwable) {

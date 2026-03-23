@@ -119,7 +119,7 @@ public abstract class ModuleEntrance extends XposedModule {
 
     private HookHandle handle;
 
-    private void hookApplication(PackageLoadedParam param) {
+    private void hookApplication(@NonNull PackageLoadedParam param) {
         if (param.isFirstPackage()) {
             if (handle != null) {
                 handle.unhook();

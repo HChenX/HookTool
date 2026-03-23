@@ -18,6 +18,7 @@
  */
 package com.hchen.hooktool.data;
 
+import android.content.pm.ApplicationInfo;
 import android.graphics.Bitmap;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -32,13 +33,14 @@ import java.util.Objects;
  * @author 焕晨HChen
  */
 public final class AppData implements Parcelable {
+    private ApplicationInfo info;
     private int user = -1;
     private int uid = -1;
     private Bitmap icon;
     private String label;
     private String packageName;
-    private String versionName;
-    private String versionCode;
+    private String versionName; // 仅 PackageInfo 下填充数据
+    private String versionCode; // 仅 PackageInfo 下填充数据
     private boolean isSystemApp;
     private boolean isEnabled;
 
@@ -46,6 +48,14 @@ public final class AppData implements Parcelable {
     }
 
     // Getter and Setter methods
+    public ApplicationInfo getInfo() {
+        return info;
+    }
+
+    public void setInfo(ApplicationInfo info) {
+        this.info = info;
+    }
+
     public int getUser() {
         return user;
     }
@@ -135,7 +145,8 @@ public final class AppData implements Parcelable {
     @Override
     public String toString() {
         return "AppData{" +
-            "user=" + user +
+            "info=" + info +
+            ", user=" + user +
             ", uid=" + uid +
             ", icon=" + icon +
             ", label='" + label + '\'' +
@@ -150,10 +161,12 @@ public final class AppData implements Parcelable {
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof AppData appData)) return false;
+
         return user == appData.user &&
             uid == appData.uid &&
             isSystemApp == appData.isSystemApp &&
             isEnabled == appData.isEnabled &&
+            Objects.equals(info, appData.info) &&
             Objects.equals(icon, appData.icon) &&
             Objects.equals(label, appData.label) &&
             Objects.equals(packageName, appData.packageName) &&
@@ -163,24 +176,21 @@ public final class AppData implements Parcelable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(user, uid, icon, label, packageName, versionName, versionCode, isSystemApp, isEnabled);
+        int result = Objects.hashCode(info);
+        result = 31 * result + user;
+        result = 31 * result + uid;
+        result = 31 * result + Objects.hashCode(icon);
+        result = 31 * result + Objects.hashCode(label);
+        result = 31 * result + Objects.hashCode(packageName);
+        result = 31 * result + Objects.hashCode(versionName);
+        result = 31 * result + Objects.hashCode(versionCode);
+        result = 31 * result + Boolean.hashCode(isSystemApp);
+        result = 31 * result + Boolean.hashCode(isEnabled);
+        return result;
     }
 
-    public static final Creator<AppData> CREATOR = new Creator<AppData>() {
-        @NonNull
-        @Override
-        public AppData createFromParcel(Parcel in) {
-            return new AppData(in);
-        }
-
-        @NonNull
-        @Override
-        public AppData[] newArray(int size) {
-            return new AppData[size];
-        }
-    };
-
     private AppData(@NonNull Parcel in) {
+        info = in.readParcelable(ApplicationInfo.class.getClassLoader());
         user = in.readInt();
         uid = in.readInt();
         icon = in.readParcelable(Bitmap.class.getClassLoader());
@@ -194,6 +204,7 @@ public final class AppData implements Parcelable {
 
     @Override
     public void writeToParcel(@NonNull Parcel dest, int flags) {
+        dest.writeParcelable(info, flags);
         dest.writeInt(user);
         dest.writeInt(uid);
         dest.writeParcelable(icon, flags);
@@ -209,4 +220,16 @@ public final class AppData implements Parcelable {
     public int describeContents() {
         return 0;
     }
+
+    public static final Creator<AppData> CREATOR = new Creator<AppData>() {
+        @Override
+        public AppData createFromParcel(Parcel in) {
+            return new AppData(in);
+        }
+
+        @Override
+        public AppData[] newArray(int size) {
+            return new AppData[size];
+        }
+    };
 }

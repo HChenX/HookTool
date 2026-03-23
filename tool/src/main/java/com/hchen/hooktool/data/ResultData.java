@@ -49,12 +49,12 @@ public final class ResultData<R> {
         return result;
     }
 
-    public R orElse(R or) {
+    public R getOrDefault(R def) {
         runIfNeed();
         if (isSuccess()) {
             return result;
         }
-        return or;
+        return def;
     }
 
     public R getOrThrow() {

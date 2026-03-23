@@ -21,6 +21,7 @@ package com.hchen.hooktool.hook;
 import static io.github.libxposed.api.XposedInterface.PRIORITY_DEFAULT;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.hchen.hooktool.log.LogExpand;
 
@@ -262,7 +263,7 @@ public abstract class AbsHook {
      * @param args 新的参数数组
      * @throws IndexOutOfBoundsException 当参数数量不匹配时抛出
      */
-    public final void setArgs(Object... args) {
+    public final void setArgs(@NonNull Object... args) {
         CallState state = getState();
         if (state.args == null) {
             state.args = state.originalChain.getArgs().toArray(new Object[0]);
@@ -312,22 +313,9 @@ public abstract class AbsHook {
      *
      * @return 当前被钩住方法的异常
      */
+    @Nullable
     public Throwable getThrowable() {
         return getState().throwable;
-    }
-
-    /**
-     * 获取结果或抛出异常
-     * <p>
-     * 如果存在异常，则抛出异常；否则返回结果
-     *
-     * @return 当前被钩住方法的返回值
-     * @throws Throwable 如果存在异常，则抛出该异常
-     */
-    public Object getResultOrThrowable() throws Throwable {
-        Throwable t = getThrowable();
-        if (t != null) throw t;
-        return getResult();
     }
 
     final void setHandle(@NonNull XposedInterface.HookHandle handle) {
@@ -347,7 +335,7 @@ public abstract class AbsHook {
         }
     }
 
-    final XposedInterface.Chain getChain() {
+    @NonNull final XposedInterface.Chain getChain() {
         return getState().innerChain;
     }
 
@@ -392,7 +380,7 @@ public abstract class AbsHook {
      * <p>
      * 生成当前调用的详细信息字符串
      */
-    final public String observeCall() {
+    @NonNull final public String observeCall() {
         return LogExpand.observeCall(this);
     }
 
@@ -416,7 +404,7 @@ public abstract class AbsHook {
     private static class InnerChain implements XposedInterface.Chain {
         private final CallState state;
 
-        InnerChain(CallState state) {
+        InnerChain(@NonNull CallState state) {
             this.state = state;
         }
 

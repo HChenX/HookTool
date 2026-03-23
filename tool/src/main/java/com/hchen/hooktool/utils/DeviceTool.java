@@ -274,18 +274,22 @@ public final class DeviceTool {
         return false;
     }
 
+    @NonNull
     public static String getXiaomiVersion() {
         return getRomVersion(VERSION_PROPERTY_XIAOMI);
     }
 
+    @NonNull
     public static String getXiaomiMarketName() {
         return getProp(VERSION_PROPERTY_XIAOMI_MARKET);
     }
 
+    @NonNull
     public static String getColorOSVersion() {
         return getProp(VERSION_PROPERTY_COLOROS_FULL);
     }
 
+    @NonNull
     public static String getColorOSMarketName() {
         return getProp(VERSION_PROPERTY_COLOROS_MARKET);
     }
@@ -319,12 +323,13 @@ public final class DeviceTool {
             public Boolean get() throws Throwable {
                 return Boolean.TRUE.equals(getStaticField("miui.os.Build", "IS_INTERNATIONAL_BUILD"));
             }
-        }).orElse(false);
+        }).getOrDefault(false);
     }
 
     /**
      * 获取 WindowManager 实例
      */
+    @NonNull
     public static WindowManager getWindowManager(@NonNull Context context) {
         return (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
     }
@@ -332,6 +337,7 @@ public final class DeviceTool {
     /**
      * 获取当前上下文的 Display 对象
      */
+    @NonNull
     public static Display getDisplay(@NonNull Context context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             return context.getDisplay();
@@ -343,6 +349,7 @@ public final class DeviceTool {
     /**
      * 获取窗口尺寸
      */
+    @NonNull
     public static Point getWindowSize(@NonNull Context context) {
         return getWindowSize(getWindowManager(context));
     }
@@ -350,6 +357,7 @@ public final class DeviceTool {
     /**
      * 获取窗口尺寸
      */
+    @NonNull
     public static Point getWindowSize(@NonNull WindowManager windowManager) {
         Point point = new Point();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -368,6 +376,7 @@ public final class DeviceTool {
     /**
      * 获取屏幕尺寸
      */
+    @NonNull
     public static Point getScreenSize(@NonNull Context context) {
         return getScreenSize(getWindowManager(context));
     }
@@ -375,6 +384,7 @@ public final class DeviceTool {
     /**
      * 获取屏幕尺寸
      */
+    @NonNull
     public static Point getScreenSize(@NonNull WindowManager windowManager) {
         Point point = new Point();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -466,7 +476,7 @@ public final class DeviceTool {
                     )
                 );
             }
-        }).orElse(false);
+        }).getOrDefault(false);
     }
 
     private static boolean isPadByProp() {

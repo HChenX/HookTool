@@ -18,6 +18,8 @@
  */
 package com.hchen.app;
 
+import android.content.Context;
+
 import androidx.annotation.NonNull;
 
 import com.hchen.app.hook.TestHook;
@@ -73,5 +75,11 @@ public class InitHook extends ModuleEntrance {
     public void handleSystemServerStarting(@NonNull SystemServerStartingParam param) {
         AndroidLog.logD(TAG, "handleSystemServerStarting: " + param.getClassLoader() + ", " + param);
         super.handleSystemServerStarting(param);
+    }
+
+    @Override
+    public void handleApplicationCreated(@NonNull Context context) {
+        AndroidLog.logD(TAG, "handleApplicationCreated: " + context);
+        super.handleApplicationCreated(context);
     }
 }

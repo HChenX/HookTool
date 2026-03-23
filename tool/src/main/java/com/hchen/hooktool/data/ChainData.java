@@ -90,7 +90,7 @@ public final class ChainData {
      * @param methodName 方法名
      * @param parameterTypes 参数类型
      */
-    public ChainData(@NonNull String methodName, Object... parameterTypes) {
+    public ChainData(@NonNull String methodName, @NonNull Object... parameterTypes) {
         this.methodName = methodName;
         this.parameterTypes = parameterTypes;
         this.chainType = ChainType.FIND_METHOD;
@@ -113,7 +113,7 @@ public final class ChainData {
      *
      * @param parameterTypes 参数类型
      */
-    public ChainData(Object... parameterTypes) {
+    public ChainData(@NonNull Object... parameterTypes) {
         this.parameterTypes = parameterTypes;
         this.chainType = ChainType.FIND_CONSTRUCTOR;
     }

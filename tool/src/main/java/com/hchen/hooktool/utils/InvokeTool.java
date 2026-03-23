@@ -63,7 +63,7 @@ public final class InvokeTool {
      * 调用静态方法
      */
     public static <T> T callStaticMethod(@NonNull String classPath, @NonNull String methodName, @NonNull Object[] parameterTypes, @NonNull Object... args) {
-        return baseInvokeMethod(findClass(classPath), null, methodName, getParameterTypes(null, parameterTypes), args);
+        return baseInvokeMethod(findClass(classPath), null, methodName, getParameterTypes(parameterTypes), args);
     }
 
     /**
@@ -80,6 +80,13 @@ public final class InvokeTool {
      */
     public static void setField(@NonNull Object instance, @NonNull String fieldName, Object value) {
         baseInvokeField(null, instance, fieldName, true, value);
+    }
+
+    /**
+     * 获取指定实例的字段的值
+     */
+    public static <T> T getField(@NonNull Object instance, @NonNull String fieldName) {
+        return baseInvokeField(null, instance, fieldName, false, null);
     }
 
     /**
@@ -101,13 +108,6 @@ public final class InvokeTool {
      */
     public static void setStaticField(@NonNull String classPath, ClassLoader classLoader, @NonNull String fieldName, Object value) {
         baseInvokeField(findClass(classPath, classLoader), null, fieldName, true, value);
-    }
-
-    /**
-     * 获取指定实例的字段的值
-     */
-    public static <T> T getField(@NonNull Object instance, @NonNull String fieldName) {
-        return baseInvokeField(null, instance, fieldName, false, null);
     }
 
     /**
@@ -134,10 +134,8 @@ public final class InvokeTool {
     /**
      * @noinspection unchecked
      */
-    private static <T> T baseInvokeMethod(Class<?> clazz, Object instance, String methodName, Class<?>[] parameterTypes, Object... args) {
-        if (clazz == null && instance == null) {
-            throw new NullPointerException("Class or instance must not be null, can't invoke method: " + methodName);
-        } else if (clazz == null) {
+    private static <T> T baseInvokeMethod(Class<?> clazz, Object instance, @NonNull String methodName, @NonNull Class<?>[] parameterTypes, @NonNull Object... args) {
+        if (clazz == null) {
             clazz = instance.getClass();
         }
 
@@ -160,7 +158,8 @@ public final class InvokeTool {
     /**
      * 查找指定的方法，包括父类中的方法
      */
-    private static Method findMethod(Class<?> clazz, String methodName, Class<?>[] parameterTypes) throws NoSuchMethodException {
+    @NonNull
+    private static Method findMethod(@NonNull Class<?> clazz, @NonNull String methodName, @NonNull Class<?>[] parameterTypes) throws NoSuchMethodException {
         try {
             return clazz.getDeclaredMethod(methodName, parameterTypes);
         } catch (NoSuchMethodException e) {
@@ -179,7 +178,8 @@ public final class InvokeTool {
     /**
      * 生成方法缓存的键
      */
-    private static String generateMethodCacheKey(Class<?> clazz, String methodName, Class<?>[] parameterTypes) {
+    @NonNull
+    private static String generateMethodCacheKey(@NonNull Class<?> clazz, @NonNull String methodName, @NonNull Class<?>[] parameterTypes) {
         StringBuilder keyBuilder = new StringBuilder();
         keyBuilder.append(clazz.getName());
         keyBuilder.append("#").append(methodName);
@@ -192,10 +192,8 @@ public final class InvokeTool {
     /**
      * @noinspection unchecked
      */
-    private static <T> T baseInvokeField(Class<?> clazz, Object instance, String fieldName, boolean isSetter, Object value) {
-        if (clazz == null && instance == null) {
-            throw new NullPointerException("Class or instance must not be null, can't invoke field: " + fieldName);
-        } else if (clazz == null) {
+    private static <T> T baseInvokeField(Class<?> clazz, Object instance, @NonNull String fieldName, boolean isSetter, Object value) {
+        if (clazz == null) {
             clazz = instance.getClass();
         }
 
@@ -224,7 +222,8 @@ public final class InvokeTool {
     /**
      * 查找指定的字段，包括父类中的字段
      */
-    private static Field findField(Class<?> clazz, String fieldName) throws NoSuchFieldException {
+    @NonNull
+    private static Field findField(@NonNull Class<?> clazz, @NonNull String fieldName) throws NoSuchFieldException {
         try {
             return clazz.getDeclaredField(fieldName);
         } catch (NoSuchFieldException e) {
@@ -243,7 +242,8 @@ public final class InvokeTool {
     /**
      * 生成字段缓存的键
      */
-    private static String generateFieldCacheKey(Class<?> clazz, String fieldName) {
+    @NonNull
+    private static String generateFieldCacheKey(@NonNull Class<?> clazz, @NonNull String fieldName) {
         return clazz.getName() + "#" + fieldName;
     }
 
@@ -261,8 +261,9 @@ public final class InvokeTool {
     @NonNull
     public static Class<?> findClass(@NonNull String classPath, ClassLoader classLoader) {
         try {
-            if (classLoader == null)
+            if (classLoader == null) {
                 classLoader = ClassLoader.getSystemClassLoader();
+            }
 
             return classLoader.loadClass(classPath);
         } catch (ClassNotFoundException e) {

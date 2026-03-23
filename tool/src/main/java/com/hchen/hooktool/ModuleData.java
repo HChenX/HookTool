@@ -89,6 +89,11 @@ public final class ModuleData {
     }
 
     @NonNull
+    public static String getModulePath() {
+        return getWrapper().getModuleApplicationInfo().sourceDir;
+    }
+
+    @NonNull
     public static String[] listRemoteFiles() {
         return getWrapper().listRemoteFiles();
     }

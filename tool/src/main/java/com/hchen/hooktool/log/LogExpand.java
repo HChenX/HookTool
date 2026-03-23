@@ -36,6 +36,7 @@ public final class LogExpand {
     private LogExpand() {
     }
 
+    @NonNull
     public static String printStackTrace(@NonNull Throwable e) {
         StringWriter stringWriter = new StringWriter();
         PrintWriter printWriter = new PrintWriter(stringWriter);
@@ -43,6 +44,7 @@ public final class LogExpand {
         return stringWriter.toString();
     }
 
+    @NonNull
     public static String getStackTrace() {
         StringBuilder stringBuilder = new StringBuilder();
         for (StackTraceElement element : Thread.currentThread().getStackTrace()) {
@@ -54,6 +56,7 @@ public final class LogExpand {
         return stringBuilder.toString();
     }
 
+    @NonNull
     public static String getTag() {
         String[] logExpandPaths = ModuleConfig.getLogExpandPaths();
         String[] ignoreClassNames = ModuleConfig.getLogExpandIgnoreClassNames();
@@ -88,6 +91,7 @@ public final class LogExpand {
         return ModuleConfig.getLogTag();
     }
 
+    @NonNull
     @SuppressWarnings("StringBufferReplaceableByString")
     public static String observeCall(@NonNull AbsHook hook) {
         Object[] args = hook.getArgs();
@@ -123,6 +127,7 @@ public final class LogExpand {
         return log.toString();
     }
 
+    @NonNull
     private static String paramToString(Object param) {
         if (param == null) {
             return "null";
