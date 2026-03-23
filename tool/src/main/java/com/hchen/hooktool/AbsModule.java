@@ -41,28 +41,31 @@ public abstract class AbsModule extends CoreTool {
 
     protected String TAG = getClass().getSimpleName();
 
+    public enum StageEnum {
+        MODULE_LOADED,
+        PACKAGE_LOADED,
+        PACKAGE_READY,
+        SYSTEM_SERVER_STARTING
+    }
+
     protected boolean isEnabled() {
         return true;
     }
 
     /**
-     * 模块加载时调用
-     */
-    protected void onModuleLoaded(@NonNull XposedModuleInterface.ModuleLoadedParam param) {
-    }
-
-    /**
-     * 目标应用加载包时调用
-     */
-    protected void onPackageLoaded(@NonNull XposedModuleInterface.PackageLoadedParam param) {
-    }
-
-    /**
-     * 目标应用包加载完毕时调用
+     * 模块应在此方法下编写 Hook 逻辑
      * <p>
-     * 推荐在此时编写 Hook
+     * 使用 {@link StageEnum} 判断当前阶段
+     * <p>
+     * {@link StageEnum#MODULE_LOADED} -> {@link XposedModuleInterface.ModuleLoadedParam}
+     * <p>
+     * {@link StageEnum#PACKAGE_LOADED} -> {@link XposedModuleInterface.PackageLoadedParam}
+     * <p>
+     * {@link StageEnum#PACKAGE_READY} -> {@link XposedModuleInterface.PackageLoadedParam}
+     * <p>
+     * {@link StageEnum#SYSTEM_SERVER_STARTING} -> {@link XposedModuleInterface.SystemServerStartingParam}
      */
-    protected abstract void onPackageReady(@NonNull XposedModuleInterface.PackageReadyParam param);
+    protected abstract void onLoaded(@NonNull StageEnum stageEnum, @NonNull Object param);
 
     /**
      * 传入自定义 ClassLoader 参数时调用
@@ -93,7 +96,7 @@ public abstract class AbsModule extends CoreTool {
             if (!isEnabled()) return;
 
             Objects.requireNonNull(param);
-            onModuleLoaded(param);
+            onLoaded(StageEnum.MODULE_LOADED, param);
         } catch (Throwable e) {
             onThrow(e);
             logE(TAG, e);
@@ -105,7 +108,7 @@ public abstract class AbsModule extends CoreTool {
             if (!isEnabled()) return;
 
             Objects.requireNonNull(param);
-            onPackageLoaded(param);
+            onLoaded(StageEnum.PACKAGE_LOADED, param);
         } catch (Throwable e) {
             onThrow(e);
             logE(TAG, e);
@@ -117,7 +120,19 @@ public abstract class AbsModule extends CoreTool {
             if (!isEnabled()) return;
 
             Objects.requireNonNull(param);
-            onPackageReady(param);
+            onLoaded(StageEnum.PACKAGE_READY, param);
+        } catch (Throwable e) {
+            onThrow(e);
+            logE(TAG, e);
+        }
+    }
+
+    final public void handleSystemServerStarting(@NonNull XposedModuleInterface.SystemServerStartingParam param) {
+        try {
+            if (!isEnabled()) return;
+
+            Objects.requireNonNull(param);
+            onLoaded(StageEnum.SYSTEM_SERVER_STARTING, param);
         } catch (Throwable e) {
             onThrow(e);
             logE(TAG, e);

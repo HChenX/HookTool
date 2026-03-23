@@ -32,96 +32,85 @@ public class XposedLog {
     // -------- logE -------------
     public static void logE(String tag, String log) {
         if (ModuleConfig.getLogLevel() < ModuleConfig.LOG_E) return;
-        ModuleData.getWrapper().log(getLogLevel(), tag, "[E]: " + log);
+        ModuleData.getWrapper().log(Log.ERROR, tag, "[E]: " + log);
     }
 
     public static void logE(String tag, Throwable e) {
         if (ModuleConfig.getLogLevel() < ModuleConfig.LOG_E) return;
-        ModuleData.getWrapper().log(getLogLevel(), tag, "[E]: ", e);
+        ModuleData.getWrapper().log(Log.ERROR, tag, "[E]: ", e);
     }
 
     public static void logE(String tag, String log, String stackTrace) {
         if (ModuleConfig.getLogLevel() < ModuleConfig.LOG_E) return;
-        ModuleData.getWrapper().log(getLogLevel(), tag, "[E]: " + log + "\n[Stack Info]: " + stackTrace);
+        ModuleData.getWrapper().log(Log.ERROR, tag, "[E]: " + log + "\n[Stack Info]: " + stackTrace);
     }
 
     public static void logE(String tag, String log, Throwable e) {
         if (ModuleConfig.getLogLevel() < ModuleConfig.LOG_E) return;
-        ModuleData.getWrapper().log(getLogLevel(), tag, "[E]: " + log, e);
+        ModuleData.getWrapper().log(Log.ERROR, tag, "[E]: " + log, e);
     }
 
     // ----------- logW --------------
     public static void logW(String tag, String log) {
         if (ModuleConfig.getLogLevel() < ModuleConfig.LOG_W) return;
-        ModuleData.getWrapper().log(getLogLevel(), tag, "[W]: " + log);
+        ModuleData.getWrapper().log(Log.WARN, tag, "[W]: " + log);
     }
 
     public static void logW(String tag, Throwable e) {
         if (ModuleConfig.getLogLevel() < ModuleConfig.LOG_W) return;
-        ModuleData.getWrapper().log(getLogLevel(), tag, "[W]: ", e);
+        ModuleData.getWrapper().log(Log.WARN, tag, "[W]: ", e);
     }
 
     public static void logW(String tag, String log, String stackTrace) {
         if (ModuleConfig.getLogLevel() < ModuleConfig.LOG_W) return;
-        ModuleData.getWrapper().log(getLogLevel(), tag, "[W]: " + log + "\n[Stack Info]: " + stackTrace);
+        ModuleData.getWrapper().log(Log.WARN, tag, "[W]: " + log + "\n[Stack Info]: " + stackTrace);
     }
 
     public static void logW(String tag, String log, Throwable e) {
         if (ModuleConfig.getLogLevel() < ModuleConfig.LOG_W) return;
-        ModuleData.getWrapper().log(getLogLevel(), tag, "[W]: " + log, e);
+        ModuleData.getWrapper().log(Log.WARN, tag, "[W]: " + log, e);
     }
 
     // ----------- logI --------------
 
     public static void logI(String tag, String log) {
         if (ModuleConfig.getLogLevel() < ModuleConfig.LOG_I) return;
-        ModuleData.getWrapper().log(getLogLevel(), tag, "[I]: " + log);
+        ModuleData.getWrapper().log(Log.INFO, tag, "[I]: " + log);
     }
 
     public static void logI(String tag, String log, String stackTrace) {
         if (ModuleConfig.getLogLevel() < ModuleConfig.LOG_I) return;
-        ModuleData.getWrapper().log(getLogLevel(), tag, "[I]: " + log + "\n[Stack Info]: " + stackTrace);
+        ModuleData.getWrapper().log(Log.INFO, tag, "[I]: " + log + "\n[Stack Info]: " + stackTrace);
     }
 
     public static void logI(String tag, Throwable e) {
         if (ModuleConfig.getLogLevel() < ModuleConfig.LOG_I) return;
-        ModuleData.getWrapper().log(getLogLevel(), tag, "[I]: ", e);
+        ModuleData.getWrapper().log(Log.INFO, tag, "[I]: ", e);
     }
 
     public static void logI(String tag, String log, Throwable e) {
         if (ModuleConfig.getLogLevel() < ModuleConfig.LOG_I) return;
-        ModuleData.getWrapper().log(getLogLevel(), tag, "[I]: " + log, e);
+        ModuleData.getWrapper().log(Log.INFO, tag, "[I]: " + log, e);
     }
 
     // ------------ logD --------------
     public static void logD(String tag, String log) {
         if (ModuleConfig.getLogLevel() < ModuleConfig.LOG_D) return;
-        ModuleData.getWrapper().log(getLogLevel(), tag, "[D]: " + log);
+        ModuleData.getWrapper().log(Log.DEBUG, tag, "[D]: " + log);
     }
 
     public static void logD(String tag, Throwable e) {
         if (ModuleConfig.getLogLevel() < ModuleConfig.LOG_D) return;
-        ModuleData.getWrapper().log(getLogLevel(), tag, "[D]: ", e);
+        ModuleData.getWrapper().log(Log.DEBUG, tag, "[D]: ", e);
     }
 
     public static void logD(String tag, String log, String stackTrace) {
         if (ModuleConfig.getLogLevel() < ModuleConfig.LOG_D) return;
-        ModuleData.getWrapper().log(getLogLevel(), tag, "[D]: " + log + "\n[Stack Info]: " + stackTrace);
+        ModuleData.getWrapper().log(Log.DEBUG, tag, "[D]: " + log + "\n[Stack Info]: " + stackTrace);
     }
 
     public static void logD(String tag, String log, Throwable e) {
         if (ModuleConfig.getLogLevel() < ModuleConfig.LOG_D) return;
-        ModuleData.getWrapper().log(getLogLevel(), tag, "[D]: " + log, e);
-    }
-
-    private static int getLogLevel() {
-        return switch (ModuleConfig.getLogLevel()) {
-            case ModuleConfig.LOG_I -> Log.INFO;
-            case ModuleConfig.LOG_W -> Log.WARN;
-            case ModuleConfig.LOG_E -> Log.ERROR;
-            case ModuleConfig.LOG_D -> Log.DEBUG;
-            default ->
-                throw new IllegalStateException("Unexpected value: " + ModuleConfig.getLogLevel());
-        };
+        ModuleData.getWrapper().log(Log.DEBUG, tag, "[D]: " + log, e);
     }
 }
