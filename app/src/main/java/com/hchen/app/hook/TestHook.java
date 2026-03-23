@@ -22,10 +22,8 @@ import androidx.annotation.NonNull;
 
 import com.hchen.hooktool.AbsModule;
 
-import io.github.libxposed.api.XposedModuleInterface;
-
 public class TestHook extends AbsModule {
     @Override
-    protected void onPackageReady(@NonNull XposedModuleInterface.PackageReadyParam param) {
+    protected void onLoaded(@NonNull StageEnum stageEnum, @NonNull Object param) {
     }
 }
