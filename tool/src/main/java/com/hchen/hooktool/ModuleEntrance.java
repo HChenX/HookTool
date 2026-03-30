@@ -20,7 +20,6 @@ package com.hchen.hooktool;
 
 import android.app.Application;
 import android.content.Context;
-import android.os.Build;
 import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
@@ -94,9 +93,6 @@ public abstract class ModuleEntrance extends XposedModule {
             return;
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            ModuleData.setClassLoader(param.getDefaultClassLoader());
-        }
         handlePackageLoaded(param);
     }
 
@@ -106,14 +102,12 @@ public abstract class ModuleEntrance extends XposedModule {
             return;
         }
 
-        ModuleData.setClassLoader(param.getClassLoader());
         hookApplication(param);
         handlePackageReady(param);
     }
 
     @Override
     public final void onSystemServerStarting(@NonNull SystemServerStartingParam param) {
-        ModuleData.setClassLoader(param.getClassLoader());
         handleSystemServerStarting(param);
     }
 
