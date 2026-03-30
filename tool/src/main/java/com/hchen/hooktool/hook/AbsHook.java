@@ -236,10 +236,7 @@ public abstract class AbsHook {
         if (state.args == null) {
             state.args = state.originalChain.getArgs().toArray(new Object[0]);
         }
-        if (state.isArgsChanged) {
-            return state.args[index];
-        }
-        return state.originalChain.getArg(index);
+        return state.args[index];
     }
 
     /**

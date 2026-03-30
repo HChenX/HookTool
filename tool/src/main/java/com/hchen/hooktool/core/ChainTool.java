@@ -23,9 +23,8 @@ import static com.hchen.hooktool.core.CoreTool.findClass;
 import androidx.annotation.NonNull;
 
 import com.hchen.hooktool.data.ChainData;
+import com.hchen.hooktool.exception.UnexpectedException;
 import com.hchen.hooktool.hook.AbsHook;
-import com.hchen.hooktool.log.LogExpand;
-import com.hchen.hooktool.log.XposedLog;
 
 import java.lang.reflect.Executable;
 import java.util.HashSet;
@@ -56,9 +55,9 @@ public final class ChainTool {
     private ChainData chainData;
 
     /**
-     * 链式数据集合，用于去重
+     * 链式数据哈希值，用于去重
      */
-    private final HashSet<ChainData> chainDataSet = new HashSet<>();
+    private final HashSet<Integer> dataHashSet = new HashSet<>();
 
     /**
      * 构造方法
@@ -67,8 +66,9 @@ public final class ChainTool {
      */
     private ChainTool(@NonNull Class<?> clazz) {
         Objects.requireNonNull(clazz, "Class must not be null.");
+
         this.clazz = clazz;
-        chainHook = new ChainHook();
+        this.chainHook = new ChainHook();
     }
 
     /**
@@ -110,7 +110,7 @@ public final class ChainTool {
      * @return 链式钩子对象
      */
     public ChainHook findMethod(@NonNull String methodName, @NonNull Object... parameterTypes) {
-        chainData = new ChainData(methodName, parameterTypes);
+        this.chainData = new ChainData(methodName, parameterTypes);
         return chainHook;
     }
 
@@ -121,7 +121,7 @@ public final class ChainTool {
      * @return 链式钩子对象
      */
     public ChainHook findAllMethod(@NonNull String methodName) {
-        chainData = new ChainData(methodName);
+        this.chainData = new ChainData(methodName);
         return chainHook;
     }
 
@@ -132,7 +132,7 @@ public final class ChainTool {
      * @return 链式钩子对象
      */
     public ChainHook findConstructor(@NonNull Object... parameterTypes) {
-        chainData = new ChainData(parameterTypes);
+        this.chainData = new ChainData(parameterTypes);
         return chainHook;
     }
 
@@ -142,7 +142,7 @@ public final class ChainTool {
      * @return 链式钩子对象
      */
     public ChainHook findAllConstructor() {
-        chainData = new ChainData();
+        this.chainData = new ChainData();
         return chainHook;
     }
 
@@ -153,7 +153,7 @@ public final class ChainTool {
      * @return 链式钩子对象
      */
     public ChainHook withExecutable(@NonNull Executable executable) {
-        chainData = new ChainData(executable);
+        this.chainData = new ChainData(executable);
         return chainHook;
     }
 
@@ -164,7 +164,7 @@ public final class ChainTool {
         Objects.requireNonNull(chainData);
 
         try {
-            if (!chainDataSet.contains(chainData)) {
+            if (!dataHashSet.contains(chainData.hashCode())) {
                 runFind();
                 if (chainData.throwable != null) {
                     if (chainData.isIgnoreThrow) {
@@ -181,13 +181,12 @@ public final class ChainTool {
                     }
                 }
 
-                final ChainData tempChainData = chainData;
-                chainDataSet.add(tempChainData);
+                dataHashSet.add(chainData.hashCode());
                 for (Executable executable : chainData.executables) {
                     CoreTool.hook(executable, chainData.absHook);
                 }
             } else {
-                XposedLog.logW(LogExpand.getTag(), "Duplicate content will be skipped: " + chainData);
+                throw new UnexpectedException("Duplicate chain data: " + chainData);
             }
         } finally {
             chainData = null;

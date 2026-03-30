@@ -19,11 +19,11 @@
 package com.hchen.hooktool.core
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.content.res.Resources
 import androidx.annotation.IdRes
 import com.hchen.hooktool.ModuleConfig
 import com.hchen.hooktool.ModuleData
-import com.hchen.hooktool.callback.IPreferences
 import com.hchen.hooktool.exception.UnexpectedException
 import com.hchen.hooktool.hook.AbsHook
 import com.hchen.hooktool.hook.HookBridge
@@ -1346,13 +1346,13 @@ open class CoreTool : XposedLog() {
          * 获取 SharedPreferences 操作接口
          *
          * @param prefsName 偏好设置名称，默认为空
-         * @return IPrefsApply 接口
+         * @return SharedPreferences 接口
          */
         @JvmStatic
         @JvmOverloads
         fun Context.prefs(
             prefsName: String = ""
-        ): IPreferences {
+        ): SharedPreferences {
             return PrefsTool.prefs(this, prefsName)
         }
 
@@ -1360,13 +1360,13 @@ open class CoreTool : XposedLog() {
          * 获取 SharedPreferences 操作接口
          *
          * @param prefsName 偏好设置名称，默认为空
-         * @return IPrefsApply 接口
+         * @return SharedPreferences 接口
          */
         @JvmStatic
         @JvmOverloads
         fun prefs(
             prefsName: String = ""
-        ): IPreferences {
+        ): SharedPreferences {
             return PrefsTool.prefs(prefsName)
         }
 
@@ -1426,7 +1426,7 @@ open class CoreTool : XposedLog() {
                     }
 
                     else -> {
-                        throw UnexpectedException("unknown parameter types.")
+                        throw UnexpectedException("Unknown parameter types.")
                     }
                 }
             }

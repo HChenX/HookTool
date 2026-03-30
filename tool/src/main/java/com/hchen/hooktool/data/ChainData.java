@@ -39,39 +39,39 @@ public final class ChainData {
      * 链式调用类型
      */
     public ChainType chainType;
-    
+
     /**
      * 可执行对象数组
      */
     public Executable[] executables = new Executable[1];
-    
+
     /**
      * 钩子对象
      */
     public AbsHook absHook;
-    
+
     /**
      * 异常对象
      */
     public Throwable throwable;
-    
+
     /**
      * 异常处理函数
      */
     public Function<Throwable, Boolean> function;
-    
+
     /**
      * 是否忽略异常
      */
     public boolean isIgnoreThrow = false;
 
     // ---------------------------------------------------------------
-    
+
     /**
      * 参数类型数组
      */
     public Object[] parameterTypes;
-    
+
     /**
      * 单个可执行对象
      */
@@ -87,7 +87,7 @@ public final class ChainData {
     /**
      * 构造方法，用于查找指定方法
      *
-     * @param methodName 方法名
+     * @param methodName     方法名
      * @param parameterTypes 参数类型
      */
     public ChainData(@NonNull String methodName, @NonNull Object... parameterTypes) {
@@ -126,7 +126,7 @@ public final class ChainData {
     }
 
     // ----------------------- Executable ----------------------------
-    
+
     /**
      * 构造方法，用于指定可执行对象
      *
@@ -156,31 +156,32 @@ public final class ChainData {
     }
 
     @Override
-    public final boolean equals(Object o) {
-        if (!(o instanceof ChainData chainData)) return false;
+    public boolean equals(Object object) {
+        if (!(object instanceof ChainData chainData)) return false;
 
         return chainType == chainData.chainType &&
             // isIgnoreThrow == chainData.isIgnoreThrow &&
-            // Arrays.equals(executables, chainData.executables) &&
+            // Objects.deepEquals(executables, chainData.executables) &&
             // Objects.equals(absHook, chainData.absHook) &&
             // Objects.equals(throwable, chainData.throwable) &&
             // Objects.equals(function, chainData.function) &&
-            Arrays.equals(parameterTypes, chainData.parameterTypes) &&
+            Objects.deepEquals(parameterTypes, chainData.parameterTypes) &&
             Objects.equals(executable, chainData.executable) &&
             Objects.equals(methodName, chainData.methodName);
     }
 
     @Override
     public int hashCode() {
-        int result = Objects.hashCode(chainType);
-        // result = 31 * result + Arrays.hashCode(executables);
-        // result = 31 * result + Objects.hashCode(absHook);
-        // result = 31 * result + Objects.hashCode(throwable);
-        // result = 31 * result + Objects.hashCode(function);
-        // result = 31 * result + Boolean.hashCode(isIgnoreThrow);
-        result = 31 * result + Arrays.hashCode(parameterTypes);
-        result = 31 * result + Objects.hashCode(executable);
-        result = 31 * result + Objects.hashCode(methodName);
-        return result;
+        return Objects.hash(
+            chainType,
+            // isIgnoreThrow,
+            // Arrays.hashCode(executables),
+            // absHook,
+            // throwable,
+            // function,
+            Arrays.hashCode(parameterTypes),
+            executable,
+            methodName
+        );
     }
 }

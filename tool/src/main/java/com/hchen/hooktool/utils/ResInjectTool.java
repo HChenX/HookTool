@@ -88,7 +88,7 @@ public final class ResInjectTool {
     public static void injectModuleRes() {
         if (isInjected) return;
 
-        String sourceDir = ModuleData.getModuleApplicationInfo().sourceDir;
+        String sourceDir = ModuleData.getModulePath();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             if (resourcesLoader == null) {
                 try (ParcelFileDescriptor pfd = ParcelFileDescriptor.open(new File(sourceDir), ParcelFileDescriptor.MODE_READ_ONLY)) {
@@ -258,7 +258,7 @@ public final class ResInjectTool {
                     setResult(value);
                 }
             } catch (Throwable t) {
-                XposedLog.logD(TAG, "failed to replacement res.", t);
+                XposedLog.logD(TAG, "Failed to replacement res.", t);
             }
         }
     };
@@ -293,7 +293,7 @@ public final class ResInjectTool {
                     }
                 }
             } catch (Throwable t) {
-                XposedLog.logD(TAG, "failed to replacement typed array.", t);
+                XposedLog.logD(TAG, "Failed to replacement typed array.", t);
             }
         }
     };

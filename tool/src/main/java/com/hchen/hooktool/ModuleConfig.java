@@ -65,7 +65,7 @@ public final class ModuleConfig {
     }
 
     static {
-        logTag = "unknown";
+        logTag = "Unknown";
         logLevel = LOG_I;
         modulePackageName = "";
         prefsName = "";

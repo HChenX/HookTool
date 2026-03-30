@@ -202,16 +202,18 @@ public final class PackageTool {
     @NonNull
     public static <T> AppData createAppData(@NonNull PackageManager pm, @NonNull T t) {
         AppData appData = new AppData();
+        PackageInfo packageInfo = null;
         ApplicationInfo applicationInfo = null;
 
         // 根据不同类型的 T 对象获取 ApplicationInfo
-        if (t instanceof PackageInfo packageInfo) {
-            applicationInfo = packageInfo.applicationInfo;
-            appData.setVersionName(packageInfo.versionName);
+        if (t instanceof PackageInfo info) {
+            packageInfo = info;
+            applicationInfo = info.applicationInfo;
+            appData.setVersionName(info.versionName);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                appData.setVersionCode(Long.toString(packageInfo.getLongVersionCode()));
+                appData.setVersionCode(Long.toString(info.getLongVersionCode()));
             } else {
-                appData.setVersionCode(Integer.toString(packageInfo.versionCode));
+                appData.setVersionCode(Integer.toString(info.versionCode));
             }
         } else if (t instanceof ApplicationInfo appInfo) {
             applicationInfo = appInfo;
@@ -229,7 +231,8 @@ public final class PackageTool {
 
         // 填充应用数据
         if (applicationInfo != null) {
-            appData.setInfo(applicationInfo);
+            appData.setPackageInfo(packageInfo);
+            appData.setApplicationInfo(applicationInfo);
             appData.setIcon(BitmapTool.drawableToBitmap(applicationInfo.loadIcon(pm)));
             appData.setLabel(applicationInfo.loadLabel(pm).toString());
             appData.setPackageName(applicationInfo.packageName);

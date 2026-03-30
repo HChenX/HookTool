@@ -29,14 +29,11 @@ import androidx.annotation.Nullable;
 
 import com.hchen.hooktool.ModuleConfig;
 import com.hchen.hooktool.ModuleData;
-import com.hchen.hooktool.callback.IPreferences;
 import com.hchen.hooktool.exception.NoXposedEnvironmentException;
 import com.hchen.hooktool.exception.UnexpectedException;
 import com.hchen.hooktool.log.AndroidLog;
 
-import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -46,8 +43,8 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class PrefsTool {
     private static final String TAG = "PrefsTool";
-    private final static ConcurrentHashMap<String, SPrefs> xSPrefsMap = new ConcurrentHashMap<>(); // 宿主端
-    private final static ConcurrentHashMap<String, SPrefs> sPrefsMap = new ConcurrentHashMap<>(); // 模块端
+    private final static ConcurrentHashMap<String, SharedPreferences> xPreferences = new ConcurrentHashMap<>(); // 宿主端
+    private final static ConcurrentHashMap<String, SharedPreferences> sPreferences = new ConcurrentHashMap<>(); // 模块端
 
     private PrefsTool() {
     }
@@ -56,7 +53,7 @@ public final class PrefsTool {
      * 从应用私有目录读取/写入共享首选项数据
      */
     @NonNull
-    public static IPreferences prefs(@NonNull Context context) {
+    public static SharedPreferences prefs(@NonNull Context context) {
         return prefs(context, "");
     }
 
@@ -64,15 +61,15 @@ public final class PrefsTool {
      * 从应用私有目录读取/写入共享首选项数据
      */
     @NonNull
-    public static IPreferences prefs(@NonNull Context context, @NonNull String prefsName) {
-        return createSPrefsIfNeed(context, prefsName);
+    public static SharedPreferences prefs(@NonNull Context context, @NonNull String prefsName) {
+        return createSharedPreferences(context, prefsName);
     }
 
     /**
      * Xposed 环境中读取模块的共享首选项，非 Xposed 环境中使用会引发异常
      */
     @NonNull
-    public static IPreferences prefs() {
+    public static SharedPreferences prefs() {
         if (!ModuleData.isXposedEnvironment())
             throw new NoXposedEnvironmentException("Must be in the xposed environment.");
         return prefs("");
@@ -82,45 +79,42 @@ public final class PrefsTool {
      * Xposed 环境中读取模块的共享首选项，非 Xposed 环境中使用会引发异常
      */
     @NonNull
-    public static IPreferences prefs(@NonNull String prefsName) {
+    public static SharedPreferences prefs(@NonNull String prefsName) {
         if (!ModuleData.isXposedEnvironment())
             throw new NoXposedEnvironmentException("Must be in the xposed environment.");
-        return createXSPrefsIfNeed(prefsName);
+        return createSharedPreferences(null, prefsName);
     }
 
-    private static IPreferences createXSPrefsIfNeed(@NonNull String prefsName) {
-        prefsName = initPrefsName(prefsName);
-        if (xSPrefsMap.get(ModuleConfig.getModulePackageName() + prefsName) == null) {
-            Objects.requireNonNull(ModuleData.getWrapper());
-
-            SPrefs sPrefs = new SPrefs(ModuleData.getRemotePreferences(prefsName));
-            xSPrefsMap.put(ModuleConfig.getModulePackageName() + prefsName, sPrefs);
-            return sPrefs;
-        } else {
-            return xSPrefsMap.get(ModuleConfig.getModulePackageName() + prefsName);
-        }
-    }
-
-    /**
-     * @noinspection deprecation
-     */
     @SuppressLint("WorldReadableFiles")
-    private static IPreferences createSPrefsIfNeed(@NonNull Context context, @NonNull String prefsName) {
+    private static SharedPreferences createSharedPreferences(@Nullable Context context, @NonNull String prefsName) {
         prefsName = initPrefsName(prefsName);
-        if (sPrefsMap.get(context.getPackageName() + prefsName) == null) {
-            SharedPreferences s;
-            try {
-                s = context.getSharedPreferences(prefsName, Context.MODE_WORLD_READABLE);
-            } catch (Throwable ignored) {
-                s = context.getSharedPreferences(prefsName, Context.MODE_PRIVATE);
-                AndroidLog.logW(TAG, "maybe unsupported prefs.", getStackTrace());
-            }
 
-            SPrefs sprefs = new SPrefs(s);
-            sPrefsMap.put(context.getPackageName() + prefsName, sprefs);
-            return sprefs;
+        if (ModuleData.isXposedEnvironment()) {
+            if (xPreferences.get(prefsName) == null) {
+                SharedPreferences preferences = ModuleData.getRemotePreferences(prefsName);
+                xPreferences.put(prefsName, preferences);
+                return preferences;
+            } else {
+                return xPreferences.get(prefsName);
+            }
         } else {
-            return sPrefsMap.get(context.getPackageName() + prefsName);
+            Objects.requireNonNull(context);
+
+            if (sPreferences.get(prefsName) == null) {
+                SharedPreferences preferences;
+                try {
+                    // noinspection deprecation
+                    preferences = context.getSharedPreferences(prefsName, Context.MODE_WORLD_READABLE);
+                } catch (Throwable ignored) {
+                    preferences = context.getSharedPreferences(prefsName, Context.MODE_PRIVATE);
+                    AndroidLog.logW(TAG, "Maybe unsupported prefs.", getStackTrace());
+                }
+
+                sPreferences.put(prefsName, preferences);
+                return preferences;
+            } else {
+                return sPreferences.get(prefsName);
+            }
         }
     }
 
@@ -137,86 +131,5 @@ public final class PrefsTool {
             }
             return ModuleConfig.getPrefsName();
         } else return name;
-    }
-
-    /**
-     * @noinspection unchecked
-     */
-    private record SPrefs(@NonNull SharedPreferences preferences) implements IPreferences {
-        @Override
-        @Nullable
-        public String getString(String key, @Nullable String def) {
-            return preferences.getString(key, def);
-        }
-
-        @Override
-        @Nullable
-        public Set<String> getStringSet(String key, @Nullable Set<String> def) {
-            return preferences.getStringSet(key, def);
-        }
-
-        @Override
-        public boolean getBoolean(String key, boolean def) {
-            return preferences.getBoolean(key, def);
-        }
-
-        @Override
-        public int getInt(String key, int def) {
-            return preferences.getInt(key, def);
-        }
-
-        @Override
-        public float getFloat(String key, float def) {
-            return preferences.getFloat(key, def);
-        }
-
-        @Override
-        public long getLong(String key, long def) {
-            return preferences.getLong(key, def);
-        }
-
-        @Override
-        public Object get(String key, Object def) {
-            if (def instanceof String s) {
-                return getString(key, s);
-            } else if (def instanceof Set<?> set) {
-                return getStringSet(key, (Set<String>) set);
-            } else if (def instanceof Integer i) {
-                return getInt(key, i);
-            } else if (def instanceof Boolean b) {
-                return getBoolean(key, b);
-            } else if (def instanceof Float f) {
-                return getFloat(key, f);
-            } else if (def instanceof Long l) {
-                return getLong(key, l);
-            }
-            throw new UnexpectedException("Unknown type value: " + def);
-        }
-
-        @Override
-        public boolean contains(String key) {
-            return preferences.contains(key);
-        }
-
-        @Override
-        public Map<String, ?> getAll() {
-            return preferences.getAll();
-        }
-
-        @NonNull
-        @Override
-        public SharedPreferences.Editor editor() {
-            return preferences.edit();
-        }
-
-        @Override
-        public void registerOnSharedPreferenceChangeListener(SharedPreferences.OnSharedPreferenceChangeListener listener) {
-            preferences.registerOnSharedPreferenceChangeListener(listener);
-        }
-
-        @Override
-        public void unregisterOnSharedPreferenceChangeListener(SharedPreferences.OnSharedPreferenceChangeListener listener) {
-            preferences.unregisterOnSharedPreferenceChangeListener(listener);
-        }
     }
 }

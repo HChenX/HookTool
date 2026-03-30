@@ -19,6 +19,7 @@
 package com.hchen.hooktool.data;
 
 import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
 import android.graphics.Bitmap;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -33,7 +34,8 @@ import java.util.Objects;
  * @author 焕晨HChen
  */
 public final class AppData implements Parcelable {
-    private ApplicationInfo info;
+    private PackageInfo packageInfo;
+    private ApplicationInfo applicationInfo;
     private int user = -1;
     private int uid = -1;
     private Bitmap icon;
@@ -48,12 +50,20 @@ public final class AppData implements Parcelable {
     }
 
     // Getter and Setter methods
-    public ApplicationInfo getInfo() {
-        return info;
+    public PackageInfo getPackageInfo() {
+        return packageInfo;
     }
 
-    public void setInfo(ApplicationInfo info) {
-        this.info = info;
+    public void setPackageInfo(PackageInfo packageInfo) {
+        this.packageInfo = packageInfo;
+    }
+
+    public ApplicationInfo getApplicationInfo() {
+        return applicationInfo;
+    }
+
+    public void setApplicationInfo(ApplicationInfo applicationInfo) {
+        this.applicationInfo = applicationInfo;
     }
 
     public int getUser() {
@@ -145,7 +155,8 @@ public final class AppData implements Parcelable {
     @Override
     public String toString() {
         return "AppData{" +
-            "info=" + info +
+            "packageInfo=" + packageInfo +
+            ", applicationInfo=" + applicationInfo +
             ", user=" + user +
             ", uid=" + uid +
             ", icon=" + icon +
@@ -159,14 +170,15 @@ public final class AppData implements Parcelable {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (!(o instanceof AppData appData)) return false;
+    public boolean equals(Object object) {
+        if (!(object instanceof AppData appData)) return false;
 
         return user == appData.user &&
             uid == appData.uid &&
             isSystemApp == appData.isSystemApp &&
             isEnabled == appData.isEnabled &&
-            Objects.equals(info, appData.info) &&
+            Objects.equals(packageInfo, appData.packageInfo) &&
+            Objects.equals(applicationInfo, appData.applicationInfo) &&
             Objects.equals(icon, appData.icon) &&
             Objects.equals(label, appData.label) &&
             Objects.equals(packageName, appData.packageName) &&
@@ -176,21 +188,24 @@ public final class AppData implements Parcelable {
 
     @Override
     public int hashCode() {
-        int result = Objects.hashCode(info);
-        result = 31 * result + user;
-        result = 31 * result + uid;
-        result = 31 * result + Objects.hashCode(icon);
-        result = 31 * result + Objects.hashCode(label);
-        result = 31 * result + Objects.hashCode(packageName);
-        result = 31 * result + Objects.hashCode(versionName);
-        result = 31 * result + Objects.hashCode(versionCode);
-        result = 31 * result + Boolean.hashCode(isSystemApp);
-        result = 31 * result + Boolean.hashCode(isEnabled);
-        return result;
+        return Objects.hash(
+            packageInfo,
+            applicationInfo,
+            user,
+            uid,
+            icon,
+            label,
+            packageName,
+            versionName,
+            versionCode,
+            isSystemApp,
+            isEnabled
+        );
     }
 
     private AppData(@NonNull Parcel in) {
-        info = in.readParcelable(ApplicationInfo.class.getClassLoader());
+        packageInfo = in.readParcelable(PackageInfo.class.getClassLoader());
+        applicationInfo = in.readParcelable(ApplicationInfo.class.getClassLoader());
         user = in.readInt();
         uid = in.readInt();
         icon = in.readParcelable(Bitmap.class.getClassLoader());
@@ -204,7 +219,8 @@ public final class AppData implements Parcelable {
 
     @Override
     public void writeToParcel(@NonNull Parcel dest, int flags) {
-        dest.writeParcelable(info, flags);
+        dest.writeParcelable(packageInfo, flags);
+        dest.writeParcelable(applicationInfo, flags);
         dest.writeInt(user);
         dest.writeInt(uid);
         dest.writeParcelable(icon, flags);
