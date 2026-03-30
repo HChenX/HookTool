@@ -1318,7 +1318,7 @@ open class CoreTool : XposedLog() {
         @JvmStatic
         @JvmOverloads
         fun String.buildChain(
-            classLoader: ClassLoader = ModuleData.getClassLoader()
+            classLoader: ClassLoader? = ModuleData.getClassLoader()
         ): ChainTool {
             return ChainTool.buildChain(this, classLoader)
         }
