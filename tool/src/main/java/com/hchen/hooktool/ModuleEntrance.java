@@ -127,7 +127,7 @@ public abstract class ModuleEntrance extends XposedModule {
             }
 
             try {
-                handle = CoreTool.hook(
+                handle = CoreTool.hookMethod(
                     Application.class,
                     "attach",
                     Context.class,

@@ -102,7 +102,6 @@ open class CoreTool : XposedLog() {
          *
          * @param classLoader 类加载器，默认为 ModuleData.getClassLoader()
          * @param methodName 方法名
-         * @param exactMatch 是否精确匹配，默认为 true
          * @param parameterTypes 参数类型
          * @return 是否存在该方法
          */
@@ -111,35 +110,53 @@ open class CoreTool : XposedLog() {
         fun String.hasMethod(
             classLoader: ClassLoader? = ModuleData.getClassLoader(),
             methodName: String,
-            exactMatch: Boolean = true,
             vararg parameterTypes: Any
         ): Boolean {
-            return this.findClassIfExists(classLoader)?.hasMethod(methodName, exactMatch, *parameterTypes) ?: false
+            return this.findClassIfExists(classLoader)?.hasMethod(methodName, *parameterTypes) ?: false
         }
 
         /**
          * 检查当前类是否包含指定方法
          *
          * @param methodName 方法名
-         * @param exactMatch 是否精确匹配，默认为 true
          * @param parameterTypes 参数类型
          * @return 是否存在该方法
          */
         @JvmStatic
-        @JvmOverloads
         fun Class<*>.hasMethod(
             methodName: String,
-            exactMatch: Boolean = true,
             vararg parameterTypes: Any
         ): Boolean {
-            return if (exactMatch) {
-                Objects.nonNull(
-                    XposedHelpers.findMethodExactIfExists(this, methodName, *parameterTypes)
-                )
-            } else {
-                this.declaredMethods.any { method ->
-                    methodName.contentEquals(method.name)
-                }
+            return Objects.nonNull(
+                XposedHelpers.findMethodExactIfExists(this, methodName, *parameterTypes)
+            )
+        }
+
+        /**
+         * 检查当前类是否包含任意指定方法名的方法
+         *
+         * @param classLoader 类加载器，默认为 ModuleData.getClassLoader()
+         * @param methodName 方法名
+         * @return 是否存在该方法
+         */
+        fun String.hasAnyMethod(
+            classLoader: ClassLoader? = ModuleData.getClassLoader(),
+            methodName: String
+        ): Boolean {
+            return this.findClassIfExists(classLoader)?.hasAnyMethod(methodName) ?: false
+        }
+
+        /**
+         * 检查当前类是否包含任意指定方法名的方法
+         *
+         * @param methodName 方法名
+         * @return 是否存在该方法
+         */
+        fun Class<*>.hasAnyMethod(
+            methodName: String
+        ): Boolean {
+            return this.declaredMethods.any { method ->
+                methodName.contentEquals(method.name)
             }
         }
 
@@ -486,7 +503,7 @@ open class CoreTool : XposedLog() {
             vararg args: Any?
         ): Any? {
             this.isAccessible = true
-            return this.getInvoker().invoke(instance, *args)
+            return this.getMethodInvoker().invoke(instance, *args)
         }
 
         /**
@@ -679,7 +696,7 @@ open class CoreTool : XposedLog() {
             vararg args: Any?
         ): Any? {
             this.isAccessible = true
-            return this.getInvoker().invoke(null, *args)
+            return this.getMethodInvoker().invoke(null, *args)
         }
 
         /**
@@ -869,18 +886,12 @@ open class CoreTool : XposedLog() {
          */
         @JvmStatic
         @JvmOverloads
-        fun String.hook(
+        fun String.hookMethod(
             classLoader: ClassLoader? = ModuleData.getClassLoader(),
             methodName: String,
             vararg parameterTypes: Any
         ): XposedInterface.HookHandle {
-            require(parameterTypes.isNotEmpty() && parameterTypes.last() is AbsHook) {
-                "The last element of parameterTypes must be an instance of AbsHook"
-            }
-
-            val absHook = parameterTypes.last() as AbsHook
-            val realParameterTypes = parameterTypes.dropLast(1).toTypedArray()
-            return this.findMethod(classLoader, methodName, *realParameterTypes).hook(absHook)
+            return this.findClass(classLoader).hookMethod(methodName, *parameterTypes)
         }
 
         /**
@@ -891,7 +902,7 @@ open class CoreTool : XposedLog() {
          * @return XposedInterface.HookHandle 实例
          */
         @JvmStatic
-        fun Class<*>.hook(
+        fun Class<*>.hookMethod(
             methodName: String,
             vararg parameterTypes: Any
         ): XposedInterface.HookHandle {
@@ -913,17 +924,11 @@ open class CoreTool : XposedLog() {
          */
         @JvmStatic
         @JvmOverloads
-        fun String.hook(
+        fun String.hookConstructor(
             classLoader: ClassLoader? = ModuleData.getClassLoader(),
             vararg parameterTypes: Any
         ): XposedInterface.HookHandle {
-            require(parameterTypes.isNotEmpty() && parameterTypes.last() is AbsHook) {
-                "The last element of parameterTypes must be an instance of AbsHook"
-            }
-
-            val absHook = parameterTypes.last() as AbsHook
-            val realParameterTypes = parameterTypes.dropLast(1).toTypedArray()
-            return this.findConstructor(classLoader, *realParameterTypes).hook(absHook)
+            return this.findClass(classLoader).hookConstructor(*parameterTypes)
         }
 
         /**
@@ -933,7 +938,7 @@ open class CoreTool : XposedLog() {
          * @return XposedInterface.HookHandle 实例
          */
         @JvmStatic
-        fun Class<*>.hook(
+        fun Class<*>.hookConstructor(
             vararg parameterTypes: Any
         ): XposedInterface.HookHandle {
             require(parameterTypes.isNotEmpty() && parameterTypes.last() is AbsHook) {
@@ -970,7 +975,7 @@ open class CoreTool : XposedLog() {
          */
         @JvmStatic
         @JvmOverloads
-        fun String.hookAll(
+        fun String.hookAllMethod(
             classLoader: ClassLoader? = ModuleData.getClassLoader(),
             methodName: String,
             absHook: AbsHook
@@ -985,7 +990,7 @@ open class CoreTool : XposedLog() {
          * @return XposedInterface.HookHandle 实例
          */
         @JvmStatic
-        fun Class<*>.hookAll(
+        fun Class<*>.hookAllMethod(
             methodName: String,
             absHook: AbsHook
         ): Array<XposedInterface.HookHandle> {
@@ -1000,7 +1005,7 @@ open class CoreTool : XposedLog() {
          */
         @JvmStatic
         @JvmOverloads
-        fun String.hookAll(
+        fun String.hookAllConstructor(
             classLoader: ClassLoader? = ModuleData.getClassLoader(),
             absHook: AbsHook
         ): Array<XposedInterface.HookHandle> {
@@ -1013,7 +1018,7 @@ open class CoreTool : XposedLog() {
          * @return XposedInterface.HookHandle 实例
          */
         @JvmStatic
-        fun Class<*>.hookAll(absHook: AbsHook): Array<XposedInterface.HookHandle> {
+        fun Class<*>.hookAllConstructor(absHook: AbsHook): Array<XposedInterface.HookHandle> {
             return this.findAllConstructor().hookAll(absHook)
         }
 
@@ -1112,12 +1117,12 @@ open class CoreTool : XposedLog() {
          */
         @JvmStatic
         @JvmOverloads
-        fun String.getInvoker(
+        fun String.getMethodInvoker(
             classLoader: ClassLoader? = ModuleData.getClassLoader(),
             methodName: String,
             vararg parameterTypes: Any
         ): XposedInterface.Invoker<*, Method> {
-            return this.findMethod(classLoader, methodName, *parameterTypes).getInvoker()
+            return this.findMethod(classLoader, methodName, *parameterTypes).getMethodInvoker()
         }
 
         /**
@@ -1128,11 +1133,11 @@ open class CoreTool : XposedLog() {
          * @return 方法调用器
          */
         @JvmStatic
-        fun Class<*>.getInvoker(
+        fun Class<*>.getMethodInvoker(
             methodName: String,
             vararg parameterTypes: Any
         ): XposedInterface.Invoker<*, Method> {
-            return this.findMethod(methodName, *parameterTypes).getInvoker()
+            return this.findMethod(methodName, *parameterTypes).getMethodInvoker()
         }
 
         /**
@@ -1141,7 +1146,7 @@ open class CoreTool : XposedLog() {
          * @return 方法调用器
          */
         @JvmStatic
-        fun Method.getInvoker(): XposedInterface.Invoker<*, Method> {
+        fun Method.getMethodInvoker(): XposedInterface.Invoker<*, Method> {
             return ModuleData.getWrapper().getInvoker(this)
         }
 
@@ -1154,11 +1159,11 @@ open class CoreTool : XposedLog() {
          */
         @JvmStatic
         @JvmOverloads
-        fun String.getInvoker(
+        fun String.getConstructorInvoker(
             classLoader: ClassLoader? = ModuleData.getClassLoader(),
             vararg parameterTypes: Any
         ): XposedInterface.CtorInvoker<*> {
-            return this.findConstructor(classLoader, *parameterTypes).getInvoker()
+            return this.findConstructor(classLoader, *parameterTypes).getConstructorInvoker()
         }
 
         /**
@@ -1168,10 +1173,10 @@ open class CoreTool : XposedLog() {
          * @return 构造函数调用器
          */
         @JvmStatic
-        fun Class<*>.getInvoker(
+        fun Class<*>.getConstructorInvoker(
             vararg parameterTypes: Any
         ): XposedInterface.CtorInvoker<*> {
-            return this.findConstructor(*parameterTypes).getInvoker()
+            return this.findConstructor(*parameterTypes).getConstructorInvoker()
         }
 
         /**
@@ -1180,7 +1185,7 @@ open class CoreTool : XposedLog() {
          * @return 构造函数调用器
          */
         @JvmStatic
-        fun Constructor<*>.getInvoker(): XposedInterface.CtorInvoker<*> {
+        fun Constructor<*>.getConstructorInvoker(): XposedInterface.CtorInvoker<*> {
             return ModuleData.getWrapper().getInvoker(this)
         }
 
@@ -1195,7 +1200,7 @@ open class CoreTool : XposedLog() {
          */
         @JvmStatic
         @JvmOverloads
-        fun String.deoptimize(
+        fun String.deoptimizeMethod(
             classLoader: ClassLoader? = ModuleData.getClassLoader(),
             methodName: String,
             vararg parameterTypes: Any
@@ -1210,7 +1215,7 @@ open class CoreTool : XposedLog() {
          * @param parameterTypes 参数类型
          */
         @JvmStatic
-        fun Class<*>.deoptimize(
+        fun Class<*>.deoptimizeMethod(
             methodName: String,
             vararg parameterTypes: Any
         ) {
@@ -1225,7 +1230,7 @@ open class CoreTool : XposedLog() {
          */
         @JvmStatic
         @JvmOverloads
-        fun String.deoptimize(
+        fun String.deoptimizeConstructor(
             classLoader: ClassLoader? = ModuleData.getClassLoader(),
             vararg parameterTypes: Any
         ) {
@@ -1238,7 +1243,7 @@ open class CoreTool : XposedLog() {
          * @param parameterTypes 参数类型
          */
         @JvmStatic
-        fun Class<*>.deoptimize(
+        fun Class<*>.deoptimizeConstructor(
             vararg parameterTypes: Any
         ) {
             this.findConstructor(*parameterTypes).deoptimize()
@@ -1388,7 +1393,9 @@ open class CoreTool : XposedLog() {
          * @return 执行时间（毫秒），如果发生异常则返回-1
          */
         @JvmStatic
-        fun timeConsumption(runnable: Runnable): Long {
+        fun timeConsumption(
+            runnable: Runnable
+        ): Long {
             try {
                 val start = Instant.now()
                 runnable.run()

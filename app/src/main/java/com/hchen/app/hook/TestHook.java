@@ -24,6 +24,6 @@ import com.hchen.hooktool.AbsModule;
 
 public class TestHook extends AbsModule {
     @Override
-    protected void onLoaded(@NonNull StageEnum stageEnum, @NonNull Object param) {
+    protected void onLoaded(@NonNull StageEnum stage, @NonNull Object param) {
     }
 }

@@ -45,7 +45,9 @@ public abstract class AbsModule extends CoreTool {
         MODULE_LOADED,
         PACKAGE_LOADED,
         PACKAGE_READY,
-        SYSTEM_SERVER_STARTING
+        SYSTEM_SERVER_STARTING,
+        ON_CLASSLOADER,
+        ON_APPLICATION_CREATED
     }
 
     protected boolean isEnabled() {
@@ -65,7 +67,7 @@ public abstract class AbsModule extends CoreTool {
      * <p>
      * {@link StageEnum#SYSTEM_SERVER_STARTING} -> {@link XposedModuleInterface.SystemServerStartingParam}
      */
-    protected abstract void onLoaded(@NonNull StageEnum stageEnum, @NonNull Object param);
+    protected abstract void onLoaded(@NonNull StageEnum stage, @NonNull Object param);
 
     /**
      * 传入自定义 ClassLoader 参数时调用
@@ -86,7 +88,7 @@ public abstract class AbsModule extends CoreTool {
      * <p>
      * 请勿在此处继续执行任何任务，请执行清理工作
      */
-    protected void onThrow(@NonNull Throwable e) {
+    protected void onThrow(@NonNull StageEnum stage, @NonNull Throwable e) {
     }
 
     // ------------------------------ 入口类内统一调用 ------------------------------------
@@ -98,7 +100,7 @@ public abstract class AbsModule extends CoreTool {
             Objects.requireNonNull(param);
             onLoaded(StageEnum.MODULE_LOADED, param);
         } catch (Throwable e) {
-            onThrow(e);
+            onThrow(StageEnum.MODULE_LOADED, e);
             logE(TAG, e);
         }
     }
@@ -110,7 +112,7 @@ public abstract class AbsModule extends CoreTool {
             Objects.requireNonNull(param);
             onLoaded(StageEnum.PACKAGE_LOADED, param);
         } catch (Throwable e) {
-            onThrow(e);
+            onThrow(StageEnum.PACKAGE_LOADED, e);
             logE(TAG, e);
         }
     }
@@ -122,7 +124,7 @@ public abstract class AbsModule extends CoreTool {
             Objects.requireNonNull(param);
             onLoaded(StageEnum.PACKAGE_READY, param);
         } catch (Throwable e) {
-            onThrow(e);
+            onThrow(StageEnum.PACKAGE_READY, e);
             logE(TAG, e);
         }
     }
@@ -134,7 +136,7 @@ public abstract class AbsModule extends CoreTool {
             Objects.requireNonNull(param);
             onLoaded(StageEnum.SYSTEM_SERVER_STARTING, param);
         } catch (Throwable e) {
-            onThrow(e);
+            onThrow(StageEnum.SYSTEM_SERVER_STARTING, e);
             logE(TAG, e);
         }
     }
@@ -146,7 +148,7 @@ public abstract class AbsModule extends CoreTool {
             Objects.requireNonNull(classLoader);
             onClassLoader(classLoader);
         } catch (Throwable e) {
-            onThrow(e);
+            onThrow(StageEnum.ON_CLASSLOADER, e);
             logE(TAG, e);
         }
     }
@@ -158,7 +160,7 @@ public abstract class AbsModule extends CoreTool {
             Objects.requireNonNull(context);
             onApplicationCreated(context);
         } catch (Throwable e) {
-            onThrow(e);
+            onThrow(StageEnum.ON_APPLICATION_CREATED, e);
             logE(TAG, e);
         }
     }
