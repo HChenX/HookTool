@@ -62,9 +62,7 @@ open class CoreTool : XposedLog() {
         fun String.hasClass(
             classLoader: ClassLoader? = ModuleData.getClassLoader(),
         ): Boolean {
-            return Objects.nonNull(
-                XposedHelpers.findClassIfExists(this, classLoader)
-            )
+            return XposedHelpers.findClassIfExists(this, classLoader) != null
         }
 
         /**
@@ -127,9 +125,7 @@ open class CoreTool : XposedLog() {
             methodName: String,
             vararg parameterTypes: Any
         ): Boolean {
-            return Objects.nonNull(
-                XposedHelpers.findMethodExactIfExists(this, methodName, *parameterTypes)
-            )
+            return XposedHelpers.findMethodExactIfExists(this, methodName, *parameterTypes) != null
         }
 
         /**
@@ -139,6 +135,8 @@ open class CoreTool : XposedLog() {
          * @param methodName 方法名
          * @return 是否存在该方法
          */
+        @JvmStatic
+        @JvmOverloads
         fun String.hasAnyMethod(
             classLoader: ClassLoader? = ModuleData.getClassLoader(),
             methodName: String
@@ -152,6 +150,7 @@ open class CoreTool : XposedLog() {
          * @param methodName 方法名
          * @return 是否存在该方法
          */
+        @JvmStatic
         fun Class<*>.hasAnyMethod(
             methodName: String
         ): Boolean {
@@ -272,9 +271,7 @@ open class CoreTool : XposedLog() {
             classLoader: ClassLoader? = ModuleData.getClassLoader(),
             vararg parameterTypes: Any
         ): Boolean {
-            return Objects.nonNull(
-                XposedHelpers.findConstructorExactIfExists(this, classLoader, *parameterTypes)
-            )
+            return XposedHelpers.findConstructorExactIfExists(this, classLoader, *parameterTypes) != null
         }
 
         /**
@@ -287,9 +284,7 @@ open class CoreTool : XposedLog() {
         fun Class<*>.hasConstructor(
             vararg parameterTypes: Any
         ): Boolean {
-            return Objects.nonNull(
-                XposedHelpers.findConstructorExactIfExists(this, *parameterTypes)
-            )
+            return XposedHelpers.findConstructorExactIfExists(this, *parameterTypes) != null
         }
 
         /**
@@ -389,9 +384,7 @@ open class CoreTool : XposedLog() {
             classLoader: ClassLoader? = ModuleData.getClassLoader(),
             fieldName: String
         ): Boolean {
-            return Objects.nonNull(
-                this.findClassIfExists(classLoader)?.hasField(fieldName)
-            )
+            return this.findClassIfExists(classLoader)?.hasField(fieldName) ?: false
         }
 
         /**
@@ -404,9 +397,7 @@ open class CoreTool : XposedLog() {
         fun Class<*>.hasField(
             fieldName: String
         ): Boolean {
-            return Objects.nonNull(
-                XposedHelpers.findFieldIfExists(this, fieldName)
-            )
+            return XposedHelpers.findFieldIfExists(this, fieldName) != null
         }
 
         /**
@@ -1223,6 +1214,34 @@ open class CoreTool : XposedLog() {
         }
 
         /**
+         * 反优化指定类的全部方法
+         *
+         * @param classLoader 类加载器，默认为 ModuleData.getClassLoader()
+         * @param methodName 方法名
+         */
+        @JvmStatic
+        @JvmOverloads
+        fun String.deoptimizeAllMethod(
+            classLoader: ClassLoader? = ModuleData.getClassLoader(),
+            methodName: String? = null
+        ) {
+            this.findAllMethod(classLoader, methodName).deoptimizeAll()
+        }
+
+        /**
+         * 反优化指定类的全部方法
+         *
+         * @param methodName 方法名
+         */
+        @JvmStatic
+        @JvmOverloads
+        fun Class<*>.deoptimizeAllMethod(
+            methodName: String? = null
+        ) {
+            this.findAllMethod(methodName).deoptimizeAll()
+        }
+
+        /**
          * 反优化指定类的指定构造函数
          *
          * @param classLoader 类加载器，默认为 ModuleData.getClassLoader()
@@ -1250,11 +1269,42 @@ open class CoreTool : XposedLog() {
         }
 
         /**
+         * 反优化指定类的全部构造函数
+         *
+         * @param classLoader 类加载器，默认为 ModuleData.getClassLoader()
+         */
+        @JvmStatic
+        @JvmOverloads
+        fun String.deoptimizeAllConstructor(
+            classLoader: ClassLoader? = ModuleData.getClassLoader(),
+        ) {
+            this.findAllConstructor(classLoader).deoptimizeAll()
+        }
+
+        /**
+         * 反优化指定类的全部构造函数
+         */
+        @JvmStatic
+        fun Class<*>.deoptimizeAllConstructor() {
+            this.findAllConstructor().deoptimizeAll()
+        }
+
+        /**
          * 反优化可执行对象
          */
         @JvmStatic
         fun Executable.deoptimize() {
             ModuleData.getWrapper().deoptimize(this)
+        }
+
+        /**
+         * 反优化全部可执行对象
+         */
+        @JvmStatic
+        fun Array<out Executable>.deoptimizeAll() {
+            this.forEach {
+                it.deoptimize()
+            }
         }
 
         // --------------------------------- chain -----------------------------------
