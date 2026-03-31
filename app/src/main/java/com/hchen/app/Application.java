@@ -35,7 +35,6 @@ public class Application extends android.app.Application
         super.onCreate();
         ModuleConfig.setLogTag("TestDemo");
         ModuleConfig.setLogLevel(ModuleConfig.LOG_D);
-        ModuleConfig.setModulePackageName(BuildConfig.APPLICATION_ID);
         ModuleConfig.setPrefsName("test_demo_prefs");
 
         XposedServiceHelper.registerListener(this);

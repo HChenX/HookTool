@@ -35,7 +35,6 @@ public class InitHook extends ModuleEntrance {
     public void initModuleConfig() {
         ModuleConfig.setLogTag("TestDemo");
         ModuleConfig.setLogLevel(ModuleConfig.LOG_D);
-        ModuleConfig.setModulePackageName(BuildConfig.APPLICATION_ID);
         ModuleConfig.setPrefsName("test_demo_prefs");
         ModuleConfig.setLogExpandPaths(new String[]{
             "com.hchen.app.hook"

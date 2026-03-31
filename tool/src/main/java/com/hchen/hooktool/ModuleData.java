@@ -57,6 +57,10 @@ public final class ModuleData {
 
     @NonNull
     public static XposedInterfaceWrapper getWrapper() {
+        if (!isXposedEnvironment()) {
+            throw new UnexpectedException("Please call in the xposed environment.");
+        }
+
         Objects.requireNonNull(wrapper);
         return wrapper;
     }
@@ -94,14 +98,14 @@ public final class ModuleData {
 
     public static void addRemotePreferences(@NonNull String name, @NonNull SharedPreferences preferences) {
         if (isXposedEnvironment()) {
-            throw new UnexpectedException("Please set up in the module environment.");
+            throw new UnexpectedException("Please call in the module environment.");
         }
         mRemotePreferences.put(name, preferences);
     }
 
     public static void clearRemotePreferences() {
         if (isXposedEnvironment()) {
-            throw new UnexpectedException("Please set up in the module environment.");
+            throw new UnexpectedException("Please call in the module environment.");
         }
         mRemotePreferences.clear();
     }
