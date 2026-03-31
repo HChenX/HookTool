@@ -24,8 +24,12 @@ import android.os.ParcelFileDescriptor;
 
 import androidx.annotation.NonNull;
 
+import com.hchen.hooktool.exception.UnexpectedException;
+
 import java.io.FileNotFoundException;
+import java.util.Map;
 import java.util.Objects;
+import java.util.WeakHashMap;
 
 import io.github.libxposed.api.XposedInterfaceWrapper;
 
@@ -38,6 +42,7 @@ public final class ModuleData {
     private static boolean isXposedEnvironment;
     private static XposedInterfaceWrapper wrapper;
     private static ClassLoader classLoader;
+    private static final Map<String, SharedPreferences> mRemotePreferences = new WeakHashMap<>();
 
     private ModuleData() {
     }
@@ -80,12 +85,35 @@ public final class ModuleData {
 
     @NonNull
     public static SharedPreferences getRemotePreferences(@NonNull String name) {
-        return getWrapper().getRemotePreferences(name);
+        if (isXposedEnvironment()) {
+            return getWrapper().getRemotePreferences(name);
+        } else {
+            return Objects.requireNonNull(mRemotePreferences.get(name));
+        }
+    }
+
+    public static void addRemotePreferences(@NonNull String name, @NonNull SharedPreferences preferences) {
+        if (isXposedEnvironment()) {
+            throw new UnexpectedException("Please set up in the module environment.");
+        }
+        mRemotePreferences.put(name, preferences);
+    }
+
+    public static void clearRemotePreferences() {
+        if (isXposedEnvironment()) {
+            throw new UnexpectedException("Please set up in the module environment.");
+        }
+        mRemotePreferences.clear();
     }
 
     @NonNull
     public static ApplicationInfo getModuleApplicationInfo() {
         return getWrapper().getModuleApplicationInfo();
+    }
+
+    @NonNull
+    public static String getModulePackageName() {
+        return getWrapper().getModuleApplicationInfo().packageName;
     }
 
     @NonNull

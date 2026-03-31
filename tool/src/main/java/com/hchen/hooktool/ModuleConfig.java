@@ -21,8 +21,6 @@ package com.hchen.hooktool;
 import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
 
-import com.hchen.hooktool.exception.UnexpectedException;
-
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
@@ -38,8 +36,6 @@ public final class ModuleConfig {
     private static String logTag;
     @LogLevel
     private static int logLevel;
-    @NonNull
-    private static String modulePackageName;
     @NonNull
     private static String prefsName;
     @NonNull
@@ -67,7 +63,6 @@ public final class ModuleConfig {
     static {
         logTag = "Unknown";
         logLevel = LOG_I;
-        modulePackageName = "";
         prefsName = "";
         logExpandPaths = new String[]{};
         logExpandIgnoreClassNames = new String[]{};
@@ -91,13 +86,6 @@ public final class ModuleConfig {
      */
     public static void setLogLevel(@LogLevel int logLevel) {
         ModuleConfig.logLevel = logLevel;
-    }
-
-    /**
-     * 设置模块包名，推荐设置
-     */
-    public static void setModulePackageName(@NonNull String modulePackageName) {
-        ModuleConfig.modulePackageName = modulePackageName;
     }
 
     /**
@@ -151,15 +139,6 @@ public final class ModuleConfig {
     @LogLevel
     public static int getLogLevel() {
         return logLevel;
-    }
-
-    @NonNull
-    public static String getModulePackageName() {
-        if (modulePackageName.isEmpty()) {
-            throw new UnexpectedException("Module package name must not be empty.");
-        }
-
-        return modulePackageName;
     }
 
     @NonNull

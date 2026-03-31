@@ -25,16 +25,14 @@ import android.content.Context;
 import android.content.SharedPreferences;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.hchen.hooktool.ModuleConfig;
 import com.hchen.hooktool.ModuleData;
-import com.hchen.hooktool.exception.NoXposedEnvironmentException;
 import com.hchen.hooktool.exception.UnexpectedException;
 import com.hchen.hooktool.log.AndroidLog;
 
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.WeakHashMap;
 
 /**
  * 共享首选项工具
@@ -43,8 +41,8 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class PrefsTool {
     private static final String TAG = "PrefsTool";
-    private final static ConcurrentHashMap<String, SharedPreferences> xPreferences = new ConcurrentHashMap<>(); // 宿主端
-    private final static ConcurrentHashMap<String, SharedPreferences> sPreferences = new ConcurrentHashMap<>(); // 模块端
+    private final static WeakHashMap<String, SharedPreferences> xPreferences = new WeakHashMap<>(); // 宿主端
+    private final static WeakHashMap<String, SharedPreferences> sPreferences = new WeakHashMap<>(); // 模块端
 
     private PrefsTool() {
     }
@@ -66,55 +64,53 @@ public final class PrefsTool {
     }
 
     /**
-     * Xposed 环境中读取模块的共享首选项，非 Xposed 环境中使用会引发异常
+     * Xposed 环境中读取模块的共享首选项，或模块环境中获取远程共享首选项
      */
     @NonNull
     public static SharedPreferences prefs() {
-        if (!ModuleData.isXposedEnvironment())
-            throw new NoXposedEnvironmentException("Must be in the xposed environment.");
         return prefs("");
     }
 
     /**
-     * Xposed 环境中读取模块的共享首选项，非 Xposed 环境中使用会引发异常
+     * Xposed 环境中读取模块的共享首选项，或模块环境中获取远程共享首选项
      */
     @NonNull
     public static SharedPreferences prefs(@NonNull String prefsName) {
-        if (!ModuleData.isXposedEnvironment())
-            throw new NoXposedEnvironmentException("Must be in the xposed environment.");
-        return createSharedPreferences(null, prefsName);
+        if (ModuleData.isXposedEnvironment()) {
+            return createSharedPreferences(prefsName);
+        } else {
+            return ModuleData.getRemotePreferences(initPrefsName(prefsName));
+        }
+    }
+
+    private synchronized static SharedPreferences createSharedPreferences(@NonNull String prefsName) {
+        prefsName = initPrefsName(prefsName);
+        if (xPreferences.get(ModuleData.getModulePackageName() + prefsName) == null) {
+            SharedPreferences preferences = ModuleData.getRemotePreferences(prefsName);
+            xPreferences.put(ModuleData.getModulePackageName() + prefsName, preferences);
+            return preferences;
+        } else {
+            return xPreferences.get(ModuleData.getModulePackageName() + prefsName);
+        }
     }
 
     @SuppressLint("WorldReadableFiles")
-    private static SharedPreferences createSharedPreferences(@Nullable Context context, @NonNull String prefsName) {
+    private synchronized static SharedPreferences createSharedPreferences(@NonNull Context context, @NonNull String prefsName) {
         prefsName = initPrefsName(prefsName);
-
-        if (ModuleData.isXposedEnvironment()) {
-            if (xPreferences.get(prefsName) == null) {
-                SharedPreferences preferences = ModuleData.getRemotePreferences(prefsName);
-                xPreferences.put(prefsName, preferences);
-                return preferences;
-            } else {
-                return xPreferences.get(prefsName);
+        if (sPreferences.get(context.getPackageName() + prefsName) == null) {
+            SharedPreferences preferences;
+            try {
+                // noinspection deprecation
+                preferences = context.getSharedPreferences(prefsName, Context.MODE_WORLD_READABLE);
+            } catch (Throwable ignored) {
+                preferences = context.getSharedPreferences(prefsName, Context.MODE_PRIVATE);
+                AndroidLog.logW(TAG, "Maybe unsupported prefs.", getStackTrace());
             }
+
+            sPreferences.put(context.getPackageName() + prefsName, preferences);
+            return preferences;
         } else {
-            Objects.requireNonNull(context);
-
-            if (sPreferences.get(prefsName) == null) {
-                SharedPreferences preferences;
-                try {
-                    // noinspection deprecation
-                    preferences = context.getSharedPreferences(prefsName, Context.MODE_WORLD_READABLE);
-                } catch (Throwable ignored) {
-                    preferences = context.getSharedPreferences(prefsName, Context.MODE_PRIVATE);
-                    AndroidLog.logW(TAG, "Maybe unsupported prefs.", getStackTrace());
-                }
-
-                sPreferences.put(prefsName, preferences);
-                return preferences;
-            } else {
-                return sPreferences.get(prefsName);
-            }
+            return sPreferences.get(context.getPackageName() + prefsName);
         }
     }
 
@@ -124,10 +120,10 @@ public final class PrefsTool {
 
         if (name.isEmpty()) {
             if (ModuleConfig.getPrefsName().isEmpty()) {
-                if (ModuleConfig.getModulePackageName().isEmpty())
+                if (ModuleData.getModulePackageName().isEmpty())
                     throw new UnexpectedException("What prefs name you want use?");
 
-                return ModuleConfig.getModulePackageName().toLowerCase() + "_prefs";
+                return ModuleData.getModulePackageName().toLowerCase() + "_prefs";
             }
             return ModuleConfig.getPrefsName();
         } else return name;
