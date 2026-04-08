@@ -64,7 +64,7 @@ public final class PrefsTool {
     }
 
     /**
-     * Xposed 环境中读取模块的共享首选项，或模块环境中获取远程共享首选项
+     * Xposed 环境中读取模块的共享首选项
      */
     @NonNull
     public static SharedPreferences prefs() {
@@ -72,15 +72,11 @@ public final class PrefsTool {
     }
 
     /**
-     * Xposed 环境中读取模块的共享首选项，或模块环境中获取远程共享首选项
+     * Xposed 环境中读取模块的共享首选项
      */
     @NonNull
     public static SharedPreferences prefs(@NonNull String prefsName) {
-        if (ModuleData.isXposedEnvironment()) {
-            return createSharedPreferences(prefsName);
-        } else {
-            return ModuleData.getRemotePreferences(initPrefsName(prefsName));
-        }
+        return createSharedPreferences(prefsName);
     }
 
     private synchronized static SharedPreferences createSharedPreferences(@NonNull String prefsName) {

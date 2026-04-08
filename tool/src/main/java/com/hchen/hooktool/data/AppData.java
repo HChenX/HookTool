@@ -33,122 +33,20 @@ import java.util.Objects;
  *
  * @author 焕晨HChen
  */
-public final class AppData implements Parcelable {
-    private PackageInfo packageInfo;
-    private ApplicationInfo applicationInfo;
-    private int user = -1;
-    private int uid = -1;
-    private Bitmap icon;
-    private String label;
-    private String packageName;
-    private String versionName; // 仅 PackageInfo 下填充数据
-    private String versionCode; // 仅 PackageInfo 下填充数据
-    private boolean isSystemApp;
-    private boolean isEnabled;
+public class AppData implements Parcelable {
+    public PackageInfo packageInfo;
+    public ApplicationInfo applicationInfo;
+    public int user = -1;
+    public int uid = -1;
+    public Bitmap icon;
+    public String label;
+    public String packageName;
+    public String versionName; // 仅 PackageInfo 下填充数据
+    public String versionCode; // 仅 PackageInfo 下填充数据
+    public boolean isSystemApp;
+    public boolean isEnabled;
 
     public AppData() {
-    }
-
-    // Getter and Setter methods
-    public PackageInfo getPackageInfo() {
-        return packageInfo;
-    }
-
-    public void setPackageInfo(PackageInfo packageInfo) {
-        this.packageInfo = packageInfo;
-    }
-
-    public ApplicationInfo getApplicationInfo() {
-        return applicationInfo;
-    }
-
-    public void setApplicationInfo(ApplicationInfo applicationInfo) {
-        this.applicationInfo = applicationInfo;
-    }
-
-    public int getUser() {
-        return user;
-    }
-
-    public void setUser(int user) {
-        this.user = user;
-    }
-
-    public int getUid() {
-        return uid;
-    }
-
-    public void setUid(int uid) {
-        this.uid = uid;
-    }
-
-    public Bitmap getIcon() {
-        return icon;
-    }
-
-    public void setIcon(Bitmap icon) {
-        this.icon = icon;
-    }
-
-    public String getLabel() {
-        return label;
-    }
-
-    public void setLabel(String label) {
-        this.label = label;
-    }
-
-    public String getPackageName() {
-        return packageName;
-    }
-
-    public void setPackageName(String packageName) {
-        this.packageName = packageName;
-    }
-
-    public String getVersionName() {
-        return versionName;
-    }
-
-    public void setVersionName(String versionName) {
-        this.versionName = versionName;
-    }
-
-    public String getVersionCode() {
-        return versionCode;
-    }
-
-    public void setVersionCode(String versionCode) {
-        this.versionCode = versionCode;
-    }
-
-    public boolean isSystemApp() {
-        return isSystemApp;
-    }
-
-    public void setSystemApp(boolean systemApp) {
-        isSystemApp = systemApp;
-    }
-
-    public boolean isEnabled() {
-        return isEnabled;
-    }
-
-    public void setEnabled(boolean enabled) {
-        isEnabled = enabled;
-    }
-
-    @NonNull
-    public Parcel marshall() {
-        Parcel parcel = Parcel.obtain();
-        writeToParcel(parcel, 0);
-        return parcel;
-    }
-
-    @NonNull
-    public static AppData unmarshall(@NonNull Parcel parcel) {
-        parcel.setDataPosition(0);
-        return new AppData(parcel);
     }
 
     @NonNull

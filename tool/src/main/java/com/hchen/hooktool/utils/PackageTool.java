@@ -209,11 +209,11 @@ public final class PackageTool {
         if (t instanceof PackageInfo info) {
             packageInfo = info;
             applicationInfo = info.applicationInfo;
-            appData.setVersionName(info.versionName);
+            appData.versionName = info.versionName;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                appData.setVersionCode(Long.toString(info.getLongVersionCode()));
+                appData.versionCode = Long.toString(info.getLongVersionCode());
             } else {
-                appData.setVersionCode(Integer.toString(info.versionCode));
+                appData.versionCode = Integer.toString(info.versionCode);
             }
         } else if (t instanceof ApplicationInfo appInfo) {
             applicationInfo = appInfo;
@@ -231,15 +231,15 @@ public final class PackageTool {
 
         // 填充应用数据
         if (applicationInfo != null) {
-            appData.setPackageInfo(packageInfo);
-            appData.setApplicationInfo(applicationInfo);
-            appData.setIcon(BitmapTool.drawableToBitmap(applicationInfo.loadIcon(pm)));
-            appData.setLabel(applicationInfo.loadLabel(pm).toString());
-            appData.setPackageName(applicationInfo.packageName);
-            appData.setSystemApp(isSystem(applicationInfo));
-            appData.setEnabled(applicationInfo.enabled);
-            appData.setUser(getUserId(applicationInfo.uid));
-            appData.setUid(applicationInfo.uid);
+            appData.packageInfo = packageInfo;
+            appData.applicationInfo = applicationInfo;
+            appData.icon = BitmapTool.drawableToBitmap(applicationInfo.loadIcon(pm));
+            appData.label = applicationInfo.loadLabel(pm).toString();
+            appData.packageName = applicationInfo.packageName;
+            appData.isSystemApp = isSystem(applicationInfo);
+            appData.isEnabled = applicationInfo.enabled;
+            appData.user = getUserId(applicationInfo.uid);
+            appData.uid = applicationInfo.uid;
         }
 
         return appData;

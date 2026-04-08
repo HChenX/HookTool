@@ -301,7 +301,7 @@ public abstract class AbsHook {
      *
      * @param throwable 要抛出的异常
      */
-    public void setThrowable(@NonNull Throwable throwable) {
+    public final void setThrowable(Throwable throwable) {
         getState().throwable = throwable;
     }
 
@@ -311,7 +311,7 @@ public abstract class AbsHook {
      * @return 当前被钩住方法的异常
      */
     @Nullable
-    public Throwable getThrowable() {
+    public final Throwable getThrowable() {
         return getState().throwable;
     }
 

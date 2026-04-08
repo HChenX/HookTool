@@ -907,6 +907,45 @@ open class CoreTool : XposedLog() {
         }
 
         /**
+         * 钩子指定类的指定方法，如果不存在则返回 null
+         *
+         * @param classLoader 类加载器，默认为 ModuleData.getClassLoader()
+         * @param methodName 方法名
+         * @param parameterTypes 参数类型
+         * @return XposedInterface.HookHandle 实例，如果不存在则返回 null
+         */
+        @JvmStatic
+        @JvmOverloads
+        fun String.hookMethodIfExists(
+            classLoader: ClassLoader? = ModuleData.getClassLoader(),
+            methodName: String,
+            vararg parameterTypes: Any
+        ): XposedInterface.HookHandle? {
+            return this.findClassIfExists(classLoader)?.hookMethod(methodName, *parameterTypes)
+        }
+
+        /**
+         * 钩子当前类的指定方法，如果不存在则返回 null
+         *
+         * @param methodName 方法名
+         * @param parameterTypes 参数类型
+         * @return XposedInterface.HookHandle 实例，如果不存在则返回 null
+         */
+        @JvmStatic
+        fun Class<*>.hookMethodIfExists(
+            methodName: String,
+            vararg parameterTypes: Any
+        ): XposedInterface.HookHandle? {
+            require(parameterTypes.isNotEmpty() && parameterTypes.last() is AbsHook) {
+                "The last element of parameterTypes must be an instance of AbsHook"
+            }
+
+            val absHook = parameterTypes.last() as AbsHook
+            val realParameterTypes = parameterTypes.dropLast(1).toTypedArray()
+            return this.findMethodIfExists(methodName, *realParameterTypes)?.hook(absHook)
+        }
+
+        /**
          * 钩子指定类的指定构造函数
          *
          * @param classLoader 类加载器，默认为 ModuleData.getClassLoader()
@@ -939,6 +978,41 @@ open class CoreTool : XposedLog() {
             val absHook = parameterTypes.last() as AbsHook
             val realParameterTypes = parameterTypes.dropLast(1).toTypedArray()
             return this.findConstructor(*realParameterTypes).hook(absHook)
+        }
+
+        /**
+         * 钩子指定类的指定构造函数，如果不存在则返回 null
+         *
+         * @param classLoader 类加载器，默认为 ModuleData.getClassLoader()
+         * @param parameterTypes 参数类型
+         * @return XposedInterface.HookHandle 实例，如果不存在则返回 null
+         */
+        @JvmStatic
+        @JvmOverloads
+        fun String.hookConstructorIfExists(
+            classLoader: ClassLoader? = ModuleData.getClassLoader(),
+            vararg parameterTypes: Any
+        ): XposedInterface.HookHandle? {
+            return this.findClassIfExists(classLoader)?.hookConstructor(*parameterTypes)
+        }
+
+        /**
+         * 钩子当前类的指定构造函数，如果不存在则返回 null
+         *
+         * @param parameterTypes 参数类型
+         * @return XposedInterface.HookHandle 实例，如果不存在则返回 null
+         */
+        @JvmStatic
+        fun Class<*>.hookConstructorIfExists(
+            vararg parameterTypes: Any
+        ): XposedInterface.HookHandle? {
+            require(parameterTypes.isNotEmpty() && parameterTypes.last() is AbsHook) {
+                "The last element of parameterTypes must be an instance of AbsHook"
+            }
+
+            val absHook = parameterTypes.last() as AbsHook
+            val realParameterTypes = parameterTypes.dropLast(1).toTypedArray()
+            return this.findConstructorIfExists(*realParameterTypes)?.hook(absHook)
         }
 
         /**
@@ -1038,6 +1112,21 @@ open class CoreTool : XposedLog() {
             absHook: AbsHook,
         ): XposedInterface.HookHandle {
             return this.findClass(classLoader).hookClassInitializer(absHook)
+        }
+
+        /**
+         * 钩子指定类的类初始化器，如果不存在则返回 null
+         *
+         * @param classLoader 类加载器，默认为 ModuleData.getClassLoader()
+         * @return XposedInterface.HookHandle 实例，如果不存在则返回 null
+         */
+        @JvmStatic
+        @JvmOverloads
+        fun String.hookClassInitializerIfExists(
+            classLoader: ClassLoader? = ModuleData.getClassLoader(),
+            absHook: AbsHook,
+        ): XposedInterface.HookHandle? {
+            return this.findClassIfExists(classLoader)?.hookClassInitializer(absHook)
         }
 
         /**

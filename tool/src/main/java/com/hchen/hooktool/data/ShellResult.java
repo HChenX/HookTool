@@ -45,8 +45,8 @@ public record ShellResult(@NonNull String command, @NonNull String exitCode,
         if (!(o instanceof ShellResult that)) return false;
         return Objects.equals(command, that.command) &&
             Objects.equals(exitCode, that.exitCode) &&
-            Objects.deepEquals(errors, that.errors) &&
-            Objects.deepEquals(outputs, that.outputs);
+            Arrays.deepEquals(errors, that.errors) &&
+            Arrays.deepEquals(outputs, that.outputs);
     }
 
     @Override

@@ -165,7 +165,7 @@ public final class ChainData {
             // Objects.equals(absHook, chainData.absHook) &&
             // Objects.equals(throwable, chainData.throwable) &&
             // Objects.equals(function, chainData.function) &&
-            Objects.deepEquals(parameterTypes, chainData.parameterTypes) &&
+            Arrays.deepEquals(parameterTypes, chainData.parameterTypes) &&
             Objects.equals(executable, chainData.executable) &&
             Objects.equals(methodName, chainData.methodName);
     }
