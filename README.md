@@ -9,7 +9,7 @@
 ![language](https://img.shields.io/badge/language-java-purple)
 
 [//]: # (<p><b><a href="README-en.md">English</a> | <a href="README.md">简体中文</a></b></p>)
-<p>使用 Java 编写的 Hook 工具！帮助你减轻编写 Hook 代码的复杂度！</p>
+<p>简易的 Hook 工具，旨在降低 Hook 编写复杂度</p>
 </div>
 
 # 🔧 使用方法
@@ -30,15 +30,13 @@ dependencyResolutionManagement {
 
 ```groovy
 dependencies {
-    implementation 'com.github.HChenX:HookTool:3.0.0-rc05'
+    implementation 'com.github.HChenX:HookTool:3.0.0'
 }
 ```
 
 #### 3. 同步项目，下载依赖后即可使用
 
-# 💕 工具使用者
-
-- 以下项目使用了本工具！
+# 💕 以下项目使用了本工具
 
 |      项目名称       |                             项目链接                             |
 |:---------------:|:------------------------------------------------------------:|
@@ -48,11 +46,8 @@ dependencies {
 |  ForegroundPin  |   [ForegroundPin](https://github.com/HChenX/ForegroundPin)   |
 |  ClipboardList  |   [ClipboardList](https://github.com/HChenX/ClipboardList)   |
 | SplitScreenPlus | [SplitScreenPlus](https://github.com/HChenX/SplitScreenPlus) |
-|   SuperLyric    |      [SuperLyric](https://github.com/HChenX/SuperLyric)      | 
+|   SuperLyric    |      [SuperLyric](https://github.com/HChenX/SuperLyric)      |
 
-- 如果你的项目使用了本工具，可以告诉我，我将会把其加入表格
-- 想要详细了解本工具也可以参考上述项目，希望给你带来帮助！
+# 🎉 结语
 
-# 🎉 结尾
-
-- 感谢您愿意使用本工具！Enjoy your day! ♥️
+- 感谢您使用本工具！Enjoy your day! ♥️
