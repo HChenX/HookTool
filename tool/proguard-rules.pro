@@ -20,10 +20,5 @@
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
 
--keep class * extends com.hchen.hooktool.HCEntrance
--keep class * extends com.hchen.hooktool.HCBase
--keep class com.hchen.hooktool.HCState {
-    public static boolean isXposedEnabled();
-    public static java.lang.String getFramework();
-    public static int getVersion();
-}
+-keep class * extends com.hchen.hooktool.ModuleEntrance
+-keep class * extends com.hchen.hooktool.AbsModule

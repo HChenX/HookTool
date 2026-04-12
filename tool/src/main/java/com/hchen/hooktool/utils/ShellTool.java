@@ -47,6 +47,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -104,7 +105,7 @@ import java.util.stream.Collectors;
  * }
  * @author 焕晨HChen
  */
-public class ShellTool {
+public final class ShellTool {
     private static final String TAG = "ShellTool";
     private static final String END_UUID = UUID.randomUUID().toString();
     private static final byte[] LINE_BREAK = "\n".getBytes(StandardCharsets.UTF_8);
@@ -201,7 +202,7 @@ public class ShellTool {
      * <p>
      * 请注意：请务必在 {@link ShellTool#cmd(String)} 前调用！
      * <p>
-     * 使用此模式后，在调用 {@link ShellTool#exec()} 或 {@link ShellTool#async()} 之前都会保持在拼接模式
+     * 使用此模式后，在下次调用 {@link ShellTool#exec()} 或 {@link ShellTool#async()} 之前都会保持在拼接模式
      * <pre>{@code
      *     ShellTool.obtain().enableSplicingMode()
      *          .cmd("if [[ hello == world ]]; then")
@@ -262,21 +263,24 @@ public class ShellTool {
      * 检查是否支持 Root
      */
     public static boolean isRootAvailable(boolean sync, @Nullable IExecListener iExecListener) {
-        Callable<Integer> callable = () -> {
-            Process process = null;
-            try {
-                process = Runtime.getRuntime().exec("su -c true");
-                int exitCode = process.waitFor();
-                if (iExecListener != null) {
-                    iExecListener.rootResult(exitCode == 0, String.valueOf(exitCode));
+        Callable<Integer> callable = new Callable<Integer>() {
+            @Override
+            public Integer call() throws Exception {
+                Process process = null;
+                try {
+                    process = Runtime.getRuntime().exec("su -c true");
+                    int exitCode = process.waitFor();
+                    if (iExecListener != null) {
+                        iExecListener.rootResult(exitCode == 0, String.valueOf(exitCode));
+                    }
+                    return exitCode;
+                } catch (IOException | InterruptedException e) {
+                    AndroidLog.logE(TAG, "Error checking if root permission is supported!!", e);
+                    return -1;
+                } finally {
+                    if (process != null)
+                        process.destroy();
                 }
-                return exitCode;
-            } catch (IOException | InterruptedException e) {
-                AndroidLog.logE(TAG, "Error checking if root permission is supported!!", e);
-                return -1;
-            } finally {
-                if (process != null)
-                    process.destroy();
             }
         };
 
@@ -287,7 +291,16 @@ public class ShellTool {
                 return false;
             }
         } else {
-            Executors.newSingleThreadExecutor().submit(callable);
+            ExecutorService service = null;
+            try {
+                // noinspection resource
+                service = Executors.newSingleThreadExecutor();
+                service.submit(callable);
+            } finally {
+                if (service != null) {
+                    service.shutdown();
+                }
+            }
             return false;
         }
     }
@@ -318,7 +331,7 @@ public class ShellTool {
                 streamThread = new StreamThread(this, process.getInputStream(), process.getErrorStream());
                 streamThread.run();
             } catch (IOException e) {
-                throw new UnexpectedException("Error initializing shell stream!!");
+                throw new UnexpectedException("Error initializing shell stream.");
             } finally {
                 notify();
             }
@@ -333,7 +346,7 @@ public class ShellTool {
         @NonNull
         private synchronized ShellTool cmd(@NonNull String cmd) {
             if (!isActive())
-                throw new UnexpectedException("Shell stream is dead!");
+                throw new UnexpectedException("Shell stream is dead.");
 
             if (isSplicingMode) waitSplicingCommandList.add(cmd);
             else command = cmd;
@@ -343,7 +356,7 @@ public class ShellTool {
         @Nullable
         private synchronized ShellResult exec() {
             if (!isActive())
-                throw new UnexpectedException("Shell stream is dead!");
+                throw new UnexpectedException("Shell stream is dead.");
 
             splicingCommandIfNeed();
             callbackCommandListener();
@@ -372,7 +385,7 @@ public class ShellTool {
 
         private synchronized void async(@Nullable IExecListener iExecListener) {
             if (!isActive())
-                throw new UnexpectedException("Shell stream is dead!");
+                throw new UnexpectedException("Shell stream is dead.");
 
             splicingCommandIfNeed();
             callbackCommandListener();
@@ -508,44 +521,50 @@ public class ShellTool {
 
         private void run() {
             outputFuture = outputService.submit(
-                () -> {
-                    try (BufferedReader br = new BufferedReader(new InputStreamReader(input))) {
-                        String line;
-                        while ((line = br.readLine()) != null) {
-                            if (filterContent(line, SHELL_ID_OUTPUT)) {
-                                continue;
-                            }
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        try (BufferedReader br = new BufferedReader(new InputStreamReader(input))) {
+                            String line;
+                            while ((line = br.readLine()) != null) {
+                                if (filterContent(line, SHELL_ID_OUTPUT)) {
+                                    continue;
+                                }
 
-                            outputList.add(line);
+                                outputList.add(line);
+                            }
+                        } catch (Throwable e) {
+                            AndroidLog.logE(TAG, "Error reading shell standard output stream!!", e);
                         }
-                    } catch (Throwable e) {
-                        AndroidLog.logE(TAG, "Error reading shell standard output stream!!", e);
                     }
                 }
             );
 
             errorFuture = errorService.submit(
-                () -> {
-                    try (BufferedReader br = new BufferedReader(new InputStreamReader(error))) {
-                        String line;
-                        while ((line = br.readLine()) != null) {
-                            if (filterContent(line, SHELL_ID_ERROR)) {
-                                continue;
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        try (BufferedReader br = new BufferedReader(new InputStreamReader(error))) {
+                            String line;
+                            while ((line = br.readLine()) != null) {
+                                if (filterContent(line, SHELL_ID_ERROR)) {
+                                    continue;
+                                }
+
+                                errorList.add(line);
                             }
 
-                            errorList.add(line);
-                        }
+                            // Shell 管道异常破裂
+                            if (!errorList.isEmpty()) {
+                                isAbnormalExit = true;
 
-                        // Shell 管道异常破裂
-                        if (!errorList.isEmpty()) {
-                            isAbnormalExit = true;
-
-                            onBrokenPip();
-                            shellImpl.close();
-                            shellImpl.init();
+                                onBrokenPip();
+                                shellImpl.close();
+                                shellImpl.init();
+                            }
+                        } catch (Throwable e) {
+                            AndroidLog.logE(TAG, "Error reading shell standard error stream!!", e);
                         }
-                    } catch (Throwable e) {
-                        AndroidLog.logE(TAG, "Error reading shell standard error stream!!", e);
                     }
                 }
             );
@@ -627,7 +646,15 @@ public class ShellTool {
                 iGlobalExecListeners.brokenPip(
                     "Incorrect shell code causing pipeline rupture!!" +
                         " Shell code list: sync: " + shellSyncMap.values()
-                        + ", async: " + shellAsyncMap.values().stream().map(p -> p.first).collect(Collectors.toCollection(ArrayList::new)),
+                        + ", async: " +
+                        shellAsyncMap.values()
+                            .stream()
+                            .map(new Function<Pair<String, IExecListener>, String>() {
+                                @Override
+                                public String apply(Pair<String, IExecListener> p) {
+                                    return p.first;
+                                }
+                            }).collect(Collectors.toCollection(ArrayList::new)),
                     toArray(errorList)
                 );
             } catch (Throwable e) {

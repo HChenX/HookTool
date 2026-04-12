@@ -28,7 +28,7 @@ import java.lang.annotation.RetentionPolicy;
  *
  * @author 焕晨HChen
  */
-public class RangeHelper {
+public final class RangeHelper {
     /**
      * 大于
      */

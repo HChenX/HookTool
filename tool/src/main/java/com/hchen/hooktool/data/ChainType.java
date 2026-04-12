@@ -24,10 +24,9 @@ package com.hchen.hooktool.data;
  * @author 焕晨HChen
  */
 public enum ChainType {
-    METHOD,
+    EXECUTABLE,
     FIND_METHOD,
     FIND_ALL_METHOD,
-    CONSTRUCTOR,
     FIND_CONSTRUCTOR,
     FIND_ALL_CONSTRUCTOR
 }

@@ -18,10 +18,10 @@
  */
 package com.hchen.hooktool.log;
 
-import com.hchen.hooktool.HCData;
-import com.hchen.hooktool.HCInit;
+import android.util.Log;
 
-import de.robv.android.xposed.XposedBridge;
+import com.hchen.hooktool.ModuleConfig;
+import com.hchen.hooktool.ModuleData;
 
 /**
  * Xposed 日志
@@ -31,89 +31,86 @@ import de.robv.android.xposed.XposedBridge;
 public class XposedLog {
     // -------- logE -------------
     public static void logE(String tag, String log) {
-        if (HCData.getLogLevel() < HCInit.LOG_E) return;
-        XposedBridge.log(getXposedTag() + "[" + HCData.getTargetPackageName() + "][" + tag + "][E]: " + log);
+        if (ModuleConfig.getLogLevel() < ModuleConfig.LOG_E) return;
+        ModuleData.getWrapper().log(Log.ERROR, tag, "[E]: " + log);
     }
 
     public static void logE(String tag, Throwable e) {
-        if (HCData.getLogLevel() < HCInit.LOG_E) return;
-        XposedBridge.log(getXposedTag() + "[" + HCData.getTargetPackageName() + "][" + tag + "][E]:\n" + LogExpand.printStackTrace(e));
+        if (ModuleConfig.getLogLevel() < ModuleConfig.LOG_E) return;
+        ModuleData.getWrapper().log(Log.ERROR, tag, "[E]: ", e);
     }
 
     public static void logE(String tag, String log, String stackTrace) {
-        if (HCData.getLogLevel() < HCInit.LOG_E) return;
-        XposedBridge.log(getXposedTag() + "[" + HCData.getTargetPackageName() + "][" + tag + "][E]: " + log + "\n[Stack Info]: " + stackTrace);
+        if (ModuleConfig.getLogLevel() < ModuleConfig.LOG_E) return;
+        ModuleData.getWrapper().log(Log.ERROR, tag, "[E]: " + log + "\n[Stack Info]: " + stackTrace);
     }
 
     public static void logE(String tag, String log, Throwable e) {
-        if (HCData.getLogLevel() < HCInit.LOG_E) return;
-        XposedBridge.log(getXposedTag() + "[" + HCData.getTargetPackageName() + "][" + tag + "][E]: " + log + "\n[Stack Info]: " + LogExpand.printStackTrace(e));
+        if (ModuleConfig.getLogLevel() < ModuleConfig.LOG_E) return;
+        ModuleData.getWrapper().log(Log.ERROR, tag, "[E]: " + log, e);
     }
 
     // ----------- logW --------------
     public static void logW(String tag, String log) {
-        if (HCData.getLogLevel() < HCInit.LOG_W) return;
-        XposedBridge.log(getXposedTag() + "[" + HCData.getTargetPackageName() + "][" + tag + "][W]: " + log);
+        if (ModuleConfig.getLogLevel() < ModuleConfig.LOG_W) return;
+        ModuleData.getWrapper().log(Log.WARN, tag, "[W]: " + log);
     }
 
     public static void logW(String tag, Throwable e) {
-        if (HCData.getLogLevel() < HCInit.LOG_W) return;
-        XposedBridge.log(getXposedTag() + "[" + HCData.getTargetPackageName() + "][" + tag + "][W]:\n" + LogExpand.printStackTrace(e));
+        if (ModuleConfig.getLogLevel() < ModuleConfig.LOG_W) return;
+        ModuleData.getWrapper().log(Log.WARN, tag, "[W]: ", e);
     }
 
     public static void logW(String tag, String log, String stackTrace) {
-        if (HCData.getLogLevel() < HCInit.LOG_W) return;
-        XposedBridge.log(getXposedTag() + "[" + HCData.getTargetPackageName() + "][" + tag + "][W]: " + log + "\n[Stack Info]: " + stackTrace);
+        if (ModuleConfig.getLogLevel() < ModuleConfig.LOG_W) return;
+        ModuleData.getWrapper().log(Log.WARN, tag, "[W]: " + log + "\n[Stack Info]: " + stackTrace);
     }
 
     public static void logW(String tag, String log, Throwable e) {
-        if (HCData.getLogLevel() < HCInit.LOG_W) return;
-        XposedBridge.log(getXposedTag() + "[" + HCData.getTargetPackageName() + "][" + tag + "][W]: " + log + "\n[Stack Info]: " + LogExpand.printStackTrace(e));
+        if (ModuleConfig.getLogLevel() < ModuleConfig.LOG_W) return;
+        ModuleData.getWrapper().log(Log.WARN, tag, "[W]: " + log, e);
     }
 
     // ----------- logI --------------
-    public static void logI(String log) {
-        if (HCData.getLogLevel() < HCInit.LOG_I) return;
-        XposedBridge.log(getXposedTag() + "[I]: " + log);
-    }
 
     public static void logI(String tag, String log) {
-        if (HCData.getLogLevel() < HCInit.LOG_I) return;
-        XposedBridge.log(getXposedTag() + "[" + HCData.getTargetPackageName() + "][" + tag + "][I]: " + log);
+        if (ModuleConfig.getLogLevel() < ModuleConfig.LOG_I) return;
+        ModuleData.getWrapper().log(Log.INFO, tag, "[I]: " + log);
     }
 
     public static void logI(String tag, String log, String stackTrace) {
-        if (HCData.getLogLevel() < HCInit.LOG_I) return;
-        XposedBridge.log(getXposedTag() + "[" + HCData.getTargetPackageName() + "][" + tag + "][I]: " + log + "\n[Stack Info]: " + stackTrace);
+        if (ModuleConfig.getLogLevel() < ModuleConfig.LOG_I) return;
+        ModuleData.getWrapper().log(Log.INFO, tag, "[I]: " + log + "\n[Stack Info]: " + stackTrace);
+    }
+
+    public static void logI(String tag, Throwable e) {
+        if (ModuleConfig.getLogLevel() < ModuleConfig.LOG_I) return;
+        ModuleData.getWrapper().log(Log.INFO, tag, "[I]: ", e);
     }
 
     public static void logI(String tag, String log, Throwable e) {
-        if (HCData.getLogLevel() < HCInit.LOG_I) return;
-        XposedBridge.log(getXposedTag() + "[" + HCData.getTargetPackageName() + "][" + tag + "][I]: " + log + "\n[Stack Info]: " + LogExpand.printStackTrace(e));
+        if (ModuleConfig.getLogLevel() < ModuleConfig.LOG_I) return;
+        ModuleData.getWrapper().log(Log.INFO, tag, "[I]: " + log, e);
     }
 
     // ------------ logD --------------
     public static void logD(String tag, String log) {
-        if (HCData.getLogLevel() < HCInit.LOG_D) return;
-        XposedBridge.log(getXposedTag() + "[" + HCData.getTargetPackageName() + "][" + tag + "][D]: " + log);
+        if (ModuleConfig.getLogLevel() < ModuleConfig.LOG_D) return;
+        ModuleData.getWrapper().log(Log.DEBUG, tag, "[D]: " + log);
     }
 
     public static void logD(String tag, Throwable e) {
-        if (HCData.getLogLevel() < HCInit.LOG_D) return;
-        XposedBridge.log(getXposedTag() + "[" + HCData.getTargetPackageName() + "][" + tag + "][D]:\n" + LogExpand.printStackTrace(e));
+        if (ModuleConfig.getLogLevel() < ModuleConfig.LOG_D) return;
+        ModuleData.getWrapper().log(Log.DEBUG, tag, "[D]: ", e);
     }
 
     public static void logD(String tag, String log, String stackTrace) {
-        if (HCData.getLogLevel() < HCInit.LOG_D) return;
-        XposedBridge.log(getXposedTag() + "[" + HCData.getTargetPackageName() + "][" + tag + "][D]: " + log + "\n[Stack Info]: " + stackTrace);
+        if (ModuleConfig.getLogLevel() < ModuleConfig.LOG_D) return;
+        ModuleData.getWrapper().log(Log.DEBUG, tag, "[D]: " + log + "\n[Stack Info]: " + stackTrace);
     }
 
     public static void logD(String tag, String log, Throwable e) {
-        if (HCData.getLogLevel() < HCInit.LOG_D) return;
-        XposedBridge.log(getXposedTag() + "[" + HCData.getTargetPackageName() + "][" + tag + "][D]: " + log + "\n[Stack Info]: " + LogExpand.printStackTrace(e));
-    }
-
-    private static String getXposedTag() {
-        return "[" + HCData.getTag() + "]";
+        if (ModuleConfig.getLogLevel() < ModuleConfig.LOG_D) return;
+        ModuleData.getWrapper().log(Log.DEBUG, tag, "[D]: " + log, e);
     }
 }

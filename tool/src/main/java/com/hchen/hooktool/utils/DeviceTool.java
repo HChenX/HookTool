@@ -39,17 +39,17 @@ import android.view.WindowManager;
 
 import androidx.annotation.NonNull;
 
+import com.hchen.hooktool.callback.IDecomposer;
 import com.hchen.hooktool.helper.RangeHelper;
 import com.hchen.hooktool.helper.TryHelper;
 
-import java.util.Objects;
-
 /**
- * 设备工具
+ * 设备工具类
+ * 提供设备相关的各种信息获取和判断方法
  *
  * @author 焕晨HChen
  */
-public class DeviceTool {
+public final class DeviceTool {
     private DeviceTool() {
     }
 
@@ -88,9 +88,9 @@ public class DeviceTool {
         };
         if (os == 0f) {
             try {
-                return Float.parseFloat(getProp(VERSION_PROPERTY_HYPER_OS).trim().replace("OS", ""));
+                os = Float.parseFloat(getProp(VERSION_PROPERTY_HYPER_OS).trim().replace("OS", ""));
             } catch (Throwable ignore) {
-                return 0f;
+                os = 0f;
             }
         }
         return os;
@@ -246,7 +246,7 @@ public class DeviceTool {
     }
 
     /**
-     * 判断当前厂商是否为 ColoOS
+     * 判断当前厂商是否为 ColorOS
      */
     public static boolean isColorOS() {
         return isRightRom(DEVICE_COLOROS);
@@ -274,18 +274,22 @@ public class DeviceTool {
         return false;
     }
 
+    @NonNull
     public static String getXiaomiVersion() {
         return getRomVersion(VERSION_PROPERTY_XIAOMI);
     }
 
+    @NonNull
     public static String getXiaomiMarketName() {
         return getProp(VERSION_PROPERTY_XIAOMI_MARKET);
     }
 
+    @NonNull
     public static String getColorOSVersion() {
         return getProp(VERSION_PROPERTY_COLOROS_FULL);
     }
 
+    @NonNull
     public static String getColorOSMarketName() {
         return getProp(VERSION_PROPERTY_COLOROS_MARKET);
     }
@@ -296,11 +300,16 @@ public class DeviceTool {
     @NonNull
     public static String getRomVersion(@NonNull String... props) {
         for (String property : props) {
-            String versionName = getProp(property);
-            if (TextUtils.isEmpty(versionName))
+            if (TextUtils.isEmpty(property)) {
                 continue;
-
-            return versionName;
+            }
+            try {
+                String versionName = getProp(property);
+                if (!TextUtils.isEmpty(versionName)) {
+                    return versionName;
+                }
+            } catch (Throwable ignore) {
+            }
         }
         return "";
     }
@@ -309,21 +318,18 @@ public class DeviceTool {
      * 是否为国际版小米系统
      */
     public static boolean isMiuiInternational() {
-        return TryHelper.doTry(() ->
-            Boolean.TRUE.equals(getStaticField("miui.os.Build", "IS_INTERNATIONAL_BUILD"))
-        ).orElse(false);
-    }
-
-    /**
-     * 获取系统是否已经启动完成
-     */
-    public static boolean isBootCompleted() {
-        return Objects.equals(getProp("sys.boot_completed", 0), 1);
+        return TryHelper.doTry(new IDecomposer<Boolean>() {
+            @Override
+            public Boolean get() throws Throwable {
+                return Boolean.TRUE.equals(getStaticField("miui.os.Build", "IS_INTERNATIONAL_BUILD"));
+            }
+        }).getOrDefault(false);
     }
 
     /**
      * 获取 WindowManager 实例
      */
+    @NonNull
     public static WindowManager getWindowManager(@NonNull Context context) {
         return (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
     }
@@ -331,6 +337,7 @@ public class DeviceTool {
     /**
      * 获取当前上下文的 Display 对象
      */
+    @NonNull
     public static Display getDisplay(@NonNull Context context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             return context.getDisplay();
@@ -342,6 +349,7 @@ public class DeviceTool {
     /**
      * 获取窗口尺寸
      */
+    @NonNull
     public static Point getWindowSize(@NonNull Context context) {
         return getWindowSize(getWindowManager(context));
     }
@@ -349,6 +357,7 @@ public class DeviceTool {
     /**
      * 获取窗口尺寸
      */
+    @NonNull
     public static Point getWindowSize(@NonNull WindowManager windowManager) {
         Point point = new Point();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -367,6 +376,7 @@ public class DeviceTool {
     /**
      * 获取屏幕尺寸
      */
+    @NonNull
     public static Point getScreenSize(@NonNull Context context) {
         return getScreenSize(getWindowManager(context));
     }
@@ -374,6 +384,7 @@ public class DeviceTool {
     /**
      * 获取屏幕尺寸
      */
+    @NonNull
     public static Point getScreenSize(@NonNull WindowManager windowManager) {
         Point point = new Point();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -455,21 +466,33 @@ public class DeviceTool {
      * 是否是小米平板
      */
     public static boolean isXiaomiPad() {
-        return TryHelper.doTry(() -> Boolean.TRUE.equals(
-            getStaticField(
-                "miui.os.Build",
-                "IS_TABLET"
-            )
-        )).orElse(false);
+        return TryHelper.doTry(new IDecomposer<Boolean>() {
+            @Override
+            public Boolean get() throws Throwable {
+                return Boolean.TRUE.equals(
+                    getStaticField(
+                        "miui.os.Build",
+                        "IS_TABLET"
+                    )
+                );
+            }
+        }).getOrDefault(false);
     }
 
     private static boolean isPadByProp() {
         String deviceType = getProp("ro.build.characteristics", "default");
-        return (deviceType != null && deviceType.toLowerCase().contains("tablet")) || getProp("persist.sys.muiltdisplay_type", 0) == 2;
+        boolean isTablet = (deviceType != null && deviceType.toLowerCase().contains("tablet"));
+        if (isTablet) {
+            return true;
+        }
+
+        int multiDisplayType = getProp("persist.sys.muiltdisplay_type", 0);
+        return multiDisplayType == 2;
     }
 
     private static boolean isPadBySize(@NonNull Context context) {
-        Display display = ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
+        WindowManager windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+        Display display = windowManager.getDefaultDisplay();
         DisplayMetrics dm = new DisplayMetrics();
         display.getMetrics(dm);
         double x = Math.pow(dm.widthPixels / dm.xdpi, 2);
@@ -478,6 +501,38 @@ public class DeviceTool {
     }
 
     private static boolean isPadByApi(@NonNull Context context) {
-        return (context.getResources().getConfiguration().screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK) >= Configuration.SCREENLAYOUT_SIZE_LARGE;
+        Resources resources = context.getResources();
+        Configuration config = resources.getConfiguration();
+        return (config.screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK) >= Configuration.SCREENLAYOUT_SIZE_LARGE;
+    }
+
+    /**
+     * 获取屏幕密度
+     */
+    public static int getScreenDensity(@NonNull Context context) {
+        try {
+            Resources resources = context.getResources();
+            if (resources == null) {
+                return DisplayMetrics.DENSITY_DEFAULT;
+            }
+            return resources.getDisplayMetrics().densityDpi;
+        } catch (Throwable ignore) {
+            return DisplayMetrics.DENSITY_DEFAULT;
+        }
+    }
+
+    /**
+     * 获取设备唯一标识符（基于设备信息生成）
+     */
+    @NonNull
+    public static String getDeviceId() {
+        try {
+            return Build.BRAND + "_" +
+                Build.MODEL + "_" +
+                Build.VERSION.SDK_INT + "_" +
+                Build.FINGERPRINT.hashCode();
+        } catch (Throwable ignore) {
+            return "unknown_device";
+        }
     }
 }

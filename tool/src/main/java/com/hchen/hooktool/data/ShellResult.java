@@ -18,6 +18,8 @@
  */
 package com.hchen.hooktool.data;
 
+import android.text.TextUtils;
+
 import androidx.annotation.NonNull;
 
 import java.util.Arrays;
@@ -35,7 +37,7 @@ public record ShellResult(@NonNull String command, @NonNull String exitCode,
      * 是否成功执行
      */
     public boolean isSuccess() {
-        return "0".equals(exitCode);
+        return TextUtils.equals("0", exitCode);
     }
 
     @Override
@@ -43,8 +45,8 @@ public record ShellResult(@NonNull String command, @NonNull String exitCode,
         if (!(o instanceof ShellResult that)) return false;
         return Objects.equals(command, that.command) &&
             Objects.equals(exitCode, that.exitCode) &&
-            Objects.deepEquals(errors, that.errors) &&
-            Objects.deepEquals(outputs, that.outputs);
+            Arrays.deepEquals(errors, that.errors) &&
+            Arrays.deepEquals(outputs, that.outputs);
     }
 
     @Override

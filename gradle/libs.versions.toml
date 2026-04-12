@@ -1,12 +1,21 @@
 [versions]
 agp = "9.1.0"
+xposed = "101.0.0"
+
+appcompat = "1.7.1"
+activity = "1.13.0"
+constraintlayout = "2.2.1"
 annotation = "1.9.1"
-xposed = "82"
 
 [libraries]
+appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
+constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
 annotation = { module = "androidx.annotation:annotation-jvm", version.ref = "annotation" }
-xposed = { group = "de.robv.android.xposed", name = "api", version.ref = "xposed" }
+
+service = { module = "io.github.libxposed:service", version.ref = "xposed" }
+xposed = { group = "io.github.libxposed", name = "api", version.ref = "xposed" }
 
 [plugins]
-androidLibrary = { id = "com.android.library", version.ref = "agp" }
-androidApplication = { id = "com.android.application", version.ref = "agp" }
+android-library = { id = "com.android.library", version.ref = "agp" }
+android-application = { id = "com.android.application", version.ref = "agp" }

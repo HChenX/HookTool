@@ -20,7 +20,8 @@ package com.hchen.hooktool.log;
 
 import androidx.annotation.NonNull;
 
-import com.hchen.hooktool.HCData;
+import com.hchen.hooktool.ModuleConfig;
+import com.hchen.hooktool.hook.AbsHook;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -31,10 +32,11 @@ import java.util.Arrays;
  *
  * @author 焕晨HChen
  */
-public class LogExpand {
+public final class LogExpand {
     private LogExpand() {
     }
 
+    @NonNull
     public static String printStackTrace(@NonNull Throwable e) {
         StringWriter stringWriter = new StringWriter();
         PrintWriter printWriter = new PrintWriter(stringWriter);
@@ -42,52 +44,114 @@ public class LogExpand {
         return stringWriter.toString();
     }
 
+    @NonNull
     public static String getStackTrace() {
         StringBuilder stringBuilder = new StringBuilder();
-        StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
-        Arrays.stream(stackTraceElements).forEach(element -> {
-            String clazz = element.getClassName();
-            String method = element.getMethodName();
-            String field = element.getFileName();
-            int line = element.getLineNumber();
-            stringBuilder.append("\nat ").append(clazz).append(".")
-                .append(method).append("(")
-                .append(field).append(":")
-                .append(line).append(")");
-        });
+        for (StackTraceElement element : Thread.currentThread().getStackTrace()) {
+            stringBuilder.append("\nat ").append(element.getClassName()).append(".")
+                .append(element.getMethodName()).append("(")
+                .append(element.getFileName()).append(":")
+                .append(element.getLineNumber()).append(")");
+        }
         return stringBuilder.toString();
     }
 
+    @NonNull
     public static String getTag() {
-        String[] logExpandPath = HCData.getLogExpandPath();
-        String[] logExpandIgnoreClassNames = HCData.getLogExpandIgnoreClassNames();
-        if (logExpandPath == null || logExpandPath.length == 0) return "HookTool";
+        String[] logExpandPaths = ModuleConfig.getLogExpandPaths();
+        String[] ignoreClassNames = ModuleConfig.getLogExpandIgnoreClassNames();
+        if (logExpandPaths.length == 0) return ModuleConfig.getLogTag();
 
-        String tag = null;
         StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
-        for (StackTraceElement stackTraceElement : stackTraceElements) {
-            if (tag != null) break;
-            String className = stackTraceElement.getClassName();
-            if (logExpandIgnoreClassNames != null && Arrays.stream(logExpandIgnoreClassNames).anyMatch(className::contains))
-                continue;
 
-            if (Arrays.stream(logExpandPath).anyMatch(className::contains)) {
-                int index = className.lastIndexOf(".");
-                int index2 = className.lastIndexOf("$");
-                if (index == -1) break;
-                if (index2 == -1) {
-                    tag = className.substring(index + 1);
-                    break;
+        main:
+        for (StackTraceElement element : stackTraceElements) {
+            String className = element.getClassName();
+            for (String name : ignoreClassNames) {
+                if (className.contains(name)) {
+                    continue main;
                 }
-                tag = className.substring(index + 1, index2);
-                while (tag.lastIndexOf("$") != -1) {
-                    index = tag.lastIndexOf("$");
-                    tag = tag.substring(0, index);
+            }
+
+            for (String path : logExpandPaths) {
+                if (className.contains(path)) {
+                    int dotIndex = className.lastIndexOf(".");
+                    if (dotIndex == -1) continue main;
+
+                    String tag = className.substring(dotIndex + 1);
+                    int dollarIndex = tag.indexOf('$');
+                    if (dollarIndex != -1) {
+                        tag = tag.substring(0, dollarIndex);
+                    }
+                    return tag;
                 }
             }
         }
-        if (tag == null)
-            return "HookTool";
-        return tag;
+
+        return ModuleConfig.getLogTag();
+    }
+
+    @NonNull
+    @SuppressWarnings("StringBufferReplaceableByString")
+    public static String observeCall(@NonNull AbsHook hook) {
+        Object[] args = hook.getArgs();
+        String declaringClass = hook.getExecutable().getDeclaringClass().getName();
+        String methodName = hook.getExecutable().getName();
+
+        if (args.length == 0) {
+            StringBuilder sb = new StringBuilder(128);
+            sb.append("→ Called Method\n")
+                .append("├─ Class:  ").append(declaringClass).append("\n")
+                .append("├─ Method: ").append(methodName).append("\n")
+                .append("├─ Params: { }\n")
+                .append("└─ Return: ").append(hook.getResult());
+            return sb.toString();
+        }
+
+        StringBuilder log = new StringBuilder(256);
+        log.append("→ Called Method\n")
+            .append("├─ Class:  ").append(declaringClass).append("\n")
+            .append("├─ Method: ").append(methodName).append("\n")
+            .append("├─ Params: {\n");
+
+        for (int i = 0; i < args.length; i++) {
+            Object arg = args[i];
+            log.append("    [").append(i).append("] ");
+            log.append(arg == null ? "(null)" : arg.getClass().getSimpleName());
+            log.append(" = ").append(paramToString(arg)).append("\n");
+        }
+
+        log.append("├─ }\n")
+            .append("└─ Return: ").append(hook.getResult());
+
+        return log.toString();
+    }
+
+    @NonNull
+    private static String paramToString(Object param) {
+        if (param == null) {
+            return "null";
+        }
+
+        Class<?> clazz = param.getClass();
+        if (!clazz.isArray()) {
+            return param.toString();
+        }
+
+        // noinspection IfCanBeSwitch
+        if (param instanceof Object[]) {
+            return Arrays.deepToString((Object[]) param);
+        }
+
+        if (param instanceof int[]) return Arrays.toString((int[]) param);
+        if (param instanceof byte[]) return Arrays.toString((byte[]) param);
+        if (param instanceof boolean[]) return Arrays.toString((boolean[]) param);
+        if (param instanceof long[]) return Arrays.toString((long[]) param);
+        if (param instanceof float[]) return Arrays.toString((float[]) param);
+        if (param instanceof double[]) return Arrays.toString((double[]) param);
+        if (param instanceof char[]) return Arrays.toString((char[]) param);
+        if (param instanceof short[]) return Arrays.toString((short[]) param);
+
+        return param.toString();
     }
 }

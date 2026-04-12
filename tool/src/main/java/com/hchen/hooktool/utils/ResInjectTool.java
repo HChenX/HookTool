@@ -31,33 +31,33 @@ import android.util.TypedValue;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.hchen.hooktool.HCData;
+import com.hchen.hooktool.ModuleData;
 import com.hchen.hooktool.core.CoreTool;
 import com.hchen.hooktool.exception.InjectResourcesException;
-import com.hchen.hooktool.hook.IHook;
+import com.hchen.hooktool.hook.AbsHook;
 import com.hchen.hooktool.log.XposedLog;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArraySet;
+
+import io.github.libxposed.api.XposedInterface;
 
 /**
  * 资源注入工具
  *
  * @author 焕晨HChen
  */
-public class ResInjectTool {
+public final class ResInjectTool {
     private static final String TAG = "ResInjectTool";
     private static ResourcesLoader resourcesLoader = null;
     private static final ConcurrentHashMap<String, Pair<ReplacementType, Object>> replacements = new ConcurrentHashMap<>();
-    private static final CopyOnWriteArraySet<Integer> waitSet = new CopyOnWriteArraySet<>();
     private static boolean isInjected = false;
     private static boolean isHooked = false;
 
@@ -87,33 +87,32 @@ public class ResInjectTool {
      */
     public static void injectModuleRes() {
         if (isInjected) return;
-        if (HCData.getModulePath() == null)
-            throw new NullPointerException("[ResInjectTool]: Module path must not be null!!");
 
+        String sourceDir = ModuleData.getModulePath();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             if (resourcesLoader == null) {
-                assert HCData.getModulePath() != null;
-                try (ParcelFileDescriptor pfd = ParcelFileDescriptor.open(new File(HCData.getModulePath()), ParcelFileDescriptor.MODE_READ_ONLY)) {
+                try (ParcelFileDescriptor pfd = ParcelFileDescriptor.open(new File(sourceDir), ParcelFileDescriptor.MODE_READ_ONLY)) {
                     ResourcesProvider provider = ResourcesProvider.loadFromApk(pfd);
                     ResourcesLoader loader = new ResourcesLoader();
                     loader.addProvider(provider);
                     resourcesLoader = loader;
                 } catch (IOException e) {
-                    throw new InjectResourcesException("[ResInjectTool]: Failed to create res loader!!", e);
+                    throw new InjectResourcesException("Failed to create res loader.", e);
                 }
             }
 
-            CoreTool.hookConstructor("android.content.res.ResourcesKey",
+            CoreTool.hookConstructor(
+                "android.content.res.ResourcesKey",
                 String.class /* resDir */, String[].class /* splitResDirs */, String[].class /* overlayPaths */,
                 String[].class,/* libDirs */ int.class /* overrideDisplayId */, Configuration.class /* overrideConfig */,
                 "android.content.res.CompatibilityInfo" /* compatInfo */, ResourcesLoader[].class /* loader */,
-                new IHook() {
+                new AbsHook() {
                     @Override
                     public void before() {
                         ResourcesLoader[] loader = (ResourcesLoader[]) getArg(7);
                         if (loader != null) {
-                            if (Arrays.stream(loader).noneMatch(l -> Objects.equals(l, resourcesLoader))) {
-                                List<ResourcesLoader> loaders = new ArrayList<>(Arrays.asList(loader));
+                            List<ResourcesLoader> loaders = new ArrayList<>(Arrays.asList(loader));
+                            if (!loaders.contains(resourcesLoader)) {
                                 loaders.add(resourcesLoader);
                                 setArg(7, loaders.toArray(new ResourcesLoader[0]));
                             }
@@ -124,22 +123,23 @@ public class ResInjectTool {
                 }
             );
         } else {
-            CoreTool.hookConstructor("android.content.res.ResourcesKey",
+            CoreTool.hookConstructor(
+                "android.content.res.ResourcesKey",
                 String.class /* resDir */, String[].class /* splitResDirs */, String[].class /* overlayDirs */,
                 String[].class,/* libDirs */ int.class /* displayId */, Configuration.class /* overrideConfig */,
                 "android.content.res.CompatibilityInfo" /* compatInfo */,
-                new IHook() {
+                new AbsHook() {
                     @Override
                     public void before() {
                         String[] splitResDirs = (String[]) getArg(1);
                         if (splitResDirs != null) {
-                            if (Arrays.stream(splitResDirs).noneMatch(s -> Objects.equals(s, HCData.getModulePath()))) {
-                                List<String> loaders = new ArrayList<>(Arrays.asList(splitResDirs));
-                                loaders.add(HCData.getModulePath());
+                            List<String> loaders = new ArrayList<>(Arrays.asList(splitResDirs));
+                            if (!loaders.contains(sourceDir)) {
+                                loaders.add(sourceDir);
                                 setArg(1, loaders.toArray(new String[0]));
                             }
                         } else {
-                            setArg(1, new String[]{HCData.getModulePath()});
+                            setArg(1, new String[]{sourceDir});
                         }
                     }
                 }
@@ -195,10 +195,11 @@ public class ResInjectTool {
     private static int STYLE_TYPE;
     private static int STYLE_RESOURCE_ID;
 
+    @SuppressWarnings("DataFlowIssue")
     private static void applyHooks() {
         if (isHooked) return;
         if (!isInjected) {
-            throw new InjectResourcesException("[ResInjectTool]: You should inject module res first!!");
+            throw new InjectResourcesException("Should inject module res first.");
         }
 
         CoreTool.hookMethod(Resources.class, "loadXmlResourceParser", int.class, String.class, hookResBefore); // XmlResourceParser
@@ -244,15 +245,12 @@ public class ResInjectTool {
         isHooked = true;
     }
 
-    private static final IHook hookResBefore = new IHook() {
+    private static final AbsHook hookResBefore = new AbsHook() {
         @Override
         public void before() {
             try {
-                Integer resId = (Integer) getArg(0);
-                if (waitSet.contains(resId)) return;
-
-                String methodName = getMethod().getName();
-                Object value = getResourceReplacement((Method) getMethod(), (Resources) thisObject(), getArgs());
+                String methodName = getExecutable().getName();
+                Object value = getResourceReplacement((Method) getExecutable(), (Resources) getThisObject(), getArgs());
                 if (value != null) {
                     if ("getDimensionPixelOffset".equals(methodName) || "getDimensionPixelSize".equals(methodName)) {
                         if (value instanceof Float) value = ((Float) value).intValue();
@@ -260,25 +258,28 @@ public class ResInjectTool {
                     setResult(value);
                 }
             } catch (Throwable t) {
-                XposedLog.logD(TAG, "Failed to replacement res!!", t);
+                XposedLog.logD(TAG, "Failed to replacement res.", t);
             }
         }
     };
 
-    private static final IHook hookTypedBefore = new IHook() {
+    private static final AbsHook hookTypedBefore = new AbsHook() {
         @Override
         public void before() {
             try {
                 int index = (int) getArg(0);
                 index *= STYLE_NUM_ENTRIES;
-                int[] data = (int[]) getThisField("mData");
+                int[] data = (int[]) CoreTool.getField(getThisObject(), "mData");
 
+                assert data != null;
                 int type = data[index + STYLE_TYPE];
                 int id = data[index + STYLE_RESOURCE_ID];
                 if (type != TypedValue.TYPE_NULL /* 不为空数据 */ && id != 0 /* 储存的是资源 */) {
-                    String methodName = getMethod().getName();
-                    Resources resources = (Resources) getThisField("mResources");
-                    Resources.Theme theme = (Resources.Theme) getThisField("mTheme");
+                    String methodName = getExecutable().getName();
+                    Resources resources = (Resources) CoreTool.getField(getThisObject(), "mResources");
+                    Resources.Theme theme = (Resources.Theme) CoreTool.getField(getThisObject(), "mTheme");
+
+                    assert resources != null;
                     Object value = getTypedArrayReplacement(resources, theme, id, methodName, getArgs());
                     if (value != null) {
                         if (
@@ -292,7 +293,7 @@ public class ResInjectTool {
                     }
                 }
             } catch (Throwable t) {
-                XposedLog.logD(TAG, "Failed to replacement typed array!!", t);
+                XposedLog.logD(TAG, "Failed to replacement typed array.", t);
             }
         }
     };
@@ -329,13 +330,13 @@ public class ResInjectTool {
                     return (Float) replacement.second * res.getDisplayMetrics().density;
                 }
                 case ID -> {
-                    int resId = (int) replacement.second;
                     try {
-                        waitSet.add(resId);
-                        params[0] = resId;
-                        return CoreTool.callMethod(res, method, params);
-                    } finally {
-                        waitSet.remove(resId);
+                        params[0] = replacement.second;
+                        return CoreTool.getMethodInvoker(method)
+                            .setType(XposedInterface.Invoker.Type.ORIGIN)
+                            .invoke(res, params);
+                    } catch (InvocationTargetException | IllegalAccessException e) {
+                        throw new InjectResourcesException(e);
                     }
                 }
             }
@@ -375,36 +376,48 @@ public class ResInjectTool {
                     return (Float) replacement.second * res.getDisplayMetrics().density;
                 }
                 case ID -> {
-                    int resId = (int) replacement.second;
                     try {
                         Object result;
-                        waitSet.add(resId);
+                        Class<?> resClass = res.getClass();
+                        int resId = (int) replacement.second;
                         switch (methodName) {
                             case "getBoolean", "getFloat", "getInteger", "getString", "getText",
                                  "getFont", "getDimension", "getDimensionPixelOffset",
                                  "getDimensionPixelSize" -> {
-                                result = CoreTool.callMethod(res, methodName, new Class<?>[]{int.class}, resId);
+                                result = CoreTool.getMethodInvoker(resClass, methodName, int.class)
+                                    .setType(XposedInterface.Invoker.Type.ORIGIN)
+                                    .invoke(res, resId);
                             }
                             case "getColor", "getColorStateList" -> {
-                                result = CoreTool.callMethod(res, methodName, new Class<?>[]{int.class, Resources.Theme.class}, resId, theme);
+                                result = CoreTool.getMethodInvoker(resClass, methodName, int.class, Resources.Theme.class)
+                                    .setType(XposedInterface.Invoker.Type.ORIGIN)
+                                    .invoke(res, resId, theme);
                             }
                             case "getDrawableForDensity" -> {
-                                result = CoreTool.callMethod(res, methodName, new Class<?>[]{int.class, int.class, Resources.Theme.class}, resId, params[1], theme);
+                                result = CoreTool.getMethodInvoker(resClass, methodName, int.class, int.class, Resources.Theme.class)
+                                    .setType(XposedInterface.Invoker.Type.ORIGIN)
+                                    .invoke(res, resId, params[1], theme);
                             }
                             case "getLayoutDimension" -> {
-                                result = CoreTool.callMethod(res, "getDimensionPixelSize", new Class<?>[]{int.class}, resId);
+                                result = CoreTool.getMethodInvoker(resClass, "getDimensionPixelSize", int.class)
+                                    .setType(XposedInterface.Invoker.Type.ORIGIN)
+                                    .invoke(res, resId);
                             }
                             case "getFraction" -> {
-                                result = CoreTool.callMethod(res, methodName, new Class<?>[]{int.class, int.class, int.class}, resId, params[1], params[2]);
+                                result = CoreTool.getMethodInvoker(resClass, methodName, int.class, int.class, int.class)
+                                    .setType(XposedInterface.Invoker.Type.ORIGIN)
+                                    .invoke(res, resId, params[1], params[2]);
                             }
                             case "getInt" -> {
-                                result = CoreTool.callMethod(res, "getInteger", new Class<?>[]{int.class}, resId);
+                                result = CoreTool.getMethodInvoker(resClass, "getInteger", int.class)
+                                    .setType(XposedInterface.Invoker.Type.ORIGIN)
+                                    .invoke(res, resId);
                             }
                             default -> result = null;
                         }
                         return result;
-                    } finally {
-                        waitSet.remove(resId);
+                    } catch (InvocationTargetException | IllegalAccessException e) {
+                        throw new InjectResourcesException(e);
                     }
                 }
             }

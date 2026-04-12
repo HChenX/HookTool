@@ -19,232 +19,278 @@
 package com.hchen.hooktool.core;
 
 import static com.hchen.hooktool.core.CoreTool.findClass;
-import static com.hchen.hooktool.log.XposedLog.logW;
 
 import androidx.annotation.NonNull;
 
 import com.hchen.hooktool.data.ChainData;
-import com.hchen.hooktool.data.ChainType;
-import com.hchen.hooktool.hook.IHook;
-import com.hchen.hooktool.log.LogExpand;
-import com.hchen.hooktool.log.XposedLog;
+import com.hchen.hooktool.exception.UnexpectedException;
+import com.hchen.hooktool.hook.AbsHook;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
+import java.lang.reflect.Executable;
 import java.util.HashSet;
 import java.util.Objects;
+import java.util.function.Function;
 
 /**
- * 链式调用工具
- * <p>
- * 使用方法：
- * <pre>{@code
- * ChainTool.buildChain("com.hchen.demo.Test")
- *  .findMethod("test")
- *  .hook(new IHook() {
- *      // TODO
- *  })
- *  .findMethod("test1")
- *  .hook(new IHook() {
- *       // TODO
- *  });
- * }
+ * 链式工具
  *
  * @author 焕晨HChen
  */
-public class ChainTool {
+public final class ChainTool {
+    /**
+     * 目标类
+     */
     @NonNull
     private final Class<?> clazz;
+
+    /**
+     * 链式钩子对象
+     */
     @NonNull
     private final ChainHook chainHook;
-    private ChainData chainData;
-    private final HashSet<ChainData> chainDataSet = new HashSet<>();
 
+    /**
+     * 链式数据对象
+     */
+    private ChainData chainData;
+
+    /**
+     * 链式数据哈希值，用于去重
+     */
+    private final HashSet<Integer> dataHashSet = new HashSet<>();
+
+    /**
+     * 构造方法
+     *
+     * @param clazz 目标类
+     */
     private ChainTool(@NonNull Class<?> clazz) {
-        Objects.requireNonNull(clazz, "[ChainTool]: Class must not be null!!");
-        chainHook = new ChainHook();
+        Objects.requireNonNull(clazz, "Class must not be null.");
+
         this.clazz = clazz;
+        this.chainHook = new ChainHook();
     }
 
     /**
-     * 构建链式
+     * 构建链式工具实例
+     *
+     * @param classPath 类路径
+     * @return 链式工具实例
      */
     public static ChainTool buildChain(@NonNull String classPath) {
         return new ChainTool(findClass(classPath));
     }
 
     /**
-     * 构建链式
+     * 构建链式工具实例
+     *
+     * @param classPath   类路径
+     * @param classLoader 类加载器
+     * @return 链式工具实例
      */
     public static ChainTool buildChain(@NonNull String classPath, ClassLoader classLoader) {
         return new ChainTool(findClass(classPath, classLoader));
     }
 
     /**
-     * 构建链式
+     * 构建链式工具实例
+     *
+     * @param clazz 目标类
+     * @return 链式工具实例
      */
     public static ChainTool buildChain(@NonNull Class<?> clazz) {
         return new ChainTool(clazz);
     }
 
     /**
-     * 查找方法
+     * 查找指定方法
+     *
+     * @param methodName     方法名
+     * @param parameterTypes 参数类型
+     * @return 链式钩子对象
      */
-    public ChainHook findMethod(@NonNull String methodName, @NonNull Object... params) {
-        chainData = new ChainData(methodName, params);
+    public ChainHook findMethod(@NonNull String methodName, @NonNull Object... parameterTypes) {
+        this.chainData = new ChainData(methodName, parameterTypes);
         return chainHook;
     }
 
     /**
-     * 查找方法，如果存在
-     */
-    public ChainHook findMethodIfExist(@NonNull String methodName, @NonNull Object... params) {
-        chainData = new ChainData(methodName, params);
-        chainData.setIfExist(true);
-        return chainHook;
-    }
-
-    /**
-     * 查找全部指定名称的方法
+     * 查找所有指定名称的方法
+     *
+     * @param methodName 方法名
+     * @return 链式钩子对象
      */
     public ChainHook findAllMethod(@NonNull String methodName) {
-        chainData = new ChainData(methodName);
+        this.chainData = new ChainData(methodName);
         return chainHook;
     }
 
     /**
-     * 传入指定方法
+     * 查找指定构造函数
+     *
+     * @param parameterTypes 参数类型
+     * @return 链式钩子对象
      */
-    public ChainHook withMethod(@NonNull Method method) {
-        chainData = new ChainData(method);
+    public ChainHook findConstructor(@NonNull Object... parameterTypes) {
+        this.chainData = new ChainData(parameterTypes);
         return chainHook;
     }
 
     /**
-     * 查找构造函数
-     */
-    public ChainHook findConstructor(@NonNull Object... params) {
-        chainData = new ChainData(params);
-        return chainHook;
-    }
-
-    /**
-     * 查找构造方法，如果存在
-     */
-    public ChainHook findConstructorIfExist(@NonNull Object... params) {
-        chainData = new ChainData(params);
-        chainData.setIfExist(true);
-        return chainHook;
-    }
-
-    /**
-     * 查找全部构造函数
+     * 查找所有构造函数
+     *
+     * @return 链式钩子对象
      */
     public ChainHook findAllConstructor() {
-        chainData = new ChainData();
+        this.chainData = new ChainData();
         return chainHook;
     }
 
     /**
-     * 传入指定构造函数
+     * 使用指定的可执行对象
+     *
+     * @param executable 可执行对象
+     * @return 链式钩子对象
      */
-    public ChainHook withConstructor(@NonNull Constructor<?> constructor) {
-        chainData = new ChainData(constructor);
+    public ChainHook withExecutable(@NonNull Executable executable) {
+        this.chainData = new ChainData(executable);
         return chainHook;
     }
 
+    /**
+     * 执行链式调用
+     */
     private void runChain() {
-        Objects.requireNonNull(chainData, "[ChainTool]: Chain data must not be null!!");
+        Objects.requireNonNull(chainData);
 
-        final ChainData tempChainData = chainData;
-        if (!chainDataSet.contains(chainData)) {
-            runFind();
-            if (shouldHook()) {
-                chainDataSet.add(tempChainData);
-                CoreTool.hookAll(chainData.members, chainData.iHook);
+        try {
+            if (!dataHashSet.contains(chainData.hashCode())) {
+                runFind();
+                if (chainData.throwable != null) {
+                    if (chainData.isIgnoreThrow) {
+                        return;
+                    }
+                    if (chainData.function != null) {
+                        if (Boolean.TRUE.equals(chainData.function.apply(chainData.throwable))) {
+                            return;
+                        } else {
+                            CoreTool.throwIt(chainData.throwable);
+                        }
+                    } else {
+                        CoreTool.throwIt(chainData.throwable);
+                    }
+                }
+
+                dataHashSet.add(chainData.hashCode());
+                for (Executable executable : chainData.executables) {
+                    CoreTool.hook(executable, chainData.absHook);
+                }
+            } else {
+                throw new UnexpectedException("Duplicate chain data: " + chainData);
             }
-        } else {
-            XposedLog.logW(LogExpand.getTag(), "Duplicate content will be skipped: " + chainData);
+        } finally {
+            chainData = null;
         }
-        chainData = null;
     }
 
+    /**
+     * 执行查找操作
+     */
     private void runFind() {
-        switch (chainData.chainType) {
-            case METHOD -> {
-                chainData.members[0] = chainData.method;
-            }
-            case ChainType.FIND_METHOD -> {
-                if (chainData.ifExist) {
-                    chainData.members[0] = CoreTool.findMethodIfExists(clazz, chainData.methodName, chainData.methodParams);
-                } else {
-                    chainData.members[0] = CoreTool.findMethod(clazz, chainData.methodName, chainData.methodParams);
+        try {
+            switch (chainData.chainType) {
+                case EXECUTABLE -> {
+                    chainData.executables[0] = chainData.executable;
+                }
+                case FIND_METHOD -> {
+                    chainData.executables[0] = CoreTool.findMethod(clazz, chainData.methodName, chainData.parameterTypes);
+                }
+                case FIND_ALL_METHOD -> {
+                    chainData.executables = CoreTool.findAllMethod(clazz, chainData.methodName);
+                }
+                case FIND_CONSTRUCTOR -> {
+                    chainData.executables[0] = CoreTool.findConstructor(clazz, chainData.parameterTypes);
+                }
+                case FIND_ALL_CONSTRUCTOR -> {
+                    chainData.executables = CoreTool.findAllConstructor(clazz);
                 }
             }
-            case FIND_ALL_METHOD -> {
-                chainData.members = CoreTool.findAllMethod(clazz, chainData.methodName);
-            }
-            case CONSTRUCTOR -> {
-                chainData.members[0] = chainData.constructor;
-            }
-            case FIND_CONSTRUCTOR -> {
-                if (chainData.ifExist) {
-                    chainData.members[0] = CoreTool.findConstructorIfExists(clazz, chainData.constructorParams);
-                } else {
-                    chainData.members[0] = CoreTool.findConstructor(clazz, chainData.constructorParams);
-                }
-            }
-            case FIND_ALL_CONSTRUCTOR -> {
-                chainData.members = CoreTool.findAllConstructor(clazz);
-            }
+        } catch (Throwable throwable) {
+            chainData.throwable = throwable;
         }
     }
 
-    private boolean shouldHook() {
-        if (chainData.members.length == 0) {
-            logW(LogExpand.getTag(), "Hook method list cannot be empty! chainData: " + chainData);
-            return false;
-        }
-        if (chainData.members[0] == null) {
-            if (!chainData.ifExist)
-                logW(LogExpand.getTag(), "There is an abnormal null object in the member list, skip hook: " + chainData);
-            return false;
-        }
-        return true;
-    }
-
-    public class ChainHook {
+    /**
+     * 链式钩子类，用于执行钩子操作
+     */
+    public final class ChainHook {
+        /**
+         * 构造方法
+         */
         private ChainHook() {
         }
 
         /**
-         * Hook
+         * 执行钩子操作
+         *
+         * @param absHook 钩子对象
+         * @return 链式工具实例
          */
-        public ChainTool hook(@NonNull IHook iHook) {
-            chainData.iHook = iHook;
+        public ChainTool hook(@NonNull AbsHook absHook) {
+            chainData.absHook = absHook;
             runChain();
             return ChainTool.this;
         }
 
         /**
-         * Hook 并返回值
+         * 执行钩子操作并返回指定结果
+         *
+         * @param result 要返回的结果
+         * @return 链式工具实例
          */
         public ChainTool returnResult(final Object result) {
             return hook(CoreTool.returnResult(result));
         }
 
         /**
-         * 拦截方法执行
+         * 执行钩子操作并拦截方法执行
+         *
+         * @return 链式工具实例
          */
         public ChainTool doNothing() {
             return hook(CoreTool.doNothing());
         }
 
         /**
-         * 修改指定参数
+         * 执行钩子操作并修改指定参数
+         *
+         * @param index 参数索引
+         * @param value 新的参数值
+         * @return 链式工具实例
          */
         public ChainTool setArg(int index, Object value) {
             return hook(CoreTool.setArg(index, value));
+        }
+
+        /**
+         * 设置异常处理函数
+         *
+         * @param function 异常处理函数
+         * @return 链式钩子对象
+         */
+        public ChainHook onThrow(@NonNull Function<Throwable, Boolean> function) {
+            chainData.function = function;
+            return this;
+        }
+
+        /**
+         * 设置忽略异常
+         *
+         * @return 链式钩子对象
+         */
+        public ChainHook ignoreThrow() {
+            chainData.isIgnoreThrow = true;
+            return this;
         }
     }
 }

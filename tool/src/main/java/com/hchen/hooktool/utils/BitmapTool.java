@@ -21,7 +21,14 @@ package com.hchen.hooktool.utils;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Matrix;
+import android.graphics.Paint;
 import android.graphics.PixelFormat;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffXfermode;
+import android.graphics.Rect;
+import android.graphics.RectF;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 
 import androidx.annotation.NonNull;
@@ -34,7 +41,7 @@ import java.io.ByteArrayOutputStream;
  *
  * @author 焕晨HChen
  */
-public class BitmapTool {
+public final class BitmapTool {
     private BitmapTool() {
     }
 
@@ -43,6 +50,12 @@ public class BitmapTool {
      */
     @NonNull
     public static Bitmap drawableToBitmap(@NonNull Drawable drawable) {
+        if (drawable instanceof BitmapDrawable) {
+            Bitmap bitmap = ((BitmapDrawable) drawable).getBitmap();
+            if (bitmap != null) {
+                return bitmap;
+            }
+        }
         return drawableToBitmap(drawable, drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight());
     }
 
@@ -64,6 +77,54 @@ public class BitmapTool {
         drawable.setBounds(0, 0, width, height);
         drawable.draw(canvas);
         return bitmap;
+    }
+
+    /**
+     * 获取带有圆角的 Bitmap
+     *
+     * @param bitmap 原图
+     * @param radius 圆角半径 (px)
+     */
+    @NonNull
+    public static Bitmap getRoundedCornerBitmap(@NonNull Bitmap bitmap, float radius) {
+        Bitmap output = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(output);
+
+        final int color = 0xff424242;
+        final Paint paint = new Paint();
+        final Rect rect = new Rect(0, 0, bitmap.getWidth(), bitmap.getHeight());
+        final RectF rectF = new RectF(rect);
+
+        paint.setAntiAlias(true);
+        canvas.drawARGB(0, 0, 0, 0);
+        paint.setColor(color);
+        canvas.drawRoundRect(rectF, radius, radius, paint);
+
+        paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
+        canvas.drawBitmap(bitmap, rect, rect, paint);
+
+        return output;
+    }
+
+    /**
+     * 对 Bitmap 进行缩放操作
+     *
+     * @param bitmap    原图
+     * @param newWidth  期望宽度
+     * @param newHeight 期望高度
+     */
+    @NonNull
+    public static Bitmap scaleBitmap(@NonNull Bitmap bitmap, int newWidth, int newHeight) {
+        int width = bitmap.getWidth();
+        int height = bitmap.getHeight();
+
+        float scaleWidth = ((float) newWidth) / width;
+        float scaleHeight = ((float) newHeight) / height;
+
+        Matrix matrix = new Matrix();
+        matrix.postScale(scaleWidth, scaleHeight);
+
+        return Bitmap.createBitmap(bitmap, 0, 0, width, height, matrix, true);
     }
 
     /**

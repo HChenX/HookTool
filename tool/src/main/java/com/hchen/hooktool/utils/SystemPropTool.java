@@ -29,7 +29,7 @@ import java.util.Optional;
  *
  * @author 焕晨HChen
  */
-public class SystemPropTool {
+public final class SystemPropTool {
     private static final Class<?> propClass = InvokeTool.findClass("android.os.SystemProperties");
 
     private SystemPropTool() {

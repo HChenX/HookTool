@@ -19,27 +19,29 @@
 package com.hchen.hooktool.callback;
 
 import android.content.pm.PackageManager;
-import android.os.Parcelable;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.hchen.hooktool.data.AppData;
+
+import java.util.List;
 
 /**
  * 包信息获取器
  *
  * @author 焕晨HChen
  */
-public interface IAppDataGetter {
+public interface IAppDataGetter<T> {
     /**
      * 需要获取 AppData 信息的包列表
      */
     @NonNull
-    Parcelable[] getPackages(@NonNull PackageManager pm) throws PackageManager.NameNotFoundException;
+    List<T> getPackages(@NonNull PackageManager pm) throws PackageManager.NameNotFoundException;
 
     /**
-     * 异步获取到的 AppData 信息
+     * 异步获取 AppData 数据或抛出错误
      */
-    default void getAsyncAppData(@NonNull AppData[] appData) {
+    default void getAsyncAppData(@NonNull AppData[] appData, @Nullable PackageManager.NameNotFoundException e) {
     }
 }

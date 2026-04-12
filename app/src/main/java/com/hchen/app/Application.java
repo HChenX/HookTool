@@ -18,25 +18,35 @@
  */
 package com.hchen.app;
 
-import static com.hchen.hooktool.HCInit.LOG_D;
+import androidx.annotation.NonNull;
 
-import com.hchen.hooktool.HCInit;
+import com.hchen.hooktool.ModuleConfig;
+import com.hchen.hooktool.log.AndroidLog;
 
-/**
- * Application
- *
- * @author 焕晨HChen
- */
-public class Application extends android.app.Application {
+import io.github.libxposed.service.XposedService;
+import io.github.libxposed.service.XposedServiceHelper;
+
+public class Application extends android.app.Application
+    implements XposedServiceHelper.OnServiceListener {
+    private static final String TAG = "Application";
+
     @Override
     public void onCreate() {
         super.onCreate();
+        ModuleConfig.setLogTag("TestDemo");
+        ModuleConfig.setLogLevel(ModuleConfig.LOG_D);
+        ModuleConfig.setPrefsName("test_demo_prefs");
 
-        HCInit.initBasicData(new HCInit.BasicData()
-            .setModulePackageName("com.hchen.demo") // 模块包名
-            .setTag("HChenDemo") // 日志 tag
-            .setLogLevel(LOG_D) // 日志等级
-            .setPrefsName("hchen_prefs") // prefs 存储文件名 (可选)
-        );
+        XposedServiceHelper.registerListener(this);
+    }
+
+    @Override
+    public void onServiceBind(@NonNull XposedService service) {
+        AndroidLog.logD(TAG, "onServiceBind: " + service);
+    }
+
+    @Override
+    public void onServiceDied(@NonNull XposedService service) {
+        AndroidLog.logD(TAG, "onServiceDied: " + service);
     }
 }

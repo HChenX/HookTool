@@ -18,6 +18,8 @@
  */
 package com.hchen.hooktool.data;
 
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
 import android.graphics.Bitmap;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -32,13 +34,15 @@ import java.util.Objects;
  * @author 焕晨HChen
  */
 public class AppData implements Parcelable {
+    public PackageInfo packageInfo;
+    public ApplicationInfo applicationInfo;
     public int user = -1;
     public int uid = -1;
     public Bitmap icon;
     public String label;
     public String packageName;
-    public String versionName;
-    public String versionCode;
+    public String versionName; // 仅 PackageInfo 下填充数据
+    public String versionCode; // 仅 PackageInfo 下填充数据
     public boolean isSystemApp;
     public boolean isEnabled;
 
@@ -46,23 +50,12 @@ public class AppData implements Parcelable {
     }
 
     @NonNull
-    public Parcel marshall() {
-        Parcel parcel = Parcel.obtain();
-        writeToParcel(parcel, 0);
-        return parcel;
-    }
-
-    @NonNull
-    public static AppData unmarshall(@NonNull Parcel parcel) {
-        parcel.setDataPosition(0);
-        return new AppData(parcel);
-    }
-
-    @NonNull
     @Override
     public String toString() {
         return "AppData{" +
-            "user=" + user +
+            "packageInfo=" + packageInfo +
+            ", applicationInfo=" + applicationInfo +
+            ", user=" + user +
             ", uid=" + uid +
             ", icon=" + icon +
             ", label='" + label + '\'' +
@@ -75,12 +68,15 @@ public class AppData implements Parcelable {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (!(o instanceof AppData appData)) return false;
+    public boolean equals(Object object) {
+        if (!(object instanceof AppData appData)) return false;
+
         return user == appData.user &&
             uid == appData.uid &&
             isSystemApp == appData.isSystemApp &&
             isEnabled == appData.isEnabled &&
+            Objects.equals(packageInfo, appData.packageInfo) &&
+            Objects.equals(applicationInfo, appData.applicationInfo) &&
             Objects.equals(icon, appData.icon) &&
             Objects.equals(label, appData.label) &&
             Objects.equals(packageName, appData.packageName) &&
@@ -90,24 +86,24 @@ public class AppData implements Parcelable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(user, uid, icon, label, packageName, versionName, versionCode, isSystemApp, isEnabled);
+        return Objects.hash(
+            packageInfo,
+            applicationInfo,
+            user,
+            uid,
+            icon,
+            label,
+            packageName,
+            versionName,
+            versionCode,
+            isSystemApp,
+            isEnabled
+        );
     }
 
-    public static final Creator<AppData> CREATOR = new Creator<AppData>() {
-        @NonNull
-        @Override
-        public AppData createFromParcel(Parcel in) {
-            return new AppData(in);
-        }
-
-        @NonNull
-        @Override
-        public AppData[] newArray(int size) {
-            return new AppData[size];
-        }
-    };
-
     private AppData(@NonNull Parcel in) {
+        packageInfo = in.readParcelable(PackageInfo.class.getClassLoader());
+        applicationInfo = in.readParcelable(ApplicationInfo.class.getClassLoader());
         user = in.readInt();
         uid = in.readInt();
         icon = in.readParcelable(Bitmap.class.getClassLoader());
@@ -121,6 +117,8 @@ public class AppData implements Parcelable {
 
     @Override
     public void writeToParcel(@NonNull Parcel dest, int flags) {
+        dest.writeParcelable(packageInfo, flags);
+        dest.writeParcelable(applicationInfo, flags);
         dest.writeInt(user);
         dest.writeInt(uid);
         dest.writeParcelable(icon, flags);
@@ -136,4 +134,16 @@ public class AppData implements Parcelable {
     public int describeContents() {
         return 0;
     }
+
+    public static final Creator<AppData> CREATOR = new Creator<AppData>() {
+        @Override
+        public AppData createFromParcel(Parcel in) {
+            return new AppData(in);
+        }
+
+        @Override
+        public AppData[] newArray(int size) {
+            return new AppData[size];
+        }
+    };
 }

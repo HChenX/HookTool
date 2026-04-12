@@ -26,19 +26,21 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ProviderInfo;
 import android.content.pm.ResolveInfo;
+import android.content.pm.ServiceInfo;
 import android.os.Build;
-import android.os.Parcelable;
 import android.os.UserHandle;
 
 import androidx.annotation.NonNull;
 
 import com.hchen.hooktool.callback.IAppDataGetter;
+import com.hchen.hooktool.callback.IDecomposer;
+import com.hchen.hooktool.core.CoreTool;
 import com.hchen.hooktool.data.AppData;
 import com.hchen.hooktool.exception.UnexpectedException;
 import com.hchen.hooktool.helper.TryHelper;
 
-import java.util.Arrays;
-import java.util.Optional;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
@@ -46,7 +48,7 @@ import java.util.concurrent.Executors;
  *
  * @author 焕晨HChen
  */
-public class PackageTool {
+public final class PackageTool {
     private static final String TAG = "PackageTool";
 
     private PackageTool() {
@@ -70,11 +72,11 @@ public class PackageTool {
     public static boolean isDisable(@NonNull Context context, @NonNull String packageName) {
         try {
             ApplicationInfo result = context.getPackageManager().getApplicationInfo(packageName, 0);
-            if (!result.enabled) return true;
+            return !result.enabled;
         } catch (PackageManager.NameNotFoundException e) {
-            throw new UnexpectedException(e);
+            CoreTool.throwIt(e);
+            return false; // Not actually executed
         }
-        return false;
     }
 
     /**
@@ -83,27 +85,31 @@ public class PackageTool {
      * 获取失败则返回 -1
      */
     public static int getUserId(int uid) {
-        return TryHelper.doTry(() ->
-            (int) Optional.ofNullable(
-                InvokeTool.callStaticMethod(
+        return TryHelper.doTry(new IDecomposer<Integer>() {
+            @Override
+            public Integer get() throws Throwable {
+                Object result = InvokeTool.callStaticMethod(
                     UserHandle.class,
                     "getUserId",
                     new Class[]{int.class},
                     uid
-                )
-            ).orElse(-1)
-        ).orElse(-1);
+                );
+                return result != null ? (int) result : -1;
+            }
+        }).getOrDefault(-1);
     }
 
     /**
      * 判断是否是系统应用
      */
     public static boolean isSystem(@NonNull ApplicationInfo app) {
-        if (app.uid < 10000) return true;
+        if (app.uid < 10000) {
+            return true;
+        }
         return (app.flags & (ApplicationInfo.FLAG_SYSTEM | ApplicationInfo.FLAG_UPDATED_SYSTEM_APP)) != 0;
     }
 
-    public static AppData[] getAppData(@NonNull Context context, @NonNull IAppDataGetter iAppDataGetter) {
+    public static <T> AppData[] getAppData(@NonNull Context context, @NonNull IAppDataGetter<T> iAppDataGetter) {
         return getAppData(context, false, iAppDataGetter);
     }
 
@@ -115,72 +121,78 @@ public class PackageTool {
      * 示例：
      * <p>
      * <pre>{@code
-     * AppData[] appData = PackageTool.getAppData(context, false, new IAppDataGetter() {
+     * AppData[] appData = PackageTool.getAppData(context, false, new IAppDataGetter<PackageInfo>() {
      *      @Override
      *      @NonNull
-     *      public Parcelable[] getPackages(@NonNull PackageManager pm) throws PackageManager.NameNotFoundException {
+     *      public List<PackageInfo> getPackages(@NonNull PackageManager pm) throws PackageManager.NameNotFoundException {
      *          PackageInfo packageInfo = null;
      *          ArrayList<PackageInfo> arrayList = new ArrayList<>();
      *          arrayList.add(packageInfo);
-     *          return arrayList.toArray(new PackageInfo[0]);
+     *          return arrayList;
      *      }
      * });
      *
-     * PackageTool.getAppData(context, true, new IAppDataGetter() {
+     * PackageTool.getAppData(context, true, new IAppDataGetter<PackageInfo>() {
      *      @Override
      *      @NonNull
-     *      public Parcelable[] getPackages(@NonNull PackageManager pm) throws PackageManager.NameNotFoundException {
+     *      public List<PackageInfo> getPackages(@NonNull PackageManager pm) throws PackageManager.NameNotFoundException {
      *          PackageInfo packageInfo = null;
      *          ArrayList<PackageInfo> arrayList = new ArrayList<>();
      *          arrayList.add(packageInfo);
-     *          return arrayList.toArray(new PackageInfo[0]);
+     *          return arrayList;
      *      }
      *
      *      @Override
-     *      public void getAsyncAppData(@NonNull AppData[] appData) {
-     *          IAppDataGetter.super.getAsyncAppData(appData);
+     *      public void getAsyncAppData(@NonNull AppData[] appData, @Nullable PackageManager.NameNotFoundException e) {
+     *          IAppDataGetter.super.getAsyncAppData(appData, e);
      *      }
      * });
      * }
      *
      * @return AppData[] 应用详细信息
-     * @see #createAppData(Parcelable, PackageManager)
+     * @see #createAppData(PackageManager, Object)
      */
-    public static AppData[] getAppData(@NonNull Context context, boolean async, @NonNull IAppDataGetter iAppDataGetter) {
+    public static <T> AppData[] getAppData(@NonNull Context context, boolean async, @NonNull IAppDataGetter<T> iAppDataGetter) {
         PackageManager packageManager = context.getPackageManager();
         try {
             if (async) {
-                Executors.newSingleThreadExecutor().execute(() -> {
-                    try {
-                        iAppDataGetter.getAsyncAppData(
-                            Arrays.stream(iAppDataGetter.getPackages(packageManager))
-                                .map(parcelable -> createAppData(parcelable, packageManager))
-                                .toArray(AppData[]::new)
-                        );
-                    } catch (PackageManager.NameNotFoundException e) {
-                        throw new UnexpectedException(e);
+                ExecutorService service = null;
+                try {
+                    // noinspection resource
+                    service = Executors.newSingleThreadExecutor();
+                    service.execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                List<T> ts = iAppDataGetter.getPackages(packageManager);
+                                AppData[] appDataArray = new AppData[ts.size()];
+                                for (int i = 0; i < ts.size(); i++) {
+                                    appDataArray[i] = createAppData(packageManager, ts.get(i));
+                                }
+                                iAppDataGetter.getAsyncAppData(appDataArray, null);
+                            } catch (PackageManager.NameNotFoundException e) {
+                                iAppDataGetter.getAsyncAppData(new AppData[]{}, e);
+                                CoreTool.throwIt(e);
+                            }
+                        }
+                    });
+                } finally {
+                    if (service != null) {
+                        service.shutdown();
                     }
-                });
+                }
                 return null;
             } else {
-                return Arrays.stream(iAppDataGetter.getPackages(packageManager))
-                    .map(parcelable -> createAppData(parcelable, packageManager))
-                    .toArray(AppData[]::new);
+                List<T> ts = iAppDataGetter.getPackages(packageManager);
+                AppData[] appDataArray = new AppData[ts.size()];
+                for (int i = 0; i < ts.size(); i++) {
+                    appDataArray[i] = createAppData(packageManager, ts.get(i));
+                }
+                return appDataArray;
             }
         } catch (PackageManager.NameNotFoundException e) {
-            throw new UnexpectedException(e);
-        }
-    }
-
-    /**
-     * 获取指定包名的应用信息
-     */
-    public static AppData getTargetAppData(@NonNull Context context, @NonNull String packageName) {
-        try {
-            PackageManager packageManager = context.getPackageManager();
-            return createAppData(packageManager.getApplicationInfo(packageName, 0), packageManager);
-        } catch (PackageManager.NameNotFoundException e) {
-            throw new UnexpectedException(e);
+            CoreTool.throwIt(e);
+            return null; // Not actually executed
         }
     }
 
@@ -188,62 +200,56 @@ public class PackageTool {
      * @noinspection IfCanBeSwitch
      */
     @NonNull
-    public static AppData createAppData(@NonNull Parcelable parcelable, @NonNull PackageManager pm) {
+    public static <T> AppData createAppData(@NonNull PackageManager pm, @NonNull T t) {
         AppData appData = new AppData();
-        if (parcelable instanceof PackageInfo packageInfo) {
-            appData.icon = BitmapTool.drawableToBitmap(packageInfo.applicationInfo.loadIcon(pm));
-            appData.label = packageInfo.applicationInfo.loadLabel(pm).toString();
-            appData.packageName = packageInfo.applicationInfo.packageName;
-            appData.versionName = packageInfo.versionName;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
-                appData.versionCode = Long.toString(packageInfo.getLongVersionCode());
-            else appData.versionCode = Integer.toString(packageInfo.versionCode);
-            appData.isSystemApp = isSystem(packageInfo.applicationInfo);
-            appData.isEnabled = packageInfo.applicationInfo.enabled;
-            appData.user = getUserId(packageInfo.applicationInfo.uid);
-            appData.uid = packageInfo.applicationInfo.uid;
-        } else if (parcelable instanceof ResolveInfo resolveInfo) {
-            ApplicationInfo applicationInfo = aboutResolveInfo(resolveInfo).applicationInfo;
-            appData.icon = BitmapTool.drawableToBitmap(applicationInfo.loadIcon(pm));
-            appData.label = applicationInfo.loadLabel(pm).toString();
-            appData.packageName = applicationInfo.packageName;
-            appData.isSystemApp = isSystem(applicationInfo);
-            appData.isEnabled = applicationInfo.enabled;
-            appData.user = getUserId(applicationInfo.uid);
-            appData.uid = applicationInfo.uid;
-        } else if (parcelable instanceof ActivityInfo activityInfo) {
-            appData.icon = BitmapTool.drawableToBitmap(activityInfo.applicationInfo.loadIcon(pm));
-            appData.label = activityInfo.applicationInfo.loadLabel(pm).toString();
-            appData.packageName = activityInfo.applicationInfo.packageName;
-            appData.isSystemApp = isSystem(activityInfo.applicationInfo);
-            appData.isEnabled = activityInfo.applicationInfo.enabled;
-            appData.user = getUserId(activityInfo.applicationInfo.uid);
-            appData.uid = activityInfo.applicationInfo.uid;
-        } else if (parcelable instanceof ApplicationInfo applicationInfo) {
-            appData.icon = BitmapTool.drawableToBitmap(applicationInfo.loadIcon(pm));
-            appData.label = applicationInfo.loadLabel(pm).toString();
-            appData.packageName = applicationInfo.packageName;
-            appData.isSystemApp = isSystem(applicationInfo);
-            appData.isEnabled = applicationInfo.enabled;
-            appData.user = getUserId(applicationInfo.uid);
-            appData.uid = applicationInfo.uid;
-        } else if (parcelable instanceof ProviderInfo providerInfo) {
-            appData.icon = BitmapTool.drawableToBitmap(providerInfo.applicationInfo.loadIcon(pm));
-            appData.label = providerInfo.applicationInfo.loadLabel(pm).toString();
-            appData.packageName = providerInfo.applicationInfo.packageName;
-            appData.isSystemApp = isSystem(providerInfo.applicationInfo);
-            appData.isEnabled = providerInfo.applicationInfo.enabled;
-            appData.user = getUserId(providerInfo.applicationInfo.uid);
-            appData.uid = providerInfo.applicationInfo.uid;
+        PackageInfo packageInfo = null;
+        ApplicationInfo applicationInfo = null;
+
+        // 根据不同类型的 T 对象获取 ApplicationInfo
+        if (t instanceof PackageInfo info) {
+            packageInfo = info;
+            applicationInfo = info.applicationInfo;
+            appData.versionName = info.versionName;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                appData.versionCode = Long.toString(info.getLongVersionCode());
+            } else {
+                appData.versionCode = Integer.toString(info.versionCode);
+            }
+        } else if (t instanceof ApplicationInfo appInfo) {
+            applicationInfo = appInfo;
+        } else if (t instanceof ResolveInfo resolveInfo) {
+            applicationInfo = aboutResolveInfo(resolveInfo).applicationInfo;
+        } else if (t instanceof ActivityInfo activityInfo) {
+            applicationInfo = activityInfo.applicationInfo;
+        } else if (t instanceof ServiceInfo serviceInfo) {
+            applicationInfo = serviceInfo.applicationInfo;
+        } else if (t instanceof ProviderInfo providerInfo) {
+            applicationInfo = providerInfo.applicationInfo;
+        } else {
+            throw new UnexpectedException("Unknown type: " + t);
         }
+
+        // 填充应用数据
+        if (applicationInfo != null) {
+            appData.packageInfo = packageInfo;
+            appData.applicationInfo = applicationInfo;
+            appData.icon = BitmapTool.drawableToBitmap(applicationInfo.loadIcon(pm));
+            appData.label = applicationInfo.loadLabel(pm).toString();
+            appData.packageName = applicationInfo.packageName;
+            appData.isSystemApp = isSystem(applicationInfo);
+            appData.isEnabled = applicationInfo.enabled;
+            appData.user = getUserId(applicationInfo.uid);
+            appData.uid = applicationInfo.uid;
+        }
+
         return appData;
     }
 
     @NonNull
-    private static ComponentInfo aboutResolveInfo(ResolveInfo resolveInfo) {
+    private static ComponentInfo aboutResolveInfo(@NonNull ResolveInfo resolveInfo) {
         if (resolveInfo.activityInfo != null) return resolveInfo.activityInfo;
         if (resolveInfo.serviceInfo != null) return resolveInfo.serviceInfo;
         if (resolveInfo.providerInfo != null) return resolveInfo.providerInfo;
-        throw new UnexpectedException("[PackageTool]: Unable to obtain application information!!");
+        throw new UnexpectedException("Unable to obtain application information.");
     }
 }

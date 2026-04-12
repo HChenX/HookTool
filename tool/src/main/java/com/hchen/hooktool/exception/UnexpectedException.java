@@ -23,7 +23,7 @@ package com.hchen.hooktool.exception;
  *
  * @author 焕晨HChen
  */
-public class UnexpectedException extends RuntimeException {
+public final class UnexpectedException extends RuntimeException {
     public UnexpectedException() {
         super();
     }

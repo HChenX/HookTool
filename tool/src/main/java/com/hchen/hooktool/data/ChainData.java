@@ -20,109 +20,168 @@ package com.hchen.hooktool.data;
 
 import androidx.annotation.NonNull;
 
-import com.hchen.hooktool.hook.IHook;
+import com.hchen.hooktool.hook.AbsHook;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Member;
-import java.lang.reflect.Method;
+import java.lang.reflect.Executable;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.function.Function;
 
 /**
  * 链式数据
  *
  * @author 焕晨HChen
  */
-public class ChainData {
+public final class ChainData {
     // -------------------------- Data ------------------------------
 
+    /**
+     * 链式调用类型
+     */
     public ChainType chainType;
-    public IHook iHook;
-    public boolean ifExist;
-    public Member[] members = new Member[1];
+
+    /**
+     * 可执行对象数组
+     */
+    public Executable[] executables = new Executable[1];
+
+    /**
+     * 钩子对象
+     */
+    public AbsHook absHook;
+
+    /**
+     * 异常对象
+     */
+    public Throwable throwable;
+
+    /**
+     * 异常处理函数
+     */
+    public Function<Throwable, Boolean> function;
+
+    /**
+     * 是否忽略异常
+     */
+    public boolean isIgnoreThrow = false;
+
+    // ---------------------------------------------------------------
+
+    /**
+     * 参数类型数组
+     */
+    public Object[] parameterTypes;
+
+    /**
+     * 单个可执行对象
+     */
+    public Executable executable;
 
     // -------------------------- Method ------------------------------
 
+    /**
+     * 方法名
+     */
     public String methodName;
-    public Object[] methodParams;
-    public Method method;
 
-    public ChainData(String methodName, Object... methodParams) {
+    /**
+     * 构造方法，用于查找指定方法
+     *
+     * @param methodName     方法名
+     * @param parameterTypes 参数类型
+     */
+    public ChainData(@NonNull String methodName, @NonNull Object... parameterTypes) {
         this.methodName = methodName;
-        this.methodParams = methodParams;
+        this.parameterTypes = parameterTypes;
         this.chainType = ChainType.FIND_METHOD;
     }
 
-    public ChainData(String methodName) {
+    /**
+     * 构造方法，用于查找所有指定名称的方法
+     *
+     * @param methodName 方法名
+     */
+    public ChainData(@NonNull String methodName) {
         this.methodName = methodName;
         this.chainType = ChainType.FIND_ALL_METHOD;
     }
 
-    public ChainData(Method method) {
-        this.method = method;
-        this.chainType = ChainType.METHOD;
-    }
-
     // -------------------------- Constructor ------------------------------
 
-    public Object[] constructorParams;
-    public Constructor<?> constructor;
+    /**
+     * 构造方法，用于查找指定构造函数
+     *
+     * @param parameterTypes 参数类型
+     */
+    public ChainData(@NonNull Object... parameterTypes) {
+        this.parameterTypes = parameterTypes;
+        this.chainType = ChainType.FIND_CONSTRUCTOR;
+    }
 
+    /**
+     * 构造方法，用于查找所有构造函数
+     */
     public ChainData() {
         this.chainType = ChainType.FIND_ALL_CONSTRUCTOR;
     }
 
-    public ChainData(Object... constructorParams) {
-        this.constructorParams = constructorParams;
-        this.chainType = ChainType.FIND_CONSTRUCTOR;
+    // ----------------------- Executable ----------------------------
+
+    /**
+     * 构造方法，用于指定可执行对象
+     *
+     * @param executable 可执行对象
+     */
+    public ChainData(@NonNull Executable executable) {
+        this.executable = executable;
+        this.chainType = ChainType.EXECUTABLE;
     }
 
-    public ChainData(Constructor<?> constructor) {
-        this.constructor = constructor;
-        this.chainType = ChainType.CONSTRUCTOR;
-    }
-
-    // ------------------------ Exist ---------------------------------
-
-    public void setIfExist(boolean ifExist) {
-        this.ifExist = ifExist;
-    }
+    // ---------------------------------------------------------------
 
     @NonNull
     @Override
     public String toString() {
         return "ChainData{" +
             "chainType=" + chainType +
-            ", iHook=" + iHook +
-            ", ifExist=" + ifExist +
-            ", members=" + Arrays.toString(members) +
+            ", executables=" + Arrays.toString(executables) +
+            ", absHook=" + absHook +
+            ", throwable=" + throwable +
+            ", function=" + function +
+            ", isIgnoreThrow=" + isIgnoreThrow +
+            ", parameterTypes=" + Arrays.toString(parameterTypes) +
+            ", executable=" + executable +
             ", methodName='" + methodName + '\'' +
-            ", methodParams=" + Arrays.toString(methodParams) +
-            ", method=" + method +
-            ", constructorParams=" + Arrays.toString(constructorParams) +
-            ", constructor=" + constructor +
             '}';
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (!(o instanceof ChainData chainData)) return false;
-        return // ifExist == chainData.ifExist && ignore
-            chainType == chainData.chainType &&
-                // Objects.equals(iHook, chainData.iHook) && ignore
-                // Objects.deepEquals(members, chainData.members) && ignore
-                Objects.equals(method, chainData.method) &&
-                Objects.equals(methodName, chainData.methodName) &&
-                Objects.deepEquals(methodParams, chainData.methodParams) &&
-                Objects.equals(constructor, chainData.constructor) &&
-                Objects.deepEquals(constructorParams, chainData.constructorParams);
+    public boolean equals(Object object) {
+        if (!(object instanceof ChainData chainData)) return false;
+
+        return chainType == chainData.chainType &&
+            // isIgnoreThrow == chainData.isIgnoreThrow &&
+            // Objects.deepEquals(executables, chainData.executables) &&
+            // Objects.equals(absHook, chainData.absHook) &&
+            // Objects.equals(throwable, chainData.throwable) &&
+            // Objects.equals(function, chainData.function) &&
+            Arrays.deepEquals(parameterTypes, chainData.parameterTypes) &&
+            Objects.equals(executable, chainData.executable) &&
+            Objects.equals(methodName, chainData.methodName);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(chainType,
-            /* ifExist ignore */ /* iHook ignore */ /* Arrays.hashCode(members) ignore */
-            method, methodName, Arrays.hashCode(methodParams),
-            Arrays.hashCode(constructorParams), constructor);
+        return Objects.hash(
+            chainType,
+            // isIgnoreThrow,
+            // Arrays.hashCode(executables),
+            // absHook,
+            // throwable,
+            // function,
+            Arrays.hashCode(parameterTypes),
+            executable,
+            methodName
+        );
     }
 }
