@@ -26,6 +26,7 @@ import androidx.annotation.NonNull;
 
 import com.hchen.hooktool.core.CoreTool;
 import com.hchen.hooktool.hook.AbsHook;
+import com.hchen.hooktool.log.AndroidLog;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -134,7 +135,8 @@ public abstract class ModuleEntrance extends XposedModule {
                         }
                     }
                 );
-            } catch (Throwable ignore) {
+            } catch (Throwable e) {
+                AndroidLog.logW("ModuleEntrance", "Failed to hook Application.attach()", e);
             }
         }
     }

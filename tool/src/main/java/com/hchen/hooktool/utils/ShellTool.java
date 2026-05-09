@@ -295,13 +295,18 @@ public final class ShellTool {
             try {
                 // noinspection resource
                 service = Executors.newSingleThreadExecutor();
-                service.submit(callable);
+                Future<Integer> future = service.submit(callable);
+                try {
+                    return future.get(10, TimeUnit.SECONDS) == 0;
+                } catch (Exception e) {
+                    AndroidLog.logE(TAG, "Error waiting for root check result!!", e);
+                    return false;
+                }
             } finally {
                 if (service != null) {
-                    service.shutdown();
+                    service.shutdownNow();
                 }
             }
-            return false;
         }
     }
     // ----------------------------------------------------------------------------------------------
@@ -320,6 +325,8 @@ public final class ShellTool {
             this.shellTool = shellTool;
         }
 
+        private volatile boolean resultReady = false;
+
         private synchronized void init() {
             try {
                 if (isActive()) return;
@@ -332,8 +339,6 @@ public final class ShellTool {
                 streamThread.run();
             } catch (IOException e) {
                 throw new UnexpectedException("Error initializing shell stream.");
-            } finally {
-                notify();
             }
         }
 
@@ -369,6 +374,7 @@ public final class ShellTool {
                 )
                 .getBytes(StandardCharsets.UTF_8);
             streamThread.shellSyncMap.put(String.valueOf(command.hashCode()), command);
+            resultReady = false;
             write("{");
             writeAll(commands);
             write("}");
@@ -376,7 +382,9 @@ public final class ShellTool {
             command = null;
 
             try {
-                wait();
+                while (!resultReady) {
+                    wait();
+                }
             } catch (InterruptedException ignore) {
             }
 
@@ -463,6 +471,7 @@ public final class ShellTool {
                 command = null;
                 process = null;
                 os = null;
+                resultReady = false;
             }
         }
 
@@ -511,7 +520,7 @@ public final class ShellTool {
         private final InputStream input;
         @NonNull
         private final InputStream error;
-        private boolean isAbnormalExit = false;
+        private volatile boolean isAbnormalExit = false;
 
         private StreamThread(@NonNull ShellImpl shellImpl, @NonNull InputStream inputStream, @NonNull InputStream errorStream) {
             this.shellImpl = shellImpl;
@@ -720,6 +729,7 @@ public final class ShellTool {
 
                 synchronized (shellImpl) {
                     try {
+                        shellImpl.resultReady = true;
                         shellImpl.notify();
                     } catch (IllegalMonitorStateException ignore) {
                     }

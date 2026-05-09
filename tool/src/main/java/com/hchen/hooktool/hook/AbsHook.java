@@ -86,31 +86,33 @@ public abstract class AbsHook {
         private int depth = -1;
 
         void push(@NonNull XposedInterface.Chain chain) {
-            depth++;
-            if (depth >= states.length) {
+            int newDepth = depth + 1;
+            if (newDepth >= states.length) {
                 states = Arrays.copyOf(states, states.length * 2);
             }
-            if (states[depth] == null) {
-                states[depth] = new CallState();
+            if (states[newDepth] == null) {
+                states[newDepth] = new CallState();
             }
-            states[depth].reset(chain);
+            states[newDepth].reset(chain);
+            depth = newDepth;
         }
 
         void pop() {
-            if (depth >= 0) {
-                states[depth].originalChain = null;
-                states[depth].args = null;
-                states[depth].originalResult = null;
-                states[depth].replaceResult = null;
-                states[depth].throwable = null;
-                states[depth].isArgsChanged = false;
-                states[depth].isResultChanged = false;
+            if (depth >= 0 && depth < states.length) {
+                CallState state = states[depth];
+                state.originalChain = null;
+                state.args = null;
+                state.originalResult = null;
+                state.replaceResult = null;
+                state.throwable = null;
+                state.isArgsChanged = false;
+                state.isResultChanged = false;
                 depth--;
             }
         }
 
         CallState current() {
-            if (depth < 0) return null;
+            if (depth < 0 || depth >= states.length) return null;
             return states[depth];
         }
     }
@@ -121,7 +123,7 @@ public abstract class AbsHook {
             return new StateStack();
         }
     };
-    private XposedInterface.HookHandle handle;
+    private volatile XposedInterface.HookHandle handle;
 
     public enum StageEnum {
         BEFORE,
@@ -135,6 +137,10 @@ public abstract class AbsHook {
 
     public AbsHook(int priority) {
         this.priority = priority;
+    }
+
+    public final int getPriority() {
+        return priority;
     }
 
     /**
@@ -367,8 +373,7 @@ public abstract class AbsHook {
      * 移除当前钩子的所有拦截
      */
     final public void unHookSelf() {
-        Objects.requireNonNull(handle);
-        stackLocal.remove();
+        Objects.requireNonNull(handle, "Hook handle is not initialized. Cannot unhook before the hook is applied.");
         handle.unhook();
     }
 

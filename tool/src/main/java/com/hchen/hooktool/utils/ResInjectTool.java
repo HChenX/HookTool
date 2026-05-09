@@ -46,6 +46,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.github.libxposed.api.XposedInterface;
 
@@ -56,10 +57,10 @@ import io.github.libxposed.api.XposedInterface;
  */
 public final class ResInjectTool {
     private static final String TAG = "ResInjectTool";
-    private static ResourcesLoader resourcesLoader = null;
+    private static volatile ResourcesLoader resourcesLoader = null;
     private static final ConcurrentHashMap<String, Pair<ReplacementType, Object>> replacements = new ConcurrentHashMap<>();
-    private static boolean isInjected = false;
-    private static boolean isHooked = false;
+    private static final AtomicBoolean isInjected = new AtomicBoolean(false);
+    private static final AtomicBoolean isHooked = new AtomicBoolean(false);
 
     private enum ReplacementType {
         ID,
@@ -86,7 +87,7 @@ public final class ResInjectTool {
      * Tip: `0x64` is the resource id, you can change it to any value you want.(recommended [0x30 to 0x6F])
      */
     public static void injectModuleRes() {
-        if (isInjected) return;
+        if (!isInjected.compareAndSet(false, true)) return;
 
         String sourceDir = ModuleData.getModulePath();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -146,7 +147,6 @@ public final class ResInjectTool {
             );
         }
 
-        isInjected = true;
     }
 
     public static int createFakeResId(@NonNull String resName) {
@@ -197,8 +197,9 @@ public final class ResInjectTool {
 
     @SuppressWarnings("DataFlowIssue")
     private static void applyHooks() {
-        if (isHooked) return;
-        if (!isInjected) {
+        if (!isHooked.compareAndSet(false, true)) return;
+        if (!isInjected.get()) {
+            isHooked.set(false);
             throw new InjectResourcesException("Should inject module res first.");
         }
 
@@ -242,7 +243,6 @@ public final class ResInjectTool {
         CoreTool.hookMethod(TypedArray.class, "getDrawableForDensity", int.class, int.class, hookTypedBefore); // Drawable
         CoreTool.hookMethod(TypedArray.class, "getFraction", int.class, int.class, int.class, float.class, hookTypedBefore); // float
 
-        isHooked = true;
     }
 
     private static final AbsHook hookResBefore = new AbsHook() {

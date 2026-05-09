@@ -87,7 +87,7 @@ public final class HookBridge {
                     } catch (Throwable throwable) {
                         if (!absHook.onThrow(AbsHook.StageEnum.PROCEED, throwable)) {
                             absHook.setThrowable(throwable);
-                            // throw throwable; // 此处不抛出异常，给予 after 拦截的机会
+                            // 此处不抛出异常，给予 after 拦截的机会
                         }
                     }
 

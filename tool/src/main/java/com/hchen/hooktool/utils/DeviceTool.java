@@ -164,7 +164,13 @@ public final class DeviceTool {
         if (isHyperOSVersion(osVersion)) {
             String version = getXiaomiVersion();
             String[] vs = version.trim().split("\\.");
-            if (vs.length >= 3) return isMatchVersion(Integer.parseInt(vs[2]), smallVersion, mode);
+            if (vs.length >= 3) {
+                try {
+                    return isMatchVersion(Integer.parseInt(vs[2]), smallVersion, mode);
+                } catch (NumberFormatException e) {
+                    return false;
+                }
+            }
             return false;
         }
         return false;
@@ -182,7 +188,11 @@ public final class DeviceTool {
      */
     public static boolean isColorOSVersion(float version, @RangeHelper.RangeModeFlag int mode) {
         String v = getProp(VERSION_PROPERTY_COLOROS); // result like "15.0"
-        return isMatchVersion(Float.parseFloat(v), version, mode);
+        try {
+            return isMatchVersion(Float.parseFloat(v), version, mode);
+        } catch (NumberFormatException e) {
+            return false;
+        }
     }
 
     private static boolean isMatchVersion(float version, float targetVersion, @RangeHelper.RangeModeFlag int mode) {

@@ -1094,9 +1094,25 @@ open class CoreTool : XposedLog() {
          */
         @JvmStatic
         fun Array<out Executable>.hookAll(absHook: AbsHook): Array<XposedInterface.HookHandle> {
-            return this.map {
-                it.hook(absHook)
+            return this.map { executable ->
+                val delegate = DelegateHook(absHook)
+                executable.hook(delegate)
             }.toTypedArray()
+        }
+
+        /**
+         * 委托钩子，为每个可执行对象创建独立的 handle 管理
+         * 解决多个 hook 共享同一个 AbsHook 实例时 unHookSelf 只能解除最后一个 hook 的问题
+         */
+        private class DelegateHook(private val delegate: AbsHook) : AbsHook(delegate.getPriority()) {
+            override fun before() = delegate.before()
+            override fun after() = delegate.after()
+            override fun onThrow(stage: StageEnum, e: Throwable): Boolean = delegate.onThrow(stage, e)
+
+            @Throws(Throwable::class)
+            override fun proceed(chain: XposedInterface.Chain): Any? {
+                return delegate.proceed(chain)
+            }
         }
 
         /**

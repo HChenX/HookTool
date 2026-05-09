@@ -33,16 +33,16 @@ import java.lang.annotation.RetentionPolicy;
  */
 public final class ModuleConfig {
     @NonNull
-    private static String logTag;
+    private static volatile String logTag;
     @LogLevel
-    private static int logLevel;
+    private static volatile int logLevel;
     @NonNull
-    private static String prefsName;
+    private static volatile String prefsName;
     @NonNull
-    private static String[] logExpandPaths;
+    private static volatile String[] logExpandPaths;
     @NonNull
-    private static String[] logExpandIgnoreClassNames;
-    private static boolean isShowHookSuccessLog;
+    private static volatile String[] logExpandIgnoreClassNames;
+    private static volatile boolean isShowHookSuccessLog;
 
     // -------- 可选日志等级 --------
     public static final int LOG_E = 1;
