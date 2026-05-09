@@ -39,8 +39,9 @@ public final class LogExpand {
     @NonNull
     public static String printStackTrace(@NonNull Throwable e) {
         StringWriter stringWriter = new StringWriter();
-        PrintWriter printWriter = new PrintWriter(stringWriter);
-        e.printStackTrace(printWriter);
+        try (PrintWriter printWriter = new PrintWriter(stringWriter)) {
+            e.printStackTrace(printWriter);
+        }
         return stringWriter.toString();
     }
 

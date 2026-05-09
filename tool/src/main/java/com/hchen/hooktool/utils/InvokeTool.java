@@ -136,6 +136,9 @@ public final class InvokeTool {
      */
     private static <T> T baseInvokeMethod(Class<?> clazz, Object instance, @NonNull String methodName, @NonNull Class<?>[] parameterTypes, @NonNull Object... args) {
         if (clazz == null) {
+            if (instance == null) {
+                throw new IllegalArgumentException("Both clazz and instance cannot be null.");
+            }
             clazz = instance.getClass();
         }
 
@@ -194,6 +197,9 @@ public final class InvokeTool {
      */
     private static <T> T baseInvokeField(Class<?> clazz, Object instance, @NonNull String fieldName, boolean isSetter, Object value) {
         if (clazz == null) {
+            if (instance == null) {
+                throw new IllegalArgumentException("Both clazz and instance cannot be null.");
+            }
             clazz = instance.getClass();
         }
 

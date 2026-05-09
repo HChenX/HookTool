@@ -80,7 +80,8 @@ public final class DeviceTool {
      * 获取 HyperOS 版本
      */
     public static float getHyperOSVersion() {
-        float os = switch (getProp(VERSION_PROPERTY_HYPER_OS).trim()) {
+        String raw = getProp(VERSION_PROPERTY_HYPER_OS).trim();
+        float os = switch (raw) {
             case "OS3.0" -> 3f;
             case "OS2.0" -> 2f;
             case "OS1.0" -> 1f;
@@ -88,7 +89,7 @@ public final class DeviceTool {
         };
         if (os == 0f) {
             try {
-                os = Float.parseFloat(getProp(VERSION_PROPERTY_HYPER_OS).trim().replace("OS", ""));
+                os = Float.parseFloat(raw.replace("OS", ""));
             } catch (Throwable ignore) {
                 os = 0f;
             }
@@ -502,12 +503,20 @@ public final class DeviceTool {
 
     private static boolean isPadBySize(@NonNull Context context) {
         WindowManager windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-        Display display = windowManager.getDefaultDisplay();
-        DisplayMetrics dm = new DisplayMetrics();
-        display.getMetrics(dm);
-        double x = Math.pow(dm.widthPixels / dm.xdpi, 2);
-        double y = Math.pow(dm.heightPixels / dm.ydpi, 2);
-        return Math.sqrt(x + y) >= 7.0;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            Rect bounds = windowManager.getCurrentWindowMetrics().getBounds();
+            DisplayMetrics dm = context.getResources().getDisplayMetrics();
+            double x = Math.pow(bounds.width() / dm.xdpi, 2);
+            double y = Math.pow(bounds.height() / dm.ydpi, 2);
+            return Math.sqrt(x + y) >= 7.0;
+        } else {
+            Display display = windowManager.getDefaultDisplay();
+            DisplayMetrics dm = new DisplayMetrics();
+            display.getMetrics(dm);
+            double x = Math.pow(dm.widthPixels / dm.xdpi, 2);
+            double y = Math.pow(dm.heightPixels / dm.ydpi, 2);
+            return Math.sqrt(x + y) >= 7.0;
+        }
     }
 
     private static boolean isPadByApi(@NonNull Context context) {

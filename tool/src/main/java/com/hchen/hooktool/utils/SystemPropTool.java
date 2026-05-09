@@ -30,7 +30,16 @@ import java.util.Optional;
  * @author 焕晨HChen
  */
 public final class SystemPropTool {
-    private static final Class<?> propClass = InvokeTool.findClass("android.os.SystemProperties");
+    private static final Class<?> propClass;
+
+    static {
+        Class<?> clazz = null;
+        try {
+            clazz = InvokeTool.findClass("android.os.SystemProperties");
+        } catch (Throwable ignore) {
+        }
+        propClass = clazz;
+    }
 
     private SystemPropTool() {
     }
@@ -39,47 +48,40 @@ public final class SystemPropTool {
      * 获取 boolean 类型的 prop
      */
     public static boolean getProp(@NonNull String key, boolean def) {
+        if (propClass == null) return def;
         return Boolean.TRUE.equals(
             callStaticMethod(propClass, "getBoolean", new Class[]{String.class, boolean.class}, key, def)
         );
     }
 
-    /**
-     * 获取 int 类型的 prop
-     */
     public static int getProp(@NonNull String key, int def) {
+        if (propClass == null) return def;
         return (int) Optional.ofNullable(
             callStaticMethod(propClass, "getInt", new Class[]{String.class, int.class}, key, def)
         ).orElse(def);
     }
 
-    /**
-     * 获取 long 类型的 prop
-     */
     public static long getProp(@NonNull String key, long def) {
+        if (propClass == null) return def;
         return (long) Optional.ofNullable(
             callStaticMethod(propClass, "getLong", new Class[]{String.class, long.class}, key, def)
         ).orElse(def);
     }
 
-    /**
-     * 获取 String 类型的 prop
-     */
     public static String getProp(@NonNull String key, String def) {
+        if (propClass == null) return def;
         return (String) Optional.ofNullable(
             callStaticMethod(propClass, "get", new Class[]{String.class, String.class}, key, def)
         ).orElse(def);
     }
 
-    /**
-     * 获取 String 类型的 prop，无默认值
-     */
     public static String getProp(@NonNull String key) {
+        if (propClass == null) return "";
         return callStaticMethod(propClass, "get", new Class[]{String.class}, key);
     }
 
     /**
-     * 获取 String 类型的 prop，无默认值
+     * 获取 String 类型的 prop，指定 ClassLoader
      */
     public static String getProp(@NonNull String key, ClassLoader classLoader) {
         return callStaticMethod(
@@ -97,6 +99,7 @@ public final class SystemPropTool {
      * 可设置的 prop 类型非常有限，一般情况下使用不到
      */
     public static void setProp(@NonNull String key, String vale) {
+        if (propClass == null) return;
         callStaticMethod(propClass, "set", new Class[]{String.class, String.class}, key, vale);
     }
 }

@@ -110,11 +110,11 @@ public final class ShellTool {
     private static final String END_UUID = UUID.randomUUID().toString();
     private static final byte[] LINE_BREAK = "\n".getBytes(StandardCharsets.UTF_8);
     private static final ShellTool shellTool = new ShellTool();
-    private static boolean isRoot = false;
-    private static String[] shellCommands = new String[]{"su", "sh"};
-    private static IExecListener iGlobalExecListeners;
-    private static ICommandListener iGlobalCommandListener;
-    private static ShellImpl shellImpl;
+    private static volatile boolean isRoot = false;
+    private static volatile String[] shellCommands = new String[]{"su", "sh"};
+    private static volatile IExecListener iGlobalExecListeners;
+    private static volatile ICommandListener iGlobalCommandListener;
+    private static volatile ShellImpl shellImpl;
 
     private ShellTool() {
         shellImpl = new ShellImpl(this);
@@ -443,9 +443,9 @@ public final class ShellTool {
 
         public synchronized void close() {
             try {
-                if (isActive() || (streamThread != null && streamThread.isAbnormalExit())) {
-                    // 异常退出时 os 流已经死了，不需要再写入 exit 了
-                    if (!streamThread.isAbnormalExit()) {
+                boolean abnormal = streamThread != null && streamThread.isAbnormalExit();
+                if (isActive() || abnormal) {
+                    if (!abnormal) {
                         write("exit");
                     }
 
@@ -454,7 +454,7 @@ public final class ShellTool {
                         process.destroy();
                     }
 
-                    if (os != null && !streamThread.isAbnormalExit()) {
+                    if (os != null && !abnormal) {
                         try {
                             os.close();
                         } catch (IOException e) {
@@ -462,7 +462,9 @@ public final class ShellTool {
                         }
                     }
 
-                    streamThread.close();
+                    if (streamThread != null) {
+                        streamThread.close();
+                    }
                 }
             } catch (InterruptedException e) {
                 AndroidLog.logE(TAG, "Error closing shell stream!!", e);

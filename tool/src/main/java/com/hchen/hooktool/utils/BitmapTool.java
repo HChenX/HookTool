@@ -35,6 +35,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 
 /**
  * Bitmap 工具
@@ -70,6 +71,9 @@ public final class BitmapTool {
             width = drawable.getIntrinsicWidth();
             height = drawable.getIntrinsicHeight();
         }
+
+        if (width <= 0) width = 1;
+        if (height <= 0) height = 1;
 
         Bitmap.Config config = drawable.getOpacity() != PixelFormat.OPAQUE ? Bitmap.Config.ARGB_8888 : Bitmap.Config.RGB_565;
         Bitmap bitmap = Bitmap.createBitmap(width, height, config);
@@ -132,9 +136,12 @@ public final class BitmapTool {
      */
     @NonNull
     public static byte[] bitmapToBytes(@NonNull Bitmap bitmap) {
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
-        return stream.toByteArray();
+        try (ByteArrayOutputStream stream = new ByteArrayOutputStream()) {
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+            return stream.toByteArray();
+        } catch (IOException e) {
+            return new byte[0];
+        }
     }
 
     /**
