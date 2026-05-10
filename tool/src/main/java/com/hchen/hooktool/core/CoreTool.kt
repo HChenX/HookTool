@@ -1094,9 +1094,7 @@ open class CoreTool : XposedLog() {
          */
         @JvmStatic
         fun Array<out Executable>.hookAll(absHook: AbsHook): Array<XposedInterface.HookHandle> {
-            return this.map {
-                it.hook(absHook)
-            }.toTypedArray()
+            return this.map { it.hook(absHook) }.toTypedArray()
         }
 
         /**

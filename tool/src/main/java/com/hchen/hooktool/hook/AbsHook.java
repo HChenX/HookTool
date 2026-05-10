@@ -29,6 +29,7 @@ import java.lang.reflect.Executable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import io.github.libxposed.api.XposedInterface;
 
@@ -86,31 +87,33 @@ public abstract class AbsHook {
         private int depth = -1;
 
         void push(@NonNull XposedInterface.Chain chain) {
-            depth++;
-            if (depth >= states.length) {
+            int newDepth = depth + 1;
+            if (newDepth >= states.length) {
                 states = Arrays.copyOf(states, states.length * 2);
             }
-            if (states[depth] == null) {
-                states[depth] = new CallState();
+            if (states[newDepth] == null) {
+                states[newDepth] = new CallState();
             }
-            states[depth].reset(chain);
+            states[newDepth].reset(chain);
+            depth = newDepth;
         }
 
         void pop() {
-            if (depth >= 0) {
-                states[depth].originalChain = null;
-                states[depth].args = null;
-                states[depth].originalResult = null;
-                states[depth].replaceResult = null;
-                states[depth].throwable = null;
-                states[depth].isArgsChanged = false;
-                states[depth].isResultChanged = false;
+            if (depth >= 0 && depth < states.length) {
+                CallState state = states[depth];
+                state.originalChain = null;
+                state.args = null;
+                state.originalResult = null;
+                state.replaceResult = null;
+                state.throwable = null;
+                state.isArgsChanged = false;
+                state.isResultChanged = false;
                 depth--;
             }
         }
 
         CallState current() {
-            if (depth < 0) return null;
+            if (depth < 0 || depth >= states.length) return null;
             return states[depth];
         }
     }
@@ -121,7 +124,7 @@ public abstract class AbsHook {
             return new StateStack();
         }
     };
-    private XposedInterface.HookHandle handle;
+    private final CopyOnWriteArrayList<XposedInterface.HookHandle> handles = new CopyOnWriteArrayList<>();
 
     public enum StageEnum {
         BEFORE,
@@ -316,7 +319,7 @@ public abstract class AbsHook {
     }
 
     final void setHandle(@NonNull XposedInterface.HookHandle handle) {
-        this.handle = handle;
+        this.handles.add(handle);
     }
 
     // --- 生命周期管理 ---
@@ -367,9 +370,12 @@ public abstract class AbsHook {
      * 移除当前钩子的所有拦截
      */
     final public void unHookSelf() {
-        Objects.requireNonNull(handle);
-        stackLocal.remove();
-        handle.unhook();
+        if (handles.isEmpty()) {
+            throw new IllegalStateException("Hook handle is not initialized. Cannot unhook before the hook is applied.");
+        }
+        for (XposedInterface.HookHandle handle : handles) {
+            handle.unhook();
+        }
     }
 
     /**
@@ -387,7 +393,7 @@ public abstract class AbsHook {
         StateStack stack = stackLocal.get();
         CallState state = stack != null ? stack.current() : null;
         return "AbsHook{" +
-            "handle=" + handle +
+            "handles=" + handles +
             ", callState=" + (state != null ? state.toString() : "null") +
             '}';
     }

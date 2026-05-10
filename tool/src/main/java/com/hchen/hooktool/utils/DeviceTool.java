@@ -80,7 +80,8 @@ public final class DeviceTool {
      * 获取 HyperOS 版本
      */
     public static float getHyperOSVersion() {
-        float os = switch (getProp(VERSION_PROPERTY_HYPER_OS).trim()) {
+        String raw = getProp(VERSION_PROPERTY_HYPER_OS).trim();
+        float os = switch (raw) {
             case "OS3.0" -> 3f;
             case "OS2.0" -> 2f;
             case "OS1.0" -> 1f;
@@ -88,7 +89,7 @@ public final class DeviceTool {
         };
         if (os == 0f) {
             try {
-                os = Float.parseFloat(getProp(VERSION_PROPERTY_HYPER_OS).trim().replace("OS", ""));
+                os = Float.parseFloat(raw.replace("OS", ""));
             } catch (Throwable ignore) {
                 os = 0f;
             }
@@ -164,7 +165,13 @@ public final class DeviceTool {
         if (isHyperOSVersion(osVersion)) {
             String version = getXiaomiVersion();
             String[] vs = version.trim().split("\\.");
-            if (vs.length >= 3) return isMatchVersion(Integer.parseInt(vs[2]), smallVersion, mode);
+            if (vs.length >= 3) {
+                try {
+                    return isMatchVersion(Integer.parseInt(vs[2]), smallVersion, mode);
+                } catch (NumberFormatException e) {
+                    return false;
+                }
+            }
             return false;
         }
         return false;
@@ -182,7 +189,11 @@ public final class DeviceTool {
      */
     public static boolean isColorOSVersion(float version, @RangeHelper.RangeModeFlag int mode) {
         String v = getProp(VERSION_PROPERTY_COLOROS); // result like "15.0"
-        return isMatchVersion(Float.parseFloat(v), version, mode);
+        try {
+            return isMatchVersion(Float.parseFloat(v), version, mode);
+        } catch (NumberFormatException e) {
+            return false;
+        }
     }
 
     private static boolean isMatchVersion(float version, float targetVersion, @RangeHelper.RangeModeFlag int mode) {
@@ -209,6 +220,8 @@ public final class DeviceTool {
     }
 
     // ----------------------- 手机品牌 -------------------------
+    private static final String BRAND_LOWER = Build.BRAND.toLowerCase();
+    private static final String MANUFACTURER_LOWER = Build.MANUFACTURER.toLowerCase();
     public static final String[] DEVICE_XIAOMI = {"xiaomi", "redmi"};
     public static final String[] DEVICE_COLOROS = {"oppo", "realme", "oneplus", "oplus"};
     public static final String[] DEVICE_SAMSUNG = {"samsung"};
@@ -265,8 +278,8 @@ public final class DeviceTool {
     public static boolean isRightRom(@NonNull final String... names) {
         for (String name : names) {
             if (
-                Build.BRAND.toLowerCase().contains(name.toLowerCase()) ||
-                    Build.MANUFACTURER.toLowerCase().contains(name.toLowerCase())
+                BRAND_LOWER.contains(name.toLowerCase()) ||
+                    MANUFACTURER_LOWER.contains(name.toLowerCase())
             ) {
                 return true;
             }
@@ -492,12 +505,20 @@ public final class DeviceTool {
 
     private static boolean isPadBySize(@NonNull Context context) {
         WindowManager windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-        Display display = windowManager.getDefaultDisplay();
-        DisplayMetrics dm = new DisplayMetrics();
-        display.getMetrics(dm);
-        double x = Math.pow(dm.widthPixels / dm.xdpi, 2);
-        double y = Math.pow(dm.heightPixels / dm.ydpi, 2);
-        return Math.sqrt(x + y) >= 7.0;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            Rect bounds = windowManager.getCurrentWindowMetrics().getBounds();
+            DisplayMetrics dm = context.getResources().getDisplayMetrics();
+            double x = Math.pow(bounds.width() / dm.xdpi, 2);
+            double y = Math.pow(bounds.height() / dm.ydpi, 2);
+            return Math.sqrt(x + y) >= 7.0;
+        } else {
+            Display display = windowManager.getDefaultDisplay();
+            DisplayMetrics dm = new DisplayMetrics();
+            display.getMetrics(dm);
+            double x = Math.pow(dm.widthPixels / dm.xdpi, 2);
+            double y = Math.pow(dm.heightPixels / dm.ydpi, 2);
+            return Math.sqrt(x + y) >= 7.0;
+        }
     }
 
     private static boolean isPadByApi(@NonNull Context context) {

@@ -20,7 +20,6 @@ package com.hchen.hooktool;
 
 import android.content.ContentResolver;
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -57,14 +56,7 @@ public final class ModuleState {
             Bundle result = null;
             try {
                 result = contentResolver.call(uri, "active", null, null);
-            } catch (Throwable t) {
-                try {
-                    Intent intent = new Intent("me.weishu.exp.ACTION_ACTIVE");
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    context.startActivity(intent);
-                } catch (Throwable ignore) {
-                    return false;
-                }
+            } catch (Throwable ignore) {
             }
 
             try {

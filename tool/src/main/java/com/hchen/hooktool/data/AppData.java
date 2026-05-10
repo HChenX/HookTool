@@ -75,10 +75,6 @@ public class AppData implements Parcelable {
             uid == appData.uid &&
             isSystemApp == appData.isSystemApp &&
             isEnabled == appData.isEnabled &&
-            Objects.equals(packageInfo, appData.packageInfo) &&
-            Objects.equals(applicationInfo, appData.applicationInfo) &&
-            Objects.equals(icon, appData.icon) &&
-            Objects.equals(label, appData.label) &&
             Objects.equals(packageName, appData.packageName) &&
             Objects.equals(versionName, appData.versionName) &&
             Objects.equals(versionCode, appData.versionCode);
@@ -87,12 +83,8 @@ public class AppData implements Parcelable {
     @Override
     public int hashCode() {
         return Objects.hash(
-            packageInfo,
-            applicationInfo,
             user,
             uid,
-            icon,
-            label,
             packageName,
             versionName,
             versionCode,

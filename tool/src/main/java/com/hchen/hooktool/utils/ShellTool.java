@@ -110,11 +110,11 @@ public final class ShellTool {
     private static final String END_UUID = UUID.randomUUID().toString();
     private static final byte[] LINE_BREAK = "\n".getBytes(StandardCharsets.UTF_8);
     private static final ShellTool shellTool = new ShellTool();
-    private static boolean isRoot = false;
-    private static String[] shellCommands = new String[]{"su", "sh"};
-    private static IExecListener iGlobalExecListeners;
-    private static ICommandListener iGlobalCommandListener;
-    private static ShellImpl shellImpl;
+    private static volatile boolean isRoot = false;
+    private static volatile String[] shellCommands = new String[]{"su", "sh"};
+    private static volatile IExecListener iGlobalExecListeners;
+    private static volatile ICommandListener iGlobalCommandListener;
+    private static volatile ShellImpl shellImpl;
 
     private ShellTool() {
         shellImpl = new ShellImpl(this);
@@ -320,6 +320,8 @@ public final class ShellTool {
             this.shellTool = shellTool;
         }
 
+        private volatile boolean resultReady = false;
+
         private synchronized void init() {
             try {
                 if (isActive()) return;
@@ -332,8 +334,6 @@ public final class ShellTool {
                 streamThread.run();
             } catch (IOException e) {
                 throw new UnexpectedException("Error initializing shell stream.");
-            } finally {
-                notify();
             }
         }
 
@@ -369,6 +369,7 @@ public final class ShellTool {
                 )
                 .getBytes(StandardCharsets.UTF_8);
             streamThread.shellSyncMap.put(String.valueOf(command.hashCode()), command);
+            resultReady = false;
             write("{");
             writeAll(commands);
             write("}");
@@ -376,7 +377,9 @@ public final class ShellTool {
             command = null;
 
             try {
-                wait();
+                while (!resultReady) {
+                    wait();
+                }
             } catch (InterruptedException ignore) {
             }
 
@@ -435,9 +438,9 @@ public final class ShellTool {
 
         public synchronized void close() {
             try {
-                if (isActive() || (streamThread != null && streamThread.isAbnormalExit())) {
-                    // 异常退出时 os 流已经死了，不需要再写入 exit 了
-                    if (!streamThread.isAbnormalExit()) {
+                boolean abnormal = streamThread != null && streamThread.isAbnormalExit();
+                if (isActive() || abnormal) {
+                    if (!abnormal) {
                         write("exit");
                     }
 
@@ -446,7 +449,7 @@ public final class ShellTool {
                         process.destroy();
                     }
 
-                    if (os != null && !streamThread.isAbnormalExit()) {
+                    if (os != null && !abnormal) {
                         try {
                             os.close();
                         } catch (IOException e) {
@@ -454,7 +457,9 @@ public final class ShellTool {
                         }
                     }
 
-                    streamThread.close();
+                    if (streamThread != null) {
+                        streamThread.close();
+                    }
                 }
             } catch (InterruptedException e) {
                 AndroidLog.logE(TAG, "Error closing shell stream!!", e);
@@ -463,6 +468,7 @@ public final class ShellTool {
                 command = null;
                 process = null;
                 os = null;
+                resultReady = false;
             }
         }
 
@@ -493,8 +499,8 @@ public final class ShellTool {
 
     final class StreamThread {
         private final Object lock = new Object();
-        private final int SHELL_ID_OUTPUT = 0;
-        private final int SHELL_ID_ERROR = 1;
+        private static final int SHELL_ID_OUTPUT = 0;
+        private static final int SHELL_ID_ERROR = 1;
         private final ExecutorService outputService = Executors.newSingleThreadExecutor();
         private final ExecutorService errorService = Executors.newSingleThreadExecutor();
         private final ConcurrentHashMap<String, Pair<String, IExecListener>> shellAsyncMap = new ConcurrentHashMap<>();
@@ -511,7 +517,7 @@ public final class ShellTool {
         private final InputStream input;
         @NonNull
         private final InputStream error;
-        private boolean isAbnormalExit = false;
+        private volatile boolean isAbnormalExit = false;
 
         private StreamThread(@NonNull ShellImpl shellImpl, @NonNull InputStream inputStream, @NonNull InputStream errorStream) {
             this.shellImpl = shellImpl;
@@ -720,6 +726,7 @@ public final class ShellTool {
 
                 synchronized (shellImpl) {
                     try {
+                        shellImpl.resultReady = true;
                         shellImpl.notify();
                     } catch (IllegalMonitorStateException ignore) {
                     }

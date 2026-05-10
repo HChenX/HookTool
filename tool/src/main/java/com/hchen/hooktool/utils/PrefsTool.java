@@ -32,7 +32,8 @@ import com.hchen.hooktool.exception.UnexpectedException;
 import com.hchen.hooktool.log.AndroidLog;
 
 import java.util.Objects;
-import java.util.WeakHashMap;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 
 /**
  * 共享首选项工具
@@ -41,8 +42,8 @@ import java.util.WeakHashMap;
  */
 public final class PrefsTool {
     private static final String TAG = "PrefsTool";
-    private final static WeakHashMap<String, SharedPreferences> xPreferences = new WeakHashMap<>(); // 宿主端
-    private final static WeakHashMap<String, SharedPreferences> sPreferences = new WeakHashMap<>(); // 模块端
+    private static final ConcurrentHashMap<String, SharedPreferences> xPreferences = new ConcurrentHashMap<>(); // 宿主端
+    private static final ConcurrentHashMap<String, SharedPreferences> sPreferences = new ConcurrentHashMap<>(); // 模块端
 
     private PrefsTool() {
     }
@@ -79,35 +80,35 @@ public final class PrefsTool {
         return createSharedPreferences(prefsName);
     }
 
-    private synchronized static SharedPreferences createSharedPreferences(@NonNull String prefsName) {
-        prefsName = initPrefsName(prefsName);
-        if (xPreferences.get(ModuleData.getModulePackageName() + prefsName) == null) {
-            SharedPreferences preferences = ModuleData.getRemotePreferences(prefsName);
-            xPreferences.put(ModuleData.getModulePackageName() + prefsName, preferences);
-            return preferences;
-        } else {
-            return xPreferences.get(ModuleData.getModulePackageName() + prefsName);
-        }
+    private static SharedPreferences createSharedPreferences(@NonNull String prefsName) {
+        String resolvedName = initPrefsName(prefsName);
+        String key = ModuleData.getModulePackageName() + resolvedName;
+        return xPreferences.computeIfAbsent(key, new Function<String, SharedPreferences>() {
+            @Override
+            public SharedPreferences apply(String k) {
+                return ModuleData.getRemotePreferences(resolvedName);
+            }
+        });
     }
 
     @SuppressLint("WorldReadableFiles")
-    private synchronized static SharedPreferences createSharedPreferences(@NonNull Context context, @NonNull String prefsName) {
-        prefsName = initPrefsName(prefsName);
-        if (sPreferences.get(context.getPackageName() + prefsName) == null) {
-            SharedPreferences preferences;
-            try {
-                // noinspection deprecation
-                preferences = context.getSharedPreferences(prefsName, Context.MODE_WORLD_READABLE);
-            } catch (Throwable ignored) {
-                preferences = context.getSharedPreferences(prefsName, Context.MODE_PRIVATE);
-                AndroidLog.logW(TAG, "Maybe unsupported prefs.", getStackTrace());
+    private static SharedPreferences createSharedPreferences(@NonNull Context context, @NonNull String prefsName) {
+        String resolvedName = initPrefsName(prefsName);
+        String key = context.getPackageName() + resolvedName;
+        return sPreferences.computeIfAbsent(key, new Function<String, SharedPreferences>() {
+            @Override
+            public SharedPreferences apply(String k) {
+                SharedPreferences preferences;
+                try {
+                    // noinspection deprecation
+                    preferences = context.getSharedPreferences(resolvedName, Context.MODE_WORLD_READABLE);
+                } catch (Throwable ignored) {
+                    preferences = context.getSharedPreferences(resolvedName, Context.MODE_PRIVATE);
+                    AndroidLog.logW(TAG, "Maybe unsupported prefs.", getStackTrace());
+                }
+                return preferences;
             }
-
-            sPreferences.put(context.getPackageName() + prefsName, preferences);
-            return preferences;
-        } else {
-            return sPreferences.get(context.getPackageName() + prefsName);
-        }
+        });
     }
 
     @NonNull

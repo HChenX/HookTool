@@ -37,9 +37,9 @@ import io.github.libxposed.api.XposedInterfaceWrapper;
  * @author 焕晨HChen
  */
 public final class ModuleData {
-    private static boolean isXposedEnvironment;
-    private static XposedInterfaceWrapper wrapper;
-    private static ClassLoader classLoader;
+    private static volatile boolean isXposedEnvironment;
+    private static volatile XposedInterfaceWrapper wrapper;
+    private static volatile ClassLoader classLoader;
 
     private ModuleData() {
     }
@@ -116,8 +116,11 @@ public final class ModuleData {
 
     @NonNull
     public static ClassLoader getClassLoader() {
-        Objects.requireNonNull(classLoader);
-        return classLoader;
+        ClassLoader cl = classLoader;
+        if (cl == null) {
+            throw new UnexpectedException("ClassLoader has not been set. Ensure ModuleData.setClassLoader() is called before use.");
+        }
+        return cl;
     }
 
     @NonNull
