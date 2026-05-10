@@ -25,6 +25,7 @@ import androidx.annotation.NonNull;
 import com.hchen.hooktool.core.CoreTool;
 
 import java.util.Objects;
+import java.util.function.Consumer;
 
 import io.github.libxposed.api.XposedModuleInterface;
 
@@ -39,7 +40,7 @@ public abstract class AbsModule extends CoreTool {
 
     // -------------------------- hook 类内使用 -----------------------------
 
-    protected String TAG = getClass().getSimpleName();
+    protected final String TAG = getClass().getSimpleName();
 
     public enum StageEnum {
         MODULE_LOADED,
@@ -93,75 +94,69 @@ public abstract class AbsModule extends CoreTool {
 
     // ------------------------------ 入口类内统一调用 ------------------------------------
 
-    final public void handleModuleLoaded(@NonNull XposedModuleInterface.ModuleLoadedParam param) {
+    private <T> void dispatch(@NonNull StageEnum stage, @NonNull T param, @NonNull Consumer<T> action) {
         try {
             if (!isEnabled()) return;
 
             Objects.requireNonNull(param);
-            onLoaded(StageEnum.MODULE_LOADED, param);
+            action.accept(param);
         } catch (Throwable e) {
-            onThrow(StageEnum.MODULE_LOADED, e);
+            onThrow(stage, e);
             logE(TAG, e);
         }
+    }
+
+    final public void handleModuleLoaded(@NonNull XposedModuleInterface.ModuleLoadedParam param) {
+        dispatch(StageEnum.MODULE_LOADED, param, new Consumer<XposedModuleInterface.ModuleLoadedParam>() {
+            @Override
+            public void accept(XposedModuleInterface.ModuleLoadedParam p) {
+                onLoaded(StageEnum.MODULE_LOADED, p);
+            }
+        });
     }
 
     final public void handlePackageLoaded(@NonNull XposedModuleInterface.PackageLoadedParam param) {
-        try {
-            if (!isEnabled()) return;
-
-            Objects.requireNonNull(param);
-            onLoaded(StageEnum.PACKAGE_LOADED, param);
-        } catch (Throwable e) {
-            onThrow(StageEnum.PACKAGE_LOADED, e);
-            logE(TAG, e);
-        }
+        dispatch(StageEnum.PACKAGE_LOADED, param, new Consumer<XposedModuleInterface.PackageLoadedParam>() {
+            @Override
+            public void accept(XposedModuleInterface.PackageLoadedParam p) {
+                onLoaded(StageEnum.PACKAGE_LOADED, p);
+            }
+        });
     }
 
     final public void handlePackageReady(@NonNull XposedModuleInterface.PackageReadyParam param) {
-        try {
-            if (!isEnabled()) return;
-
-            Objects.requireNonNull(param);
-            onLoaded(StageEnum.PACKAGE_READY, param);
-        } catch (Throwable e) {
-            onThrow(StageEnum.PACKAGE_READY, e);
-            logE(TAG, e);
-        }
+        dispatch(StageEnum.PACKAGE_READY, param, new Consumer<XposedModuleInterface.PackageReadyParam>() {
+            @Override
+            public void accept(XposedModuleInterface.PackageReadyParam p) {
+                onLoaded(StageEnum.PACKAGE_READY, p);
+            }
+        });
     }
 
     final public void handleSystemServerStarting(@NonNull XposedModuleInterface.SystemServerStartingParam param) {
-        try {
-            if (!isEnabled()) return;
-
-            Objects.requireNonNull(param);
-            onLoaded(StageEnum.SYSTEM_SERVER_STARTING, param);
-        } catch (Throwable e) {
-            onThrow(StageEnum.SYSTEM_SERVER_STARTING, e);
-            logE(TAG, e);
-        }
+        dispatch(StageEnum.SYSTEM_SERVER_STARTING, param, new Consumer<XposedModuleInterface.SystemServerStartingParam>() {
+            @Override
+            public void accept(XposedModuleInterface.SystemServerStartingParam p) {
+                onLoaded(StageEnum.SYSTEM_SERVER_STARTING, p);
+            }
+        });
     }
 
     final public void handleClassLoader(@NonNull ClassLoader classLoader) {
-        try {
-            if (!isEnabled()) return;
-
-            Objects.requireNonNull(classLoader);
-            onClassLoader(classLoader);
-        } catch (Throwable e) {
-            onThrow(StageEnum.ON_CLASSLOADER, e);
-            logE(TAG, e);
-        }
+        dispatch(StageEnum.ON_CLASSLOADER, classLoader, new Consumer<ClassLoader>() {
+            @Override
+            public void accept(ClassLoader classLoader) {
+                onClassLoader(classLoader);
+            }
+        });
     }
 
     final public void handleApplicationCreated(@NonNull Context context) {
-        try {
-            if (!isEnabled()) return;
-
-            Objects.requireNonNull(context);
-            onApplicationCreated(context);
-        } catch (Throwable e) {
-            onThrow(StageEnum.ON_APPLICATION_CREATED, e);
-            logE(TAG, e);
-        }
+        dispatch(StageEnum.ON_APPLICATION_CREATED, context, new Consumer<Context>() {
+            @Override
+            public void accept(Context context) {
+                onApplicationCreated(context);
+            }
+        });
     }
 }

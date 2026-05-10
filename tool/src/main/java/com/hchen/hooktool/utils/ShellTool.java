@@ -295,18 +295,13 @@ public final class ShellTool {
             try {
                 // noinspection resource
                 service = Executors.newSingleThreadExecutor();
-                Future<Integer> future = service.submit(callable);
-                try {
-                    return future.get(10, TimeUnit.SECONDS) == 0;
-                } catch (Exception e) {
-                    AndroidLog.logE(TAG, "Error waiting for root check result!!", e);
-                    return false;
-                }
+                service.submit(callable);
             } finally {
                 if (service != null) {
-                    service.shutdownNow();
+                    service.shutdown();
                 }
             }
+            return false;
         }
     }
     // ----------------------------------------------------------------------------------------------
@@ -504,8 +499,8 @@ public final class ShellTool {
 
     final class StreamThread {
         private final Object lock = new Object();
-        private final int SHELL_ID_OUTPUT = 0;
-        private final int SHELL_ID_ERROR = 1;
+        private static final int SHELL_ID_OUTPUT = 0;
+        private static final int SHELL_ID_ERROR = 1;
         private final ExecutorService outputService = Executors.newSingleThreadExecutor();
         private final ExecutorService errorService = Executors.newSingleThreadExecutor();
         private final ConcurrentHashMap<String, Pair<String, IExecListener>> shellAsyncMap = new ConcurrentHashMap<>();

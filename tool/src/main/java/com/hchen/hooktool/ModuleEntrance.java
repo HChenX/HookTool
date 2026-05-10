@@ -43,7 +43,7 @@ import io.github.libxposed.api.XposedModule;
  */
 public abstract class ModuleEntrance extends XposedModule {
     // 跳过被 ignorePackages 匹配上的包
-    private boolean shouldSkip = false;
+    private volatile boolean shouldSkip = false;
 
     public abstract void initModuleConfig();
 
@@ -79,8 +79,9 @@ public abstract class ModuleEntrance extends XposedModule {
 
     @Override
     public final void onPackageLoaded(@NonNull PackageLoadedParam param) {
-        if (ignorePackages().length > 0) {
-            shouldSkip = Arrays.stream(ignorePackages()).anyMatch(
+        String[] ignored = ignorePackages();
+        if (ignored.length > 0) {
+            shouldSkip = Arrays.stream(ignored).anyMatch(
                 new Predicate<String>() {
                     @Override
                     public boolean test(String packageName) {
@@ -88,6 +89,8 @@ public abstract class ModuleEntrance extends XposedModule {
                     }
                 }
             );
+        } else {
+            shouldSkip = false;
         }
 
         if (shouldSkip) {
@@ -112,7 +115,7 @@ public abstract class ModuleEntrance extends XposedModule {
         handleSystemServerStarting(param);
     }
 
-    private HookHandle handle;
+    private volatile HookHandle handle;
 
     private void hookApplication(@NonNull PackageLoadedParam param) {
         if (param.isFirstPackage()) {

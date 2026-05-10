@@ -116,8 +116,11 @@ public final class ModuleData {
 
     @NonNull
     public static ClassLoader getClassLoader() {
-        Objects.requireNonNull(classLoader);
-        return classLoader;
+        ClassLoader cl = classLoader;
+        if (cl == null) {
+            throw new UnexpectedException("ClassLoader has not been set. Ensure ModuleData.setClassLoader() is called before use.");
+        }
+        return cl;
     }
 
     @NonNull

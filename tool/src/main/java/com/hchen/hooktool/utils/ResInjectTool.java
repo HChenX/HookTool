@@ -195,15 +195,6 @@ public final class ResInjectTool {
     private static int STYLE_TYPE;
     private static int STYLE_RESOURCE_ID;
 
-    private static AbsHook newDelegate(AbsHook delegate) {
-        return new AbsHook() {
-            @Override
-            public void before() {
-                delegate.before();
-            }
-        };
-    }
-
     @SuppressWarnings("DataFlowIssue")
     private static void applyHooks() {
         if (!isHooked.compareAndSet(false, true)) return;
@@ -212,45 +203,48 @@ public final class ResInjectTool {
             throw new InjectResourcesException("Should inject module res first.");
         }
 
-        CoreTool.hookMethod(Resources.class, "loadXmlResourceParser", int.class, String.class, newDelegate(hookResBefore)); // XmlResourceParser
-        CoreTool.hookMethod(Resources.class, "getDimension", int.class, newDelegate(hookResBefore)); // float
-        CoreTool.hookMethod(Resources.class, "getDimensionPixelOffset", int.class, newDelegate(hookResBefore)); // int
-        CoreTool.hookMethod(Resources.class, "getDimensionPixelSize", int.class, newDelegate(hookResBefore)); // int
-        CoreTool.hookMethod(Resources.class, "getBoolean", int.class, newDelegate(hookResBefore)); // boolean
-        CoreTool.hookMethod(Resources.class, "getInteger", int.class, newDelegate(hookResBefore)); // int
-        CoreTool.hookMethod(Resources.class, "getFloat", int.class, newDelegate(hookResBefore)); // float
-        CoreTool.hookMethod(Resources.class, "getText", int.class, newDelegate(hookResBefore)); // CharSequence
-        CoreTool.hookMethod(Resources.class, "getText", int.class, CharSequence.class, newDelegate(hookResBefore)); // CharSequence
-        CoreTool.hookMethod(Resources.class, "getQuantityText", int.class, int.class, newDelegate(hookResBefore)); // CharSequence
-        CoreTool.hookMethod(Resources.class, "getIntArray", int.class, newDelegate(hookResBefore)); // int[]
-        CoreTool.hookMethod(Resources.class, "getStringArray", int.class, newDelegate(hookResBefore)); // String[]
-        CoreTool.hookMethod(Resources.class, "getTextArray", int.class, newDelegate(hookResBefore)); // CharSequence[]
-        CoreTool.hookMethod(Resources.class, "getFont", int.class, newDelegate(hookResBefore)); // Typeface
-        CoreTool.hookMethod(Resources.class, "getMovie", int.class, newDelegate(hookResBefore)); // Movie
-        CoreTool.hookMethod(Resources.class, "getColor", int.class, Resources.Theme.class, newDelegate(hookResBefore)); // int
-        CoreTool.hookMethod(Resources.class, "getColorStateList", int.class, Resources.Theme.class, newDelegate(hookResBefore)); // ColorStateList
-        CoreTool.hookMethod(Resources.class, "getFraction", int.class, int.class, int.class, newDelegate(hookResBefore)); // float
-        CoreTool.hookMethod(Resources.class, "getDrawableForDensity", int.class, int.class, Resources.Theme.class, newDelegate(hookResBefore)); // Drawable
+        CoreTool.hookMethod(Resources.class, "loadXmlResourceParser", int.class, String.class, hookResBefore); // XmlResourceParser
+        CoreTool.hookMethod(Resources.class, "getDimension", int.class, hookResBefore); // float
+        CoreTool.hookMethod(Resources.class, "getDimensionPixelOffset", int.class, hookResBefore); // int
+        CoreTool.hookMethod(Resources.class, "getDimensionPixelSize", int.class, hookResBefore); // int
+        CoreTool.hookMethod(Resources.class, "getBoolean", int.class, hookResBefore); // boolean
+        CoreTool.hookMethod(Resources.class, "getInteger", int.class, hookResBefore); // int
+        CoreTool.hookMethod(Resources.class, "getFloat", int.class, hookResBefore); // float
+        CoreTool.hookMethod(Resources.class, "getText", int.class, hookResBefore); // CharSequence
+        CoreTool.hookMethod(Resources.class, "getText", int.class, CharSequence.class, hookResBefore); // CharSequence
+        CoreTool.hookMethod(Resources.class, "getQuantityText", int.class, int.class, hookResBefore); // CharSequence
+        CoreTool.hookMethod(Resources.class, "getIntArray", int.class, hookResBefore); // int[]
+        CoreTool.hookMethod(Resources.class, "getStringArray", int.class, hookResBefore); // String[]
+        CoreTool.hookMethod(Resources.class, "getTextArray", int.class, hookResBefore); // CharSequence[]
+        CoreTool.hookMethod(Resources.class, "getFont", int.class, hookResBefore); // Typeface
+        CoreTool.hookMethod(Resources.class, "getMovie", int.class, hookResBefore); // Movie
+        CoreTool.hookMethod(Resources.class, "getColor", int.class, Resources.Theme.class, hookResBefore); // int
+        CoreTool.hookMethod(Resources.class, "getColorStateList", int.class, Resources.Theme.class, hookResBefore); // ColorStateList
+        CoreTool.hookMethod(Resources.class, "getFraction", int.class, int.class, int.class, hookResBefore); // float
+        CoreTool.hookMethod(Resources.class, "getDrawableForDensity", int.class, int.class, Resources.Theme.class, hookResBefore); // Drawable
 
         STYLE_NUM_ENTRIES = (int) CoreTool.getStaticField(TypedArray.class, "STYLE_NUM_ENTRIES");
         STYLE_TYPE = (int) CoreTool.getStaticField(TypedArray.class, "STYLE_TYPE");
         STYLE_RESOURCE_ID = (int) CoreTool.getStaticField(TypedArray.class, "STYLE_RESOURCE_ID");
-        CoreTool.hookMethod(TypedArray.class, "getColor", int.class, int.class, newDelegate(hookTypedBefore)); // int
-        CoreTool.hookMethod(TypedArray.class, "getColorStateList", int.class, newDelegate(hookTypedBefore)); // ColorStateList
-        CoreTool.hookMethod(TypedArray.class, "getBoolean", int.class, boolean.class, newDelegate(hookTypedBefore)); // boolean
-        CoreTool.hookMethod(TypedArray.class, "getFloat", int.class, float.class, newDelegate(hookTypedBefore)); // float
-        CoreTool.hookMethod(TypedArray.class, "getInt", int.class, int.class, newDelegate(hookTypedBefore)); // int
-        CoreTool.hookMethod(TypedArray.class, "getInteger", int.class, int.class, newDelegate(hookTypedBefore)); // int
-        CoreTool.hookMethod(TypedArray.class, "getString", int.class, newDelegate(hookTypedBefore)); // String
-        CoreTool.hookMethod(TypedArray.class, "getText", int.class, newDelegate(hookTypedBefore)); // CharSequence
-        CoreTool.hookMethod(TypedArray.class, "getFont", int.class, newDelegate(hookTypedBefore)); // Typeface
-        CoreTool.hookMethod(TypedArray.class, "getDimension", int.class, float.class, newDelegate(hookTypedBefore)); // float
-        CoreTool.hookMethod(TypedArray.class, "getDimensionPixelOffset", int.class, int.class, newDelegate(hookTypedBefore)); // int
-        CoreTool.hookMethod(TypedArray.class, "getDimensionPixelSize", int.class, int.class, newDelegate(hookTypedBefore)); // int
-        CoreTool.hookMethod(TypedArray.class, "getLayoutDimension", int.class, int.class, newDelegate(hookTypedBefore)); // int
-        CoreTool.hookMethod(TypedArray.class, "getLayoutDimension", int.class, String.class, newDelegate(hookTypedBefore)); // int
-        CoreTool.hookMethod(TypedArray.class, "getDrawableForDensity", int.class, int.class, newDelegate(hookTypedBefore)); // Drawable
-        CoreTool.hookMethod(TypedArray.class, "getFraction", int.class, int.class, int.class, float.class, newDelegate(hookTypedBefore)); // float
+        if (STYLE_NUM_ENTRIES <= 0) {
+            throw new InjectResourcesException("Failed to read STYLE_NUM_ENTRIES from TypedArray.");
+        }
+        CoreTool.hookMethod(TypedArray.class, "getColor", int.class, int.class, hookTypedBefore); // int
+        CoreTool.hookMethod(TypedArray.class, "getColorStateList", int.class, hookTypedBefore); // ColorStateList
+        CoreTool.hookMethod(TypedArray.class, "getBoolean", int.class, boolean.class, hookTypedBefore); // boolean
+        CoreTool.hookMethod(TypedArray.class, "getFloat", int.class, float.class, hookTypedBefore); // float
+        CoreTool.hookMethod(TypedArray.class, "getInt", int.class, int.class, hookTypedBefore); // int
+        CoreTool.hookMethod(TypedArray.class, "getInteger", int.class, int.class, hookTypedBefore); // int
+        CoreTool.hookMethod(TypedArray.class, "getString", int.class, hookTypedBefore); // String
+        CoreTool.hookMethod(TypedArray.class, "getText", int.class, hookTypedBefore); // CharSequence
+        CoreTool.hookMethod(TypedArray.class, "getFont", int.class, hookTypedBefore); // Typeface
+        CoreTool.hookMethod(TypedArray.class, "getDimension", int.class, float.class, hookTypedBefore); // float
+        CoreTool.hookMethod(TypedArray.class, "getDimensionPixelOffset", int.class, int.class, hookTypedBefore); // int
+        CoreTool.hookMethod(TypedArray.class, "getDimensionPixelSize", int.class, int.class, hookTypedBefore); // int
+        CoreTool.hookMethod(TypedArray.class, "getLayoutDimension", int.class, int.class, hookTypedBefore); // int
+        CoreTool.hookMethod(TypedArray.class, "getLayoutDimension", int.class, String.class, hookTypedBefore); // int
+        CoreTool.hookMethod(TypedArray.class, "getDrawableForDensity", int.class, int.class, hookTypedBefore); // Drawable
+        CoreTool.hookMethod(TypedArray.class, "getFraction", int.class, int.class, int.class, float.class, hookTypedBefore); // float
 
     }
 
@@ -279,16 +273,16 @@ public final class ResInjectTool {
                 int index = (int) getArg(0);
                 index *= STYLE_NUM_ENTRIES;
                 int[] data = (int[]) CoreTool.getField(getThisObject(), "mData");
+                if (data == null) return;
 
-                assert data != null;
                 int type = data[index + STYLE_TYPE];
                 int id = data[index + STYLE_RESOURCE_ID];
                 if (type != TypedValue.TYPE_NULL /* 不为空数据 */ && id != 0 /* 储存的是资源 */) {
                     String methodName = getExecutable().getName();
                     Resources resources = (Resources) CoreTool.getField(getThisObject(), "mResources");
+                    if (resources == null) return;
                     Resources.Theme theme = (Resources.Theme) CoreTool.getField(getThisObject(), "mTheme");
 
-                    assert resources != null;
                     Object value = getTypedArrayReplacement(resources, theme, id, methodName, getArgs());
                     if (value != null) {
                         if (
@@ -308,45 +302,47 @@ public final class ResInjectTool {
     };
 
     @Nullable
-    private static Object getResourceReplacement(@NonNull Method method, @NonNull Resources res, @NonNull Object[] params) {
+    private static Pair<ReplacementType, Object> findReplacement(@NonNull Resources res, int resId) {
         String pkgName = null;
         String resType = null;
         String resName = null;
         try {
-            pkgName = res.getResourcePackageName((int) params[0]);
-            resType = res.getResourceTypeName((int) params[0]);
-            resName = res.getResourceEntryName((int) params[0]);
+            pkgName = res.getResourcePackageName(resId);
+            resType = res.getResourceTypeName(resId);
+            resName = res.getResourceEntryName(resId);
         } catch (Throwable ignore) {
         }
 
         if (pkgName == null || resType == null || resName == null) return null;
 
         String resFullName = pkgName + ":" + resType + "/" + resName;
-        String resAnyPkgName = "*:" + resType + "/" + resName;
-
-        Pair<ReplacementType, Object> replacement = null;
-        if (replacements.containsKey(resFullName)) {
-            replacement = replacements.get(resFullName);
-        } else if (replacements.containsKey(resAnyPkgName)) {
-            replacement = replacements.get(resAnyPkgName);
+        Pair<ReplacementType, Object> replacement = replacements.get(resFullName);
+        if (replacement == null) {
+            replacement = replacements.get("*:" + resType + "/" + resName);
         }
-        if (replacement != null) {
-            switch (replacement.first) {
-                case OBJECT -> {
-                    return replacement.second;
-                }
-                case DENSITY -> {
-                    return (Float) replacement.second * res.getDisplayMetrics().density;
-                }
-                case ID -> {
-                    try {
-                        params[0] = replacement.second;
-                        return CoreTool.getMethodInvoker(method)
-                            .setType(XposedInterface.Invoker.Type.ORIGIN)
-                            .invoke(res, params);
-                    } catch (InvocationTargetException | IllegalAccessException e) {
-                        throw new InjectResourcesException(e);
-                    }
+        return replacement;
+    }
+
+    @Nullable
+    private static Object getResourceReplacement(@NonNull Method method, @NonNull Resources res, @NonNull Object[] params) {
+        Pair<ReplacementType, Object> replacement = findReplacement(res, (int) params[0]);
+        if (replacement == null) return null;
+
+        switch (replacement.first) {
+            case OBJECT -> {
+                return replacement.second;
+            }
+            case DENSITY -> {
+                return (Float) replacement.second * res.getDisplayMetrics().density;
+            }
+            case ID -> {
+                try {
+                    params[0] = replacement.second;
+                    return CoreTool.getMethodInvoker(method)
+                        .setType(XposedInterface.Invoker.Type.ORIGIN)
+                        .invoke(res, params);
+                } catch (InvocationTargetException | IllegalAccessException e) {
+                    throw new InjectResourcesException(e);
                 }
             }
         }
@@ -355,79 +351,59 @@ public final class ResInjectTool {
 
     @Nullable
     private static Object getTypedArrayReplacement(@NonNull Resources res, @Nullable Resources.Theme theme, int id, @NonNull String methodName, @NonNull Object[] params) {
-        String pkgName = null;
-        String resType = null;
-        String resName = null;
-        try {
-            pkgName = res.getResourcePackageName(id);
-            resType = res.getResourceTypeName(id);
-            resName = res.getResourceEntryName(id);
-        } catch (Throwable ignore) {
-        }
+        Pair<ReplacementType, Object> replacement = findReplacement(res, id);
+        if (replacement == null) return null;
 
-        if (pkgName == null || resType == null || resName == null) return null;
-
-        String resFullName = pkgName + ":" + resType + "/" + resName;
-        String resAnyPkgName = "*:" + resType + "/" + resName;
-
-        Pair<ReplacementType, Object> replacement = null;
-        if (replacements.containsKey(resFullName)) {
-            replacement = replacements.get(resFullName);
-        } else if (replacements.containsKey(resAnyPkgName)) {
-            replacement = replacements.get(resAnyPkgName);
-        }
-        if (replacement != null) {
-            switch (replacement.first) {
-                case OBJECT -> {
-                    return replacement.second;
-                }
-                case DENSITY -> {
-                    return (Float) replacement.second * res.getDisplayMetrics().density;
-                }
-                case ID -> {
-                    try {
-                        Object result;
-                        Class<?> resClass = res.getClass();
-                        int resId = (int) replacement.second;
-                        switch (methodName) {
-                            case "getBoolean", "getFloat", "getInteger", "getString", "getText",
-                                 "getFont", "getDimension", "getDimensionPixelOffset",
-                                 "getDimensionPixelSize" -> {
-                                result = CoreTool.getMethodInvoker(resClass, methodName, int.class)
-                                    .setType(XposedInterface.Invoker.Type.ORIGIN)
-                                    .invoke(res, resId);
-                            }
-                            case "getColor", "getColorStateList" -> {
-                                result = CoreTool.getMethodInvoker(resClass, methodName, int.class, Resources.Theme.class)
-                                    .setType(XposedInterface.Invoker.Type.ORIGIN)
-                                    .invoke(res, resId, theme);
-                            }
-                            case "getDrawableForDensity" -> {
-                                result = CoreTool.getMethodInvoker(resClass, methodName, int.class, int.class, Resources.Theme.class)
-                                    .setType(XposedInterface.Invoker.Type.ORIGIN)
-                                    .invoke(res, resId, params[1], theme);
-                            }
-                            case "getLayoutDimension" -> {
-                                result = CoreTool.getMethodInvoker(resClass, "getDimensionPixelSize", int.class)
-                                    .setType(XposedInterface.Invoker.Type.ORIGIN)
-                                    .invoke(res, resId);
-                            }
-                            case "getFraction" -> {
-                                result = CoreTool.getMethodInvoker(resClass, methodName, int.class, int.class, int.class)
-                                    .setType(XposedInterface.Invoker.Type.ORIGIN)
-                                    .invoke(res, resId, params[1], params[2]);
-                            }
-                            case "getInt" -> {
-                                result = CoreTool.getMethodInvoker(resClass, "getInteger", int.class)
-                                    .setType(XposedInterface.Invoker.Type.ORIGIN)
-                                    .invoke(res, resId);
-                            }
-                            default -> result = null;
+        switch (replacement.first) {
+            case OBJECT -> {
+                return replacement.second;
+            }
+            case DENSITY -> {
+                return (Float) replacement.second * res.getDisplayMetrics().density;
+            }
+            case ID -> {
+                try {
+                    Object result;
+                    Class<?> resClass = res.getClass();
+                    int resId = (int) replacement.second;
+                    switch (methodName) {
+                        case "getBoolean", "getFloat", "getInteger", "getString", "getText",
+                             "getFont", "getDimension", "getDimensionPixelOffset",
+                             "getDimensionPixelSize" -> {
+                            result = CoreTool.getMethodInvoker(resClass, methodName, int.class)
+                                .setType(XposedInterface.Invoker.Type.ORIGIN)
+                                .invoke(res, resId);
                         }
-                        return result;
-                    } catch (InvocationTargetException | IllegalAccessException e) {
-                        throw new InjectResourcesException(e);
+                        case "getColor", "getColorStateList" -> {
+                            result = CoreTool.getMethodInvoker(resClass, methodName, int.class, Resources.Theme.class)
+                                .setType(XposedInterface.Invoker.Type.ORIGIN)
+                                .invoke(res, resId, theme);
+                        }
+                        case "getDrawableForDensity" -> {
+                            result = CoreTool.getMethodInvoker(resClass, methodName, int.class, int.class, Resources.Theme.class)
+                                .setType(XposedInterface.Invoker.Type.ORIGIN)
+                                .invoke(res, resId, params[1], theme);
+                        }
+                        case "getLayoutDimension" -> {
+                            result = CoreTool.getMethodInvoker(resClass, "getDimensionPixelSize", int.class)
+                                .setType(XposedInterface.Invoker.Type.ORIGIN)
+                                .invoke(res, resId);
+                        }
+                        case "getFraction" -> {
+                            result = CoreTool.getMethodInvoker(resClass, methodName, int.class, int.class, int.class)
+                                .setType(XposedInterface.Invoker.Type.ORIGIN)
+                                .invoke(res, resId, params[1], params[2]);
+                        }
+                        case "getInt" -> {
+                            result = CoreTool.getMethodInvoker(resClass, "getInteger", int.class)
+                                .setType(XposedInterface.Invoker.Type.ORIGIN)
+                                .invoke(res, resId);
+                        }
+                        default -> result = null;
                     }
+                    return result;
+                } catch (InvocationTargetException | IllegalAccessException e) {
+                    throw new InjectResourcesException(e);
                 }
             }
         }

@@ -29,6 +29,9 @@ import com.hchen.hooktool.ModuleData;
  * @author 焕晨HChen
  */
 public class XposedLog {
+    protected XposedLog() {
+    }
+
     // -------- logE -------------
     public static void logE(String tag, String log) {
         if (ModuleConfig.getLogLevel() < ModuleConfig.LOG_E) return;

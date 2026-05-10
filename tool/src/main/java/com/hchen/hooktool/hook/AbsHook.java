@@ -29,6 +29,7 @@ import java.lang.reflect.Executable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import io.github.libxposed.api.XposedInterface;
 
@@ -123,7 +124,7 @@ public abstract class AbsHook {
             return new StateStack();
         }
     };
-    private volatile XposedInterface.HookHandle handle;
+    private final CopyOnWriteArrayList<XposedInterface.HookHandle> handles = new CopyOnWriteArrayList<>();
 
     public enum StageEnum {
         BEFORE,
@@ -137,10 +138,6 @@ public abstract class AbsHook {
 
     public AbsHook(int priority) {
         this.priority = priority;
-    }
-
-    public final int getPriority() {
-        return priority;
     }
 
     /**
@@ -322,7 +319,7 @@ public abstract class AbsHook {
     }
 
     final void setHandle(@NonNull XposedInterface.HookHandle handle) {
-        this.handle = handle;
+        this.handles.add(handle);
     }
 
     // --- 生命周期管理 ---
@@ -373,8 +370,12 @@ public abstract class AbsHook {
      * 移除当前钩子的所有拦截
      */
     final public void unHookSelf() {
-        Objects.requireNonNull(handle, "Hook handle is not initialized. Cannot unhook before the hook is applied.");
-        handle.unhook();
+        if (handles.isEmpty()) {
+            throw new IllegalStateException("Hook handle is not initialized. Cannot unhook before the hook is applied.");
+        }
+        for (XposedInterface.HookHandle handle : handles) {
+            handle.unhook();
+        }
     }
 
     /**
@@ -392,7 +393,7 @@ public abstract class AbsHook {
         StateStack stack = stackLocal.get();
         CallState state = stack != null ? stack.current() : null;
         return "AbsHook{" +
-            "handle=" + handle +
+            "handles=" + handles +
             ", callState=" + (state != null ? state.toString() : "null") +
             '}';
     }

@@ -220,6 +220,8 @@ public final class DeviceTool {
     }
 
     // ----------------------- 手机品牌 -------------------------
+    private static final String BRAND_LOWER = Build.BRAND.toLowerCase();
+    private static final String MANUFACTURER_LOWER = Build.MANUFACTURER.toLowerCase();
     public static final String[] DEVICE_XIAOMI = {"xiaomi", "redmi"};
     public static final String[] DEVICE_COLOROS = {"oppo", "realme", "oneplus", "oplus"};
     public static final String[] DEVICE_SAMSUNG = {"samsung"};
@@ -276,8 +278,8 @@ public final class DeviceTool {
     public static boolean isRightRom(@NonNull final String... names) {
         for (String name : names) {
             if (
-                Build.BRAND.toLowerCase().contains(name.toLowerCase()) ||
-                    Build.MANUFACTURER.toLowerCase().contains(name.toLowerCase())
+                BRAND_LOWER.contains(name.toLowerCase()) ||
+                    MANUFACTURER_LOWER.contains(name.toLowerCase())
             ) {
                 return true;
             }
