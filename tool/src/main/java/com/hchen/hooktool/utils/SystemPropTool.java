@@ -54,6 +54,9 @@ public final class SystemPropTool {
         );
     }
 
+    /**
+     * 获取 int 类型的 prop
+     */
     public static int getProp(@NonNull String key, int def) {
         if (propClass == null) return def;
         return (int) Optional.ofNullable(
@@ -61,6 +64,9 @@ public final class SystemPropTool {
         ).orElse(def);
     }
 
+    /**
+     * 获取 long 类型的 prop
+     */
     public static long getProp(@NonNull String key, long def) {
         if (propClass == null) return def;
         return (long) Optional.ofNullable(
@@ -68,6 +74,9 @@ public final class SystemPropTool {
         ).orElse(def);
     }
 
+    /**
+     * 获取 String 类型的 prop
+     */
     public static String getProp(@NonNull String key, String def) {
         if (propClass == null) return def;
         return (String) Optional.ofNullable(
@@ -75,6 +84,9 @@ public final class SystemPropTool {
         ).orElse(def);
     }
 
+    /**
+     * 获取 String 类型的 prop，无默认值
+     */
     public static String getProp(@NonNull String key) {
         if (propClass == null) return "";
         return (String) Optional.ofNullable(
