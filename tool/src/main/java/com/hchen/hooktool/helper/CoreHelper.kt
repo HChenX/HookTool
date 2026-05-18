@@ -353,6 +353,17 @@ internal object CoreHelper {
         return totalCost
     }
 
+    /**
+     * 在 [clazz] 及其父类中收集所有名称为 [name] 且参数类型与 [parameterTypes] 兼容的方法。
+     *
+     * 搜索范围包括 [clazz] 自身声明的方法以及所有父类（不包括 `java.lang.Object`）中声明的方法。
+     * 父类的私有方法会被排除。通过签名去重，避免因继承关系导致同一方法被重复添加。
+     *
+     * @param clazz          开始搜索的类。
+     * @param name           要查找的方法名。
+     * @param parameterTypes 期望的参数类型（元素可为 `null`，表示匹配任意非基本类型）。
+     * @param result         用于收集匹配方法的可变列表。
+     */
     private fun collectMethodsBestMatch(clazz: Class<*>, name: String, parameterTypes: Array<Class<*>?>, result: MutableList<Method>) {
         val seen = HashSet<String>()
         var clz: Class<*>? = clazz
@@ -1162,6 +1173,19 @@ internal object CoreHelper {
      */
     private val additionalFields = WeakHashMap<Any, MutableMap<String, Any?>>()
 
+    /**
+     * 将任意值附加到对象实例上，模拟一个额外的实例字段。
+     * 该值可以随后通过 [getAdditionalInstanceField] 获取，或通过
+     * [removeAdditionalInstanceField] 移除。
+     *
+     * 内部使用 [ConcurrentHashMap] 存储每个对象的附加字段映射，保证线程安全。
+     *
+     * @param obj   要附加值的对象实例。不能为 `null`。
+     * @param key   标识此额外字段的键。不能为 `null`。
+     * @param value 要存储的值，或 `null` 以存储显式的 null 映射。
+     * @return 此实例/键组合之前存储的值，如果之前没有映射则返回 `null`。
+     * @throws NullPointerException 如果 [obj] 或 [key] 为 `null`。
+     */
     @JvmStatic
     fun setAdditionalInstanceField(obj: Any, key: String, value: Any?): Any? {
         val map: MutableMap<String, Any?>
@@ -1171,6 +1195,14 @@ internal object CoreHelper {
         return map.put(key, value)
     }
 
+    /**
+     * 返回之前通过 [setAdditionalInstanceField] 存储的值。
+     *
+     * @param obj 存储值的对象实例。不能为 `null`。
+     * @param key 标识额外字段的键。不能为 `null`。
+     * @return 存储的值，如果此实例/键组合没有存储值（或显式存储了 `null`）则返回 `null`。
+     * @throws NullPointerException 如果 [obj] 或 [key] 为 `null`。
+     */
     @JvmStatic
     fun getAdditionalInstanceField(obj: Any, key: String): Any? {
         val map = synchronized(additionalFields) {
