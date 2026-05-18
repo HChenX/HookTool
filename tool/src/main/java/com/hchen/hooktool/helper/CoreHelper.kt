@@ -68,8 +68,10 @@ internal object CoreHelper {
         }
 
         override fun hashCode(): Int {
-            var result = 31 * clazz.hashCode() + name.hashCode() + if (isExact) 1 else 0
+            var result = clazz.hashCode()
+            result = 31 * result + name.hashCode()
             result = 31 * result + parameters.contentHashCode()
+            result = 31 * result + isExact.hashCode()
             return result
         }
     }
@@ -91,8 +93,9 @@ internal object CoreHelper {
         }
 
         override fun hashCode(): Int {
-            var result = 31 * clazz.hashCode() + if (isExact) 1 else 0
+            var result = clazz.hashCode()
             result = 31 * result + parameters.contentHashCode()
+            result = 31 * result + isExact.hashCode()
             return result
         }
     }
@@ -196,11 +199,24 @@ internal object CoreHelper {
      */
     private fun isAssignable(from: Class<*>, to: Class<*>): Boolean {
         if (to.isAssignableFrom(from)) return true
+        if (from.isPrimitive && to.isPrimitive) {
+            val fromIndex = WIDENING_PRIMITIVE_TYPES.indexOf(from)
+            val toIndex = WIDENING_PRIMITIVE_TYPES.indexOf(to)
+            return fromIndex >= 0 && toIndex >= 0 && fromIndex <= toIndex
+        }
         if (from.isPrimitive) {
             return to == getWrapperType(from)
         }
         if (to.isPrimitive) {
-            return from == getWrapperType(to)
+            val wrapper = getWrapperType(to)
+            if (from == wrapper) return true
+            val unboxedFrom = getPrimitiveType(from)
+            if (unboxedFrom != null) {
+                val fromIndex = WIDENING_PRIMITIVE_TYPES.indexOf(unboxedFrom)
+                val toIndex = WIDENING_PRIMITIVE_TYPES.indexOf(to)
+                return fromIndex >= 0 && toIndex >= 0 && fromIndex <= toIndex
+            }
+            return false
         }
         return false
     }
@@ -278,16 +294,11 @@ internal object CoreHelper {
             cost += 0.1f
             cls = getPrimitiveType(cls)
         }
-        var i = 0
-        while (cls != destType && i < WIDENING_PRIMITIVE_TYPES.size) {
-            if (cls == WIDENING_PRIMITIVE_TYPES[i]) {
-                cost += 0.1f
-                if (i < WIDENING_PRIMITIVE_TYPES.size - 1) {
-                    cls = WIDENING_PRIMITIVE_TYPES[i + 1]
-                }
-            }
-            i++
-        }
+        if (cls == destType) return cost
+        val srcIndex = WIDENING_PRIMITIVE_TYPES.indexOf(cls)
+        val destIndex = WIDENING_PRIMITIVE_TYPES.indexOf(destType)
+        if (srcIndex < 0 || destIndex < 0 || srcIndex > destIndex) return Float.MAX_VALUE
+        cost += 0.1f * (destIndex - srcIndex)
         return cost
     }
 
@@ -340,6 +351,25 @@ internal object CoreHelper {
             totalCost += getObjectTransformationCost(srcArgs[i], destArgs[i])
         }
         return totalCost
+    }
+
+    private fun collectMethodsBestMatch(clazz: Class<*>, name: String, parameterTypes: Array<Class<*>?>, result: MutableList<Method>) {
+        val seen = HashSet<String>()
+        var clz: Class<*>? = clazz
+        var considerPrivate = true
+        while (clz != null) {
+            for (method in clz.declaredMethods) {
+                if (!considerPrivate && Modifier.isPrivate(method.modifiers)) continue
+                if (method.name == name && isAssignable(parameterTypes, method.parameterTypes)) {
+                    val sig = method.name + method.parameterTypes.contentToString()
+                    if (seen.add(sig)) {
+                        result.add(method)
+                    }
+                }
+            }
+            considerPrivate = false
+            clz = clz.superclass
+        }
     }
 
     /**
@@ -640,20 +670,13 @@ internal object CoreHelper {
 
         val key = MethodCacheKey(clazz, methodName, arrayOf(*parameterTypes), false)
         return methodCache.computeIfAbsent(key) { k ->
+            val candidates = mutableListOf<Method>()
+            collectMethodsBestMatch(k.clazz, k.name, k.parameters, candidates)
             var bestMatch: Method? = null
-            var clz: Class<*>? = k.clazz
-            var considerPrivate = true
-            while (clz != null) {
-                for (method in clz.declaredMethods) {
-                    if (!considerPrivate && Modifier.isPrivate(method.modifiers)) continue
-                    if (method.name == k.name && isAssignable(k.parameters, method.parameterTypes)) {
-                        if (bestMatch == null || compareFit(method.parameterTypes, bestMatch.parameterTypes, k.parameters) < 0) {
-                            bestMatch = method
-                        }
-                    }
+            for (method in candidates) {
+                if (bestMatch == null || compareFit(method.parameterTypes, bestMatch.parameterTypes, k.parameters) < 0) {
+                    bestMatch = method
                 }
-                considerPrivate = false
-                clz = clz.superclass
             }
             if (bestMatch != null) {
                 bestMatch.isAccessible = true
@@ -907,7 +930,6 @@ internal object CoreHelper {
     fun callMethod(obj: Any, methodName: String, vararg args: Any?): Any? {
         return try {
             val method = findMethodBestMatch(obj.javaClass, methodName, *args)
-            method.isAccessible = true
             method.invoke(obj, *args)
         } catch (e: IllegalAccessException) {
             throw IllegalAccessError(e.message)
@@ -933,7 +955,6 @@ internal object CoreHelper {
     fun callMethod(obj: Any, methodName: String, parameterTypes: Array<Class<*>>, vararg args: Any?): Any? {
         return try {
             val method = findMethodBestMatch(obj.javaClass, methodName, *parameterTypes)
-            method.isAccessible = true
             method.invoke(obj, *args)
         } catch (e: IllegalAccessException) {
             throw IllegalAccessError(e.message)
@@ -959,7 +980,6 @@ internal object CoreHelper {
     fun callStaticMethod(clazz: Class<*>, methodName: String, vararg args: Any?): Any? {
         return try {
             val method = findMethodBestMatch(clazz, methodName, *args)
-            method.isAccessible = true
             method.invoke(null, *args)
         } catch (e: IllegalAccessException) {
             throw IllegalAccessError(e.message)
@@ -985,7 +1005,6 @@ internal object CoreHelper {
     fun callStaticMethod(clazz: Class<*>, methodName: String, parameterTypes: Array<Class<*>>, vararg args: Any?): Any? {
         return try {
             val method = findMethodBestMatch(clazz, methodName, *parameterTypes)
-            method.isAccessible = true
             method.invoke(null, *args)
         } catch (e: IllegalAccessException) {
             throw IllegalAccessError(e.message)
@@ -1010,7 +1029,6 @@ internal object CoreHelper {
     fun getObjectField(obj: Any, fieldName: String): Any? {
         return try {
             val field = findField(obj.javaClass, fieldName)
-            field.isAccessible = true
             field.get(obj)
         } catch (e: IllegalAccessException) {
             throw IllegalAccessError(e.message)
@@ -1031,7 +1049,6 @@ internal object CoreHelper {
     fun setObjectField(obj: Any, fieldName: String, value: Any?) {
         try {
             val field = findField(obj.javaClass, fieldName)
-            field.isAccessible = true
             field.set(obj, value)
         } catch (e: IllegalAccessException) {
             throw IllegalAccessError(e.message)
@@ -1053,7 +1070,6 @@ internal object CoreHelper {
     fun getStaticObjectField(clazz: Class<*>, fieldName: String): Any? {
         return try {
             val field = findField(clazz, fieldName)
-            field.isAccessible = true
             field.get(null)
         } catch (e: IllegalAccessException) {
             throw IllegalAccessError(e.message)
@@ -1073,7 +1089,6 @@ internal object CoreHelper {
     fun setStaticObjectField(clazz: Class<*>, fieldName: String, value: Any?) {
         try {
             val field = findField(clazz, fieldName)
-            field.isAccessible = true
             field.set(null, value)
         } catch (e: IllegalAccessException) {
             throw IllegalAccessError(e.message)
@@ -1097,7 +1112,6 @@ internal object CoreHelper {
     fun newInstance(clazz: Class<*>, vararg args: Any?): Any {
         return try {
             val constructor = findConstructorBestMatch(clazz, *args)
-            constructor.isAccessible = true
             constructor.newInstance(*args)
         } catch (e: IllegalAccessException) {
             throw IllegalAccessError(e.message)
@@ -1125,7 +1139,6 @@ internal object CoreHelper {
     fun newInstance(clazz: Class<*>, parameterTypes: Array<Class<*>>, vararg args: Any?): Any {
         return try {
             val constructor = findConstructorBestMatchWithTypes(clazz, parameterTypes, args as Array<Any?>)
-            constructor.isAccessible = true
             constructor.newInstance(*args)
         } catch (e: IllegalAccessException) {
             throw IllegalAccessError(e.message)
@@ -1149,44 +1162,21 @@ internal object CoreHelper {
      */
     private val additionalFields = WeakHashMap<Any, MutableMap<String, Any?>>()
 
-    /**
-     * 将任意值附加到对象实例上，模拟一个额外的实例字段。
-     * 该值可以随后通过 [getAdditionalInstanceField] 获取，或通过
-     * [removeAdditionalInstanceField] 移除。
-     *
-     * @param obj   要附加值的对象实例。不能为 `null`。
-     * @param key   标识此额外字段的键。不能为 `null`。
-     * @param value 要存储的值，或 `null` 以存储显式的 null 映射。
-     * @return 此实例/键组合之前存储的值，如果之前没有映射则返回 `null`。
-     * @throws NullPointerException 如果 [obj] 或 [key] 为 `null`。
-     */
     @JvmStatic
     fun setAdditionalInstanceField(obj: Any, key: String, value: Any?): Any? {
         val map: MutableMap<String, Any?>
         synchronized(additionalFields) {
-            map = additionalFields.getOrPut(obj) { mutableMapOf() }
+            map = additionalFields.getOrPut(obj) { ConcurrentHashMap() }
         }
-        synchronized(map) {
-            return map.put(key, value)
-        }
+        return map.put(key, value)
     }
 
-    /**
-     * 返回之前通过 [setAdditionalInstanceField] 存储的值。
-     *
-     * @param obj 存储值的对象实例。不能为 `null`。
-     * @param key 标识额外字段的键。不能为 `null`。
-     * @return 存储的值，如果此实例/键组合没有存储值（或显式存储了 `null`）则返回 `null`。
-     * @throws NullPointerException 如果 [obj] 或 [key] 为 `null`。
-     */
     @JvmStatic
     fun getAdditionalInstanceField(obj: Any, key: String): Any? {
         val map = synchronized(additionalFields) {
             additionalFields[obj] ?: return null
         }
-        synchronized(map) {
-            return map[key]
-        }
+        return map[key]
     }
 
     /**
@@ -1202,9 +1192,7 @@ internal object CoreHelper {
         val map = synchronized(additionalFields) {
             additionalFields[obj] ?: return null
         }
-        synchronized(map) {
-            return map.remove(key)
-        }
+        return map.remove(key)
     }
 
     /**
