@@ -28,9 +28,15 @@ import com.hchen.hooktool.ModuleData;
 import com.hchen.hooktool.ModuleEntrance;
 import com.hchen.hooktool.log.AndroidLog;
 
+/**
+ * 示例模块入口类。继承 {@link ModuleEntrance}，展示模块的完整生命周期实现。
+ */
 public class InitHook extends ModuleEntrance {
     private static final String TAG = "InitHook";
 
+    /**
+     * 初始化模块配置。
+     */
     @Override
     public void initModuleConfig() {
         ModuleConfig.setLogTag("TestDemo");
@@ -42,18 +48,27 @@ public class InitHook extends ModuleEntrance {
         ModuleConfig.setShowHookSuccessLog(true);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @NonNull
     @Override
     public String[] ignorePackages() {
         return new String[]{"com.miui.contentcatcher"};
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void handleModuleLoaded(@NonNull ModuleLoadedParam param) {
         AndroidLog.logD(TAG, "handleModuleLoaded: " + param.isSystemServer() + ", " + param.getProcessName() + ", " + param);
         super.handleModuleLoaded(param);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void handlePackageLoaded(@NonNull PackageLoadedParam param) {
         AndroidLog.logD(TAG, "handlePackageLoaded: " + param.isFirstPackage() + ", " + param.getPackageName() +
@@ -61,6 +76,9 @@ public class InitHook extends ModuleEntrance {
         super.handlePackageLoaded(param);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void handlePackageReady(@NonNull PackageReadyParam param) {
         AndroidLog.logD(TAG, "handlePackageReady: " + param.getClassLoader() + ", " + param.getAppComponentFactory() + ", " + param);
@@ -70,12 +88,18 @@ public class InitHook extends ModuleEntrance {
         new TestHook().handlePackageReady(param);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void handleSystemServerStarting(@NonNull SystemServerStartingParam param) {
         AndroidLog.logD(TAG, "handleSystemServerStarting: " + param.getClassLoader() + ", " + param);
         super.handleSystemServerStarting(param);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void handleApplicationCreated(@NonNull Context context) {
         AndroidLog.logD(TAG, "handleApplicationCreated: " + context);

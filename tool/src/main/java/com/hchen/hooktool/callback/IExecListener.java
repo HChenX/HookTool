@@ -21,31 +21,45 @@ package com.hchen.hooktool.callback;
 import androidx.annotation.NonNull;
 
 /**
- * Shell 执行监听
+ * Shell 命令执行监听器接口。提供命令执行结果的回调方法。
  *
  * @author 焕晨HChen
  */
 public interface IExecListener {
     /**
-     * 标准输出
+     * 标准输出回调。
+     *
+     * @param command  执行的命令
+     * @param exitCode 退出码
+     * @param outputs  标准输出内容
      */
     default void output(@NonNull String command, @NonNull String exitCode, @NonNull String[] outputs) {
     }
 
     /**
-     * 标准错误
+     * 标准错误输出回调。
+     *
+     * @param command  执行的命令
+     * @param exitCode 退出码
+     * @param errors   标准错误输出内容
      */
     default void error(@NonNull String command, @NonNull String exitCode, @NonNull String[] errors) {
     }
 
     /**
-     * 返回 Root 状态
+     * Root 权限检测结果回调。
+     *
+     * @param hasRoot  是否拥有 Root 权限
+     * @param exitCode 退出码
      */
     default void rootResult(boolean hasRoot, @NonNull String exitCode) {
     }
 
     /**
-     * 管道破裂时的回调，代表 Shell 流非正常终止
+     * 管道破裂回调，当 Shell 流非正常终止时触发。
+     *
+     * @param reason 原因描述
+     * @param errors 错误输出内容
      */
     default void brokenPip(@NonNull String reason, @NonNull String[] errors) {
     }

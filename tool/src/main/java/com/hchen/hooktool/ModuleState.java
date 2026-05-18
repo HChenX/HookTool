@@ -36,7 +36,7 @@ import java.util.Objects;
 import kotlin.text.Charsets;
 
 /**
- * 模块状态
+ * 模块状态检测工具类。提供检测太极（TaiChi）和 LSPatch 等第三方 Xposed 框架环境的能力。
  *
  * @author 焕晨HChen
  */
@@ -45,7 +45,10 @@ public final class ModuleState {
     }
 
     /**
-     * 是否是太极环境
+     * 检测当前是否处于太极（TaiChi）环境中。
+     *
+     * @param context 上下文
+     * @return 是否为太极环境
      */
     public static boolean isExpActive(@NonNull Context context) {
         try {
@@ -72,10 +75,12 @@ public final class ModuleState {
     }
 
     /**
-     * 是否是 LSPath 环境
-     * <p>
-     * 需要声明权限 android.permission.QUERY_ALL_PACKAGES
+     * 检测当前是否处于 LSPatch 环境中，并返回配置信息。
+     * 需要声明 android.permission.QUERY_ALL_PACKAGES 权限。
      *
+     * @param context     上下文
+     * @param packageName 目标应用包名
+     * @return 包含配置信息的 HashMap，如果非 LSPatch 环境则返回空 Map
      * @noinspection ExtractMethodRecommender
      */
     @NonNull

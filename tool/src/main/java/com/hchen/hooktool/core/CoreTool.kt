@@ -1,4 +1,4 @@
-/*
+﻿/*
  * This file is part of HookTool.
  *
  * HookTool is free software: you can redistribute it and/or modify
@@ -32,7 +32,7 @@ import com.hchen.hooktool.log.LogExpand.getTag
 import com.hchen.hooktool.log.XposedLog
 import com.hchen.hooktool.utils.PrefsTool
 import com.hchen.hooktool.utils.ResInjectTool
-import de.robv.android.xposed.XposedHelpers
+import com.hchen.hooktool.helper.CoreHelper
 import io.github.libxposed.api.XposedInterface
 import java.lang.reflect.Constructor
 import java.lang.reflect.Executable
@@ -43,16 +43,25 @@ import java.time.Instant
 import java.util.Objects
 
 /**
- * 核心工具
- * 
+ * 核心工具类。
+ * <p>
+ * 提供 HookTool 框架的完整 API，包括类查找（hasClass、findClass、findClassIfExists）、
+ * 方法查找与钩子（findMethod、hookMethod、hookAllMethod）、构造函数查找与钩子、
+ * 字段访问（findField、getField、setField、getStaticField、setStaticField）、
+ * 额外实例/静态字段管理、静态方法调用、实例创建（newInstance）、方法反优化（deoptimize）、
+ * 链式钩子构建（buildChain）、资源注入（createFakeResId、setResReplacement）、
+ * 共享首选项访问（prefs）、堆栈跟踪获取（getStackTrace）以及耗时计算（timeConsumption）等功能。
+ *
  * @author 焕晨HChen
+ * @see AbsModule
+ * @see CoreHelper
  */
 @Suppress("unused")
 open class CoreTool : XposedLog() {
     private companion object {
         // -------------------------------- class ---------------------------------
         /**
-         * 检查指定类是否存在
+         * 检查指定类是否存在。
          *
          * @param classLoader 类加载器，默认为 ModuleData.getClassLoader()
          * @return 是否存在该类
@@ -62,11 +71,11 @@ open class CoreTool : XposedLog() {
         fun String.hasClass(
             classLoader: ClassLoader? = ModuleData.getClassLoader(),
         ): Boolean {
-            return XposedHelpers.findClassIfExists(this, classLoader) != null
+            return CoreHelper.findClassIfExists(this, classLoader) != null
         }
 
         /**
-         * 查找指定类
+         * 查找指定类。
          *
          * @param classLoader 类加载器，默认为 ModuleData.getClassLoader()
          * @return 找到的类
@@ -76,11 +85,11 @@ open class CoreTool : XposedLog() {
         fun String.findClass(
             classLoader: ClassLoader? = ModuleData.getClassLoader()
         ): Class<*> {
-            return XposedHelpers.findClass(this, classLoader)
+            return CoreHelper.findClass(this, classLoader)
         }
 
         /**
-         * 查找指定类，如果不存在则返回 null
+         * 查找指定类，如果不存在则返回 null。
          *
          * @param classLoader 类加载器，默认为 ModuleData.getClassLoader()
          * @return 找到的类，如果不存在则返回 null
@@ -90,13 +99,13 @@ open class CoreTool : XposedLog() {
         fun String.findClassIfExists(
             classLoader: ClassLoader? = ModuleData.getClassLoader()
         ): Class<*>? {
-            return XposedHelpers.findClassIfExists(this, classLoader)
+            return CoreHelper.findClassIfExists(this, classLoader)
         }
 
         // ---------------------------------- method -----------------------------------
 
         /**
-         * 检查指定类是否包含指定方法
+         * 检查指定类是否包含指定方法。
          *
          * @param classLoader 类加载器，默认为 ModuleData.getClassLoader()
          * @param methodName 方法名
@@ -114,7 +123,7 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 检查当前类是否包含指定方法
+         * 检查当前类是否包含指定方法。
          *
          * @param methodName 方法名
          * @param parameterTypes 参数类型
@@ -125,11 +134,11 @@ open class CoreTool : XposedLog() {
             methodName: String,
             vararg parameterTypes: Any
         ): Boolean {
-            return XposedHelpers.findMethodExactIfExists(this, methodName, *parameterTypes) != null
+            return CoreHelper.findMethodExactIfExists(this, methodName, *parameterTypes) != null
         }
 
         /**
-         * 检查当前类是否包含任意指定方法名的方法
+         * 检查当前类是否包含任意指定方法名的方法。
          *
          * @param classLoader 类加载器，默认为 ModuleData.getClassLoader()
          * @param methodName 方法名
@@ -145,7 +154,7 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 检查当前类是否包含任意指定方法名的方法
+         * 检查当前类是否包含任意指定方法名的方法。
          *
          * @param methodName 方法名
          * @return 是否存在该方法
@@ -160,7 +169,7 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 查找指定类的指定方法
+         * 查找指定类的指定方法。
          *
          * @param classLoader 类加载器，默认为 ModuleData.getClassLoader()
          * @param methodName 方法名
@@ -174,11 +183,11 @@ open class CoreTool : XposedLog() {
             methodName: String,
             vararg parameterTypes: Any
         ): Method {
-            return XposedHelpers.findMethodExact(this, classLoader, methodName, *parameterTypes)
+            return CoreHelper.findMethodExact(this, classLoader, methodName, *parameterTypes)
         }
 
         /**
-         * 查找当前类的指定方法
+         * 查找当前类的指定方法。
          *
          * @param methodName 方法名
          * @param parameterTypes 参数类型
@@ -189,11 +198,11 @@ open class CoreTool : XposedLog() {
             methodName: String,
             vararg parameterTypes: Any
         ): Method {
-            return XposedHelpers.findMethodExact(this, methodName, *parameterTypes)
+            return CoreHelper.findMethodExact(this, methodName, *parameterTypes)
         }
 
         /**
-         * 查找指定类的指定方法，如果不存在则返回 null
+         * 查找指定类的指定方法，如果不存在则返回 null。
          *
          * @param classLoader 类加载器，默认为 ModuleData.getClassLoader()
          * @param methodName 方法名
@@ -207,11 +216,11 @@ open class CoreTool : XposedLog() {
             methodName: String,
             vararg parameterTypes: Any
         ): Method? {
-            return XposedHelpers.findMethodExactIfExists(this, classLoader, methodName, *parameterTypes)
+            return CoreHelper.findMethodExactIfExists(this, classLoader, methodName, *parameterTypes)
         }
 
         /**
-         * 查找当前类的指定方法，如果不存在则返回 null
+         * 查找当前类的指定方法，如果不存在则返回 null。
          *
          * @param methodName 方法名
          * @param parameterTypes 参数类型
@@ -222,11 +231,11 @@ open class CoreTool : XposedLog() {
             methodName: String,
             vararg parameterTypes: Any
         ): Method? {
-            return XposedHelpers.findMethodExactIfExists(this, methodName, *parameterTypes)
+            return CoreHelper.findMethodExactIfExists(this, methodName, *parameterTypes)
         }
 
         /**
-         * 查找指定类的所有方法，可选择按方法名过滤
+         * 查找指定类的所有方法，可选择按方法名过滤。
          *
          * @param classLoader 类加载器，默认为 ModuleData.getClassLoader()
          * @param methodName 方法名，为null时返回所有方法
@@ -242,7 +251,7 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 查找当前类的所有方法，可选择按方法名过滤
+         * 查找当前类的所有方法，可选择按方法名过滤。
          *
          * @param methodName 方法名，为null时返回所有方法
          * @return 找到的方法数组
@@ -259,7 +268,7 @@ open class CoreTool : XposedLog() {
 
         // -------------------------------- constructor ---------------------------------
         /**
-         * 检查指定类是否包含指定构造函数
+         * 检查指定类是否包含指定构造函数。
          *
          * @param classLoader 类加载器，默认为 ModuleData.getClassLoader()
          * @param parameterTypes 参数类型
@@ -271,11 +280,11 @@ open class CoreTool : XposedLog() {
             classLoader: ClassLoader? = ModuleData.getClassLoader(),
             vararg parameterTypes: Any
         ): Boolean {
-            return XposedHelpers.findConstructorExactIfExists(this, classLoader, *parameterTypes) != null
+            return CoreHelper.findConstructorExactIfExists(this, classLoader, *parameterTypes) != null
         }
 
         /**
-         * 检查当前类是否包含指定构造函数
+         * 检查当前类是否包含指定构造函数。
          *
          * @param parameterTypes 参数类型
          * @return 是否存在该构造函数
@@ -284,11 +293,11 @@ open class CoreTool : XposedLog() {
         fun Class<*>.hasConstructor(
             vararg parameterTypes: Any
         ): Boolean {
-            return XposedHelpers.findConstructorExactIfExists(this, *parameterTypes) != null
+            return CoreHelper.findConstructorExactIfExists(this, *parameterTypes) != null
         }
 
         /**
-         * 查找指定类的指定构造函数
+         * 查找指定类的指定构造函数。
          *
          * @param classLoader 类加载器，默认为 ModuleData.getClassLoader()
          * @param parameterTypes 参数类型
@@ -300,11 +309,11 @@ open class CoreTool : XposedLog() {
             classLoader: ClassLoader? = ModuleData.getClassLoader(),
             vararg parameterTypes: Any
         ): Constructor<*> {
-            return XposedHelpers.findConstructorExact(this, classLoader, *parameterTypes)
+            return CoreHelper.findConstructorExact(this, classLoader, *parameterTypes)
         }
 
         /**
-         * 查找当前类的指定构造函数
+         * 查找当前类的指定构造函数。
          *
          * @param parameterTypes 参数类型
          * @return 找到的构造函数
@@ -313,11 +322,11 @@ open class CoreTool : XposedLog() {
         fun Class<*>.findConstructor(
             vararg parameterTypes: Any
         ): Constructor<*> {
-            return XposedHelpers.findConstructorExact(this, *parameterTypes)
+            return CoreHelper.findConstructorExact(this, *parameterTypes)
         }
 
         /**
-         * 查找指定类的指定构造函数，如果不存在则返回 null
+         * 查找指定类的指定构造函数，如果不存在则返回 null。
          *
          * @param classLoader 类加载器，默认为 ModuleData.getClassLoader()
          * @param parameterTypes 参数类型
@@ -329,11 +338,11 @@ open class CoreTool : XposedLog() {
             classLoader: ClassLoader? = ModuleData.getClassLoader(),
             vararg parameterTypes: Any
         ): Constructor<*>? {
-            return XposedHelpers.findConstructorExactIfExists(this, classLoader, *parameterTypes)
+            return CoreHelper.findConstructorExactIfExists(this, classLoader, *parameterTypes)
         }
 
         /**
-         * 查找当前类的指定构造函数，如果不存在则返回 null
+         * 查找当前类的指定构造函数，如果不存在则返回 null。
          *
          * @param parameterTypes 参数类型
          * @return 找到的构造函数，如果不存在则返回 null
@@ -342,11 +351,11 @@ open class CoreTool : XposedLog() {
         fun Class<*>.findConstructorIfExists(
             vararg parameterTypes: Any
         ): Constructor<*>? {
-            return XposedHelpers.findConstructorExactIfExists(this, *parameterTypes)
+            return CoreHelper.findConstructorExactIfExists(this, *parameterTypes)
         }
 
         /**
-         * 查找指定类的所有构造函数
+         * 查找指定类的所有构造函数。
          *
          * @param classLoader 类加载器，默认为 ModuleData.getClassLoader()
          * @return 找到的构造函数数组
@@ -360,7 +369,7 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 查找当前类的所有构造函数
+         * 查找当前类的所有构造函数。
          *
          * @return 找到的构造函数数组
          */
@@ -372,7 +381,7 @@ open class CoreTool : XposedLog() {
         // --------------------------------- field ----------------------------------
 
         /**
-         * 检查指定类是否包含指定字段
+         * 检查指定类是否包含指定字段。
          *
          * @param classLoader 类加载器，默认为 ModuleData.getClassLoader()
          * @param fieldName 字段名
@@ -388,7 +397,7 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 检查当前类是否包含指定字段
+         * 检查当前类是否包含指定字段。
          *
          * @param fieldName 字段名
          * @return 是否存在该字段
@@ -397,11 +406,11 @@ open class CoreTool : XposedLog() {
         fun Class<*>.hasField(
             fieldName: String
         ): Boolean {
-            return XposedHelpers.findFieldIfExists(this, fieldName) != null
+            return CoreHelper.findFieldIfExists(this, fieldName) != null
         }
 
         /**
-         * 查找指定类的指定字段
+         * 查找指定类的指定字段。
          *
          * @param classLoader 类加载器，默认为 ModuleData.getClassLoader()
          * @param fieldName 字段名
@@ -417,7 +426,7 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 查找当前类的指定字段
+         * 查找当前类的指定字段。
          *
          * @param fieldName 字段名
          * @return 找到的字段
@@ -426,11 +435,11 @@ open class CoreTool : XposedLog() {
         fun Class<*>.findField(
             fieldName: String
         ): Field {
-            return XposedHelpers.findField(this, fieldName)
+            return CoreHelper.findField(this, fieldName)
         }
 
         /**
-         * 查找指定类的指定字段，如果不存在则返回 null
+         * 查找指定类的指定字段，如果不存在则返回 null。
          *
          * @param classLoader 类加载器，默认为 ModuleData.getClassLoader()
          * @param fieldName 字段名
@@ -446,7 +455,7 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 查找当前类的指定字段，如果不存在则返回 null
+         * 查找当前类的指定字段，如果不存在则返回 null。
          *
          * @param fieldName 字段名
          * @return 找到的字段，如果不存在则返回 null
@@ -455,12 +464,12 @@ open class CoreTool : XposedLog() {
         fun Class<*>.findFieldIfExists(
             fieldName: String
         ): Field? {
-            return XposedHelpers.findFieldIfExists(this, fieldName)
+            return CoreHelper.findFieldIfExists(this, fieldName)
         }
 
         // -------------------------------- non static ---------------------------------
         /**
-         * 调用对象的指定方法
+         * 调用对象的指定方法。
          *
          * @param methodName 方法名
          * @param parameterTypes 参数类型数组，默认为空数组
@@ -475,14 +484,14 @@ open class CoreTool : XposedLog() {
             vararg args: Any?
         ): Any? {
             return if (parameterTypes.isEmpty()) {
-                XposedHelpers.callMethod(this, methodName, *args)
+                CoreHelper.callMethod(this, methodName, *args)
             } else {
-                XposedHelpers.callMethod(this, methodName, parameterTypes, *args)
+                CoreHelper.callMethod(this, methodName, parameterTypes, *args)
             }
         }
 
         /**
-         * 调用指定实例的方法
+         * 调用指定实例的方法。
          *
          * @param instance 实例对象
          * @param args 方法参数
@@ -498,7 +507,7 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 获取对象的指定字段值
+         * 获取对象的指定字段值。
          *
          * @param fieldName 字段名
          * @return 字段值
@@ -507,11 +516,11 @@ open class CoreTool : XposedLog() {
         fun Any.getField(
             fieldName: String,
         ): Any? {
-            return XposedHelpers.getObjectField(this, fieldName)
+            return CoreHelper.getObjectField(this, fieldName)
         }
 
         /**
-         * 获取指定实例的字段值
+         * 获取指定实例的字段值。
          *
          * @param instance 实例对象
          * @return 字段值
@@ -525,7 +534,7 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 设置对象的指定字段值
+         * 设置对象的指定字段值。
          *
          * @param fieldName 字段名
          * @param value 新的字段值
@@ -535,11 +544,11 @@ open class CoreTool : XposedLog() {
             fieldName: String,
             value: Any?
         ) {
-            XposedHelpers.setObjectField(this, fieldName, value)
+            CoreHelper.setObjectField(this, fieldName, value)
         }
 
         /**
-         * 设置指定实例的字段值
+         * 设置指定实例的字段值。
          *
          * @param instance 实例对象
          * @param value 新的字段值
@@ -554,7 +563,7 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 为对象设置额外的实例字段
+         * 为对象设置额外的实例字段。
          *
          * @param key 字段键
          * @param value 字段值
@@ -565,11 +574,11 @@ open class CoreTool : XposedLog() {
             key: String,
             value: Any?
         ): Any? {
-            return XposedHelpers.setAdditionalInstanceField(this, key, value)
+            return CoreHelper.setAdditionalInstanceField(this, key, value)
         }
 
         /**
-         * 获取对象的额外实例字段
+         * 获取对象的额外实例字段。
          *
          * @param key 字段键
          * @return 字段值，如果不存在则返回 null
@@ -578,11 +587,11 @@ open class CoreTool : XposedLog() {
         fun Any.getAdditionalInstanceField(
             key: String
         ): Any? {
-            return XposedHelpers.getAdditionalInstanceField(this, key)
+            return CoreHelper.getAdditionalInstanceField(this, key)
         }
 
         /**
-         * 移除对象的额外实例字段
+         * 移除对象的额外实例字段。
          *
          * @param key 字段键
          * @return 被移除的值，如果不存在则返回 null
@@ -591,13 +600,13 @@ open class CoreTool : XposedLog() {
         fun Any.removeAdditionalInstanceField(
             key: String
         ): Any? {
-            return XposedHelpers.removeAdditionalInstanceField(this, key)
+            return CoreHelper.removeAdditionalInstanceField(this, key)
         }
 
         // ------------------------------- static ------------------------------------
 
         /**
-         * 创建指定类的实例
+         * 创建指定类的实例。
          *
          * @param classLoader 类加载器，默认为 ModuleData.getClassLoader()
          * @param parameterTypes 参数类型数组，默认为空数组
@@ -615,7 +624,7 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 创建当前类的实例
+         * 创建当前类的实例。
          *
          * @param parameterTypes 参数类型数组，默认为空数组
          * @param args 构造函数参数
@@ -628,14 +637,14 @@ open class CoreTool : XposedLog() {
             vararg args: Any?
         ): Any {
             return if (parameterTypes.isEmpty()) {
-                XposedHelpers.newInstance(this, *args)
+                CoreHelper.newInstance(this, *args)
             } else {
-                XposedHelpers.newInstance(this, parameterTypes, *args)
+                CoreHelper.newInstance(this, parameterTypes, *args)
             }
         }
 
         /**
-         * 调用指定类的静态方法
+         * 调用指定类的静态方法。
          *
          * @param classLoader 类加载器，默认为 ModuleData.getClassLoader()
          * @param methodName 方法名
@@ -655,7 +664,7 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 调用当前类的静态方法
+         * 调用当前类的静态方法。
          *
          * @param methodName 方法名
          * @param parameterTypes 参数类型数组，默认为空数组
@@ -670,14 +679,14 @@ open class CoreTool : XposedLog() {
             vararg args: Any?
         ): Any? {
             return if (parameterTypes.isEmpty()) {
-                XposedHelpers.callStaticMethod(this, methodName, *args)
+                CoreHelper.callStaticMethod(this, methodName, *args)
             } else {
-                XposedHelpers.callStaticMethod(this, methodName, parameterTypes, *args)
+                CoreHelper.callStaticMethod(this, methodName, parameterTypes, *args)
             }
         }
 
         /**
-         * 调用静态方法
+         * 调用静态方法。
          *
          * @param args 方法参数
          * @return 方法返回值
@@ -691,7 +700,7 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 获取指定类的静态字段值
+         * 获取指定类的静态字段值。
          *
          * @param classLoader 类加载器，默认为 ModuleData.getClassLoader()
          * @param fieldName 字段名
@@ -707,7 +716,7 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 获取当前类的静态字段值
+         * 获取当前类的静态字段值。
          *
          * @param fieldName 字段名
          * @return 字段值
@@ -716,11 +725,11 @@ open class CoreTool : XposedLog() {
         fun Class<*>.getStaticField(
             fieldName: String
         ): Any? {
-            return XposedHelpers.getStaticObjectField(this, fieldName)
+            return CoreHelper.getStaticObjectField(this, fieldName)
         }
 
         /**
-         * 获取静态字段值
+         * 获取静态字段值。
          *
          * @return 字段值
          */
@@ -731,7 +740,7 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 设置指定类的静态字段值
+         * 设置指定类的静态字段值。
          *
          * @param classLoader 类加载器，默认为 ModuleData.getClassLoader()
          * @param fieldName 字段名
@@ -748,7 +757,7 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 设置当前类的静态字段值
+         * 设置当前类的静态字段值。
          *
          * @param fieldName 字段名
          * @param value 新的字段值
@@ -758,11 +767,11 @@ open class CoreTool : XposedLog() {
             fieldName: String,
             value: Any?
         ) {
-            XposedHelpers.setStaticObjectField(this, fieldName, value)
+            CoreHelper.setStaticObjectField(this, fieldName, value)
         }
 
         /**
-         * 设置静态字段值
+         * 设置静态字段值。
          *
          * @param value 新的字段值
          */
@@ -775,7 +784,7 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 为指定类设置额外的静态字段
+         * 为指定类设置额外的静态字段。
          *
          * @param classLoader 类加载器，默认为 ModuleData.getClassLoader()
          * @param key 字段键
@@ -793,7 +802,7 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 为当前类设置额外的静态字段
+         * 为当前类设置额外的静态字段。
          *
          * @param key 字段键
          * @param value 字段值
@@ -804,11 +813,11 @@ open class CoreTool : XposedLog() {
             key: String,
             value: Any?
         ): Any? {
-            return XposedHelpers.setAdditionalStaticField(this, key, value)
+            return CoreHelper.setAdditionalStaticField(this, key, value)
         }
 
         /**
-         * 获取指定类的额外静态字段
+         * 获取指定类的额外静态字段。
          *
          * @param classLoader 类加载器，默认为 ModuleData.getClassLoader()
          * @param key 字段键
@@ -824,7 +833,7 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 获取当前类的额外静态字段
+         * 获取当前类的额外静态字段。
          *
          * @param key 字段键
          * @return 字段值，如果不存在则返回 null
@@ -833,11 +842,11 @@ open class CoreTool : XposedLog() {
         fun Class<*>.getAdditionalStaticField(
             key: String,
         ): Any? {
-            return XposedHelpers.getAdditionalStaticField(this, key)
+            return CoreHelper.getAdditionalStaticField(this, key)
         }
 
         /**
-         * 移除指定类的额外静态字段
+         * 移除指定类的额外静态字段。
          *
          * @param classLoader 类加载器，默认为 ModuleData.getClassLoader()
          * @param key 字段键
@@ -853,7 +862,7 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 移除当前类的额外静态字段
+         * 移除当前类的额外静态字段。
          *
          * @param key 字段键
          * @return 被移除的值，如果不存在则返回 null
@@ -862,13 +871,13 @@ open class CoreTool : XposedLog() {
         fun Class<*>.removeAdditionalStaticField(
             key: String,
         ): Any? {
-            return XposedHelpers.removeAdditionalStaticField(this, key)
+            return CoreHelper.removeAdditionalStaticField(this, key)
         }
 
         // --------------------------------- hook ------------------------------------
 
         /**
-         * 钩子指定类的指定方法
+         * 钩子指定类的指定方法。
          *
          * @param classLoader 类加载器，默认为 ModuleData.getClassLoader()
          * @param methodName 方法名
@@ -886,7 +895,7 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 钩子当前类的指定方法
+         * 钩子当前类的指定方法。
          *
          * @param methodName 方法名
          * @param parameterTypes 参数类型
@@ -907,7 +916,7 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 钩子指定类的指定方法，如果不存在则返回 null
+         * 钩子指定类的指定方法，如果不存在则返回 null。
          *
          * @param classLoader 类加载器，默认为 ModuleData.getClassLoader()
          * @param methodName 方法名
@@ -925,7 +934,7 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 钩子当前类的指定方法，如果不存在则返回 null
+         * 钩子当前类的指定方法，如果不存在则返回 null。
          *
          * @param methodName 方法名
          * @param parameterTypes 参数类型
@@ -946,7 +955,7 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 钩子指定类的指定构造函数
+         * 钩子指定类的指定构造函数。
          *
          * @param classLoader 类加载器，默认为 ModuleData.getClassLoader()
          * @param parameterTypes 参数类型
@@ -962,7 +971,7 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 钩子当前类的指定构造函数
+         * 钩子当前类的指定构造函数。
          *
          * @param parameterTypes 参数类型
          * @return XposedInterface.HookHandle 实例
@@ -981,7 +990,7 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 钩子指定类的指定构造函数，如果不存在则返回 null
+         * 钩子指定类的指定构造函数，如果不存在则返回 null。
          *
          * @param classLoader 类加载器，默认为 ModuleData.getClassLoader()
          * @param parameterTypes 参数类型
@@ -997,7 +1006,7 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 钩子当前类的指定构造函数，如果不存在则返回 null
+         * 钩子当前类的指定构造函数，如果不存在则返回 null。
          *
          * @param parameterTypes 参数类型
          * @return XposedInterface.HookHandle 实例，如果不存在则返回 null
@@ -1016,8 +1025,9 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 钩子可执行对象
+         * 钩子可执行对象。
          *
+         * @param absHook 钩子实现对象。
          * @return XposedInterface.HookHandle 实例
          */
         @JvmStatic
@@ -1032,10 +1042,11 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 钩子指定类的指定名称的全部方法
+         * 钩子指定类的指定名称的全部方法。
          *
          * @param classLoader 类加载器，默认为 ModuleData.getClassLoader()
          * @param methodName 方法名
+         * @param absHook 钩子实现对象。
          * @return XposedInterface.HookHandle 实例
          */
         @JvmStatic
@@ -1049,9 +1060,10 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 钩子指定类的指定名称的全部方法
+         * 钩子指定类的指定名称的全部方法。
          *
          * @param methodName 方法名
+         * @param absHook 钩子实现对象。
          * @return XposedInterface.HookHandle 实例
          */
         @JvmStatic
@@ -1063,9 +1075,10 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 钩子指定类的全部构造函数
+         * 钩子指定类的全部构造函数。
          *
          * @param classLoader 类加载器，默认为 ModuleData.getClassLoader()
+         * @param absHook 钩子实现对象。
          * @return XposedInterface.HookHandle 实例
          */
         @JvmStatic
@@ -1078,8 +1091,9 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 钩子指定类的全部构造函数
+         * 钩子指定类的全部构造函数。
          *
+         * @param absHook 钩子实现对象。
          * @return XposedInterface.HookHandle 实例
          */
         @JvmStatic
@@ -1088,8 +1102,9 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 钩子指定类的全部方法
+         * 钩子指定类的全部方法。
          *
+         * @param absHook 钩子实现对象。
          * @return XposedInterface.HookHandle 实例
          */
         @JvmStatic
@@ -1098,9 +1113,10 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 钩子指定类的类初始化器
+         * 钩子指定类的类初始化器。
          *
          * @param classLoader 类加载器，默认为 ModuleData.getClassLoader()
+         * @param absHook 钩子实现对象。
          * @return XposedInterface.HookHandle 实例
          */
         @JvmStatic
@@ -1113,9 +1129,10 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 钩子指定类的类初始化器，如果不存在则返回 null
+         * 钩子指定类的类初始化器，如果不存在则返回 null。
          *
          * @param classLoader 类加载器，默认为 ModuleData.getClassLoader()
+         * @param absHook 钩子实现对象。
          * @return XposedInterface.HookHandle 实例，如果不存在则返回 null
          */
         @JvmStatic
@@ -1128,8 +1145,9 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 钩子当前类的类初始化器
+         * 钩子当前类的类初始化器。
          *
+         * @param absHook 钩子实现对象。
          * @return XposedInterface.HookHandle 实例
          */
         @JvmStatic
@@ -1144,7 +1162,7 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 创建拦截并返回指定结果的钩子
+         * 创建拦截并返回指定结果的钩子。
          *
          * @param result 要返回的结果
          * @return AbsHook 实例
@@ -1159,7 +1177,7 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 创建拦截方法的钩子
+         * 创建拦截方法的钩子。
          *
          * @return AbsHook 实例
          */
@@ -1169,7 +1187,7 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 创建替换参数的钩子
+         * 创建替换参数的钩子。
          *
          * @param index 参数索引
          * @param value 新的参数值
@@ -1186,7 +1204,7 @@ open class CoreTool : XposedLog() {
 
         // ------------------------------- invoker -----------------------------------
         /**
-         * 获取指定类指定方法的调用器
+         * 获取指定类指定方法的调用器。
          *
          * @param classLoader 类加载器，默认为 ModuleData.getClassLoader()
          * @param methodName 方法名
@@ -1204,7 +1222,7 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 获取当前类指定方法的调用器
+         * 获取当前类指定方法的调用器。
          *
          * @param methodName 方法名
          * @param parameterTypes 参数类型
@@ -1219,7 +1237,7 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 获取方法的调用器
+         * 获取方法的调用器。
          *
          * @return 方法调用器
          */
@@ -1229,7 +1247,7 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 获取指定类指定构造函数的调用器
+         * 获取指定类指定构造函数的调用器。
          *
          * @param classLoader 类加载器，默认为 ModuleData.getClassLoader()
          * @param parameterTypes 参数类型
@@ -1245,7 +1263,7 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 获取当前类指定构造函数的调用器
+         * 获取当前类指定构造函数的调用器。
          *
          * @param parameterTypes 参数类型
          * @return 构造函数调用器
@@ -1258,7 +1276,7 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 获取构造函数的调用器
+         * 获取构造函数的调用器。
          *
          * @return 构造函数调用器
          */
@@ -1270,7 +1288,7 @@ open class CoreTool : XposedLog() {
         // ------------------------------ deoptimize --------------------------------
 
         /**
-         * 反优化指定类的指定方法
+         * 反优化指定类的指定方法。
          *
          * @param classLoader 类加载器，默认为 ModuleData.getClassLoader()
          * @param methodName 方法名
@@ -1287,7 +1305,7 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 反优化当前类的指定方法
+         * 反优化当前类的指定方法。
          *
          * @param methodName 方法名
          * @param parameterTypes 参数类型
@@ -1301,7 +1319,7 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 反优化指定类的全部方法
+         * 反优化指定类的全部方法。
          *
          * @param classLoader 类加载器，默认为 ModuleData.getClassLoader()
          * @param methodName 方法名
@@ -1316,7 +1334,7 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 反优化指定类的全部方法
+         * 反优化指定类的全部方法。
          *
          * @param methodName 方法名
          */
@@ -1329,7 +1347,7 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 反优化指定类的指定构造函数
+         * 反优化指定类的指定构造函数。
          *
          * @param classLoader 类加载器，默认为 ModuleData.getClassLoader()
          * @param parameterTypes 参数类型
@@ -1344,7 +1362,7 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 反优化当前类的指定构造函数
+         * 反优化当前类的指定构造函数。
          *
          * @param parameterTypes 参数类型
          */
@@ -1356,7 +1374,7 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 反优化指定类的全部构造函数
+         * 反优化指定类的全部构造函数。
          *
          * @param classLoader 类加载器，默认为 ModuleData.getClassLoader()
          */
@@ -1369,7 +1387,7 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 反优化指定类的全部构造函数
+         * 反优化指定类的全部构造函数。
          */
         @JvmStatic
         fun Class<*>.deoptimizeAllConstructor() {
@@ -1377,7 +1395,7 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 反优化可执行对象
+         * 反优化可执行对象。
          */
         @JvmStatic
         fun Executable.deoptimize() {
@@ -1385,7 +1403,7 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 反优化全部可执行对象
+         * 反优化全部可执行对象。
          */
         @JvmStatic
         fun Array<out Executable>.deoptimizeAll() {
@@ -1397,7 +1415,7 @@ open class CoreTool : XposedLog() {
         // --------------------------------- chain -----------------------------------
 
         /**
-         * 创建链式钩子
+         * 创建链式钩子。
          *
          * @param classLoader 类加载器，默认为 ModuleData.getClassLoader()
          * @return ChainTool 实例
@@ -1411,7 +1429,7 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 创建链式钩子
+         * 创建链式钩子。
          *
          * @return ChainTool 实例
          */
@@ -1422,7 +1440,7 @@ open class CoreTool : XposedLog() {
 
         // ----------------------------------- res ---------------------------------------
         /**
-         * 创建假的资源ID
+         * 创建假的资源ID。
          *
          * @param resName 资源名称
          * @return 假的资源ID
@@ -1433,7 +1451,7 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 创建假的资源ID
+         * 创建假的资源ID。
          *
          * @param resources 资源对象
          * @param resId 原始资源ID
@@ -1445,7 +1463,7 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 设置资源替换
+         * 设置资源替换。
          *
          * @param packageName 包名
          * @param type 资源类型
@@ -1458,7 +1476,7 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 设置密度资源替换
+         * 设置密度资源替换。
          *
          * @param packageName 包名
          * @param type 资源类型
@@ -1471,7 +1489,7 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 设置对象资源替换
+         * 设置对象资源替换。
          *
          * @param packageName 包名
          * @param type 资源类型
@@ -1485,7 +1503,7 @@ open class CoreTool : XposedLog() {
         // -------------------------------- prefs --------------------------------------
 
         /**
-         * 获取 SharedPreferences 操作接口
+         * 获取 SharedPreferences 操作接口。
          *
          * @param prefsName 偏好设置名称，默认为空
          * @return SharedPreferences 接口
@@ -1499,7 +1517,7 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 获取 SharedPreferences 操作接口
+         * 获取 SharedPreferences 操作接口。
          *
          * @param prefsName 偏好设置名称，默认为空
          * @return SharedPreferences 接口
@@ -1514,7 +1532,7 @@ open class CoreTool : XposedLog() {
 
         // -------------------------------- other -------------------------------
         /**
-         * 获取当前堆栈跟踪信息
+         * 获取当前堆栈跟踪信息。
          *
          * @return 堆栈跟踪信息字符串
          */
@@ -1524,7 +1542,7 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 计算代码执行时间
+         * 计算代码执行时间。
          *
          * @param runnable 要执行的代码
          * @return 执行时间（毫秒），如果发生异常则返回-1
@@ -1544,7 +1562,7 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 获取参数类型数组
+         * 获取参数类型数组。
          *
          * @param classLoader 类加载器，默认为 ModuleData.getClassLoader()
          * @param parameterTypes 参数类型列表
@@ -1578,8 +1596,8 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 抛出指定错误
-         * */
+         * 抛出指定错误。
+         */
         @JvmStatic
         fun Throwable.throwIt() {
             throw this

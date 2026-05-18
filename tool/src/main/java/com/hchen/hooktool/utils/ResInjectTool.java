@@ -51,7 +51,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import io.github.libxposed.api.XposedInterface;
 
 /**
- * 资源注入工具
+ * 资源注入工具类。
+ * <p>
+ * 提供模块资源注入、资源替换（ID 替换、密度替换、对象替换）以及假资源 ID 创建等功能。
  *
  * @author 焕晨HChen
  */
@@ -72,8 +74,9 @@ public final class ResInjectTool {
     }
 
     /**
-     * 把模块资源注入至目标作用域<br/>
-     * 同时请务必请在项目 app 下的 build.gradle 中添加如下代码：
+     * 把模块资源注入至目标作用域。
+     * <p>
+     * 同时请务必在项目 app 下的 build.gradle 中添加如下代码：
      * <pre> {@code
      * Kotlin Gradle DSL:
      *
@@ -84,7 +87,9 @@ public final class ResInjectTool {
      * aaptOptions.additionalParameters '--allow-reserved-package-id', '--package-id', '0x64'
      *
      * }<br/>
-     * Tip: `0x64` is the resource id, you can change it to any value you want.(recommended [0x30 to 0x6F])
+     * Tip: `0x64` is the resource id, you can change it to any value you want.(recommended [0x30 to 0x6F])。
+     *
+     * @throws InjectResourcesException 如果资源加载器创建失败
      */
     public static void injectModuleRes() {
         if (!isInjected.compareAndSet(false, true)) return;
@@ -149,10 +154,23 @@ public final class ResInjectTool {
 
     }
 
+    /**
+     * 根据资源名称创建假资源 ID。
+     *
+     * @param resName 资源名称
+     * @return 假资源 ID
+     */
     public static int createFakeResId(@NonNull String resName) {
         return 0x7e000000 | (fnv1a32Hash(resName) & 0x00ffffff);
     }
 
+    /**
+     * 根据资源 ID 创建假资源 ID。
+     *
+     * @param res Resources 实例
+     * @param id  原始资源 ID
+     * @return 假资源 ID
+     */
     public static int createFakeResId(@NonNull Resources res, int id) {
         return createFakeResId(res.getResourceName(id));
     }
@@ -168,7 +186,12 @@ public final class ResInjectTool {
     }
 
     /**
-     * 设置资源 ID 类型的替换
+     * 设置资源 ID 类型的替换。
+     *
+     * @param packageName      目标应用包名
+     * @param type             资源类型（如 drawable、string 等）
+     * @param resName          资源名称
+     * @param replacementResId 替换用的资源 ID
      */
     public static void setResReplacement(@NonNull String packageName, @NonNull String type, @NonNull String resName, int replacementResId) {
         applyHooks();
@@ -176,7 +199,12 @@ public final class ResInjectTool {
     }
 
     /**
-     * 设置密度类型的资源
+     * 设置密度类型的资源替换。
+     *
+     * @param packageName        目标应用包名
+     * @param type               资源类型
+     * @param resName            资源名称
+     * @param replacementResValue 替换用的密度值
      */
     public static void setDensityReplacement(@NonNull String packageName, @NonNull String type, @NonNull String resName, float replacementResValue) {
         applyHooks();
@@ -184,7 +212,12 @@ public final class ResInjectTool {
     }
 
     /**
-     * 设置 Object 类型的资源
+     * 设置 Object 类型的资源替换。
+     *
+     * @param packageName        目标应用包名
+     * @param type               资源类型
+     * @param resName            资源名称
+     * @param replacementResValue 替换用的对象值
      */
     public static void setObjectReplacement(@NonNull String packageName, @NonNull String type, @NonNull String resName, Object replacementResValue) {
         applyHooks();

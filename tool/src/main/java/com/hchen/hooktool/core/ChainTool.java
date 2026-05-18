@@ -32,7 +32,13 @@ import java.util.Objects;
 import java.util.function.Function;
 
 /**
- * 链式工具
+ * 链式钩子工具类。
+ * <p>
+ * 提供流式 API 用于方法和构造函数的查找与钩子操作。
+ * 支持通过 {@link #buildChain} 创建实例，{@link #findMethod}/{@link #findAllMethod}/
+ * {@link #findConstructor}/{@link #findAllConstructor}/{@link #withExecutable} 进行目标定位，
+ * 以及 {@link ChainHook#hook}/{@link ChainHook#returnResult}/{@link ChainHook#doNothing}/
+ * {@link ChainHook#setArg} 进行钩子操作。
  *
  * @author 焕晨HChen
  */
@@ -72,7 +78,7 @@ public final class ChainTool {
     }
 
     /**
-     * 构建链式工具实例
+     * 构建链式工具实例。
      *
      * @param classPath 类路径
      * @return 链式工具实例
@@ -82,7 +88,7 @@ public final class ChainTool {
     }
 
     /**
-     * 构建链式工具实例
+     * 构建链式工具实例。
      *
      * @param classPath   类路径
      * @param classLoader 类加载器
@@ -93,7 +99,7 @@ public final class ChainTool {
     }
 
     /**
-     * 构建链式工具实例
+     * 构建链式工具实例。
      *
      * @param clazz 目标类
      * @return 链式工具实例
@@ -103,7 +109,7 @@ public final class ChainTool {
     }
 
     /**
-     * 查找指定方法
+     * 查找指定方法。
      *
      * @param methodName     方法名
      * @param parameterTypes 参数类型
@@ -115,7 +121,7 @@ public final class ChainTool {
     }
 
     /**
-     * 查找所有指定名称的方法
+     * 查找所有指定名称的方法。
      *
      * @param methodName 方法名
      * @return 链式钩子对象
@@ -126,7 +132,7 @@ public final class ChainTool {
     }
 
     /**
-     * 查找指定构造函数
+     * 查找指定构造函数。
      *
      * @param parameterTypes 参数类型
      * @return 链式钩子对象
@@ -137,7 +143,7 @@ public final class ChainTool {
     }
 
     /**
-     * 查找所有构造函数
+     * 查找所有构造函数。
      *
      * @return 链式钩子对象
      */
@@ -147,7 +153,7 @@ public final class ChainTool {
     }
 
     /**
-     * 使用指定的可执行对象
+     * 使用指定的可执行对象。
      *
      * @param executable 可执行对象
      * @return 链式钩子对象
@@ -221,7 +227,7 @@ public final class ChainTool {
     }
 
     /**
-     * 链式钩子类，用于执行钩子操作
+     * 链式钩子类，用于执行钩子操作。
      */
     public final class ChainHook {
         /**
@@ -231,7 +237,7 @@ public final class ChainTool {
         }
 
         /**
-         * 执行钩子操作
+         * 执行钩子操作。
          *
          * @param absHook 钩子对象
          * @return 链式工具实例
@@ -243,7 +249,7 @@ public final class ChainTool {
         }
 
         /**
-         * 执行钩子操作并返回指定结果
+         * 执行钩子操作并返回指定结果。
          *
          * @param result 要返回的结果
          * @return 链式工具实例
@@ -253,7 +259,7 @@ public final class ChainTool {
         }
 
         /**
-         * 执行钩子操作并拦截方法执行
+         * 执行钩子操作并拦截方法执行。
          *
          * @return 链式工具实例
          */
@@ -262,7 +268,7 @@ public final class ChainTool {
         }
 
         /**
-         * 执行钩子操作并修改指定参数
+         * 执行钩子操作并修改指定参数。
          *
          * @param index 参数索引
          * @param value 新的参数值
@@ -273,7 +279,7 @@ public final class ChainTool {
         }
 
         /**
-         * 设置异常处理函数
+         * 设置异常处理函数。
          *
          * @param function 异常处理函数
          * @return 链式钩子对象
@@ -284,7 +290,7 @@ public final class ChainTool {
         }
 
         /**
-         * 设置忽略异常
+         * 设置忽略异常。
          *
          * @return 链式钩子对象
          */

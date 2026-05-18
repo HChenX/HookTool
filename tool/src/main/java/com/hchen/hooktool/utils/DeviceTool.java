@@ -44,8 +44,9 @@ import com.hchen.hooktool.helper.RangeHelper;
 import com.hchen.hooktool.helper.TryHelper;
 
 /**
- * 设备工具类
- * 提供设备相关的各种信息获取和判断方法
+ * 设备信息工具类。
+ * <p>
+ * 提供获取 Android 版本、MIUI 版本、HyperOS 版本、ColorOS 版本以及设备品牌判断等功能。
  *
  * @author 焕晨HChen
  */
@@ -54,14 +55,18 @@ public final class DeviceTool {
     }
 
     /**
-     * 获取安卓版本
+     * 获取当前 Android SDK 版本号。
+     *
+     * @return SDK 版本号
      */
     public static int getAndroidVersion() {
         return Build.VERSION.SDK_INT;
     }
 
     /**
-     * 获取 MIUI 版本
+     * 获取 MIUI 版本号。
+     *
+     * @return MIUI 版本号，如果非 MIUI 环境则返回 0
      */
     public static float getMiuiVersion() {
         return switch (getProp(VERSION_PROPERTY_MIUI).trim()) {
@@ -77,7 +82,9 @@ public final class DeviceTool {
     }
 
     /**
-     * 获取 HyperOS 版本
+     * 获取 HyperOS 版本号。
+     *
+     * @return HyperOS 版本号，如果非 HyperOS 环境则返回 0
      */
     public static float getHyperOSVersion() {
         String raw = getProp(VERSION_PROPERTY_HYPER_OS).trim();
@@ -98,68 +105,98 @@ public final class DeviceTool {
     }
 
     /**
-     * 判断是否为指定 Android 版本
+     * 判断当前 Android 版本是否等于指定版本。
+     *
+     * @param version 目标版本号
+     * @return 是否匹配
      */
     public static boolean isAndroidVersion(int version) {
         return isAndroidVersion(version, EQ);
     }
 
     /**
-     * 根据指定模式匹配 Android 版本是否符合要求
+     * 根据指定模式匹配 Android 版本是否符合要求。
+     *
+     * @param version 目标版本号
+     * @param mode    匹配模式
+     * @return 是否匹配
      */
     public static boolean isAndroidVersion(int version, @RangeHelper.RangeModeFlag int mode) {
         return isMatchVersion(getAndroidVersion(), version, mode);
     }
 
     /**
-     * 判断是否为指定 MIUI 版本
+     * 判断当前 MIUI 版本是否等于指定版本。
+     *
+     * @param version 目标版本号
+     * @return 是否匹配
      */
     public static boolean isMiuiVersion(float version) {
         return isMiuiVersion(version, EQ);
     }
 
     /**
-     * 根据指定模式匹配 Miui 版本是否符合要求
+     * 根据指定模式匹配 MIUI 版本是否符合要求。
+     *
+     * @param version 目标版本号
+     * @param mode    匹配模式
+     * @return 是否匹配
      */
     public static boolean isMiuiVersion(float version, @RangeHelper.RangeModeFlag int mode) {
         return isMatchVersion(getMiuiVersion(), version, mode);
     }
 
     /**
-     * 判断是否为指定 HyperOS 版本
+     * 判断当前 HyperOS 版本是否等于指定版本。
+     *
+     * @param version 目标版本号
+     * @return 是否匹配
      */
     public static boolean isHyperOSVersion(float version) {
         return isHyperOSVersion(version, EQ);
     }
 
     /**
-     * 根据指定模式匹配 HyperOS 版本是否符合要求
+     * 根据指定模式匹配 HyperOS 版本是否符合要求。
+     *
+     * @param version 目标版本号
+     * @param mode    匹配模式
+     * @return 是否匹配
      */
     public static boolean isHyperOSVersion(float version, @RangeHelper.RangeModeFlag int mode) {
         return isMatchVersion(getHyperOSVersion(), version, mode);
     }
 
     /**
-     * 是否是指定 HyperOS 的指定小版本
+     * 判断当前 HyperOS 版本是否匹配指定的大版本和小版本号。
      * <p>
      * 例如：OS2.0.201.0.VOMCNXM
      * <p>
      * HyperOS -> 2.0
      * <p>
-     * Small Version -> 201
+     * Small Version -> 201。
+     *
+     * @param osVersion    HyperOS 大版本号
+     * @param smallVersion 小版本号
+     * @return 是否匹配
      */
     public static boolean isHyperOSSmallVersion(float osVersion, int smallVersion) {
         return isHyperOSSmallVersion(osVersion, smallVersion, EQ);
     }
 
     /**
-     * 根据指定模式匹配指定 HyperOS 版本的小版本是否符合要求
+     * 根据指定模式匹配指定 HyperOS 版本的小版本是否符合要求。
      * <p>
      * 例如：OS2.0.201.0.VOMCNXM
      * <p>
      * HyperOS -> 2.0
      * <p>
-     * Small Version -> 201
+     * Small Version -> 201。
+     *
+     * @param osVersion    HyperOS 大版本号
+     * @param smallVersion 小版本号
+     * @param mode         匹配模式
+     * @return 是否匹配
      */
     public static boolean isHyperOSSmallVersion(float osVersion, int smallVersion, @RangeHelper.RangeModeFlag int mode) {
         if (isHyperOSVersion(osVersion)) {
@@ -178,14 +215,21 @@ public final class DeviceTool {
     }
 
     /**
-     * 判断是否为指定 ColorOS 版本
+     * 判断当前 ColorOS 版本是否等于指定版本。
+     *
+     * @param version 目标版本号
+     * @return 是否匹配
      */
     public static boolean isColorOSVersion(float version) {
         return isColorOSVersion(version, EQ);
     }
 
     /**
-     * 根据指定模式匹配 ColorOS 版本是否符合要求
+     * 根据指定模式匹配 ColorOS 版本是否符合要求。
+     *
+     * @param version 目标版本号
+     * @param mode    匹配模式
+     * @return 是否匹配
      */
     public static boolean isColorOSVersion(float version, @RangeHelper.RangeModeFlag int mode) {
         String v = getProp(VERSION_PROPERTY_COLOROS); // result like "15.0"
@@ -222,8 +266,17 @@ public final class DeviceTool {
     // ----------------------- 手机品牌 -------------------------
     private static final String BRAND_LOWER = Build.BRAND.toLowerCase();
     private static final String MANUFACTURER_LOWER = Build.MANUFACTURER.toLowerCase();
+    /**
+     * 小米设备品牌名称列表。
+     */
     public static final String[] DEVICE_XIAOMI = {"xiaomi", "redmi"};
+    /**
+     * ColorOS 设备品牌名称列表。
+     */
     public static final String[] DEVICE_COLOROS = {"oppo", "realme", "oneplus", "oplus"};
+    /**
+     * 三星设备品牌名称列表。
+     */
     public static final String[] DEVICE_SAMSUNG = {"samsung"};
     // ---------------------------------------------------------
 
@@ -238,42 +291,55 @@ public final class DeviceTool {
     // --------------------------------------------------------------------
 
     /**
-     * 判断当前厂商是否为 Xiaomi
+     * 判断当前设备是否为小米品牌。
+     *
+     * @return 是否为小米设备
      */
     public static boolean isXiaomi() {
         return isRightRom(DEVICE_XIAOMI);
     }
 
     /**
-     * 判断当前厂商系统是否为 Miui
+     * 判断当前系统是否为 MIUI。
+     *
+     * @return 是否为 MIUI 系统
      */
     public static boolean isMiui() {
         return !getRomVersion(VERSION_PROPERTY_MIUI).isEmpty();
     }
 
     /**
-     * 判断当前厂商系统是否为 HyperOS
+     * 判断当前系统是否为 HyperOS。
+     *
+     * @return 是否为 HyperOS 系统
      */
     public static boolean isHyperOS() {
         return !getRomVersion(VERSION_PROPERTY_HYPER_OS).isEmpty();
     }
 
     /**
-     * 判断当前厂商是否为 ColorOS
+     * 判断当前系统是否为 ColorOS。
+     *
+     * @return 是否为 ColorOS 系统
      */
     public static boolean isColorOS() {
         return isRightRom(DEVICE_COLOROS);
     }
 
     /**
-     * 判断当前厂商是否为 Samsung
+     * 判断当前设备是否为三星品牌。
+     *
+     * @return 是否为三星设备
      */
     public static boolean isSamsung() {
         return isRightRom(DEVICE_SAMSUNG);
     }
 
     /**
-     * 判断是否是指定的 ROM
+     * 判断当前设备品牌是否匹配指定名称列表。
+     *
+     * @param names 设备品牌名称列表
+     * @return 是否匹配
      */
     public static boolean isRightRom(@NonNull final String... names) {
         for (String name : names) {
@@ -287,28 +353,51 @@ public final class DeviceTool {
         return false;
     }
 
+    /**
+     * 获取小米系统版本号。
+     *
+     * @return 小米系统版本号
+     */
     @NonNull
     public static String getXiaomiVersion() {
         return getRomVersion(VERSION_PROPERTY_XIAOMI);
     }
 
+    /**
+     * 获取小米设备市场名称。
+     *
+     * @return 设备市场名称
+     */
     @NonNull
     public static String getXiaomiMarketName() {
         return getProp(VERSION_PROPERTY_XIAOMI_MARKET);
     }
 
+    /**
+     * 获取 ColorOS 版本号。
+     *
+     * @return ColorOS 版本号
+     */
     @NonNull
     public static String getColorOSVersion() {
         return getProp(VERSION_PROPERTY_COLOROS_FULL);
     }
 
+    /**
+     * 获取 ColorOS 设备市场名称。
+     *
+     * @return 设备市场名称
+     */
     @NonNull
     public static String getColorOSMarketName() {
         return getProp(VERSION_PROPERTY_COLOROS_MARKET);
     }
 
     /**
-     * 通过 prop 获取系统版本号
+     * 根据系统属性获取 ROM 版本号。
+     *
+     * @param props 系统属性名列表
+     * @return ROM 版本号，如果未找到则返回空字符串
      */
     @NonNull
     public static String getRomVersion(@NonNull String... props) {
@@ -328,7 +417,9 @@ public final class DeviceTool {
     }
 
     /**
-     * 是否为国际版小米系统
+     * 判断当前系统是否为 MIUI 国际版。
+     *
+     * @return 是否为 MIUI 国际版
      */
     public static boolean isMiuiInternational() {
         return TryHelper.doTry(new IDecomposer<Boolean>() {
@@ -340,7 +431,10 @@ public final class DeviceTool {
     }
 
     /**
-     * 获取 WindowManager 实例
+     * 获取 WindowManager 实例。
+     *
+     * @param context 上下文
+     * @return WindowManager 实例
      */
     @NonNull
     public static WindowManager getWindowManager(@NonNull Context context) {
@@ -348,7 +442,10 @@ public final class DeviceTool {
     }
 
     /**
-     * 获取当前上下文的 Display 对象
+     * 获取 Display 实例。
+     *
+     * @param context 上下文
+     * @return Display 实例
      */
     @NonNull
     public static Display getDisplay(@NonNull Context context) {
@@ -360,7 +457,10 @@ public final class DeviceTool {
     }
 
     /**
-     * 获取窗口尺寸
+     * 获取当前窗口尺寸。
+     *
+     * @param context 上下文
+     * @return 包含窗口宽度和高度的 Point 对象
      */
     @NonNull
     public static Point getWindowSize(@NonNull Context context) {
@@ -368,7 +468,10 @@ public final class DeviceTool {
     }
 
     /**
-     * 获取窗口尺寸
+     * 获取当前窗口尺寸。
+     *
+     * @param windowManager WindowManager 实例
+     * @return 包含窗口宽度和高度的 Point 对象
      */
     @NonNull
     public static Point getWindowSize(@NonNull WindowManager windowManager) {
@@ -387,7 +490,10 @@ public final class DeviceTool {
     }
 
     /**
-     * 获取屏幕尺寸
+     * 获取屏幕尺寸。
+     *
+     * @param context 上下文
+     * @return 包含屏幕宽度和高度的 Point 对象
      */
     @NonNull
     public static Point getScreenSize(@NonNull Context context) {
@@ -395,7 +501,10 @@ public final class DeviceTool {
     }
 
     /**
-     * 获取屏幕尺寸
+     * 获取屏幕尺寸。
+     *
+     * @param windowManager WindowManager 实例
+     * @return 包含屏幕宽度和高度的 Point 对象
      */
     @NonNull
     public static Point getScreenSize(@NonNull WindowManager windowManager) {
@@ -411,28 +520,41 @@ public final class DeviceTool {
     }
 
     /**
-     * 判断屏幕是否为横屏
+     * 判断当前是否为横屏。
+     *
+     * @param context 上下文
+     * @return 是否为横屏
      */
     public static boolean isHorizontalScreen(@NonNull Context context) {
         return context.getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE;
     }
 
     /**
-     * 判断屏幕是否为竖屏
+     * 判断当前是否为竖屏。
+     *
+     * @param context 上下文
+     * @return 是否为竖屏
      */
     public static boolean isVerticalScreen(@NonNull Context context) {
         return context.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT;
     }
 
     /**
-     * 是否是深色模式
+     * 判断当前是否为深色模式。
+     *
+     * @param resources Resources 实例
+     * @return 是否为深色模式
      */
     public static boolean isDarkMode(@NonNull Resources resources) {
         return (resources.getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
     }
 
     /**
-     * 将像素值转换为密度独立像素值
+     * 将像素值转换为密度独立像素值（dp）。
+     *
+     * @param context 上下文
+     * @param pxValue 像素值
+     * @return 对应的 dp 值
      */
     public static int px2dp(@NonNull Context context, float pxValue) {
         float scale = context.getResources().getDisplayMetrics().density;
@@ -440,7 +562,11 @@ public final class DeviceTool {
     }
 
     /**
-     * 将像素值转换为缩放独立的字体像素值
+     * 将像素值转换为缩放独立的字体像素值（sp）。
+     *
+     * @param context 上下文
+     * @param pxValue 像素值
+     * @return 对应的 sp 值
      */
     public static int px2sp(@NonNull Context context, float pxValue) {
         float fontScale = context.getResources().getDisplayMetrics().scaledDensity;
@@ -448,7 +574,11 @@ public final class DeviceTool {
     }
 
     /**
-     * 将密度独立像素值转换为像素值
+     * 将密度独立像素值（dp）转换为像素值。
+     *
+     * @param context 上下文
+     * @param dpValue dp 值
+     * @return 对应的像素值
      */
     public static int dp2px(@NonNull Context context, float dpValue) {
         float scale = context.getResources().getDisplayMetrics().density;
@@ -456,7 +586,11 @@ public final class DeviceTool {
     }
 
     /**
-     * 将缩放独立的字体像素值转换为像素值
+     * 将缩放独立的字体像素值（sp）转换为像素值。
+     *
+     * @param context 上下文
+     * @param spValue sp 值
+     * @return 对应的像素值
      */
     public static int sp2px(@NonNull Context context, float spValue) {
         float fontScale = context.getResources().getDisplayMetrics().scaledDensity;
@@ -464,7 +598,10 @@ public final class DeviceTool {
     }
 
     /**
-     * 是否是平板
+     * 判断当前设备是否为平板。
+     *
+     * @param context 上下文
+     * @return 是否为平板
      */
     public static boolean isPad(@NonNull Context context) {
         int flag = 0;
@@ -476,7 +613,9 @@ public final class DeviceTool {
     }
 
     /**
-     * 是否是小米平板
+     * 判断当前设备是否为小米平板。
+     *
+     * @return 是否为小米平板
      */
     public static boolean isXiaomiPad() {
         return TryHelper.doTry(new IDecomposer<Boolean>() {
@@ -528,7 +667,10 @@ public final class DeviceTool {
     }
 
     /**
-     * 获取屏幕密度
+     * 获取屏幕密度。
+     *
+     * @param context 上下文
+     * @return 屏幕密度（dpi），如果获取失败则返回默认密度
      */
     public static int getScreenDensity(@NonNull Context context) {
         try {
@@ -543,7 +685,9 @@ public final class DeviceTool {
     }
 
     /**
-     * 获取设备唯一标识符（基于设备信息生成）
+     * 获取设备唯一标识（基于设备信息生成）。
+     *
+     * @return 设备唯一标识字符串
      */
     @NonNull
     public static String getDeviceId() {

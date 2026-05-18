@@ -28,7 +28,7 @@ import java.util.Objects;
 import java.util.function.Function;
 
 /**
- * 链式数据
+ * 链式钩子数据类。封装链式钩子操作所需的数据，包括链式调用类型、可执行对象、钩子对象、参数类型等。
  *
  * @author 焕晨HChen
  */
@@ -36,56 +36,56 @@ public final class ChainData {
     // -------------------------- Data ------------------------------
 
     /**
-     * 链式调用类型
+     * 链式调用类型。
      */
     public ChainType chainType;
 
     /**
-     * 可执行对象数组
+     * 可执行对象数组。
      */
     public Executable[] executables = new Executable[1];
 
     /**
-     * 钩子对象
+     * 钩子对象。
      */
     public AbsHook absHook;
 
     /**
-     * 异常对象
+     * 异常对象。
      */
     public Throwable throwable;
 
     /**
-     * 异常处理函数
+     * 异常处理函数。
      */
     public Function<Throwable, Boolean> function;
 
     /**
-     * 是否忽略异常
+     * 是否忽略异常。
      */
     public boolean isIgnoreThrow = false;
 
     // ---------------------------------------------------------------
 
     /**
-     * 参数类型数组
+     * 参数类型数组。
      */
     public Object[] parameterTypes;
 
     /**
-     * 单个可执行对象
+     * 单个可执行对象。
      */
     public Executable executable;
 
     // -------------------------- Method ------------------------------
 
     /**
-     * 方法名
+     * 方法名。
      */
     public String methodName;
 
     /**
-     * 构造方法，用于查找指定方法
+     * 构造方法，用于查找指定方法。
      *
      * @param methodName     方法名
      * @param parameterTypes 参数类型
@@ -97,7 +97,7 @@ public final class ChainData {
     }
 
     /**
-     * 构造方法，用于查找所有指定名称的方法
+     * 构造方法，用于查找所有指定名称的方法。
      *
      * @param methodName 方法名
      */
@@ -109,7 +109,7 @@ public final class ChainData {
     // -------------------------- Constructor ------------------------------
 
     /**
-     * 构造方法，用于查找指定构造函数
+     * 构造方法，用于查找指定构造函数。
      *
      * @param parameterTypes 参数类型
      */
@@ -119,7 +119,7 @@ public final class ChainData {
     }
 
     /**
-     * 构造方法，用于查找所有构造函数
+     * 构造方法，用于查找所有构造函数。
      */
     public ChainData() {
         this.chainType = ChainType.FIND_ALL_CONSTRUCTOR;
@@ -128,7 +128,7 @@ public final class ChainData {
     // ----------------------- Executable ----------------------------
 
     /**
-     * 构造方法，用于指定可执行对象
+     * 构造方法，用于指定可执行对象。
      *
      * @param executable 可执行对象
      */

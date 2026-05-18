@@ -27,4 +27,3 @@ dependencyResolutionManagement {
 rootProject.name = "HookTool"
 include ':tool'
 include ':app'
-include ':xposed-helper'

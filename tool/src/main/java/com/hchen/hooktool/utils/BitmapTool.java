@@ -38,7 +38,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 /**
- * Bitmap 工具
+ * Bitmap 工具类。
+ * <p>
+ * 提供 Drawable 与 Bitmap 之间的转换、圆角处理、缩放以及字节数组转换等功能。
  *
  * @author 焕晨HChen
  */
@@ -47,7 +49,10 @@ public final class BitmapTool {
     }
 
     /**
-     * 将 Drawable 对象转换为 Bitmap 对象，使用 Drawable 的固有宽度和高度
+     * 将 Drawable 对象转换为 Bitmap 对象，使用 Drawable 的固有宽度和高度。
+     *
+     * @param drawable Drawable 对象
+     * @return 转换后的 Bitmap 对象
      */
     @NonNull
     public static Bitmap drawableToBitmap(@NonNull Drawable drawable) {
@@ -61,9 +66,14 @@ public final class BitmapTool {
     }
 
     /**
-     * 将 Drawable 对象转换为 Bitmap 对象，可以指定宽度和高度
+     * 将 Drawable 对象转换为 Bitmap 对象，可以指定宽度和高度。
      * <p>
-     * 如果指定的宽度或高度小于等于 0，则使用 Drawable 的固有宽度和高度
+     * 如果指定的宽度或高度小于等于 0，则使用 Drawable 的固有宽度和高度。
+     *
+     * @param drawable Drawable 对象
+     * @param width    目标宽度
+     * @param height   目标高度
+     * @return 转换后的 Bitmap 对象
      */
     @NonNull
     public static Bitmap drawableToBitmap(@NonNull Drawable drawable, int width, int height) {
@@ -84,10 +94,11 @@ public final class BitmapTool {
     }
 
     /**
-     * 获取带有圆角的 Bitmap
+     * 获取带有圆角的 Bitmap。
      *
      * @param bitmap 原图
-     * @param radius 圆角半径 (px)
+     * @param radius 圆角半径（px）
+     * @return 带圆角的 Bitmap
      */
     @NonNull
     public static Bitmap getRoundedCornerBitmap(@NonNull Bitmap bitmap, float radius) {
@@ -111,11 +122,12 @@ public final class BitmapTool {
     }
 
     /**
-     * 对 Bitmap 进行缩放操作
+     * 对 Bitmap 进行缩放操作。
      *
      * @param bitmap    原图
      * @param newWidth  期望宽度
      * @param newHeight 期望高度
+     * @return 缩放后的 Bitmap
      */
     @NonNull
     public static Bitmap scaleBitmap(@NonNull Bitmap bitmap, int newWidth, int newHeight) {
@@ -132,7 +144,10 @@ public final class BitmapTool {
     }
 
     /**
-     * 将 Bitmap 对象转换为字节数组，使用 PNG 格式进行压缩
+     * 将 Bitmap 对象转换为字节数组，使用 PNG 格式进行压缩。
+     *
+     * @param bitmap Bitmap 对象
+     * @return 字节数组，如果转换失败则返回空数组
      */
     @NonNull
     public static byte[] bitmapToBytes(@NonNull Bitmap bitmap) {
@@ -145,7 +160,10 @@ public final class BitmapTool {
     }
 
     /**
-     * 将字节数组转换为 Bitmap 对象，如果字节数组为空则返回 null
+     * 将字节数组转换为 Bitmap 对象。
+     *
+     * @param bytes 字节数组
+     * @return Bitmap 对象，如果字节数组为空则返回 null
      */
     @Nullable
     public static Bitmap bytesToBitmap(@NonNull byte[] bytes) {

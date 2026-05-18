@@ -21,17 +21,16 @@ package com.hchen.hooktool.callback;
 import androidx.annotation.NonNull;
 
 /**
- * 命令监听器
+ * Shell 命令监听器接口。在命令执行前提供拦截机会。
  *
  * @author 焕晨HChen
  */
 public interface ICommandListener {
     /**
-     * 输入命令时回调本方法
-     * <p>
-     * 返回 true 放行命令
-     * <p>
-     * 返回 false 拦截命令
+     * 命令执行前的回调方法。
+     *
+     * @param cmd 待执行的命令
+     * @return {@code true} 放行命令，{@code false} 拦截命令
      */
     boolean onCommand(@NonNull String cmd);
 }

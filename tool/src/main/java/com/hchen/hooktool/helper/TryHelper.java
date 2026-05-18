@@ -24,7 +24,8 @@ import com.hchen.hooktool.callback.IDecomposer;
 import com.hchen.hooktool.data.ResultData;
 
 /**
- * TryHelper
+ * 安全执行辅助工具类。提供 {@link #doTry(IDecomposer)} 方法来安全地执行可能抛出异常的操作，
+ * 并将结果封装为 {@link ResultData}。
  *
  * @author 焕晨HChen
  */
@@ -32,6 +33,12 @@ public final class TryHelper {
     private TryHelper() {
     }
 
+    /**
+     * 安全执行给定的操作。
+     *
+     * @param supplier 可抛出异常的供应者
+     * @return 执行结果数据
+     */
     @NonNull
     public static <R> ResultData<R> doTry(@NonNull IDecomposer<R> supplier) {
         return new ResultData<R>(supplier);
