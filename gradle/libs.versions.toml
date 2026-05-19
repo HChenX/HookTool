@@ -1,11 +1,11 @@
 [versions]
-agp = "9.1.0"
-xposed = "101.0.0"
+agp = "9.2.1"
+xposed = "101.0.1"
 
 appcompat = "1.7.1"
 activity = "1.13.0"
 constraintlayout = "2.2.1"
-annotation = "1.9.1"
+annotation = "1.10.0"
 
 [libraries]
 appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
