@@ -28,27 +28,39 @@ import com.hchen.hooktool.data.AppData;
 import java.util.List;
 
 /**
- * 应用数据获取器接口。定义了获取应用包信息列表和异步回调的契约。
+ * 应用数据获取回调接口。
+ * <p>
+ * 该接口定义了从 {@link PackageManager} 查询应用包信息的标准契约，
+ * 并提供了异步查询完成后的回调机制。泛型 {@code T} 用于指定
+ * 包信息元素的具体类型，以支持不同精度的查询需求。
  *
- * @param <T> 包信息的类型参数
+ * @param <T> 包信息列表中元素的类型
  * @author 焕晨HChen
  */
 public interface IAppDataGetter<T> {
     /**
-     * 获取需要查询的应用包列表。
+     * 从 PackageManager 中查询目标应用的包信息列表。
+     * <p>
+     * 实现者应在此方法内部调用 {@link PackageManager} 的相关 API
+     * （例如 {@code getInstalledPackages} 或 {@code getInstalledApplications}），
+     * 以获取满足业务需求的包信息集合。
      *
-     * @param pm PackageManager 实例
-     * @return 包信息列表
-     * @throws PackageManager.NameNotFoundException 包未找到时抛出
+     * @param pm 用于执行包信息查询的 {@link PackageManager} 实例，不为 {@code null}
+     * @return 包含目标应用包信息的列表，不为 {@code null}
+     * @throws PackageManager.NameNotFoundException 当指定的包名不存在时抛出
      */
     @NonNull
     List<T> getPackages(@NonNull PackageManager pm) throws PackageManager.NameNotFoundException;
 
     /**
-     * 异步获取应用数据的回调方法。
+     * 异步获取应用数据完成时的回调方法。
+     * <p>
+     * 当异步查询操作执行完毕后（不论成功或失败），框架将自动调用此方法。
+     * 查询成功时，{@code e} 参数为 {@code null}，{@code appData} 包含有效数据；
+     * 查询失败时，{@code e} 携带异常信息。
      *
-     * @param appData 应用数据数组
-     * @param e       异常信息，如果为 null 表示成功
+     * @param appData 查询结果对应的应用数据数组，失败时可能为空或数据不完整
+     * @param e       查询过程中捕获的异常；查询成功时为 {@code null}
      */
     default void getAsyncAppData(@NonNull AppData[] appData, @Nullable PackageManager.NameNotFoundException e) {
     }

@@ -29,59 +29,65 @@ import androidx.annotation.NonNull;
 import java.util.Objects;
 
 /**
- * 应用数据类。封装应用的基本信息，包括包信息、应用信息、用户 ID、UID、图标、标签、包名、版本号等。
- * 实现 Parcelable 接口以支持跨进程传输。
+ * 已安装应用程序的元数据容器。
+ * <p>
+ * 该类聚合了 Android 设备上某个已安装应用的核心属性，包括但不限于
+ * {@link PackageInfo}、{@link ApplicationInfo}、多用户 ID、Linux UID、
+ * 应用图标、显示名称、包名、版本信息，以及系统应用标志和启用状态标志。
+ * <p>
+ * 本类实现了 {@link Parcelable} 协议，可借助 {@link Parcel} 在不同 Android
+ * 进程间高效地进行序列化与反序列化传输。
  *
  * @author 焕晨HChen
  */
 public class AppData implements Parcelable {
     /**
-     * 包信息。
+     * 与该应用关联的 {@link PackageInfo} 对象，其中包含完整的包级别元数据信息。
      */
     public PackageInfo packageInfo;
     /**
-     * 应用信息。
+     * 与该应用关联的 {@link ApplicationInfo} 对象，记录应用级别的配置与属性。
      */
     public ApplicationInfo applicationInfo;
     /**
-     * 用户 ID，-1 表示默认用户。
+     * 多用户环境下的用户标识符。默认值 {@code -1} 表示未显式指定用户，通常对应设备的主用户。
      */
     public int user = -1;
     /**
-     * 应用的 UID，-1 表示未设置。
+     * 该应用在 Linux 层面的用户标识符（UID）。默认值 {@code -1} 表示尚未分配。
      */
     public int uid = -1;
     /**
-     * 应用图标。
+     * 应用的图标位图。在图标加载失败或不可用时可能为 {@code null}。
      */
     public Bitmap icon;
     /**
-     * 应用标签名称。
+     * 应用面向用户展示的名称标签。
      */
     public String label;
     /**
-     * 包名。
+     * 应用的唯一包名（例如 {@code "com.android.settings"}）。
      */
     public String packageName;
     /**
-     * 版本名称，仅 PackageInfo 下填充数据。
+     * 应用的版本名称字符串（例如 {@code "1.2.3"}）。仅当通过 {@link PackageInfo} 获取数据时才会被填充。
      */
     public String versionName; // 仅 PackageInfo 下填充数据
     /**
-     * 版本号，仅 PackageInfo 下填充数据。
+     * 应用的版本号字符串。仅当通过 {@link PackageInfo} 获取数据时才会被填充。
      */
     public String versionCode; // 仅 PackageInfo 下填充数据
     /**
-     * 是否为系统应用。
+     * 指示该应用是否为系统预装应用。{@code true} 表示为系统应用。
      */
     public boolean isSystemApp;
     /**
-     * 是否已启用。
+     * 指示该应用当前是否处于启用状态。{@code true} 表示已启用，{@code false} 表示已被停用。
      */
     public boolean isEnabled;
 
     /**
-     * 创建空的应用数据实例。
+     * 构造一个所有字段均保持默认值的空 {@link AppData} 实例。
      */
     public AppData() {
     }
@@ -130,6 +136,13 @@ public class AppData implements Parcelable {
         );
     }
 
+    /**
+     * 从 {@link Parcel} 反序列化构造 {@link AppData} 实例的私有构造方法。
+     * <p>
+     * 字段的读取顺序必须与 {@link #writeToParcel(Parcel, int)} 中的写入顺序严格一致。
+     *
+     * @param in 携带序列化数据的源 {@link Parcel} 对象
+     */
     private AppData(@NonNull Parcel in) {
         packageInfo = in.readParcelable(PackageInfo.class.getClassLoader());
         applicationInfo = in.readParcelable(ApplicationInfo.class.getClassLoader());
@@ -145,10 +158,10 @@ public class AppData implements Parcelable {
     }
 
     /**
-     * 将应用数据写入 Parcel 以进行序列化传输。
+     * 将本实例的全部字段按固定顺序序列化写入指定的 {@link Parcel}。
      *
-     * @param dest  目标 Parcel 对象
-     * @param flags 附加标志位
+     * @param dest  目标 {@link Parcel} 对象，序列化数据将写入此对象中
+     * @param flags 附加控制标志，用于指示是否需要写入特殊对象引用（如文件描述符），通常传入 {@code 0}
      */
     @Override
     public void writeToParcel(@NonNull Parcel dest, int flags) {
@@ -166,9 +179,9 @@ public class AppData implements Parcelable {
     }
 
     /**
-     * 获取 Parcelable 的内容描述标志。
+     * 返回此 Parcelable 对象的内容描述标志位。
      *
-     * @return 始终返回 0，表示不包含特殊对象
+     * @return 固定返回 {@code 0}，表示该对象不包含需要特殊处理的文件描述符
      */
     @Override
     public int describeContents() {
@@ -176,7 +189,8 @@ public class AppData implements Parcelable {
     }
 
     /**
-     * Parcelable 创建器。
+     * Parcelable 反序列化工厂实例，负责从 {@link Parcel} 中重建 {@link AppData} 对象，
+     * 以及创建指定容量的 {@code AppData} 数组以供框架内部使用。
      */
     public static final Creator<AppData> CREATOR = new Creator<AppData>() {
         @Override

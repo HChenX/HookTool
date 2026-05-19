@@ -26,21 +26,27 @@ import java.util.Arrays;
 import java.util.Objects;
 
 /**
- * Shell 命令执行结果。封装命令、退出码、标准输出和标准错误输出。
+ * Shell 命令执行结果的不可变数据记录。
+ * <p>
+ * 该记录封装了一次 Shell 命令执行的完整输出信息，包括所执行的命令字符串、
+ * 进程退出码、标准输出（stdout）内容以及标准错误（stderr）内容，
+ * 方便调用方对命令执行结果进行全方位的检查与分析。
  *
- * @param command  执行的命令
- * @param exitCode 退出码
- * @param outputs  标准输出内容
- * @param errors   标准错误输出内容
+ * @param command  实际执行的完整命令字符串
+ * @param exitCode 命令进程的退出码字符串（{@code "0"} 通常表示执行成功）
+ * @param outputs  标准输出内容按行分割后所得的字符串数组
+ * @param errors   标准错误输出内容按行分割后所得的字符串数组
  * @author 焕晨HChen
  * @noinspection DeconstructionCanBeUsed
  */
 public record ShellResult(@NonNull String command, @NonNull String exitCode,
                           @NonNull String[] outputs, @NonNull String[] errors) {
     /**
-     * 判断命令是否执行成功。
+     * 判断该命令是否执行成功。
+     * <p>
+     * 通过检查退出码是否等于 {@code "0"} 来确定执行是否成功。
      *
-     * @return 退出码为 0 时返回 true
+     * @return 当退出码为 {@code "0"} 时返回 {@code true}，否则返回 {@code false}
      */
     public boolean isSuccess() {
         return TextUtils.equals("0", exitCode);

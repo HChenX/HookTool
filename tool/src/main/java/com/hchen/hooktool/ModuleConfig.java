@@ -25,9 +25,14 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 /**
- * ModuleConfig
+ * HookTool 模块的全局配置中心。
  * <p>
- * 此类存储模块的基本配置。
+ * 以静态方式集中管理模块的各项运行时配置，包括日志标签、日志等级阈值、
+ * SharedPreferences 名称、日志增强扫描路径以及 Hook 成功日志开关等。
+ * 所有配置项均通过静态 setter 方法写入、静态 getter 方法读取。
+ * <p>
+ * 建议在 {@link com.hchen.hooktool.ModuleEntrance#initModuleConfig()} 中
+ * 完成全部配置的初始化工作。
  *
  * @author 焕晨HChen
  */
@@ -46,16 +51,16 @@ public final class ModuleConfig {
 
     // -------- 可选日志等级 --------
 
-    /** 错误日志等级。 */
+    /** 错误级别，仅输出错误信息。 */
     public static final int LOG_E = 1;
 
-    /** 警告日志等级。 */
+    /** 警告级别，输出警告及以上等级信息。 */
     public static final int LOG_W = 2;
 
-    /** 信息日志等级。 */
+    /** 信息级别，输出一般信息及以上等级信息。 */
     public static final int LOG_I = 3;
 
-    /** 调试日志等级。 */
+    /** 调试级别，输出全部等级的详细调试信息。 */
     public static final int LOG_D = 4;
 
     @IntDef(value = {
@@ -83,67 +88,75 @@ public final class ModuleConfig {
     // ------------------------ setter ------------------------
 
     /**
-     * 设置模块日志 tag，推荐设置。
+     * 设置日志输出标签。
+     * <p>
+     * 推荐在模块初始化时调用，设置一个有意义的标签以便在 Logcat 中过滤日志。
      *
-     * @param logTag 日志标签
+     * @param logTag 日志标签，不可为 null
      */
     public static void setLogTag(@NonNull String logTag) {
         ModuleConfig.logTag = logTag;
     }
 
     /**
-     * 设置模块可输出日志等级，推荐设置。
+     * 设置日志输出等级阈值。
+     * <p>
+     * 低于此阈值的日志将被过滤，不会实际输出。可选值：
+     * {@link #LOG_E}、{@link #LOG_W}、{@link #LOG_I}、{@link #LOG_D}。
      *
-     * @param logLevel 日志等级
+     * @param logLevel 日志等级常量
      */
     public static void setLogLevel(@LogLevel int logLevel) {
         ModuleConfig.logLevel = logLevel;
     }
 
     /**
-     * 设置模块默认的共享首选项名称，推荐设置。
+     * 设置 SharedPreferences 文件名称。
+     * <p>
+     * 该名称用于通过远程 SharedPreferences 接口存取模块的持久化配置。
      *
-     * @param prefsName 共享首选项名称
+     * @param prefsName SharedPreferences 文件名称，不可为 null
      */
     public static void setPrefsName(@NonNull String prefsName) {
         ModuleConfig.prefsName = prefsName;
     }
 
     /**
-     * 设置日志增强功能，将帮助工具在代码被混淆时正确获取日志 tag。
+     * 配置日志增强功能的扫描路径。
      * <p>
-     * 此功能可能带来性能影响，请谨慎使用。
+     * 启用后，工具会在代码被 ProGuard/R8 混淆的情况下通过遍历指定路径
+     * 来正确获取日志 TAG。此功能会引入额外性能开销，请按需启用。
      * <p>
-     * 需要配置如下混淆规则：
+     * 使用前需在混淆规则中添加如下配置（将包名替换为实际值）：
      * <pre>{@code
-     * // 包名改成自己的，此配置的含义就是不混淆指定目录下的文件名
      * -keepnames class com.hchen.demo.hook.**
      * -keepnames class com.hchen.demo.hook.**$*
-     * }
+     * }</pre>
      *
-     * @param logExpandPaths 日志增强路径数组
+     * @param logExpandPaths 需要扫描的包路径数组，支持可变参数
      */
     public static void setLogExpandPaths(@NonNull String... logExpandPaths) {
         ModuleConfig.logExpandPaths = logExpandPaths;
     }
 
     /**
-     * 使用日志增强功能时应该忽略的类目列表。
+     * 设置日志增强扫描时应忽略的类名列表。
      * <p>
-     * 帮助工具忽略干扰项。
+     * 扫描调用栈时会跳过此处指定的类，以排除干扰项并提高 TAG 识别准确性。
      *
-     * @param logExpandIgnoreClassNames 忽略的类名数组
+     * @param logExpandIgnoreClassNames 需要忽略的完整类名数组，支持可变参数
      */
     public static void setLogExpandIgnoreClassNames(@NonNull String... logExpandIgnoreClassNames) {
         ModuleConfig.logExpandIgnoreClassNames = logExpandIgnoreClassNames;
     }
 
     /**
-     * 是否在 Hook 成功时打印日志，默认关闭。
+     * 设置是否在 Hook 成功时输出日志，默认关闭。
      * <p>
-     * 使用此功能时务必设置 {@link ModuleConfig#setLogExpandPaths(String[])}。
+     * 启用前须先通过 {@link #setLogExpandPaths(String...)} 配置日志增强路径，
+     * 否则在代码混淆场景下可能无法正确输出日志标签。
      *
-     * @param isShowHookSuccessLog 是否显示 Hook 成功日志
+     * @param isShowHookSuccessLog {@code true} 开启，{@code false} 关闭
      */
     public static void setShowHookSuccessLog(boolean isShowHookSuccessLog) {
         ModuleConfig.isShowHookSuccessLog = isShowHookSuccessLog;
@@ -151,37 +164,61 @@ public final class ModuleConfig {
 
     // -------------------- getter ----------------------
 
-    /** 获取模块日志标签。 */
+    /**
+     * 获取当前日志标签。
+     *
+     * @return 日志标签字符串
+     */
     @NonNull
     public static String getLogTag() {
         return logTag;
     }
 
-    /** 获取模块日志等级。 */
+    /**
+     * 获取当前日志输出等级。
+     *
+     * @return 日志等级常量
+     */
     @LogLevel
     public static int getLogLevel() {
         return logLevel;
     }
 
-    /** 获取模块共享首选项名称。 */
+    /**
+     * 获取当前 SharedPreferences 文件名称。
+     *
+     * @return SharedPreferences 名称字符串
+     */
     @NonNull
     public static String getPrefsName() {
         return prefsName;
     }
 
-    /** 获取日志增强路径列表。 */
+    /**
+     * 获取日志增强扫描路径列表。
+     *
+     * @return 扫描路径数组
+     */
     @NonNull
     public static String[] getLogExpandPaths() {
         return logExpandPaths;
     }
 
-    /** 获取日志增强忽略类名列表。 */
+    /**
+     * 获取日志增强扫描时忽略的类名列表。
+     *
+     * @return 忽略类名数组
+     */
     @NonNull
     public static String[] getLogExpandIgnoreClassNames() {
         return logExpandIgnoreClassNames;
     }
 
-    /** 判断是否显示 Hook 成功日志。 */
+    /**
+     * 查询 Hook 成功日志是否已启用。
+     *
+     * @return {@code true} 表示已启用，{@code false} 表示已关闭
+     */
     public static boolean isShowHookSuccessLog() {
         return isShowHookSuccessLog;
     }

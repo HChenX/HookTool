@@ -23,10 +23,19 @@ import android.util.Log;
 import com.hchen.hooktool.ModuleConfig;
 
 /**
- * Android 原生日志工具类。通过 Android 标准 Log API 输出日志，支持 E/W/I/D 四个日志等级。
- * 日志输出受 {@link ModuleConfig#getLogLevel()} 控制。
+ * Android 平台原生日志输出工具类。
+ * <p>
+ * 该类封装了 {@link android.util.Log} 的系统级 API，为 HookTool 框架提供统一的日志输出通道。
+ * 内部支持四个日志优先级：ERROR（{@code E}）、WARN（{@code W}）、INFO（{@code I}）和 DEBUG（{@code D}），
+ * 每个优先级均提供纯文本、附带调用栈字符串、附带异常对象及两者兼具等多种重载形式。
+ * <p>
+ * 所有日志输出行为受全局配置约束：日志等级由 {@link ModuleConfig#getLogLevel()} 控制，
+ * 低于当前方法所对应等级的调用将被静默忽略；日志标签由 {@link ModuleConfig#getLogTag()} 统一指定，
+ * 调用者提供的 {@code tag} 参数会以 {@code [tag]} 的格式嵌入日志消息体中。
  *
  * @author 焕晨HChen
+ * @see ModuleConfig#getLogLevel()
+ * @see ModuleConfig#getLogTag()
  */
 public class AndroidLog {
     private AndroidLog() {
@@ -34,10 +43,13 @@ public class AndroidLog {
 
     // ----------- logE ----------
     /**
-     * 输出错误级别日志。
+     * 以 ERROR 级别输出一条纯文本日志。
+     * <p>
+     * 日志格式为：{@code [tag][E]: log}。
+     * 当全局日志等级低于 {@link ModuleConfig#LOG_E} 时，此调用将被静默跳过。
      *
-     * @param tag 日志标签
-     * @param log 日志内容
+     * @param tag 业务侧自定义标识，将嵌入消息头部的方括号中
+     * @param log 待输出的日志正文
      */
     public static void logE(String tag, String log) {
         if (ModuleConfig.getLogLevel() < ModuleConfig.LOG_E) return;
@@ -45,11 +57,14 @@ public class AndroidLog {
     }
 
     /**
-     * 输出错误级别日志，附带堆栈跟踪信息。
+     * 以 ERROR 级别输出一条附带调用栈字符串的日志。
+     * <p>
+     * 日志格式为：{@code [tag][E]: log[Stack Info]: stackTrace}。
+     * 适用于需要手动传入预格式化堆栈信息的场景。
      *
-     * @param tag        日志标签
-     * @param log        日志内容
-     * @param stackTrace 堆栈跟踪信息
+     * @param tag        业务侧自定义标识
+     * @param log        待输出的日志正文
+     * @param stackTrace 以字符串形式提供的调用栈信息，将追加到消息末尾
      */
     public static void logE(String tag, String log, String stackTrace) {
         if (ModuleConfig.getLogLevel() < ModuleConfig.LOG_E) return;
@@ -57,10 +72,12 @@ public class AndroidLog {
     }
 
     /**
-     * 输出错误级别日志。
+     * 以 ERROR 级别输出一条仅包含异常信息的日志。
+     * <p>
+     * 异常对象的完整堆栈将由 {@link android.util.Log} 底层自动格式化输出。
      *
-     * @param tag       日志标签
-     * @param throwable 异常对象
+     * @param tag       业务侧自定义标识
+     * @param throwable 待记录的异常实例
      */
     public static void logE(String tag, Throwable throwable) {
         if (ModuleConfig.getLogLevel() < ModuleConfig.LOG_E) return;
@@ -68,11 +85,13 @@ public class AndroidLog {
     }
 
     /**
-     * 输出错误级别日志，附带异常信息。
+     * 以 ERROR 级别输出一条同时包含文本描述和异常信息的日志。
+     * <p>
+     * 文本消息作为日志主体输出，异常对象的堆栈信息将作为附加内容由底层引擎格式化。
      *
-     * @param tag       日志标签
-     * @param log       日志内容
-     * @param throwable 异常对象
+     * @param tag       业务侧自定义标识
+     * @param log       待输出的日志正文
+     * @param throwable 待记录的异常实例
      */
     public static void logE(String tag, String log, Throwable throwable) {
         if (ModuleConfig.getLogLevel() < ModuleConfig.LOG_E) return;
@@ -81,10 +100,12 @@ public class AndroidLog {
 
     // -------- logW --------------
     /**
-     * 输出警告级别日志。
+     * 以 WARN 级别输出一条纯文本日志。
+     * <p>
+     * 当全局日志等级低于 {@link ModuleConfig#LOG_W} 时，此调用将被静默跳过。
      *
-     * @param tag 日志标签
-     * @param log 日志内容
+     * @param tag 业务侧自定义标识
+     * @param log 待输出的日志正文
      */
     public static void logW(String tag, String log) {
         if (ModuleConfig.getLogLevel() < ModuleConfig.LOG_W) return;
@@ -92,11 +113,11 @@ public class AndroidLog {
     }
 
     /**
-     * 输出警告级别日志，附带堆栈跟踪信息。
+     * 以 WARN 级别输出一条附带调用栈字符串的日志。
      *
-     * @param tag        日志标签
-     * @param log        日志内容
-     * @param stackTrace 堆栈跟踪信息
+     * @param tag        业务侧自定义标识
+     * @param log        待输出的日志正文
+     * @param stackTrace 以字符串形式提供的调用栈信息
      */
     public static void logW(String tag, String log, String stackTrace) {
         if (ModuleConfig.getLogLevel() < ModuleConfig.LOG_W) return;
@@ -104,10 +125,10 @@ public class AndroidLog {
     }
 
     /**
-     * 输出警告级别日志。
+     * 以 WARN 级别输出一条仅包含异常信息的日志。
      *
-     * @param tag       日志标签
-     * @param throwable 异常对象
+     * @param tag       业务侧自定义标识
+     * @param throwable 待记录的异常实例
      */
     public static void logW(String tag, Throwable throwable) {
         if (ModuleConfig.getLogLevel() < ModuleConfig.LOG_W) return;
@@ -115,11 +136,11 @@ public class AndroidLog {
     }
 
     /**
-     * 输出警告级别日志，附带异常信息。
+     * 以 WARN 级别输出一条同时包含文本描述和异常信息的日志。
      *
-     * @param tag       日志标签
-     * @param log       日志内容
-     * @param throwable 异常对象
+     * @param tag       业务侧自定义标识
+     * @param log       待输出的日志正文
+     * @param throwable 待记录的异常实例
      */
     public static void logW(String tag, String log, Throwable throwable) {
         if (ModuleConfig.getLogLevel() < ModuleConfig.LOG_W) return;
@@ -128,10 +149,12 @@ public class AndroidLog {
 
     // ------------ logI -------------
     /**
-     * 输出信息级别日志。
+     * 以 INFO 级别输出一条纯文本日志。
+     * <p>
+     * 当全局日志等级低于 {@link ModuleConfig#LOG_I} 时，此调用将被静默跳过。
      *
-     * @param tag 日志标签
-     * @param log 日志内容
+     * @param tag 业务侧自定义标识
+     * @param log 待输出的日志正文
      */
     public static void logI(String tag, String log) {
         if (ModuleConfig.getLogLevel() < ModuleConfig.LOG_I) return;
@@ -139,11 +162,11 @@ public class AndroidLog {
     }
 
     /**
-     * 输出信息级别日志，附带堆栈跟踪信息。
+     * 以 INFO 级别输出一条附带调用栈字符串的日志。
      *
-     * @param tag        日志标签
-     * @param log        日志内容
-     * @param stackTrace 堆栈跟踪信息
+     * @param tag        业务侧自定义标识
+     * @param log        待输出的日志正文
+     * @param stackTrace 以字符串形式提供的调用栈信息
      */
     public static void logI(String tag, String log, String stackTrace) {
         if (ModuleConfig.getLogLevel() < ModuleConfig.LOG_I) return;
@@ -151,10 +174,10 @@ public class AndroidLog {
     }
 
     /**
-     * 输出信息级别日志。
+     * 以 INFO 级别输出一条仅包含异常信息的日志。
      *
-     * @param tag       日志标签
-     * @param throwable 异常对象
+     * @param tag       业务侧自定义标识
+     * @param throwable 待记录的异常实例
      */
     public static void logI(String tag, Throwable throwable) {
         if (ModuleConfig.getLogLevel() < ModuleConfig.LOG_I) return;
@@ -162,11 +185,11 @@ public class AndroidLog {
     }
 
     /**
-     * 输出信息级别日志，附带异常信息。
+     * 以 INFO 级别输出一条同时包含文本描述和异常信息的日志。
      *
-     * @param tag       日志标签
-     * @param log       日志内容
-     * @param throwable 异常对象
+     * @param tag       业务侧自定义标识
+     * @param log       待输出的日志正文
+     * @param throwable 待记录的异常实例
      */
     public static void logI(String tag, String log, Throwable throwable) {
         if (ModuleConfig.getLogLevel() < ModuleConfig.LOG_I) return;
@@ -175,10 +198,12 @@ public class AndroidLog {
 
     // ---------- logD ---------------
     /**
-     * 输出调试级别日志。
+     * 以 DEBUG 级别输出一条纯文本日志。
+     * <p>
+     * 当全局日志等级低于 {@link ModuleConfig#LOG_D} 时，此调用将被静默跳过。
      *
-     * @param tag 日志标签
-     * @param log 日志内容
+     * @param tag 业务侧自定义标识
+     * @param log 待输出的日志正文
      */
     public static void logD(String tag, String log) {
         if (ModuleConfig.getLogLevel() < ModuleConfig.LOG_D) return;
@@ -186,11 +211,11 @@ public class AndroidLog {
     }
 
     /**
-     * 输出调试级别日志，附带堆栈跟踪信息。
+     * 以 DEBUG 级别输出一条附带调用栈字符串的日志。
      *
-     * @param tag        日志标签
-     * @param log        日志内容
-     * @param stackTrace 堆栈跟踪信息
+     * @param tag        业务侧自定义标识
+     * @param log        待输出的日志正文
+     * @param stackTrace 以字符串形式提供的调用栈信息
      */
     public static void logD(String tag, String log, String stackTrace) {
         if (ModuleConfig.getLogLevel() < ModuleConfig.LOG_D) return;
@@ -198,10 +223,10 @@ public class AndroidLog {
     }
 
     /**
-     * 输出调试级别日志。
+     * 以 DEBUG 级别输出一条仅包含异常信息的日志。
      *
-     * @param tag       日志标签
-     * @param throwable 异常对象
+     * @param tag       业务侧自定义标识
+     * @param throwable 待记录的异常实例
      */
     public static void logD(String tag, Throwable throwable) {
         if (ModuleConfig.getLogLevel() < ModuleConfig.LOG_D) return;
@@ -209,11 +234,11 @@ public class AndroidLog {
     }
 
     /**
-     * 输出调试级别日志，附带异常信息。
+     * 以 DEBUG 级别输出一条同时包含文本描述和异常信息的日志。
      *
-     * @param tag       日志标签
-     * @param log       日志内容
-     * @param throwable 异常对象
+     * @param tag       业务侧自定义标识
+     * @param log       待输出的日志正文
+     * @param throwable 待记录的异常实例
      */
     public static void logD(String tag, String log, Throwable throwable) {
         if (ModuleConfig.getLogLevel() < ModuleConfig.LOG_D) return;

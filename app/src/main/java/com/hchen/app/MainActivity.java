@@ -29,11 +29,36 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 /**
- * 示例应用主 Activity。
+ * HookTool 示例应用的主界面 Activity。
+ *
+ * <p>本类作为应用的入口界面，主要职责包括：</p>
+ * <ul>
+ *   <li>启用 Edge-to-Edge 全面屏沉浸式显示模式</li>
+ *   <li>在 Android Q（API 29）及以上版本关闭导航栏对比度强制效果</li>
+ *   <li>监听系统栏（状态栏与导航栏）的内边距变化，确保界面内容不被遮挡</li>
+ * </ul>
+ *
+ * @see AppCompatActivity
  */
 public class MainActivity extends AppCompatActivity {
     /**
-     * {@inheritDoc}
+     * Activity 生命周期的创建阶段入口。
+     *
+     * <p>完成以下初始化操作：</p>
+     * <ol>
+     *   <li>通过 {@link EdgeToEdge#enable} 启用全面屏显示模式</li>
+     *   <li>在 Android Q 及以上版本，调用
+     *       {@code Window#setNavigationBarContrastEnforced(false)}
+     *       关闭导航栏对比度强制，允许内容延伸至导航栏后方</li>
+     *   <li>加载布局文件 {@code R.layout.activity_main}</li>
+     *   <li>通过 {@link ViewCompat#setOnApplyWindowInsetsListener} 注册窗口内边距监听器，
+     *       根据系统栏的 {@link Insets} 为根视图设置对应方向的内边距</li>
+     * </ol>
+     *
+     * @param savedInstanceState 之前由系统保存的实例状态数据，
+     *                           若为首次创建则为 {@code null}
+     * @see EdgeToEdge
+     * @see WindowInsetsCompat
      */
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {

@@ -44,9 +44,19 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * 包信息工具类。
+ * Android 应用包信息查询工具类。
  * <p>
- * 提供应用安装状态判断、系统应用判断以及应用信息查询等功能。
+ * 提供以下功能：
+ * <ul>
+ *     <li>应用安装状态检测与启用/禁用状态查询</li>
+ *     <li>系统应用判定</li>
+ *     <li>根据应用 uid 获取所属 user ID</li>
+ *     <li>将多种包信息类型（{@link PackageInfo}、{@link ApplicationInfo}、{@link ResolveInfo} 等）
+ *         统一转换为 {@link AppData} 数据结构</li>
+ *     <li>支持同步与异步两种模式获取应用数据</li>
+ * </ul>
+ * <p>
+ * 该类为纯工具类，所有方法均为静态方法，不允许实例化。
  *
  * @author 焕晨HChen
  */
@@ -57,11 +67,14 @@ public final class PackageTool {
     }
 
     /**
-     * 判断应用是否已被安装。
+     * 判断指定包名的应用是否已安装在当前设备上。
+     * <p>
+     * 内部通过 {@link PackageManager#getPackageInfo(String, int)} 进行查询，
+     * 若抛出 {@link PackageManager.NameNotFoundException} 则视为未安装。
      *
-     * @param context     上下文
-     * @param packageName 应用包名
-     * @return 是否已安装
+     * @param context     上下文对象，不得为 {@code null}
+     * @param packageName 待查询的应用包名
+     * @return 已安装返回 {@code true}，未安装返回 {@code false}
      */
     public static boolean isInstalled(@NonNull Context context, @NonNull String packageName) {
         try {
@@ -73,11 +86,15 @@ public final class PackageTool {
     }
 
     /**
-     * 判断应用是否被禁用。
+     * 判断指定包名的应用是否已被禁用。
+     * <p>
+     * 通过 {@link PackageManager#getApplicationInfo(String, int)} 获取 {@link ApplicationInfo}
+     * 并检查其 {@link ApplicationInfo#enabled} 标志位。
      *
-     * @param context     上下文
-     * @param packageName 应用包名
-     * @return 是否被禁用
+     * @param context     上下文对象，不得为 {@code null}
+     * @param packageName 待查询的应用包名
+     * @return 已被禁用返回 {@code true}
+     * @throws RuntimeException 若包名对应的包不存在（{@link PackageManager.NameNotFoundException}）
      */
     public static boolean isDisable(@NonNull Context context, @NonNull String packageName) {
         try {
@@ -90,12 +107,13 @@ public final class PackageTool {
     }
 
     /**
-     * 根据 uid 获取 user id。
+     * 根据应用的 uid 获取所属的 user ID。
      * <p>
-     * 获取失败则返回 -1。
+     * 内部通过反射调用 {@code UserHandle.getUserId(int)} 方法实现转换。
+     * 若调用失败，返回 -1。
      *
      * @param uid 应用的 uid
-     * @return user id，获取失败则返回 -1
+     * @return 对应的 user ID，获取失败时返回 -1
      */
     public static int getUserId(int uid) {
         return TryHelper.doTry(new IDecomposer<Integer>() {
@@ -113,10 +131,17 @@ public final class PackageTool {
     }
 
     /**
-     * 判断是否是系统应用。
+     * 判断给定的 {@link ApplicationInfo} 是否属于系统应用。
+     * <p>
+     * 满足以下任一条件即视为系统应用：
+     * <ul>
+     *     <li>uid 小于 10000</li>
+     *     <li>flags 包含 {@link ApplicationInfo#FLAG_SYSTEM}</li>
+     *     <li>flags 包含 {@link ApplicationInfo#FLAG_UPDATED_SYSTEM_APP}</li>
+     * </ul>
      *
-     * @param app ApplicationInfo 对象
-     * @return 是否为系统应用
+     * @param app {@link ApplicationInfo} 对象，不得为 {@code null}
+     * @return 是系统应用返回 {@code true}
      */
     public static boolean isSystem(@NonNull ApplicationInfo app) {
         if (app.uid < 10000) {
@@ -126,25 +151,34 @@ public final class PackageTool {
     }
 
     /**
-     * 通过自定义代码同步获取应用数据。
+     * 通过自定义查询逻辑同步获取应用数据。
+     * <p>
+     * 此方法为 {@link #getAppData(Context, boolean, IAppDataGetter)} 的便捷重载，
+     * 默认使用同步模式（{@code async = false}）。
      *
-     * @param context       上下文
-     * @param iAppDataGetter 应用数据获取回调
-     * @param <T>           返回的包信息类型
-     * @return AppData 数组，包含应用详细信息
+     * @param context        上下文对象，不得为 {@code null}
+     * @param iAppDataGetter 自定义的应用数据查询回调，不得为 {@code null}
+     * @param <T>            包信息类型（如 {@link PackageInfo}、{@link ApplicationInfo} 等）
+     * @return 包含查询结果的 {@link AppData} 数组
      */
     public static <T> AppData[] getAppData(@NonNull Context context, @NonNull IAppDataGetter<T> iAppDataGetter) {
         return getAppData(context, false, iAppDataGetter);
     }
 
     /**
-     * 通过自定义代码获取应用数据。
+     * 通过自定义查询逻辑获取应用数据，支持同步或异步模式。
      * <p>
-     * 支持：PackageInfo、ResolveInfo、ActivityInfo、ApplicationInfo、ProviderInfo 类型的返回值。
+     * 泛型参数 {@code T} 支持以下类型：{@link PackageInfo}、{@link ResolveInfo}、{@link ActivityInfo}、
+     * {@link ApplicationInfo}、{@link ProviderInfo}。
      * <p>
-     * 示例：
+     * <b>同步模式</b>（{@code async = false}）：在当前线程中执行查询并直接返回 {@link AppData} 数组。
      * <p>
+     * <b>异步模式</b>（{@code async = true}）：在独立线程中执行查询，结果通过
+     * {@link IAppDataGetter#getAsyncAppData} 回调返回，本方法返回 {@code null}。
+     * <p>
+     * 使用示例：
      * <pre>{@code
+     * // 同步模式
      * AppData[] appData = PackageTool.getAppData(context, false, new IAppDataGetter<PackageInfo>() {
      *      @Override
      *      @NonNull
@@ -156,6 +190,7 @@ public final class PackageTool {
      *      }
      * });
      *
+     * // 异步模式
      * PackageTool.getAppData(context, true, new IAppDataGetter<PackageInfo>() {
      *      @Override
      *      @NonNull
@@ -173,11 +208,11 @@ public final class PackageTool {
      * });
      * }
      *
-     * @param context       上下文
-     * @param async         是否异步获取
-     * @param iAppDataGetter 应用数据获取回调
-     * @param <T>           返回的包信息类型
-     * @return AppData 数组，包含应用详细信息；异步模式下返回 null
+     * @param context        上下文对象，不得为 {@code null}
+     * @param async          是否使用异步模式
+     * @param iAppDataGetter 自定义的应用数据查询回调，不得为 {@code null}
+     * @param <T>            包信息类型
+     * @return 同步模式下返回 {@link AppData} 数组；异步模式下返回 {@code null}
      * @see #createAppData(PackageManager, Object)
      */
     public static <T> AppData[] getAppData(@NonNull Context context, boolean async, @NonNull IAppDataGetter<T> iAppDataGetter) {
@@ -225,12 +260,18 @@ public final class PackageTool {
     }
 
     /**
-     * 根据包信息对象创建 AppData 实例。
+     * 将包信息对象转换为统一的 {@link AppData} 数据结构。
+     * <p>
+     * 支持的输入类型包括：{@link PackageInfo}、{@link ApplicationInfo}、{@link ResolveInfo}、
+     * {@link ActivityInfo}、{@link ServiceInfo}、{@link ProviderInfo}。
+     * <p>
+     * 转换过程中自动填充以下字段：应用图标、标签、包名、版本号、系统应用标记、启用状态及用户 ID。
      *
-     * @param pm PackageManager 实例
-     * @param t  包信息对象，支持 PackageInfo、ApplicationInfo、ResolveInfo、ActivityInfo、ServiceInfo、ProviderInfo
+     * @param pm  {@link PackageManager} 实例，用于加载应用图标和标签
+     * @param t   待转换的包信息对象
      * @param <T> 包信息类型
-     * @return AppData 实例
+     * @return 填充完毕的 {@link AppData} 实例
+     * @throws UnexpectedException 若传入的对象类型不受支持
      */
     @NonNull
     public static <T> AppData createAppData(@NonNull PackageManager pm, @NonNull T t) {
@@ -278,6 +319,16 @@ public final class PackageTool {
         return appData;
     }
 
+    /**
+     * 从 {@link ResolveInfo} 中提取 {@link ComponentInfo}。
+     * <p>
+     * 按优先级依次尝试获取 {@code activityInfo}、{@code serviceInfo}、{@code providerInfo}。
+     * 若三者均为 {@code null}，则抛出异常。
+     *
+     * @param resolveInfo {@link ResolveInfo} 对象
+     * @return 包含 {@link ApplicationInfo} 的 {@link ComponentInfo}
+     * @throws UnexpectedException 若无法从 ResolveInfo 中获取任何应用组件信息
+     */
     @NonNull
     private static ComponentInfo aboutResolveInfo(@NonNull ResolveInfo resolveInfo) {
         if (resolveInfo.activityInfo != null) return resolveInfo.activityInfo;

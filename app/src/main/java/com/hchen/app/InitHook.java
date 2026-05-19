@@ -29,13 +29,33 @@ import com.hchen.hooktool.ModuleEntrance;
 import com.hchen.hooktool.log.AndroidLog;
 
 /**
- * 示例模块入口类。继承 {@link ModuleEntrance}，展示模块的完整生命周期实现。
+ * HookTool 模块的主入口类。
+ *
+ * <p>继承自 {@link ModuleEntrance}，是整个 Hook 模块生命周期的核心控制器。
+ * 本类涵盖了模块从加载到运行的完整生命周期回调，包括：</p>
+ * <ul>
+ *   <li>模块全局配置初始化（{@link #initModuleConfig()}）</li>
+ *   <li>忽略包名过滤（{@link #ignorePackages()}）</li>
+ *   <li>模块加载、包加载、包就绪、系统服务启动、Application 创建等回调</li>
+ * </ul>
+ *
+ * @see ModuleEntrance
+ * @see TestHook
  */
 public class InitHook extends ModuleEntrance {
     private static final String TAG = "InitHook";
 
     /**
-     * 初始化模块配置。
+     * 配置模块的全局参数。
+     *
+     * <p>在模块首次加载时由框架调用，完成以下配置：</p>
+     * <ul>
+     *   <li>日志标签：{@code "TestDemo"}</li>
+     *   <li>日志等级：{@link ModuleConfig#LOG_D}（调试级别）</li>
+     *   <li>偏好设置文件名：{@code "test_demo_prefs"}</li>
+     *   <li>日志扩展路径：{@code "com.hchen.app.hook"}</li>
+     *   <li>启用 Hook 成功日志输出</li>
+     * </ul>
      */
     @Override
     public void initModuleConfig() {
@@ -49,7 +69,12 @@ public class InitHook extends ModuleEntrance {
     }
 
     /**
-     * {@inheritDoc}
+     * 获取需要被模块忽略的包名列表。
+     *
+     * <p>返回的包名在模块加载流程中将被直接跳过，
+     * 不会执行任何 Hook 操作。当前忽略的包为 {@code "com.miui.contentcatcher"}。</p>
+     *
+     * @return 包名字符串数组，表示需要排除的目标包
      */
     @NonNull
     @Override
@@ -58,7 +83,14 @@ public class InitHook extends ModuleEntrance {
     }
 
     /**
-     * {@inheritDoc}
+     * 模块自身加载完成时的回调。
+     *
+     * <p>当 Hook 框架完成模块的初始化加载后触发此方法。
+     * 当前实现输出是否为系统服务进程及进程名称等调试信息，
+     * 并委托父类执行默认处理。</p>
+     *
+     * @param param 模块加载参数，包含是否为系统服务进程及进程名称等信息
+     * @see ModuleEntrance#handleModuleLoaded(ModuleLoadedParam)
      */
     @Override
     public void handleModuleLoaded(@NonNull ModuleLoadedParam param) {
@@ -67,7 +99,14 @@ public class InitHook extends ModuleEntrance {
     }
 
     /**
-     * {@inheritDoc}
+     * 目标应用包加载完成时的回调。
+     *
+     * <p>当目标应用的包被加载到内存后触发此方法。
+     * 当前实现输出是否为首次加载、包名、ApplicationInfo、
+     * 默认类加载器等调试信息，并委托父类执行默认处理。</p>
+     *
+     * @param param 包加载参数，包含包名、应用信息、类加载器及是否为首次加载等
+     * @see ModuleEntrance#handlePackageLoaded(PackageLoadedParam)
      */
     @Override
     public void handlePackageLoaded(@NonNull PackageLoadedParam param) {
@@ -77,7 +116,19 @@ public class InitHook extends ModuleEntrance {
     }
 
     /**
-     * {@inheritDoc}
+     * 目标应用包就绪时的回调。
+     *
+     * <p>当目标应用的包完全就绪（类加载器和组件工厂均已可用）后触发此方法。
+     * 当前实现输出类加载器和组件工厂的调试信息，委托父类执行默认处理，
+     * 并在此基础上完成以下操作：</p>
+     * <ul>
+     *   <li>通过 {@link ModuleData#setClassLoader} 设置全局类加载器</li>
+     *   <li>创建并初始化 {@link TestHook} 模块实例</li>
+     * </ul>
+     *
+     * @param param 包就绪参数，提供目标应用的类加载器和组件工厂等信息
+     * @see ModuleEntrance#handlePackageReady(PackageReadyParam)
+     * @see TestHook
      */
     @Override
     public void handlePackageReady(@NonNull PackageReadyParam param) {
@@ -89,7 +140,14 @@ public class InitHook extends ModuleEntrance {
     }
 
     /**
-     * {@inheritDoc}
+     * 系统服务进程启动时的回调。
+     *
+     * <p>当系统服务（system_server）进程启动时触发此方法。
+     * 当前实现输出系统服务类加载器的调试信息，
+     * 并委托父类执行默认处理。</p>
+     *
+     * @param param 系统服务启动参数，提供系统服务进程的类加载器
+     * @see ModuleEntrance#handleSystemServerStarting(SystemServerStartingParam)
      */
     @Override
     public void handleSystemServerStarting(@NonNull SystemServerStartingParam param) {
@@ -98,7 +156,13 @@ public class InitHook extends ModuleEntrance {
     }
 
     /**
-     * {@inheritDoc}
+     * 目标应用的 {@link android.app.Application} 创建完成时的回调。
+     *
+     * <p>当目标应用的 Application 对象实例化完成后触发此方法。
+     * 当前实现输出应用上下文的调试信息，并委托父类执行默认处理。</p>
+     *
+     * @param context 目标应用已创建完成的 {@link Context} 上下文实例
+     * @see ModuleEntrance#handleApplicationCreated(Context)
      */
     @Override
     public void handleApplicationCreated(@NonNull Context context) {

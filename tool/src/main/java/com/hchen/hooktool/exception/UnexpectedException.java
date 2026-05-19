@@ -19,41 +19,44 @@
 package com.hchen.hooktool.exception;
 
 /**
- * 意外异常。表示发生了预期之外的运行时错误。
+ * 意外异常类，属于非受检异常（{@link RuntimeException} 的子类）。
+ * <p>
+ * 用于标识 HookTool 内部逻辑中不应发生的运行时错误，例如链式数据重复执行、
+ * 状态校验失败等断言性质的异常场景。捕获此异常通常意味着代码中存在逻辑缺陷。
  *
  * @author 焕晨HChen
  */
 public final class UnexpectedException extends RuntimeException {
     /**
-     * 创建空的意外异常。
+     * 构造一个不携带详细消息和原因的意外异常实例。
      */
     public UnexpectedException() {
         super();
     }
 
     /**
-     * 创建带有指定消息的意外异常。
+     * 构造一个携带指定描述消息的意外异常实例。
      *
-     * @param message 异常消息
+     * @param message 异常的描述信息
      */
     public UnexpectedException(String message) {
         super(message);
     }
 
     /**
-     * 创建带有指定消息和原因的意外异常。
+     * 构造一个携带指定描述消息和根本原因的意外异常实例。
      *
-     * @param message 异常消息
-     * @param cause   异常原因
+     * @param message 异常的描述信息
+     * @param cause   导致此异常的根本原因（即原始异常）
      */
     public UnexpectedException(String message, Throwable cause) {
         super(message, cause);
     }
 
     /**
-     * 创建带有指定原因的意外异常。
+     * 构造一个仅携带根本原因的意外异常实例。
      *
-     * @param cause 异常原因
+     * @param cause 导致此异常的根本原因（即原始异常）
      */
     public UnexpectedException(Throwable cause) {
         super(cause);
