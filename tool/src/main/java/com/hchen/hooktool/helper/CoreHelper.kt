@@ -31,7 +31,7 @@ import java.util.concurrent.ConcurrentHashMap
  *
  * 替代原 Xposed 框架中 `XposedHelpers` 工具类的功能，提供以下核心能力：
  * - 类查找（支持内部类自动解析）
- * - 字段访问（实例字段与静态字段）
+ * - 字段访问（实例字段、静态字段以及接口常量字段）
  * - 方法 / 构造函数解析（精确匹配与最佳匹配）
  * - 反射调用（实例方法与静态方法）
  * - 额外实例 / 静态字段附加
@@ -205,30 +205,50 @@ internal object CoreHelper {
     }
 
     /**
-     * 递归查找指定类及其父类中与给定名称匹配的字段。
+     * 递归查找指定类、其父类以及实现的接口树中与给定名称匹配的字段。
      *
-     * 搜索顺序：当前类声明的字段 → 父类（向上逐级遍历直至 `Object`）。
+     * 搜索顺序：当前类声明的字段 → 当前类声明的接口树常量 → 父类及其接口树（向上逐级遍历）。
      * 首次找到即返回；如果在所有层级均未找到，则抛出 [NoSuchFieldException]。
      *
      * @param clazz     开始搜索的类。
      * @param fieldName 要查找的字段名称。
      * @return 找到的 [Field] 对象（未设置可访问性）。
-     * @throws NoSuchFieldException 如果在类及所有父类中均未找到该字段。
+     * @throws NoSuchFieldException 如果在类、父类及所有接口树中均未找到该字段。
      */
     private fun findFieldRecursiveImpl(clazz: Class<*>, fieldName: String): Field {
-        try {
-            return clazz.getDeclaredField(fieldName)
-        } catch (e: NoSuchFieldException) {
-            var clz: Class<*>? = clazz.superclass
-            while (clz != null && clz != Any::class.java) {
-                try {
-                    return clz.getDeclaredField(fieldName)
-                } catch (_: NoSuchFieldException) {
-                    clz = clz.superclass
-                }
+        var clz: Class<*>? = clazz
+        while (clz != null && clz != Any::class.java) {
+            try {
+                return clz.getDeclaredField(fieldName)
+            } catch (_: NoSuchFieldException) {
             }
-            throw e
+
+            for (iface in clz.interfaces) {
+                val f = findInterfaceFieldRecursive(iface, fieldName)
+                if (f != null) return f
+            }
+            clz = clz.superclass
         }
+        throw NoSuchFieldException(fieldName)
+    }
+
+    /**
+     * 递归在接口及其父接口中查找指定名称的字段（接口常量）。
+     *
+     * @param iface     要搜索的接口。
+     * @param fieldName 要查找的字段名称。
+     * @return 找到的 [Field] 对象，如果未找到则返回 `null`。
+     */
+    private fun findInterfaceFieldRecursive(iface: Class<*>, fieldName: String): Field? {
+        try {
+            return iface.getDeclaredField(fieldName)
+        } catch (_: NoSuchFieldException) {
+        }
+        for (superIface in iface.interfaces) {
+            val f = findInterfaceFieldRecursive(superIface, fieldName)
+            if (f != null) return f
+        }
+        return null
     }
 
     /**
@@ -369,6 +389,7 @@ internal object CoreHelper {
                 "double" -> 5
                 else -> -1
             }
+
             "short" -> when (destName) {
                 "int" -> 1
                 "long" -> 2
@@ -376,6 +397,7 @@ internal object CoreHelper {
                 "double" -> 4
                 else -> -1
             }
+
             "char" -> when (destName) {
                 "int" -> 1
                 "long" -> 2
@@ -383,21 +405,25 @@ internal object CoreHelper {
                 "double" -> 4
                 else -> -1
             }
+
             "int" -> when (destName) {
                 "long" -> 1
                 "float" -> 2
                 "double" -> 3
                 else -> -1
             }
+
             "long" -> when (destName) {
                 "float" -> 1
                 "double" -> 2
                 else -> -1
             }
+
             "float" -> when (destName) {
                 "double" -> 1
                 else -> -1
             }
+
             else -> -1
         }
     }
@@ -662,14 +688,14 @@ internal object CoreHelper {
     // ==================== Field ====================
 
     /**
-     * 查找指定类中具有给定名称的字段，支持沿继承链向上递归查找。
+     * 查找指定类中具有给定名称的字段，支持沿继承链及接口树向上递归查找。
      *
      * 查找结果会被缓存。找到的字段会自动设置为可访问（`isAccessible = true`）。
      *
      * @param clazz     要查找字段的类。
      * @param fieldName 字段名称。
      * @return 已设置为可访问的 [Field] 对象。
-     * @throws NoSuchFieldError 如果在类及所有父类中均未找到该字段。
+     * @throws NoSuchFieldError 如果在类、父类及接口树中均未找到该字段。
      */
     @JvmStatic
     fun findField(clazz: Class<*>, fieldName: String): Field {
@@ -944,7 +970,7 @@ internal object CoreHelper {
      * @throws NoSuchMethodError 如果在类中未找到任何兼容的方法。
      */
     @JvmStatic
-    fun findMethodBestMatchWithTypes(clazz: Class<*>, methodName: String, parameterTypes: Array<Class<*>>, args: Array<Any?>): Method {
+    fun findMethodBestMatchWithTypes(clazz: Class<*>, methodName: String, parameterTypes: Array<Class<*>?>, args: Array<out Any?>): Method {
         val resolvedTypes: Array<Class<*>?> = Array(parameterTypes.size) { parameterTypes[it] }
         for (i in resolvedTypes.indices) {
             if (resolvedTypes[i] == null && args[i] != null) {
@@ -1134,7 +1160,7 @@ internal object CoreHelper {
      * @throws NoSuchMethodError 如果在类中未找到任何兼容的构造函数。
      */
     @JvmStatic
-    fun findConstructorBestMatchWithTypes(clazz: Class<*>, parameterTypes: Array<Class<*>>, args: Array<Any?>): Constructor<*> {
+    fun findConstructorBestMatchWithTypes(clazz: Class<*>, parameterTypes: Array<Class<*>?>, args: Array<out Any?>): Constructor<*> {
         val resolvedTypes: Array<Class<*>?> = Array(parameterTypes.size) { parameterTypes[it] }
         for (i in resolvedTypes.indices) {
             if (resolvedTypes[i] == null && args[i] != null) {
@@ -1174,11 +1200,11 @@ internal object CoreHelper {
     /**
      * 使用指定的参数类型调用指定对象的实例方法。
      *
-     * 通过 [findMethodBestMatch] 使用给定的参数类型查找最佳匹配的方法并调用。
+     * 支持在参数类型数组中传入 `null` 作为通配符进行最佳匹配查找并调用。
      *
      * @param obj            目标对象实例。
      * @param methodName     方法名称。
-     * @param parameterTypes 参数类型数组。
+     * @param parameterTypes 参数类型数组（元素可包含 `null` 表示通配）。
      * @param args           方法参数值（可为 `null`）。
      * @return 方法的返回值，如果方法返回类型为 `void` 则返回 `null`。
      * @throws NoSuchMethodError   如果未找到兼容的方法。
@@ -1186,7 +1212,7 @@ internal object CoreHelper {
      * @throws Throwable           方法执行过程中抛出的原始异常。
      */
     @JvmStatic
-    fun callMethod(obj: Any, methodName: String, parameterTypes: Array<Class<*>>, vararg args: Any?): Any? {
+    fun callMethod(obj: Any, methodName: String, parameterTypes: Array<Class<*>?>, vararg args: Any?): Any? {
         return try {
             val method = findMethodBestMatch(obj.javaClass, methodName, *parameterTypes)
             method.invoke(obj, *args)
@@ -1227,11 +1253,11 @@ internal object CoreHelper {
     /**
      * 使用指定的参数类型调用指定类的静态方法。
      *
-     * 通过 [findMethodBestMatch] 使用给定的参数类型查找最佳匹配的方法并以 `null` 作为接收者调用。
+     * 支持在参数类型数组中传入 `null` 作为通配符进行最佳匹配查找并以 `null` 作为接收者调用。
      *
      * @param clazz          目标类。
-     * @param methodName     方法名称。
-     * @param parameterTypes 参数类型数组。
+     * @param methodName     方法名称.
+     * @param parameterTypes 参数类型数组（元素可包含 `null` 表示通配）。
      * @param args           方法参数值（可为 `null`）。
      * @return 方法的返回值，如果方法返回类型为 `void` 则返回 `null`。
      * @throws NoSuchMethodError   如果未找到兼容的方法。
@@ -1239,7 +1265,7 @@ internal object CoreHelper {
      * @throws Throwable           方法执行过程中抛出的原始异常。
      */
     @JvmStatic
-    fun callStaticMethod(clazz: Class<*>, methodName: String, parameterTypes: Array<Class<*>>, vararg args: Any?): Any? {
+    fun callStaticMethod(clazz: Class<*>, methodName: String, parameterTypes: Array<Class<*>?>, vararg args: Any?): Any? {
         return try {
             val method = findMethodBestMatch(clazz, methodName, *parameterTypes)
             method.invoke(null, *args)
@@ -1295,11 +1321,11 @@ internal object CoreHelper {
     }
 
     /**
-     * 获取指定类的静态字段值。
+     * 获取指定类的静态字段值（支持接口静态常量）。
      *
      * 通过 [findField] 查找字段并以 `null` 作为接收者读取其值。
      *
-     * @param clazz     目标类。
+     * @param clazz     目标类或接口。
      * @param fieldName 字段名称。
      * @return 字段的值，可能为 `null`。
      * @throws NoSuchFieldError   如果未找到该字段。
@@ -1366,10 +1392,10 @@ internal object CoreHelper {
     /**
      * 使用指定的参数类型通过最佳匹配的构造函数创建指定类的新实例。
      *
-     * 通过 [findConstructorBestMatchWithTypes] 使用给定的参数类型查找最佳匹配的构造函数并创建实例。
+     * 支持在参数类型数组中传入 `null` 作为通配符。
      *
      * @param clazz          目标类。
-     * @param parameterTypes 参数类型数组。
+     * @param parameterTypes 参数类型数组（元素可包含 `null` 表示通配）。
      * @param args           构造函数参数值（可为 `null`）。
      * @return 创建的新实例。
      * @throws NoSuchMethodError     如果未找到兼容的构造函数。
@@ -1378,9 +1404,9 @@ internal object CoreHelper {
      * @throws Throwable             构造函数执行过程中抛出的原始异常。
      */
     @JvmStatic
-    fun newInstance(clazz: Class<*>, parameterTypes: Array<Class<*>>, vararg args: Any?): Any {
+    fun newInstance(clazz: Class<*>, parameterTypes: Array<Class<*>?>, vararg args: Any?): Any {
         return try {
-            val constructor = findConstructorBestMatchWithTypes(clazz, parameterTypes, args as Array<Any?>)
+            val constructor = findConstructorBestMatchWithTypes(clazz, parameterTypes, args)
             constructor.newInstance(*args)
         } catch (e: IllegalAccessException) {
             throw IllegalAccessError(e.message)
