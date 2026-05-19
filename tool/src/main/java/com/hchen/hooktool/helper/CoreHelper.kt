@@ -27,32 +27,48 @@ import java.util.WeakHashMap
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * Xposed 辅助方法的内部反射实现类。替代原 Xposed 框架中 XposedHelpers 工具类的功能，
- * 提供类查找、字段访问、方法/构造函数解析、反射调用以及额外实例/静态字段附加等功能。
+ * Xposed 辅助方法的内部反射实现类。
  *
- * 所有已解析的 [Field]、[Method] 和 [Constructor] 引均使用 [ConcurrentHashMap] 缓存，
- * 避免重复的反射查找。
+ * 替代原 Xposed 框架中 `XposedHelpers` 工具类的功能，提供以下核心能力：
+ * - 类查找（支持内部类自动解析）
+ * - 字段访问（实例字段与静态字段）
+ * - 方法 / 构造函数解析（精确匹配与最佳匹配）
+ * - 反射调用（实例方法与静态方法）
+ * - 额外实例 / 静态字段附加
  *
- * 此类标记为 internal，仅在 tool 模块内部可访问，不属于公开 API。
+ * 所有已解析的 [Field]、[Method] 和 [Constructor] 均使用 [ConcurrentHashMap] 缓存，
+ * 避免重复的反射查找。此版本在类型匹配上严格对齐 Apache Commons Lang 规范，
+ * 并深度支持 Java 8+ 接口 default 方法。
+ *
+ * 此类标记为 `internal`，仅在 `tool` 模块内部可访问，不属于公开 API。
  *
  * @author 焕晨HChen
- * @see java.lang.reflect.Field
- * @see java.lang.reflect.Method
- * @see java.lang.reflect.Constructor
  */
 internal object CoreHelper {
+    /** 已解析字段的缓存，键为 [FieldCacheKey]（类 + 字段名），值为 [Optional] 包装的 [Field]。 */
     private val fieldCache = ConcurrentHashMap<FieldCacheKey, Optional<Field>>()
+
+    /** 已解析方法的缓存，键为 [MethodCacheKey]（类 + 方法名 + 参数类型 + 是否精确），值为 [Optional] 包装的 [Method]。 */
     private val methodCache = ConcurrentHashMap<MethodCacheKey, Optional<Method>>()
+
+    /** 已解析构造函数的缓存，键为 [ConstructorCacheKey]（类 + 参数类型 + 是否精确），值为 [Optional] 包装的 [Constructor]。 */
     private val constructorCache = ConcurrentHashMap<ConstructorCacheKey, Optional<Constructor<*>>>()
 
     /**
-     * 字段查找的缓存键，由声明该字段的 [Class] 和字段名组成。
+     * 字段缓存的键。
+     *
+     * @property clazz  字段所属的类。
+     * @property name   字段名称。
      */
     private data class FieldCacheKey(val clazz: Class<*>, val name: String)
 
     /**
-     * 方法查找的缓存键，由声明该方法的 [Class]、方法名、精确参数类型以及
-     * 是否为精确匹配或最佳匹配搜索组成。
+     * 方法缓存的键。
+     *
+     * @property clazz       方法所属的类。
+     * @property name        方法名称。
+     * @property parameters  参数类型数组（元素可为 `null`，表示通配）。
+     * @property isExact     是否为精确匹配模式（`true` 表示精确匹配，`false` 表示最佳匹配）。
      */
     private data class MethodCacheKey(
         val clazz: Class<*>,
@@ -77,8 +93,11 @@ internal object CoreHelper {
     }
 
     /**
-     * 构造函数查找的缓存键，由声明该构造函数的 [Class]、精确参数类型以及
-     * 是否为精确匹配或最佳匹配搜索组成。
+     * 构造函数缓存的键。
+     *
+     * @property clazz       构造函数所属的类。
+     * @property parameters  参数类型数组（元素可为 `null`，表示通配）。
+     * @property isExact     是否为精确匹配模式（`true` 表示精确匹配，`false` 表示最佳匹配）。
      */
     private data class ConstructorCacheKey(
         val clazz: Class<*>,
@@ -101,39 +120,80 @@ internal object CoreHelper {
     }
 
     /**
-     * 用于缓存的轻量级 Optional 包装类。存储已解析的值或 `null`（表示之前的查找失败），
-     * 以避免对已知不存在的成员进行重复的反射查找。
+     * 轻量级的可选值包装器，用于缓存中区分 "未查找" 与 "查找失败" 两种状态。
+     *
+     * 与 `java.util.Optional` 不同，此实现允许存储 `null` 值以外的 "空" 状态，
+     * 以支持 [ConcurrentHashMap.computeIfAbsent] 的缓存语义。
+     *
+     * @param T 被包装值的类型。
+     * @property value 被包装的值，可为 `null`。
      */
     private class Optional<T>(val value: T?) {
+        /** 判断是否存在有效值（即 [value] 不为 `null`）。 */
         fun isPresent(): Boolean = value != null
+
+        /**
+         * 返回有效值，如果不存在则抛出由 [lazyError] 提供的异常。
+         *
+         * @param lazyError 用于生成异常的延迟函数。
+         * @return 有效的值。
+         * @throws Throwable 由 [lazyError] 生成的异常。
+         */
         fun orElseThrow(lazyError: () -> Throwable): T {
             if (value == null) throw lazyError()
             return value
         }
 
         companion object {
+            private val EMPTY = Optional<Any>(null)
+
+            /**
+             * 创建一个包含指定值的 [Optional] 实例。
+             *
+             * @param v 要包装的值。
+             * @return 包含指定值的 [Optional] 实例。
+             */
             fun <T> of(v: T): Optional<T> = Optional(v)
-            fun <T> empty(): Optional<T> = Optional(null)
+
+            /**
+             * 返回一个空的 [Optional] 实例。
+             *
+             * @return 空的 [Optional] 实例。
+             */
+            @Suppress("UNCHECKED_CAST")
+            fun <T> empty(): Optional<T> = EMPTY as Optional<T>
         }
     }
 
     /**
-     * 将参数类型描述符数组解析为对应的 [Class] 对象。
+     * 获取安全的类加载器。
      *
-     * [parameterTypes] 中的每个元素可以是：
-     * - 一个 [Class] 引用（原样返回），或
-     * - 一个包含完整类名的 [String]（通过 [findClass] 解析）。
+     * 按优先级依次尝试：传入的 [classLoader] → 当前线程上下文类加载器 → 系统类加载器。
+     * 确保始终返回一个可用的非 `null` 类加载器。
      *
-     * @param classLoader    用于解析字符串类名的类加载器。
-     * @param parameterTypes 参数类型描述符数组；每个元素必须是 [Class] 或 [String]。
-     * @return 与每个输入描述符对应的已解析 [Class] 对象数组。
-     * @throws IllegalArgumentException 如果任何元素为 `null` 或既不是 [Class] 也不是 [String]。
+     * @param classLoader 优先使用的类加载器，可为 `null`。
+     * @return 可用的类加载器实例。
+     */
+    private fun getSafeClassLoader(classLoader: ClassLoader?): ClassLoader {
+        return classLoader ?: Thread.currentThread().contextClassLoader ?: ClassLoader.getSystemClassLoader()
+    }
+
+    /**
+     * 将参数类型数组中的每个元素解析为对应的 [Class] 对象。
+     *
+     * 数组中的每个元素可以是 [Class] 实例或类名 [String]。若为 [String]，
+     * 则通过 [findClass] 进行查找。不允许出现 `null` 元素。
+     *
+     * @param classLoader    用于加载类的类加载器。
+     * @param parameterTypes 参数类型数组，元素为 [Class] 或 [String]。
+     * @return 解析后的 [Class] 类型数组。
+     * @throws IllegalArgumentException 如果数组中包含 `null` 元素或非 [Class] / [String] 类型的元素。
+     * @throws NoClassDefFoundError     如果某个字符串类名无法解析为有效的类。
      */
     private fun getParameterClasses(classLoader: ClassLoader, parameterTypes: Array<*>): Array<Class<*>> {
         val classes = arrayOfNulls<Class<*>>(parameterTypes.size)
         for (i in parameterTypes.indices) {
-            val type = parameterTypes[i]
-                ?: throw IllegalArgumentException("parameter type must not be null")
+            val type = parameterTypes[i] ?: throw IllegalArgumentException("parameter type must not be null")
             classes[i] = when (type) {
                 is Class<*> -> type
                 is String -> findClass(type, classLoader)
@@ -145,12 +205,15 @@ internal object CoreHelper {
     }
 
     /**
-     * 在 [clazz] 及其所有父类（不包括 `java.lang.Object`）中递归搜索指定 [fieldName] 的字段。
+     * 递归查找指定类及其父类中与给定名称匹配的字段。
+     *
+     * 搜索顺序：当前类声明的字段 → 父类（向上逐级遍历直至 `Object`）。
+     * 首次找到即返回；如果在所有层级均未找到，则抛出 [NoSuchFieldException]。
      *
      * @param clazz     开始搜索的类。
-     * @param fieldName 要查找的字段名。
-     * @return 已设置为可访问的 [Field] 引用。
-     * @throws NoSuchFieldError 如果在 [clazz] 或其任何父类中未找到该字段。
+     * @param fieldName 要查找的字段名称。
+     * @return 找到的 [Field] 对象（未设置可访问性）。
+     * @throws NoSuchFieldException 如果在类及所有父类中均未找到该字段。
      */
     private fun findFieldRecursiveImpl(clazz: Class<*>, fieldName: String): Field {
         try {
@@ -169,14 +232,14 @@ internal object CoreHelper {
     }
 
     /**
-     * 检查 [from] 参数类型是否可以逐元素赋值给 [to] 参数类型。
-     * 考虑基本类型与包装类之间的自动转换。
-     * `from` 中的 `null` 元素表示未知类型（如推断自 `null` 参数），
-     * 仅当对应 `to` 元素为基本类型时才返回 `false`。
+     * 检查参数类型数组 [from] 是否可以逐一赋值给目标参数类型数组 [to]。
      *
-     * @param from 要检查的源参数类型（元素可为 `null`）。
-     * @param to   要检查的目标参数类型。
-     * @return 如果 [from] 中的每个元素都可以赋值给 [to] 中的对应元素，则返回 `true`。
+     * 两个数组的长度必须相同。对于 [from] 中的 `null` 元素，仅当 [to] 中对应位置
+     * 为非基本类型时才视为兼容。
+     *
+     * @param from 源参数类型数组（元素可为 `null`）。
+     * @param to   目标参数类型数组。
+     * @return 如果每个元素均可赋值，则返回 `true`。
      */
     private fun isAssignable(from: Array<Class<*>?>, to: Array<Class<*>>): Boolean {
         if (from.size != to.size) return false
@@ -190,31 +253,33 @@ internal object CoreHelper {
     }
 
     /**
-     * 检查单个 [from] 类型是否可以赋值给单个 [to] 类型，
-     * 包括基本类型与包装类之间的自动转换。
+     * 检查源类型 [from] 是否可以赋值给目标类型 [to]。
+     *
+     * 综合考虑以下情况：
+     * - 直接的 `isAssignableFrom` 关系
+     * - 基本类型之间的宽化转换（如 `int` → `long`）
+     * - 基本类型与其对应包装类型之间的装箱 / 拆箱（如 `int` → `Integer`）
      *
      * @param from 源类型。
      * @param to   目标类型。
-     * @return 如果 [from] 可以赋值给 [to] 类型的变量，则返回 `true`。
+     * @return 如果 [from] 可以赋值给 [to]，则返回 `true`。
      */
     private fun isAssignable(from: Class<*>, to: Class<*>): Boolean {
         if (to.isAssignableFrom(from)) return true
+
         if (from.isPrimitive && to.isPrimitive) {
-            val fromIndex = WIDENING_PRIMITIVE_TYPES.indexOf(from)
-            val toIndex = WIDENING_PRIMITIVE_TYPES.indexOf(to)
-            return fromIndex >= 0 && toIndex >= 0 && fromIndex <= toIndex
+            return isPrimitiveAssignable(from, to)
         }
+
         if (from.isPrimitive) {
-            return to == getWrapperType(from)
+            val wrapper = getWrapperType(from)
+            return to.isAssignableFrom(wrapper)
         }
+
         if (to.isPrimitive) {
-            val wrapper = getWrapperType(to)
-            if (from == wrapper) return true
             val unboxedFrom = getPrimitiveType(from)
             if (unboxedFrom != null) {
-                val fromIndex = WIDENING_PRIMITIVE_TYPES.indexOf(unboxedFrom)
-                val toIndex = WIDENING_PRIMITIVE_TYPES.indexOf(to)
-                return fromIndex >= 0 && toIndex >= 0 && fromIndex <= toIndex
+                return isPrimitiveAssignable(unboxedFrom, to)
             }
             return false
         }
@@ -222,12 +287,27 @@ internal object CoreHelper {
     }
 
     /**
-     * 返回给定基本类型对应的包装类类型。
+     * 检查基本类型 [from] 是否可以通过 Java 基本类型宽化转换赋值给 [to]。
      *
-     * 例如，[java.lang.Integer.TYPE]（`int`）映射到 [java.lang.Integer]。
+     * 例如，`int` 可以宽化为 `long`、`float` 或 `double`，但不能宽化为 `short`。
      *
-     * @param type 要查找的基本类型。
-     * @return 对应的包装类类型，如果 [type] 不是基本类型则返回 [type] 本身。
+     * @param from 源基本类型。
+     * @param to   目标基本类型。
+     * @return 如果 [from] 可以通过宽化转换赋值给 [to]，则返回 `true`。
+     */
+    private fun isPrimitiveAssignable(from: Class<*>, to: Class<*>): Boolean {
+        if (from == to) return true
+        return getPrimitiveWideningSteps(from.name, to.name) != -1
+    }
+
+    /**
+     * 获取基本类型对应的包装类型。
+     *
+     * 例如，`int` → `Integer`，`boolean` → `Boolean`。
+     * 如果传入的类型不是基本类型，则原样返回。
+     *
+     * @param type 基本类型或其他类型。
+     * @return 对应的包装类型，或原类型本身。
      */
     private fun getWrapperType(type: Class<*>): Class<*> {
         return when (type) {
@@ -245,12 +325,13 @@ internal object CoreHelper {
     }
 
     /**
-     * 返回给定包装类类型对应的基本类型。
+     * 获取包装类型对应的基本类型。
      *
-     * 例如，[java.lang.Integer] 映射到 [java.lang.Integer.TYPE]（`int`）。
+     * 例如，`Integer` → `int`，`Boolean` → `boolean`。
+     * 如果传入的类型不是包装类型，则返回 `null`。
      *
-     * @param type 要查找的包装类类型。
-     * @return 对应的基本类型，如果 [type] 不是包装类类型则返回 `null`。
+     * @param type 包装类型或其他类型。
+     * @return 对应的基本类型，如果无法转换则返回 `null`。
      */
     private fun getPrimitiveType(type: Class<*>): Class<*>? {
         return when (type) {
@@ -268,52 +349,99 @@ internal object CoreHelper {
     }
 
     /**
-     * 基本类型宽化转换的有序列表，按 Java 语言规范中的拓宽基本类型转换顺序排列。
+     * 计算从基本类型 [srcName] 到 [destName] 的宽化转换步数。
      *
-     * 用于计算类型转换代价：从源类型到目标类型在列表中的距离越远，转换代价越高。
+     * 遵循 Java 语言规范中的拓宽基本类型转换顺序：
+     * - `byte` → `short` → `int` → `long` → `float` → `double`
+     * - `char` → `int` → `long` → `float` → `double`
+     *
+     * @param srcName  源基本类型的名称（如 `"int"`）。
+     * @param destName 目标基本类型的名称（如 `"long"`）。
+     * @return 宽化转换的步数，如果无法宽化则返回 `-1`。
      */
-    private val WIDENING_PRIMITIVE_TYPES = arrayOf(
-        Byte::class.javaPrimitiveType, Short::class.javaPrimitiveType, Char::class.javaPrimitiveType,
-        Int::class.javaPrimitiveType, Long::class.javaPrimitiveType, Float::class.javaPrimitiveType, Double::class.javaPrimitiveType
-    )
+    private fun getPrimitiveWideningSteps(srcName: String, destName: String): Int {
+        return when (srcName) {
+            "byte" -> when (destName) {
+                "short" -> 1
+                "int" -> 2
+                "long" -> 3
+                "float" -> 4
+                "double" -> 5
+                else -> -1
+            }
+            "short" -> when (destName) {
+                "int" -> 1
+                "long" -> 2
+                "float" -> 3
+                "double" -> 4
+                else -> -1
+            }
+            "char" -> when (destName) {
+                "int" -> 1
+                "long" -> 2
+                "float" -> 3
+                "double" -> 4
+                else -> -1
+            }
+            "int" -> when (destName) {
+                "long" -> 1
+                "float" -> 2
+                "double" -> 3
+                else -> -1
+            }
+            "long" -> when (destName) {
+                "float" -> 1
+                "double" -> 2
+                else -> -1
+            }
+            "float" -> when (destName) {
+                "double" -> 1
+                else -> -1
+            }
+            else -> -1
+        }
+    }
 
     /**
-     * 计算从 [srcType] 到 [destType] 的基本类型宽化转换代价。
+     * 计算源基本类型到目标基本类型之间的类型提升代价。
      *
-     * 如果源类型不是基本类型，则先进行拆箱（代价 0.1），然后沿 [WIDENING_PRIMITIVE_TYPES]
-     * 列表逐步宽化，每步代价 0.1。如果源类型无法宽化到目标类型，返回累加代价。
+     * 如果 [srcType] 是包装类型，会先进行拆箱（代价 0.1），然后计算宽化步数代价（每步 0.1）。
+     * 对于 `void` 和 `boolean` 类型，返回 [Float.MAX_VALUE] 表示不可转换。
      *
-     * @param srcType  源类型（可以是包装类或基本类型）。
+     * @param srcType  源类型（可以是包装类型或基本类型）。
      * @param destType 目标基本类型。
-     * @return 转换代价，值越小表示转换越精确。
+     * @return 类型转换代价，越小表示越兼容。不可转换时返回 [Float.MAX_VALUE]。
      */
     private fun getPrimitivePromotionCost(srcType: Class<*>, destType: Class<*>): Float {
         var cost = 0.0f
         var cls: Class<*>? = srcType
         if (cls != null && !cls.isPrimitive) {
-            cost += 0.1f
+            cost += 0.1f // 拆箱代价
             cls = getPrimitiveType(cls)
         }
+        if (cls == null) return 1.5f
         if (cls == destType) return cost
-        val srcIndex = WIDENING_PRIMITIVE_TYPES.indexOf(cls)
-        val destIndex = WIDENING_PRIMITIVE_TYPES.indexOf(destType)
-        if (srcIndex < 0 || destIndex < 0 || srcIndex > destIndex) return Float.MAX_VALUE
-        cost += 0.1f * (destIndex - srcIndex)
+        if (cls == Void::class.javaPrimitiveType || cls == Boolean::class.javaPrimitiveType) return Float.MAX_VALUE
+
+        val steps = getPrimitiveWideningSteps(cls.name, destType.name)
+        if (steps == -1) return Float.MAX_VALUE
+
+        cost += 0.1f * steps
         return cost
     }
 
     /**
-     * 计算从 [srcType] 到 [destType] 的对象类型转换代价。
+     * 计算源类型到目标类型之间的对象转换代价。
      *
-     * 处理以下情况：
-     * - 目标为基本类型：通过 [getPrimitivePromotionCost] 计算拆箱 + 宽化代价。
-     * - 源为 `null`：返回 1.5（表示完全未知类型）。
-     * - 目标为接口且源可赋值：返回 0.25（接口实现的代价较低）。
-     * - 否则沿继承链向上遍历，每层父类代价 +1；若遍历到 `null`（未找到目标），额外加 1.5。
+     * 如果目标类型是基本类型，委托给 [getPrimitivePromotionCost] 计算。
+     * 否则，沿继承链向上遍历，计算类层次距离：
+     * - 实现接口的代价为 0.25
+     * - 每向上一级父类的代价为 1.0
+     * - `null` 源类型的代价固定为 1.5
      *
-     * @param srcType  源类型，可以为 `null`（表示推断自 `null` 参数）。
+     * @param srcType  源类型，可为 `null`（表示运行时为 `null` 值）。
      * @param destType 目标类型。
-     * @return 转换代价，值越小表示转换越精确。
+     * @return 类型转换代价，越小表示越兼容。
      */
     private fun getObjectTransformationCost(srcType: Class<*>?, destType: Class<*>): Float {
         if (destType.isPrimitive) {
@@ -336,14 +464,13 @@ internal object CoreHelper {
     }
 
     /**
-     * 计算所有参数类型的总转换代价。
+     * 计算所有参数的总类型转换代价。
      *
-     * 遍历 [srcArgs] 和 [destArgs]，对每对参数调用 [getObjectTransformationCost] 累加总代价。
-     * 用于在多个候选方法/构造函数中选择最佳匹配。
+     * 逐一对比 [srcArgs] 和 [destArgs] 中每个位置的类型，累加 [getObjectTransformationCost] 的结果。
      *
      * @param srcArgs  源参数类型数组（元素可为 `null`）。
      * @param destArgs 目标参数类型数组。
-     * @return 所有参数的总转换代价。
+     * @return 总的类型转换代价。
      */
     private fun getTotalTransformationCost(srcArgs: Array<Class<*>?>, destArgs: Array<Class<*>>): Float {
         var totalCost = 0f
@@ -354,14 +481,18 @@ internal object CoreHelper {
     }
 
     /**
-     * 在 [clazz] 及其父类中收集所有名称为 [name] 且参数类型与 [parameterTypes] 兼容的方法。
+     * 收集指定类及其父类、接口中与给定名称和参数类型兼容的所有方法。
      *
-     * 搜索范围包括 [clazz] 自身声明的方法以及所有父类（不包括 `java.lang.Object`）中声明的方法。
-     * 父类的私有方法会被排除。通过签名去重，避免因继承关系导致同一方法被重复添加。
+     * 搜索顺序：
+     * 1. 当前类声明的所有方法（仅第一轮包含私有方法）
+     * 2. 当前类实现的接口（深度优先递归，排除静态方法）
+     * 3. 父类（向上逐级遍历）
+     *
+     * 通过 [seen] 集合对方法签名去重，避免同一方法被多次收集。
      *
      * @param clazz          开始搜索的类。
      * @param name           要查找的方法名。
-     * @param parameterTypes 期望的参数类型（元素可为 `null`，表示匹配任意非基本类型）。
+     * @param parameterTypes 期望的参数类型（元素可为 `null`）。
      * @param result         用于收集匹配方法的可变列表。
      */
     private fun collectMethodsBestMatch(clazz: Class<*>, name: String, parameterTypes: Array<Class<*>?>, result: MutableList<Method>) {
@@ -378,21 +509,53 @@ internal object CoreHelper {
                     }
                 }
             }
+            for (iface in clz.interfaces) {
+                collectInterfaceMethodsRecursive(iface, name, parameterTypes, seen, result)
+            }
             considerPrivate = false
             clz = clz.superclass
         }
     }
 
     /**
-     * 比较候选方法/构造函数的形参相对于当前最佳匹配与给定 [parameterTypes] 的匹配程度。
+     * 递归收集接口及其父接口中与指定名称和参数类型兼容的非静态方法。
+     *
+     * 用于支持 Java 8+ 接口 default 方法的深度查找。接口中的静态方法会被排除，
+     * 因为静态方法不可被类继承。通过 [seen] 集合对方法签名去重。
+     *
+     * @param iface          要搜索的接口。
+     * @param name           要查找的方法名。
+     * @param parameterTypes 期望的参数类型（元素可为 `null`）。
+     * @param seen           已见过的方法签名集合，用于去重。
+     * @param result         用于收集匹配方法的可变列表。
+     */
+    private fun collectInterfaceMethodsRecursive(iface: Class<*>, name: String, parameterTypes: Array<Class<*>?>, seen: HashSet<String>, result: MutableList<Method>) {
+        for (method in iface.declaredMethods) {
+            if (Modifier.isStatic(method.modifiers)) continue
+            if (method.name == name && isAssignable(parameterTypes, method.parameterTypes)) {
+                val sig = method.name + method.parameterTypes.contentToString()
+                if (seen.add(sig)) {
+                    result.add(method)
+                }
+            }
+        }
+        for (superIface in iface.interfaces) {
+            collectInterfaceMethodsRecursive(superIface, name, parameterTypes, seen, result)
+        }
+    }
+
+    /**
+     * 比较候选方法 / 构造函数的形参相对于当前最佳匹配与给定 [parameterTypes] 的匹配程度。
+     *
      * 使用与 Apache Commons Lang `MemberUtils.compareMethodFit` 一致的继承距离算法。
      * 如果 candidate 更优则返回负值，如果 current 更优则返回正值，两者同等合适则返回零。
+     *
+     * @param candidateParams 候选方法的参数类型数组。
+     * @param currentParams   当前最佳匹配方法的参数类型数组。
+     * @param parameterTypes  期望的参数类型数组（元素可为 `null`）。
+     * @return 负值表示 candidate 更优，正值表示 current 更优，零表示同等合适。
      */
-    private fun compareFit(
-        candidateParams: Array<Class<*>>,
-        currentParams: Array<Class<*>>,
-        parameterTypes: Array<Class<*>?>
-    ): Int {
+    private fun compareFit(candidateParams: Array<Class<*>>, currentParams: Array<Class<*>>, parameterTypes: Array<Class<*>?>): Int {
         val candidateCost = getTotalTransformationCost(parameterTypes, candidateParams)
         val currentCost = getTotalTransformationCost(parameterTypes, currentParams)
         return candidateCost.compareTo(currentCost)
@@ -401,10 +564,13 @@ internal object CoreHelper {
     // ==================== Class ====================
 
     /**
-     * 将类名转换为 JVM 内部规范名称。
+     * 将类名转换为 JVM 内部规范格式。
      *
-     * 处理数组后缀 `[]`（如 `java.lang.String[]` → `[Ljava.lang.String;`）
-     * 以及基本类型数组（如 `int[]` → `[I`）。
+     * 处理数组类型：将 `"int[]"` 转换为 `"[I"`，将 `"java.lang.String[]"` 转换为 `"[Ljava.lang.String;"`。
+     * 非数组类型则去除首尾空白后原样返回。
+     *
+     * @param className 待转换的类名。
+     * @return JVM 内部规范格式的类名。
      */
     private fun toCanonicalName(className: String): String {
         var name = className.trim()
@@ -430,12 +596,7 @@ internal object CoreHelper {
         return name
     }
 
-    /**
-     * 基本类型名称到对应 [Class] 对象的映射表。
-     *
-     * 包含 `boolean`、`byte`、`char`、`short`、`int`、`long`、`float`、`double` 和 `void`
-     * 九种基本类型。用于 [findClass] 中快速解析基本类型名称。
-     */
+    /** 基本类型名称到其 [Class] 对象的映射表。 */
     private val PRIMITIVE_NAME_MAP = mapOf(
         "boolean" to Boolean::class.javaPrimitiveType,
         "byte" to Byte::class.javaPrimitiveType,
@@ -449,25 +610,17 @@ internal object CoreHelper {
     )
 
     /**
-     * 通过完整类名和指定的类加载器查找类。
+     * 查找指定名称的类。
      *
-     * 支持多种类名格式：
-     * - `java.lang.String`
-     * - `java.lang.String[]`（数组）
-     * - `android.app.ActivityThread.ResourcesKey`（内部类用 `.` 分隔）
-     * - `android.app.ActivityThread$ResourcesKey`（内部类用 `$` 分隔）
-     * - `int`、`void` 等基本类型名称
+     * 支持以下格式：
+     * - 基本类型名称（如 `"int"`、`"void"`）
+     * - 数组类型（如 `"int[]"`、`"java.lang.String[]"`）
+     * - 普通类名及内部类（如未找到则自动尝试将 `.` 替换为 `$` 进行内部类解析）
      *
-     * 内部类解析会逐步从右到左尝试将 `.` 替换为 `$`，与 Apache Commons Lang
-     * `ClassUtils.getClass` 行为一致，支持深层内部类（如 `a.b.C.D` → `a.b.C$D`
-     * → `a.b$C$D` → `a$b$C$D`）。
-     *
-     * [classLoader] 为 `null` 时使用启动类加载器（Bootstrap ClassLoader）。
-     *
-     * @param className   完整类名。
-     * @param classLoader 用于解析的类加载器，或 `null` 表示使用启动类加载器。
-     * @return 已解析的 [Class] 对象。
-     * @throws NoClassDefFoundError 如果无法找到该类。
+     * @param className   要查找的类名。
+     * @param classLoader 用于加载类的类加载器，可为 `null`（将使用安全类加载器）。
+     * @return 对应的 [Class] 对象。
+     * @throws NoClassDefFoundError 如果无法找到指定的类。
      */
     @JvmStatic
     fun findClass(className: String, classLoader: ClassLoader?): Class<*> {
@@ -489,11 +642,13 @@ internal object CoreHelper {
     }
 
     /**
-     * 通过完整类名查找类，如果类不存在则返回 `null` 而不是抛出异常。
+     * 查找指定名称的类，如果不存在则返回 `null`。
      *
-     * @param className   完整类名。
-     * @param classLoader 用于解析的类加载器，或 `null` 表示使用启动类加载器。
-     * @return 已解析的 [Class] 对象，如果未找到则返回 `null`。
+     * 是 [findClass] 的安全版本，不会抛出异常。
+     *
+     * @param className   要查找的类名。
+     * @param classLoader 用于加载类的类加载器，可为 `null`。
+     * @return 对应的 [Class] 对象，如果不存在则返回 `null`。
      */
     @JvmStatic
     fun findClassIfExists(className: String, classLoader: ClassLoader?): Class<*>? {
@@ -507,12 +662,14 @@ internal object CoreHelper {
     // ==================== Field ====================
 
     /**
-     * 在给定类及其父类中按名称查找字段，将其设置为可访问并返回。结果会被缓存以供后续查找使用。
+     * 查找指定类中具有给定名称的字段，支持沿继承链向上递归查找。
      *
-     * @param clazz     声明或继承该字段的类。
-     * @param fieldName 要查找的字段名。
-     * @return 已设置为可访问的 [Field] 引用。
-     * @throws NoSuchFieldError 如果在 [clazz] 或其任何父类中未找到该字段。
+     * 查找结果会被缓存。找到的字段会自动设置为可访问（`isAccessible = true`）。
+     *
+     * @param clazz     要查找字段的类。
+     * @param fieldName 字段名称。
+     * @return 已设置为可访问的 [Field] 对象。
+     * @throws NoSuchFieldError 如果在类及所有父类中均未找到该字段。
      */
     @JvmStatic
     fun findField(clazz: Class<*>, fieldName: String): Field {
@@ -529,11 +686,13 @@ internal object CoreHelper {
     }
 
     /**
-     * 按名称查找字段，如果字段不存在则返回 `null` 而不是抛出异常。
+     * 查找指定类中具有给定名称的字段，如果不存在则返回 `null`。
      *
-     * @param clazz     声明或继承该字段的类。
-     * @param fieldName 要查找的字段名。
-     * @return 已设置为可访问的 [Field] 引用，如果未找到则返回 `null`。
+     * 是 [findField] 的安全版本，不会抛出异常。
+     *
+     * @param clazz     要查找字段的类。
+     * @param fieldName 字段名称。
+     * @return 已设置为可访问的 [Field] 对象，如果不存在则返回 `null`。
      */
     @JvmStatic
     fun findFieldIfExists(clazz: Class<*>, fieldName: String): Field? {
@@ -547,59 +706,56 @@ internal object CoreHelper {
     // ==================== Method Exact ====================
 
     /**
-     * 在 [clazz] 中按名称和参数类型查找精确匹配的方法，将其设置为可访问并返回。结果会被缓存。
-     * 仅搜索 [clazz] 自身声明的方法（使用 `getDeclaredMethod`），不搜索父类。
+     * 在指定类中查找精确匹配的方法。
      *
-     * [parameterTypes] 中的参数类型可以指定为 [Class] 引用或完整类名 [String]
-     * （将使用该类自身的类加载器进行解析）。
+     * 参数类型可以是 [Class] 对象或类名 [String]（将通过 [findClass] 解析）。
+     * 查找结果会被缓存。
      *
-     * @param clazz          声明该方法的类。
-     * @param methodName     要查找的方法名。
-     * @param parameterTypes 方法的参数类型；每个元素可以是 [Class] 或 [String]。
-     * @return 已设置为可访问的 [Method] 引用。
-     * @throws NoClassDefFoundError 如果字符串参数类型无法解析。
-     * @throws NoSuchMethodError    如果不存在具有给定名称和参数类型的方法。
+     * @param clazz          要查找方法的类。
+     * @param methodName     方法名称。
+     * @param parameterTypes 参数类型（可为 [Class] 或 [String]）。
+     * @return 已设置为可访问的 [Method] 对象。
+     * @throws NoClassDefFoundError 如果某个字符串参数类型无法解析为有效的类。
+     * @throws NoSuchMethodError    如果在类中未找到精确匹配的方法。
      */
     @JvmStatic
     fun findMethodExact(clazz: Class<*>, methodName: String, vararg parameterTypes: Any): Method {
-        val resolvedTypes = getParameterClasses(
-            clazz.classLoader ?: Thread.currentThread().contextClassLoader ?: ClassLoader.getSystemClassLoader(),
-            parameterTypes as Array<*>
-        )
+        val resolvedTypes = getParameterClasses(getSafeClassLoader(clazz.classLoader), parameterTypes as Array<*>)
         return findMethodExactWithClasses(clazz, methodName, *resolvedTypes)
     }
 
     /**
-     * 通过类名、类加载器、方法名和参数类型查找精确匹配的方法。
-     * 这是一个便捷重载，先解析类，然后委托给 [findMethodExact]。
+     * 在指定类名对应的类中查找精确匹配的方法。
      *
-     * @param className      声明该方法的完整类名。
-     * @param classLoader    用于解析的类加载器，或 `null` 表示使用系统类加载器。
-     * @param methodName     要查找的方法名。
-     * @param parameterTypes 方法的参数类型；每个元素可以是 [Class] 或 [String]。
-     * @return 已设置为可访问的 [Method] 引用。
-     * @throws NoClassDefFoundError 如果类或参数类型无法解析。
-     * @throws NoSuchMethodError    如果不存在具有给定名称和参数类型的方法。
+     * 先通过 [findClass] 加载类，再解析参数类型并委托给 [findMethodExactWithClasses]。
+     * 查找结果会被缓存。
+     *
+     * @param className      要查找方法的类名。
+     * @param classLoader    用于加载类的类加载器，可为 `null`。
+     * @param methodName     方法名称。
+     * @param parameterTypes 参数类型（可为 [Class] 或 [String]）。
+     * @return 已设置为可访问的 [Method] 对象。
+     * @throws NoClassDefFoundError 如果类名或某个字符串参数类型无法解析为有效的类。
+     * @throws NoSuchMethodError    如果在类中未找到精确匹配的方法。
      */
     @JvmStatic
     fun findMethodExact(className: String, classLoader: ClassLoader?, methodName: String, vararg parameterTypes: Any): Method {
         val clazz = findClass(className, classLoader)
-        val resolvedTypes = getParameterClasses(
-            classLoader ?: Thread.currentThread().contextClassLoader ?: ClassLoader.getSystemClassLoader(),
-            parameterTypes as Array<*>
-        )
+        val resolvedTypes = getParameterClasses(getSafeClassLoader(classLoader), parameterTypes as Array<*>)
         return findMethodExactWithClasses(clazz, methodName, *resolvedTypes)
     }
 
     /**
-     * 通过已解析的 [Class] 参数类型查找精确匹配的方法。这是其他重载使用的核心精确方法解析入口。结果会被缓存。
-     * 仅搜索 [clazz] 自身声明的方法（使用 `getDeclaredMethod`），不搜索父类。
+     * 在指定类中查找精确匹配的方法（参数类型已解析为 [Class] 对象）。
      *
-     * @param clazz          声明该方法的类。
-     * @param methodName     要查找的方法名。
-     * @param parameterTypes 已解析的方法参数类型。
-     * @return 已设置为可访问的 [Method] 引用。
-     * @throws NoSuchMethodError 如果不存在具有给定名称和精确参数类型的方法。
+     * 支持从实体类及其接口树中查找继承的 default 方法。
+     * 查找结果会被缓存。
+     *
+     * @param clazz          要查找方法的类。
+     * @param methodName     方法名称。
+     * @param parameterTypes 精确的参数类型数组。
+     * @return 已设置为可访问的 [Method] 对象。
+     * @throws NoSuchMethodError 如果在类中未找到精确匹配的方法。
      */
     @JvmStatic
     fun findMethodExactWithClasses(clazz: Class<*>, methodName: String, vararg parameterTypes: Class<*>): Method {
@@ -607,7 +763,7 @@ internal object CoreHelper {
         return methodCache.computeIfAbsent(key) { k ->
             try {
                 @Suppress("UNCHECKED_CAST")
-                val method = k.clazz.getDeclaredMethod(k.name, *(k.parameters as Array<Class<*>>))
+                val method = findMethodExactRecursive(k.clazz, k.name, k.parameters as Array<Class<*>>)
                 method.isAccessible = true
                 Optional.of(method)
             } catch (_: NoSuchMethodException) {
@@ -617,12 +773,66 @@ internal object CoreHelper {
     }
 
     /**
-     * 查找精确匹配的方法，如果方法或其声明类不存在则返回 `null` 而不是抛出异常。
+     * 递归查找精确匹配的方法，支持从实体类及其接口树中查找继承的 default 方法。
      *
-     * @param clazz          声明该方法的类。
-     * @param methodName     要查找的方法名。
-     * @param parameterTypes 方法的参数类型；每个元素可以是 [Class] 或 [String]。
+     * 搜索顺序：当前类声明的方法 → 当前类实现的接口（深度优先）→ 父类（向上遍历）。
+     * 接口中的静态方法会被排除。
+     *
+     * @param clazz          开始搜索的类。
+     * @param name           要查找的方法名。
+     * @param parameterTypes 精确的参数类型数组。
+     * @return 已设置为可访问的 [Method] 引用。
+     * @throws NoSuchMethodException 如果在类及所有接口中均未找到该方法。
+     */
+    private fun findMethodExactRecursive(clazz: Class<*>, name: String, parameterTypes: Array<Class<*>>): Method {
+        var clz: Class<*>? = clazz
+        while (clz != null) {
+            try {
+                return clz.getDeclaredMethod(name, *parameterTypes)
+            } catch (_: NoSuchMethodException) {
+            }
+            for (iface in clz.interfaces) {
+                val m = findInterfaceMethodExactRecursive(iface, name, parameterTypes)
+                if (m != null) return m
+            }
+            clz = clz.superclass
+        }
+        throw NoSuchMethodException()
+    }
+
+    /**
+     * 递归在接口及其父接口中查找精确匹配的非静态方法。
+     *
+     * 用于支持 Java 8+ 接口 default 方法的精确查找。接口中的静态方法会被排除，
+     * 因为静态方法不可被类继承。
+     *
+     * @param iface          要搜索的接口。
+     * @param name           要查找的方法名。
+     * @param parameterTypes 精确的参数类型数组。
      * @return 已设置为可访问的 [Method] 引用，如果未找到则返回 `null`。
+     */
+    private fun findInterfaceMethodExactRecursive(iface: Class<*>, name: String, parameterTypes: Array<Class<*>>): Method? {
+        try {
+            val m = iface.getDeclaredMethod(name, *parameterTypes)
+            if (!Modifier.isStatic(m.modifiers)) return m
+        } catch (_: NoSuchMethodException) {
+        }
+        for (superIface in iface.interfaces) {
+            val m = findInterfaceMethodExactRecursive(superIface, name, parameterTypes)
+            if (m != null) return m
+        }
+        return null
+    }
+
+    /**
+     * 在指定类中查找精确匹配的方法，如果不存在则返回 `null`。
+     *
+     * 是 [findMethodExact] 的安全版本，不会抛出异常。
+     *
+     * @param clazz          要查找方法的类。
+     * @param methodName     方法名称。
+     * @param parameterTypes 参数类型（可为 [Class] 或 [String]）。
+     * @return 已设置为可访问的 [Method] 对象，如果不存在则返回 `null`。
      */
     @JvmStatic
     fun findMethodExactIfExists(clazz: Class<*>, methodName: String, vararg parameterTypes: Any): Method? {
@@ -636,13 +846,15 @@ internal object CoreHelper {
     }
 
     /**
-     * 通过类名查找精确匹配的方法，如果方法或类不存在则返回 `null` 而不是抛出异常。
+     * 在指定类名对应的类中查找精确匹配的方法，如果不存在则返回 `null`。
      *
-     * @param className      声明该方法的完整类名。
-     * @param classLoader    用于解析的类加载器，或 `null` 表示使用系统类加载器。
-     * @param methodName     要查找的方法名。
-     * @param parameterTypes 方法的参数类型；每个元素可以是 [Class] 或 [String]。
-     * @return 已设置为可访问的 [Method] 引用，如果未找到则返回 `null`。
+     * 是 [findMethodExact]（接受类名版本）的安全版本，不会抛出异常。
+     *
+     * @param className      要查找方法的类名。
+     * @param classLoader    用于加载类的类加载器，可为 `null`。
+     * @param methodName     方法名称。
+     * @param parameterTypes 参数类型（可为 [Class] 或 [String]）。
+     * @return 已设置为可访问的 [Method] 对象，如果不存在则返回 `null`。
      */
     @JvmStatic
     fun findMethodExactIfExists(className: String, classLoader: ClassLoader?, methodName: String, vararg parameterTypes: Any): Method? {
@@ -658,22 +870,24 @@ internal object CoreHelper {
     // ==================== Method Best Match ====================
 
     /**
-     * 在 [clazz]（及其父类）中按名称和参数类型查找最佳匹配的方法。首先尝试精确匹配；
-     * 如果失败，则搜索给定参数类型可赋值给方法形式参数的最兼容方法。
+     * 在指定类中查找与给定参数类型最匹配的方法。
      *
-     * 会考虑继承的方法。父类的私有方法在最佳匹配搜索中会被排除。结果会被缓存。
+     * 如果所有参数类型均非 `null`，则优先尝试精确匹配（[findMethodExactWithClasses]）。
+     * 精确匹配失败时，回退到最佳匹配模式：收集所有兼容的方法候选，
+     * 使用基于继承距离的评分算法选择最优匹配。
+     * 查找结果会被缓存。
      *
-     * @param clazz          声明、继承或覆盖该方法的类。
-     * @param methodName     要查找的方法名。
-     * @param parameterTypes 期望的参数类型。
-     * @return 已设置为可访问的最佳匹配 [Method] 引用。
-     * @throws NoSuchMethodError 如果未找到合适的方法。
+     * @param clazz          要查找方法的类。
+     * @param methodName     方法名称。
+     * @param parameterTypes 参数类型数组（元素可为 `null`，表示通配）。
+     * @return 已设置为可访问的最佳匹配 [Method] 对象。
+     * @throws NoSuchMethodError 如果在类中未找到任何兼容的方法。
      */
     @JvmStatic
     fun findMethodBestMatch(clazz: Class<*>, methodName: String, vararg parameterTypes: Class<*>?): Method {
         if (parameterTypes.all { it != null }) {
             try {
-                @Suppress("UNCHECKED_CAST", "KotlinConstantConditions")
+                @Suppress("UNCHECKED_CAST")
                 return findMethodExactWithClasses(clazz, methodName, *(parameterTypes as Array<Class<*>>))
             } catch (_: NoSuchMethodError) {
             }
@@ -699,15 +913,16 @@ internal object CoreHelper {
     }
 
     /**
-     * 通过从给定 [args] 推断参数类型来查找最佳匹配的方法。
-     * 对于每个非 `null` 参数，使用其运行时类作为参数类型；`null` 参数的类型保留为 `null`，
-     * 可匹配任意非基本类型形参。
+     * 在指定类中根据实际参数值查找最匹配的方法。
      *
-     * @param clazz      声明、继承或覆盖该方法的类。
-     * @param methodName 要查找的方法名。
-     * @param args       用于推断参数类型的参数实例。
-     * @return 已设置为可访问的最佳匹配 [Method] 引用。
-     * @throws NoSuchMethodError 如果未找到合适的方法。
+     * 通过运行时参数的实际类型（`javaClass`）推断参数类型，
+     * 然后委托给 [findMethodBestMatch]（接受类型数组版本）。
+     *
+     * @param clazz      要查找方法的类。
+     * @param methodName 方法名称。
+     * @param args       实际参数值（可为 `null`）。
+     * @return 已设置为可访问的最佳匹配 [Method] 对象。
+     * @throws NoSuchMethodError 如果在类中未找到任何兼容的方法。
      */
     @JvmStatic
     fun findMethodBestMatch(clazz: Class<*>, methodName: String, vararg args: Any?): Method {
@@ -716,17 +931,17 @@ internal object CoreHelper {
     }
 
     /**
-     * 使用显式 [parameterTypes] 查找最佳匹配的方法，对于 `null` 类型的条目，
-     * 回退使用 [args] 的运行时类型。当某些参数类型在编译时已知但其他参数依赖运行时值时，
-     * 此方法非常有用。
+     * 在指定类中根据指定的参数类型和实际参数值查找最匹配的方法。
      *
-     * @param clazz          声明、继承或覆盖该方法的类。
-     * @param methodName     要查找的方法名。
-     * @param parameterTypes 声明的参数类型；`null` 条目将使用对应 [args] 元素的
-     *                       运行时类型进行细化。
-     * @param args           用于类型细化的参数实例。
-     * @return 已设置为可访问的最佳匹配 [Method] 引用。
-     * @throws NoSuchMethodError 如果未找到合适的方法。
+     * 对于 [parameterTypes] 中为 `null` 的位置，使用 [args] 中对应元素的实际类型替代。
+     * 然后委托给 [findMethodBestMatch]（接受类型数组版本）。
+     *
+     * @param clazz          要查找方法的类。
+     * @param methodName     方法名称。
+     * @param parameterTypes 参数类型数组（元素可为 `null`）。
+     * @param args           实际参数值数组。
+     * @return 已设置为可访问的最佳匹配 [Method] 对象。
+     * @throws NoSuchMethodError 如果在类中未找到任何兼容的方法。
      */
     @JvmStatic
     fun findMethodBestMatchWithTypes(clazz: Class<*>, methodName: String, parameterTypes: Array<Class<*>>, args: Array<Any?>): Method {
@@ -742,56 +957,52 @@ internal object CoreHelper {
     // ==================== Constructor Exact ====================
 
     /**
-     * 在 [clazz] 中按参数类型查找精确匹配的构造函数，将其设置为可访问并返回。结果会被缓存。
-     * 仅搜索 [clazz] 自身声明的构造函数（使用 `getDeclaredConstructor`），不搜索父类。
+     * 在指定类中查找精确匹配的构造函数。
      *
-     * [parameterTypes] 中的参数类型可以指定为 [Class] 引用或完整类名 [String]
-     * （将使用该类自身的类加载器进行解析）。
+     * 参数类型可以是 [Class] 对象或类名 [String]（将通过 [findClass] 解析）。
+     * 查找结果会被缓存。
      *
      * @param clazz          要查找构造函数的类。
-     * @param parameterTypes 构造函数的参数类型；每个元素可以是 [Class] 或 [String]。
-     * @return 已设置为可访问的 [Constructor] 引用。
-     * @throws NoClassDefFoundError 如果字符串参数类型无法解析。
-     * @throws NoSuchMethodError    如果不存在具有给定参数类型的构造函数。
+     * @param parameterTypes 参数类型（可为 [Class] 或 [String]）。
+     * @return 已设置为可访问的 [Constructor] 对象。
+     * @throws NoClassDefFoundError 如果某个字符串参数类型无法解析为有效的类。
+     * @throws NoSuchMethodError    如果在类中未找到精确匹配的构造函数。
      */
     @JvmStatic
     fun findConstructorExact(clazz: Class<*>, vararg parameterTypes: Any): Constructor<*> {
-        val resolvedTypes = getParameterClasses(
-            clazz.classLoader ?: Thread.currentThread().contextClassLoader ?: ClassLoader.getSystemClassLoader(),
-            parameterTypes as Array<*>
-        )
+        val resolvedTypes = getParameterClasses(getSafeClassLoader(clazz.classLoader), parameterTypes as Array<*>)
         return findConstructorExactWithClasses(clazz, *resolvedTypes)
     }
 
     /**
-     * 通过类名、类加载器和参数类型查找精确匹配的构造函数。
-     * 这是一个便捷重载，先解析类，然后委托给 [findConstructorExact]。
+     * 在指定类名对应的类中查找精确匹配的构造函数。
      *
-     * @param className      要查找构造函数的完整类名。
-     * @param classLoader    用于解析的类加载器，或 `null` 表示使用系统类加载器。
-     * @param parameterTypes 构造函数的参数类型；每个元素可以是 [Class] 或 [String]。
-     * @return 已设置为可访问的 [Constructor] 引用。
-     * @throws NoClassDefFoundError 如果类或参数类型无法解析。
-     * @throws NoSuchMethodError    如果不存在具有给定参数类型的构造函数。
+     * 先通过 [findClass] 加载类，再解析参数类型并委托给 [findConstructorExactWithClasses]。
+     * 查找结果会被缓存。
+     *
+     * @param className      要查找构造函数的类名。
+     * @param classLoader    用于加载类的类加载器，可为 `null`。
+     * @param parameterTypes 参数类型（可为 [Class] 或 [String]）。
+     * @return 已设置为可访问的 [Constructor] 对象。
+     * @throws NoClassDefFoundError 如果类名或某个字符串参数类型无法解析为有效的类。
+     * @throws NoSuchMethodError    如果在类中未找到精确匹配的构造函数。
      */
     @JvmStatic
     fun findConstructorExact(className: String, classLoader: ClassLoader?, vararg parameterTypes: Any): Constructor<*> {
         val clazz = findClass(className, classLoader)
-        val resolvedTypes = getParameterClasses(
-            classLoader ?: Thread.currentThread().contextClassLoader ?: ClassLoader.getSystemClassLoader(),
-            parameterTypes as Array<*>
-        )
+        val resolvedTypes = getParameterClasses(getSafeClassLoader(classLoader), parameterTypes as Array<*>)
         return findConstructorExactWithClasses(clazz, *resolvedTypes)
     }
 
     /**
-     * 通过已解析的 [Class] 参数类型查找精确匹配的构造函数。这是其他重载使用的核心精确构造函数解析入口。结果会被缓存。
-     * 仅搜索 [clazz] 自身声明的构造函数（使用 `getDeclaredConstructor`），不搜索父类。
+     * 在指定类中查找精确匹配的构造函数（参数类型已解析为 [Class] 对象）。
+     *
+     * 查找结果会被缓存。找到的构造函数会自动设置为可访问（`isAccessible = true`）。
      *
      * @param clazz          要查找构造函数的类。
-     * @param parameterTypes 已解析的构造函数参数类型。
-     * @return 已设置为可访问的 [Constructor] 引用。
-     * @throws NoSuchMethodError 如果不存在具有给定精确参数类型的构造函数。
+     * @param parameterTypes 精确的参数类型数组。
+     * @return 已设置为可访问的 [Constructor] 对象。
+     * @throws NoSuchMethodError 如果在类中未找到精确匹配的构造函数。
      */
     @JvmStatic
     fun findConstructorExactWithClasses(clazz: Class<*>, vararg parameterTypes: Class<*>): Constructor<*> {
@@ -809,11 +1020,13 @@ internal object CoreHelper {
     }
 
     /**
-     * 查找精确匹配的构造函数，如果构造函数或其声明类不存在则返回 `null` 而不是抛出异常。
+     * 在指定类中查找精确匹配的构造函数，如果不存在则返回 `null`。
+     *
+     * 是 [findConstructorExact] 的安全版本，不会抛出异常。
      *
      * @param clazz          要查找构造函数的类。
-     * @param parameterTypes 构造函数的参数类型；每个元素可以是 [Class] 或 [String]。
-     * @return 已设置为可访问的 [Constructor] 引用，如果未找到则返回 `null`。
+     * @param parameterTypes 参数类型（可为 [Class] 或 [String]）。
+     * @return 已设置为可访问的 [Constructor] 对象，如果不存在则返回 `null`。
      */
     @JvmStatic
     fun findConstructorExactIfExists(clazz: Class<*>, vararg parameterTypes: Any): Constructor<*>? {
@@ -827,12 +1040,14 @@ internal object CoreHelper {
     }
 
     /**
-     * 通过类名查找精确匹配的构造函数，如果构造函数或类不存在则返回 `null` 而不是抛出异常。
+     * 在指定类名对应的类中查找精确匹配的构造函数，如果不存在则返回 `null`。
      *
-     * @param className      要查找构造函数的完整类名。
-     * @param classLoader    用于解析的类加载器，或 `null` 表示使用系统类加载器。
-     * @param parameterTypes 构造函数的参数类型；每个元素可以是 [Class] 或 [String]。
-     * @return 已设置为可访问的 [Constructor] 引用，如果未找到则返回 `null`。
+     * 是 [findConstructorExact]（接受类名版本）的安全版本，不会抛出异常。
+     *
+     * @param className      要查找构造函数的类名。
+     * @param classLoader    用于加载类的类加载器，可为 `null`。
+     * @param parameterTypes 参数类型（可为 [Class] 或 [String]）。
+     * @return 已设置为可访问的 [Constructor] 对象，如果不存在则返回 `null`。
      */
     @JvmStatic
     fun findConstructorExactIfExists(className: String, classLoader: ClassLoader?, vararg parameterTypes: Any): Constructor<*>? {
@@ -848,19 +1063,23 @@ internal object CoreHelper {
     // ==================== Constructor Best Match ====================
 
     /**
-     * 在 [clazz] 中按参数类型查找最佳匹配的构造函数。首先尝试精确匹配；如果失败，
-     * 则搜索给定参数类型可赋值给构造函数形式参数的最兼容构造函数。结果会被缓存。
+     * 在指定类中查找与给定参数类型最匹配的构造函数。
+     *
+     * 如果所有参数类型均非 `null`，则优先尝试精确匹配（[findConstructorExactWithClasses]）。
+     * 精确匹配失败时，回退到最佳匹配模式：遍历所有声明的构造函数，
+     * 使用基于继承距离的评分算法选择最优匹配。
+     * 查找结果会被缓存。
      *
      * @param clazz          要查找构造函数的类。
-     * @param parameterTypes 期望的参数类型。
-     * @return 已设置为可访问的最佳匹配 [Constructor] 引用。
-     * @throws NoSuchMethodError 如果未找到合适的构造函数。
+     * @param parameterTypes 参数类型数组（元素可为 `null`，表示通配）。
+     * @return 已设置为可访问的最佳匹配 [Constructor] 对象。
+     * @throws NoSuchMethodError 如果在类中未找到任何兼容的构造函数。
      */
     @JvmStatic
     fun findConstructorBestMatch(clazz: Class<*>, vararg parameterTypes: Class<*>?): Constructor<*> {
         if (parameterTypes.all { it != null }) {
             try {
-                @Suppress("UNCHECKED_CAST", "KotlinConstantConditions")
+                @Suppress("UNCHECKED_CAST")
                 return findConstructorExactWithClasses(clazz, *(parameterTypes as Array<Class<*>>))
             } catch (_: NoSuchMethodError) {
             }
@@ -872,8 +1091,7 @@ internal object CoreHelper {
             for (constructor in k.clazz.declaredConstructors) {
                 if (isAssignable(k.parameters, constructor.parameterTypes)) {
                     if (bestMatch == null || compareFit(constructor.parameterTypes, bestMatch.parameterTypes, k.parameters) < 0) {
-                        @Suppress("UNCHECKED_CAST")
-                        bestMatch = constructor as Constructor<*>
+                        bestMatch = constructor
                     }
                 }
             }
@@ -887,14 +1105,15 @@ internal object CoreHelper {
     }
 
     /**
-     * 通过从给定 [args] 推断参数类型来查找最佳匹配的构造函数。
-     * 对于每个非 `null` 参数，使用其运行时类作为参数类型；`null` 参数的类型保留为 `null`，
-     * 可匹配任意非基本类型形参。
+     * 在指定类中根据实际参数值查找最匹配的构造函数。
+     *
+     * 通过运行时参数的实际类型（`javaClass`）推断参数类型，
+     * 然后委托给 [findConstructorBestMatch]（接受类型数组版本）。
      *
      * @param clazz 要查找构造函数的类。
-     * @param args  用于推断参数类型的参数实例。
-     * @return 已设置为可访问的最佳匹配 [Constructor] 引用。
-     * @throws NoSuchMethodError 如果未找到合适的构造函数。
+     * @param args  实际参数值（可为 `null`）。
+     * @return 已设置为可访问的最佳匹配 [Constructor] 对象。
+     * @throws NoSuchMethodError 如果在类中未找到任何兼容的构造函数。
      */
     @JvmStatic
     fun findConstructorBestMatch(clazz: Class<*>, vararg args: Any?): Constructor<*> {
@@ -903,15 +1122,16 @@ internal object CoreHelper {
     }
 
     /**
-     * 使用显式 [parameterTypes] 查找最佳匹配的构造函数，对于 `null` 类型的条目，
-     * 回退使用 [args] 的运行时类型。
+     * 在指定类中根据指定的参数类型和实际参数值查找最匹配的构造函数。
+     *
+     * 对于 [parameterTypes] 中为 `null` 的位置，使用 [args] 中对应元素的实际类型替代。
+     * 然后委托给 [findConstructorBestMatch]（接受类型数组版本）。
      *
      * @param clazz          要查找构造函数的类。
-     * @param parameterTypes 声明的参数类型；`null` 条目将使用对应 [args] 元素的
-     *                       运行时类型进行细化。
-     * @param args           用于类型细化的参数实例。
-     * @return 已设置为可访问的最佳匹配 [Constructor] 引用。
-     * @throws NoSuchMethodError 如果未找到合适的构造函数。
+     * @param parameterTypes 参数类型数组（元素可为 `null`）。
+     * @param args           实际参数值数组。
+     * @return 已设置为可访问的最佳匹配 [Constructor] 对象。
+     * @throws NoSuchMethodError 如果在类中未找到任何兼容的构造函数。
      */
     @JvmStatic
     fun findConstructorBestMatchWithTypes(clazz: Class<*>, parameterTypes: Array<Class<*>>, args: Array<Any?>): Constructor<*> {
@@ -927,15 +1147,17 @@ internal object CoreHelper {
     // ==================== Call Method ====================
 
     /**
-     * 在 [obj] 上按名称调用实例方法，使用 [args] 的运行时类型自动解析最佳匹配的方法。
+     * 调用指定对象的实例方法。
      *
-     * @param obj        要在其上调用方法的对象实例。不能是类引用。
-     * @param methodName 要调用的方法名。
-     * @param args       传递给方法的参数。
-     * @return 方法调用的返回值，如果方法返回 `void` 则返回 `null`。
-     * @throws NoSuchMethodError  如果不存在具有给定名称的合适方法。
-     * @throws IllegalAccessError 如果方法不可访问。
-     * @throws Throwable          被调用方法本身抛出的任何异常（从 [InvocationTargetException] 中解包）。
+     * 通过 [findMethodBestMatch] 根据实际参数值自动查找最佳匹配的方法并调用。
+     *
+     * @param obj        目标对象实例。
+     * @param methodName 方法名称。
+     * @param args       方法参数值（可为 `null`）。
+     * @return 方法的返回值，如果方法返回类型为 `void` 则返回 `null`。
+     * @throws NoSuchMethodError   如果未找到兼容的方法。
+     * @throws IllegalAccessError  如果方法无法访问。
+     * @throws Throwable           方法执行过程中抛出的原始异常。
      */
     @JvmStatic
     fun callMethod(obj: Any, methodName: String, vararg args: Any?): Any? {
@@ -950,17 +1172,18 @@ internal object CoreHelper {
     }
 
     /**
-     * 在 [obj] 上按名称和显式参数类型调用实例方法。当多个方法共享相同名称时，
-     * 此重载可用于消歧，特别是在传递 `null` 参数时。
+     * 使用指定的参数类型调用指定对象的实例方法。
      *
-     * @param obj            要在其上调用方法的对象实例。
-     * @param methodName     要调用的方法名。
-     * @param parameterTypes 用于方法解析的显式参数类型。
-     * @param args           传递给方法的参数。
-     * @return 方法调用的返回值，如果方法返回 `void` 则返回 `null`。
-     * @throws NoSuchMethodError  如果不存在具有给定名称和参数类型的合适方法。
-     * @throws IllegalAccessError 如果方法不可访问。
-     * @throws Throwable          被调用方法本身抛出的任何异常。
+     * 通过 [findMethodBestMatch] 使用给定的参数类型查找最佳匹配的方法并调用。
+     *
+     * @param obj            目标对象实例。
+     * @param methodName     方法名称。
+     * @param parameterTypes 参数类型数组。
+     * @param args           方法参数值（可为 `null`）。
+     * @return 方法的返回值，如果方法返回类型为 `void` 则返回 `null`。
+     * @throws NoSuchMethodError   如果未找到兼容的方法。
+     * @throws IllegalAccessError  如果方法无法访问。
+     * @throws Throwable           方法执行过程中抛出的原始异常。
      */
     @JvmStatic
     fun callMethod(obj: Any, methodName: String, parameterTypes: Array<Class<*>>, vararg args: Any?): Any? {
@@ -977,15 +1200,17 @@ internal object CoreHelper {
     // ==================== Call Static Method ====================
 
     /**
-     * 在 [clazz] 上按名称调用静态方法，使用 [args] 的运行时类型自动解析最佳匹配的方法。
+     * 调用指定类的静态方法。
      *
-     * @param clazz      包含静态方法的类。
-     * @param methodName 要调用的静态方法名。
-     * @param args       传递给方法的参数。
-     * @return 方法调用的返回值，如果方法返回 `void` 则返回 `null`。
-     * @throws NoSuchMethodError  如果不存在具有给定名称的合适方法。
-     * @throws IllegalAccessError 如果方法不可访问。
-     * @throws Throwable          被调用方法本身抛出的任何异常。
+     * 通过 [findMethodBestMatch] 根据实际参数值自动查找最佳匹配的方法并以 `null` 作为接收者调用。
+     *
+     * @param clazz      目标类。
+     * @param methodName 方法名称。
+     * @param args       方法参数值（可为 `null`）。
+     * @return 方法的返回值，如果方法返回类型为 `void` 则返回 `null`。
+     * @throws NoSuchMethodError   如果未找到兼容的方法。
+     * @throws IllegalAccessError  如果方法无法访问。
+     * @throws Throwable           方法执行过程中抛出的原始异常。
      */
     @JvmStatic
     fun callStaticMethod(clazz: Class<*>, methodName: String, vararg args: Any?): Any? {
@@ -1000,17 +1225,18 @@ internal object CoreHelper {
     }
 
     /**
-     * 在 [clazz] 上按名称和显式参数类型调用静态方法。当多个静态方法共享相同名称时，
-     * 此重载可用于消歧。
+     * 使用指定的参数类型调用指定类的静态方法。
      *
-     * @param clazz          包含静态方法的类。
-     * @param methodName     要调用的静态方法名。
-     * @param parameterTypes 用于方法解析的显式参数类型。
-     * @param args           传递给方法的参数。
-     * @return 方法调用的返回值，如果方法返回 `void` 则返回 `null`。
-     * @throws NoSuchMethodError  如果不存在具有给定名称和参数类型的合适方法。
-     * @throws IllegalAccessError 如果方法不可访问。
-     * @throws Throwable          被调用方法本身抛出的任何异常。
+     * 通过 [findMethodBestMatch] 使用给定的参数类型查找最佳匹配的方法并以 `null` 作为接收者调用。
+     *
+     * @param clazz          目标类。
+     * @param methodName     方法名称。
+     * @param parameterTypes 参数类型数组。
+     * @param args           方法参数值（可为 `null`）。
+     * @return 方法的返回值，如果方法返回类型为 `void` 则返回 `null`。
+     * @throws NoSuchMethodError   如果未找到兼容的方法。
+     * @throws IllegalAccessError  如果方法无法访问。
+     * @throws Throwable           方法执行过程中抛出的原始异常。
      */
     @JvmStatic
     fun callStaticMethod(clazz: Class<*>, methodName: String, parameterTypes: Array<Class<*>>, vararg args: Any?): Any? {
@@ -1024,16 +1250,17 @@ internal object CoreHelper {
         }
     }
 
-    // ==================== Object Field ====================
+    // ==================== Object/Static Field & New Instance ====================
 
     /**
-     * 返回给定对象中实例字段的值。按名称在对象的类（及父类）中查找字段，
-     * 并在读取前将其设置为可访问。
+     * 获取指定对象的实例字段值。
      *
-     * @param obj       要获取字段值的对象实例。不能是类引用。
-     * @param fieldName 要读取的字段名。
-     * @return 字段的值，如果字段值为 `null` 则返回 `null`。
-     * @throws NoSuchFieldError   如果字段在对象的类层次结构中不存在。
+     * 通过 [findField] 查找字段并读取其值。
+     *
+     * @param obj       目标对象实例。
+     * @param fieldName 字段名称。
+     * @return 字段的值，可能为 `null`。
+     * @throws NoSuchFieldError   如果未找到该字段。
      * @throws IllegalAccessError 如果字段无法访问。
      */
     @JvmStatic
@@ -1047,13 +1274,14 @@ internal object CoreHelper {
     }
 
     /**
-     * 设置给定对象中实例字段的值。按名称在对象的类（及父类）中查找字段，
-     * 并在写入前将其设置为可访问。
+     * 设置指定对象的实例字段值。
      *
-     * @param obj       要修改字段的对象实例。不能是类引用。
-     * @param fieldName 要写入的字段名。
-     * @param value     要赋给字段的新值。
-     * @throws NoSuchFieldError   如果字段在对象的类层次结构中不存在。
+     * 通过 [findField] 查找字段并设置其值。
+     *
+     * @param obj       目标对象实例。
+     * @param fieldName 字段名称。
+     * @param value     要设置的值，可为 `null`。
+     * @throws NoSuchFieldError   如果未找到该字段。
      * @throws IllegalAccessError 如果字段无法访问。
      */
     @JvmStatic
@@ -1066,15 +1294,15 @@ internal object CoreHelper {
         }
     }
 
-    // ==================== Static Field ====================
-
     /**
-     * 返回给定类中静态字段的值。按名称在类（及父类）中查找字段，并在读取前将其设置为可访问。
+     * 获取指定类的静态字段值。
      *
-     * @param clazz     包含静态字段的类。
-     * @param fieldName 要读取的静态字段名。
-     * @return 静态字段的值，如果字段值为 `null` 则返回 `null`。
-     * @throws NoSuchFieldError   如果字段在类层次结构中不存在。
+     * 通过 [findField] 查找字段并以 `null` 作为接收者读取其值。
+     *
+     * @param clazz     目标类。
+     * @param fieldName 字段名称。
+     * @return 字段的值，可能为 `null`。
+     * @throws NoSuchFieldError   如果未找到该字段。
      * @throws IllegalAccessError 如果字段无法访问。
      */
     @JvmStatic
@@ -1088,12 +1316,14 @@ internal object CoreHelper {
     }
 
     /**
-     * 设置给定类中静态字段的值。按名称在类（及父类）中查找字段，并在写入前将其设置为可访问。
+     * 设置指定类的静态字段值。
      *
-     * @param clazz     包含静态字段的类。
-     * @param fieldName 要写入的静态字段名。
-     * @param value     要赋给静态字段的新值。
-     * @throws NoSuchFieldError   如果字段在类层次结构中不存在。
+     * 通过 [findField] 查找字段并以 `null` 作为接收者设置其值。
+     *
+     * @param clazz     目标类。
+     * @param fieldName 字段名称。
+     * @param value     要设置的值，可为 `null`。
+     * @throws NoSuchFieldError   如果未找到该字段。
      * @throws IllegalAccessError 如果字段无法访问。
      */
     @JvmStatic
@@ -1106,18 +1336,18 @@ internal object CoreHelper {
         }
     }
 
-    // ==================== New Instance ====================
-
     /**
-     * 通过从 [args] 的运行时类型解析最佳匹配的构造函数来创建 [clazz] 的新实例。
+     * 通过最佳匹配的构造函数创建指定类的新实例。
      *
-     * @param clazz 要实例化的类。
-     * @param args  传递给构造函数的参数。
-     * @return 新创建的实例。
-     * @throws NoSuchMethodError   如果未找到合适的构造函数。
-     * @throws IllegalAccessError  如果构造函数不可访问。
-     * @throws InstantiationError  如果类无法实例化（例如它是抽象的）。
-     * @throws Throwable           构造函数本身抛出的任何异常。
+     * 通过 [findConstructorBestMatch] 根据实际参数值自动查找最佳匹配的构造函数并创建实例。
+     *
+     * @param clazz 目标类。
+     * @param args  构造函数参数值（可为 `null`）。
+     * @return 创建的新实例。
+     * @throws NoSuchMethodError     如果未找到兼容的构造函数。
+     * @throws IllegalAccessError    如果构造函数无法访问。
+     * @throws InstantiationError    如果类是抽象类或接口，无法实例化。
+     * @throws Throwable             构造函数执行过程中抛出的原始异常。
      */
     @JvmStatic
     fun newInstance(clazz: Class<*>, vararg args: Any?): Any {
@@ -1134,17 +1364,18 @@ internal object CoreHelper {
     }
 
     /**
-     * 使用显式 [parameterTypes] 创建 [clazz] 的新实例。当多个构造函数具有相似签名，
-     * 或者 `null` 参数需要显式类型消歧时，此重载非常有用。
+     * 使用指定的参数类型通过最佳匹配的构造函数创建指定类的新实例。
      *
-     * @param clazz          要实例化的类。
-     * @param parameterTypes 用于构造函数解析的显式参数类型。
-     * @param args           传递给构造函数的参数。
-     * @return 新创建的实例。
-     * @throws NoSuchMethodError   如果未找到合适的构造函数。
-     * @throws IllegalAccessError  如果构造函数不可访问。
-     * @throws InstantiationError  如果类无法实例化（例如它是抽象的）。
-     * @throws Throwable           构造函数本身抛出的任何异常。
+     * 通过 [findConstructorBestMatchWithTypes] 使用给定的参数类型查找最佳匹配的构造函数并创建实例。
+     *
+     * @param clazz          目标类。
+     * @param parameterTypes 参数类型数组。
+     * @param args           构造函数参数值（可为 `null`）。
+     * @return 创建的新实例。
+     * @throws NoSuchMethodError     如果未找到兼容的构造函数。
+     * @throws IllegalAccessError    如果构造函数无法访问。
+     * @throws InstantiationError    如果类是抽象类或接口，无法实例化。
+     * @throws Throwable             构造函数执行过程中抛出的原始异常。
      */
     @JvmStatic
     fun newInstance(clazz: Class<*>, parameterTypes: Array<Class<*>>, vararg args: Any?): Any {
@@ -1163,78 +1394,78 @@ internal object CoreHelper {
     // ==================== Additional Fields ====================
 
     /**
-     * 额外实例字段的后备存储。将对象实例映射到一个可变的字符串键值对映射。
-     * 使用 [java.util.WeakHashMap] 以便在键对象不再被强引用时允许条目被垃圾回收。
+     * 附加实例字段的存储表。
      *
-     * **注意：** 当作为键的对象不再被任何强引用持有时（即可被垃圾回收时），
-     * 其对应的附加数据映射会被自动清除。这意味着如果使用者仅通过弱引用或软引用持有对象，
-     * 附加数据可能在意想不到的时刻丢失。在长时间运行的场景中，请确保对需要保留附加数据的
-     * 对象保持强引用，或在数据丢失前主动读取。
+     * 使用 [WeakHashMap] 以弱引用持有对象键，当对象被 GC 回收后，
+     * 对应的附加字段会自动清理，避免内存泄漏。
+     * 访问时通过 [synchronized] 保证线程安全。
      */
-    private val additionalFields = WeakHashMap<Any, MutableMap<String, Any?>>()
+    private val additionalFields = WeakHashMap<Any, HashMap<String, Any?>>()
 
     /**
-     * 将任意值附加到对象实例上，模拟一个额外的实例字段。
-     * 该值可以随后通过 [getAdditionalInstanceField] 获取，或通过
-     * [removeAdditionalInstanceField] 移除。
+     * 为指定对象设置一个附加的实例字段。
      *
-     * 内部使用 [ConcurrentHashMap] 存储每个对象的附加字段映射，保证线程安全。
+     * 附加字段不依赖于类的字段定义，可以为任意对象动态关联键值对数据。
+     * 如果指定的键已存在，则更新其值并返回旧值。
      *
-     * @param obj   要附加值的对象实例。不能为 `null`。
-     * @param key   标识此额外字段的键。不能为 `null`。
-     * @param value 要存储的值，或 `null` 以存储显式的 null 映射。
-     * @return 此实例/键组合之前存储的值，如果之前没有映射则返回 `null`。
-     * @throws NullPointerException 如果 [obj] 或 [key] 为 `null`。
+     * @param obj   目标对象实例。
+     * @param key   字段键名。
+     * @param value 要设置的值，可为 `null`。
+     * @return 该键先前关联的值，如果之前未设置则返回 `null`。
      */
     @JvmStatic
     fun setAdditionalInstanceField(obj: Any, key: String, value: Any?): Any? {
-        val map: MutableMap<String, Any?>
         synchronized(additionalFields) {
-            map = additionalFields.getOrPut(obj) { ConcurrentHashMap() }
+            val map = additionalFields.getOrPut(obj) { HashMap() }
+            return map.put(key, value)
         }
-        return map.put(key, value)
     }
 
     /**
-     * 返回之前通过 [setAdditionalInstanceField] 存储的值。
+     * 获取指定对象的附加实例字段值。
      *
-     * @param obj 存储值的对象实例。不能为 `null`。
-     * @param key 标识额外字段的键。不能为 `null`。
-     * @return 存储的值，如果此实例/键组合没有存储值（或显式存储了 `null`）则返回 `null`。
-     * @throws NullPointerException 如果 [obj] 或 [key] 为 `null`。
+     * @param obj 目标对象实例。
+     * @param key 字段键名。
+     * @return 该键关联的值，如果未设置则返回 `null`。
      */
     @JvmStatic
     fun getAdditionalInstanceField(obj: Any, key: String): Any? {
-        val map = synchronized(additionalFields) {
-            additionalFields[obj] ?: return null
+        synchronized(additionalFields) {
+            val map = additionalFields[obj] ?: return null
+            return map[key]
         }
-        return map[key]
     }
 
     /**
-     * 移除并返回之前通过 [setAdditionalInstanceField] 存储的值。
+     * 移除指定对象的附加实例字段。
      *
-     * @param obj 存储值的对象实例。不能为 `null`。
-     * @param key 标识额外字段的键。不能为 `null`。
-     * @return 之前存储的值，如果此实例/键组合没有存储值则返回 `null`。
-     * @throws NullPointerException 如果 [obj] 或 [key] 为 `null`。
+     * 如果移除后该对象不再有任何附加字段，则同时清理该对象的映射条目。
+     *
+     * @param obj 目标对象实例。
+     * @param key 字段键名。
+     * @return 被移除的值，如果该键不存在则返回 `null`。
      */
     @JvmStatic
     fun removeAdditionalInstanceField(obj: Any, key: String): Any? {
-        val map = synchronized(additionalFields) {
-            additionalFields[obj] ?: return null
+        synchronized(additionalFields) {
+            val map = additionalFields[obj] ?: return null
+            val removed = map.remove(key)
+            if (map.isEmpty()) {
+                additionalFields.remove(obj)
+            }
+            return removed
         }
-        return map.remove(key)
     }
 
     /**
-     * 将任意值附加到类上，模拟一个额外的静态字段。
-     * 委托给 [setAdditionalInstanceField]，使用 [clazz] 对象本身作为键。
+     * 为指定类设置一个附加的静态字段。
      *
-     * @param clazz 要附加值的类。不能为 `null`。
-     * @param key   标识此额外静态字段的键。不能为 `null`。
-     * @param value 要存储的值，或 `null` 以存储显式的 null 映射。
-     * @return 此类/键组合之前存储的值，如果之前没有映射则返回 `null`。
+     * 实现上将 [Class] 对象作为键委托给 [setAdditionalInstanceField]。
+     *
+     * @param clazz 目标类。
+     * @param key   字段键名。
+     * @param value 要设置的值，可为 `null`。
+     * @return 该键先前关联的值，如果之前未设置则返回 `null`。
      */
     @JvmStatic
     fun setAdditionalStaticField(clazz: Class<*>, key: String, value: Any?): Any? {
@@ -1242,11 +1473,13 @@ internal object CoreHelper {
     }
 
     /**
-     * 返回之前通过 [setAdditionalStaticField] 存储的值。
+     * 获取指定类的附加静态字段值。
      *
-     * @param clazz 存储值的类。
-     * @param key   标识额外静态字段的键。
-     * @return 存储的值，如果没有存储则返回 `null`。
+     * 实现上将 [Class] 对象作为键委托给 [getAdditionalInstanceField]。
+     *
+     * @param clazz 目标类。
+     * @param key   字段键名。
+     * @return 该键关联的值，如果未设置则返回 `null`。
      */
     @JvmStatic
     fun getAdditionalStaticField(clazz: Class<*>, key: String): Any? {
@@ -1254,11 +1487,13 @@ internal object CoreHelper {
     }
 
     /**
-     * 移除并返回之前通过 [setAdditionalStaticField] 存储的值。
+     * 移除指定类的附加静态字段。
      *
-     * @param clazz 存储值的类。
-     * @param key   标识额外静态字段的键。
-     * @return 之前存储的值，如果没有存储则返回 `null`。
+     * 实现上将 [Class] 对象作为键委托给 [removeAdditionalInstanceField]。
+     *
+     * @param clazz 目标类。
+     * @param key   字段键名。
+     * @return 被移除的值，如果该键不存在则返回 `null`。
      */
     @JvmStatic
     fun removeAdditionalStaticField(clazz: Class<*>, key: String): Any? {
