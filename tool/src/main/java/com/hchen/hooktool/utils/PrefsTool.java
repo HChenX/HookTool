@@ -36,7 +36,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 /**
- * 共享首选项工具
+ * 共享首选项工具类。
+ * <p>
+ * 提供在 Xposed 环境和普通应用环境中读写 SharedPreferences 的便捷方法。
  *
  * @author 焕晨HChen
  */
@@ -49,7 +51,10 @@ public final class PrefsTool {
     }
 
     /**
-     * 从应用私有目录读取/写入共享首选项数据
+     * 从应用私有目录读取或写入共享首选项数据。
+     *
+     * @param context 上下文
+     * @return SharedPreferences 实例
      */
     @NonNull
     public static SharedPreferences prefs(@NonNull Context context) {
@@ -57,7 +62,11 @@ public final class PrefsTool {
     }
 
     /**
-     * 从应用私有目录读取/写入共享首选项数据
+     * 从应用私有目录读取或写入指定名称的共享首选项数据。
+     *
+     * @param context   上下文
+     * @param prefsName 偏好设置名称
+     * @return SharedPreferences 实例
      */
     @NonNull
     public static SharedPreferences prefs(@NonNull Context context, @NonNull String prefsName) {
@@ -65,7 +74,9 @@ public final class PrefsTool {
     }
 
     /**
-     * Xposed 环境中读取模块的共享首选项
+     * 在 Xposed 环境中读取模块的共享首选项。
+     *
+     * @return SharedPreferences 实例
      */
     @NonNull
     public static SharedPreferences prefs() {
@@ -73,7 +84,10 @@ public final class PrefsTool {
     }
 
     /**
-     * Xposed 环境中读取模块的共享首选项
+     * 在 Xposed 环境中读取模块的指定名称的共享首选项。
+     *
+     * @param prefsName 偏好设置名称
+     * @return SharedPreferences 实例
      */
     @NonNull
     public static SharedPreferences prefs(@NonNull String prefsName) {

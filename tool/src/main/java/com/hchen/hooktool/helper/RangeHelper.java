@@ -24,32 +24,35 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 /**
- * 范围模式
+ * 版本号范围比较模式定义类。提供大于、小于、等于、大于等于、小于等于等比较模式常量。
  *
  * @author 焕晨HChen
  */
 public final class RangeHelper {
     /**
-     * 大于
+     * 大于。
      */
     public static final int GT = 0;
     /**
-     * 小于
+     * 小于。
      */
     public static final int LT = 1;
     /**
-     * 等于
+     * 等于。
      */
     public static final int EQ = 2;
     /**
-     * 大于等于
+     * 大于等于。
      */
     public static final int GE = 3;
     /**
-     * 小于等于
+     * 小于等于。
      */
     public static final int LE = 4;
 
+    /**
+     * 范围比较模式注解，用于约束参数取值范围。
+     */
     @IntDef(value = {
         GT,
         LT,

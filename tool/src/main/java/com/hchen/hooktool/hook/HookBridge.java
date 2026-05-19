@@ -25,13 +25,23 @@ import java.util.Objects;
 import io.github.libxposed.api.XposedInterface;
 
 /**
- * Hook 适配桥
+ * 钩子桥接器。
+ * <p>
+ * 作为 {@link AbsHook} 与 {@link XposedInterface.HookBuilder} 之间的桥梁，
+ * 负责将自定义的钩子实现适配到 Xposed API 的拦截器接口。
+ * 内部处理钩子优先级设置、生命周期调度（before/proceed/after）以及异常传播逻辑。
  *
  * @author 焕晨HChen
+ * @see AbsHook
  */
 public final class HookBridge {
     private final XposedInterface.HookBuilder builder;
 
+    /**
+     * 构造钩子桥接器。
+     *
+     * @param builder Xposed API 的钩子构建器，用于配置和创建钩子
+     */
     public HookBridge(@NonNull XposedInterface.HookBuilder builder) {
         this.builder = builder;
     }
@@ -47,9 +57,9 @@ public final class HookBridge {
     }
 
     /**
-     * 设置钩子拦截器
+     * 设置钩子拦截器。
      * <p>
-     * 将自定义的 AbsHook 实现与 Xposed API 连接起来
+     * 将自定义的 AbsHook 实现与 Xposed API 连接起来。
      *
      * @param absHook 自定义的钩子实现
      * @return 钩子句柄，可用于后续操作（如解除钩子）

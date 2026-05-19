@@ -34,9 +34,16 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import io.github.libxposed.api.XposedInterface;
 
 /**
- * AbsHook
+ * 钩子核心抽象基类。
+ * <p>
+ * 提供钩子执行的完整生命周期管理，包括 before（前置）、proceed（调用原方法）、after（后置）三个阶段。
+ * 使用 {@link ThreadLocal} 结合状态栈实现可重入的线程安全状态管理，支持同一线程中嵌套调用同一钩子。
+ * <p>
+ * 子类可通过重写 {@link #before()}、{@link #proceed(XposedInterface.Chain)}、{@link #after()}
+ * 方法在不同阶段插入自定义逻辑，并通过 {@link #onThrow(StageEnum, Throwable)} 处理异常。
  *
  * @author 焕晨HChen
+ * @see HookBridge
  */
 public abstract class AbsHook {
     int priority; // 钩子优先级
@@ -126,50 +133,66 @@ public abstract class AbsHook {
     };
     private final CopyOnWriteArrayList<XposedInterface.HookHandle> handles = new CopyOnWriteArrayList<>();
 
+    /**
+     * 钩子执行阶段枚举。
+     * <p>
+     * 标识钩子执行过程中所处的生命周期阶段，用于异常处理回调 {@link #onThrow(StageEnum, Throwable)} 中定位异常来源。
+     */
     public enum StageEnum {
+        /** 前置阶段，原始方法调用之前。 */
         BEFORE,
+        /** 调用阶段，正在调用原始方法。 */
         PROCEED,
+        /** 后置阶段，原始方法调用之后。 */
         AFTER
     }
 
+    /**
+     * 使用默认优先级构造钩子实例。
+     */
     public AbsHook() {
         this(PRIORITY_DEFAULT);
     }
 
+    /**
+     * 使用指定优先级构造钩子实例。
+     *
+     * @param priority 钩子优先级，值越小优先级越高
+     */
     public AbsHook(int priority) {
         this.priority = priority;
     }
 
     /**
-     * 钩子执行前的回调方法
+     * 钩子执行前的回调方法。
      * <p>
-     * 在原始方法执行前被调用，可用于修改参数或执行前置逻辑
+     * 在原始方法执行前被调用，可用于修改参数或执行前置逻辑。
      */
     public void before() {
     }
 
     /**
-     * 桥接新 API 的特殊方法
+     * 桥接新 API 的特殊方法。
      * <p>
-     * 重写此方法可以自由调用 proceed 呼叫原方法
+     * 重写此方法可以自由调用 proceed 呼叫原方法。
      * <p>
-     * 此方法的返回值将作为原方法的默认返回值使用，除非设置了 setResult
+     * 此方法的返回值将作为原方法的默认返回值使用，除非设置了 setResult。
      */
     public Object proceed(@NonNull XposedInterface.Chain chain) throws Throwable {
         return callProceed();
     }
 
     /**
-     * 钩子执行后的回调方法
-     * 在原始方法执行后被调用，可用于修改返回值或执行后置逻辑
+     * 钩子执行后的回调方法。
+     * 在原始方法执行后被调用，可用于修改返回值或执行后置逻辑。
      */
     public void after() {
     }
 
     /**
-     * 异常处理回调方法
+     * 异常处理回调方法。
      * <p>
-     * 当钩子执行过程中发生异常时被调用
+     * 当钩子执行过程中发生异常时被调用。
      *
      * @param stage 异常发生的阶段
      * @param e     发生的异常
@@ -179,6 +202,14 @@ public abstract class AbsHook {
         return false;
     }
 
+    /**
+     * 获取当前线程的钩子调用状态。
+     * <p>
+     * 从 {@link ThreadLocal} 状态栈中获取当前调用状态，若不在拦截生命周期内调用则抛出异常。
+     *
+     * @return 当前调用状态
+     * @throws IllegalStateException 当钩子状态丢失或不在拦截生命周期内时抛出
+     */
     @NonNull
     private CallState getState() {
         StateStack stack = stackLocal.get();
@@ -190,7 +221,7 @@ public abstract class AbsHook {
     }
 
     /**
-     * 获取当前被钩住的可执行对象
+     * 获取当前被钩住的可执行对象。
      *
      * @return 当前被钩住的可执行对象（方法或构造函数）
      */
@@ -200,7 +231,7 @@ public abstract class AbsHook {
     }
 
     /**
-     * 获取当前被钩住方法的 this 对象
+     * 获取当前被钩住方法的 this 对象。
      *
      * @return 当前被钩住方法的 this 对象
      */
@@ -209,9 +240,9 @@ public abstract class AbsHook {
     }
 
     /**
-     * 获取当前被钩住方法的参数数组
+     * 获取当前被钩住方法的参数数组。
      * <p>
-     * 如果参数已被修改，则返回修改后的值
+     * 如果参数已被修改，则返回修改后的值。
      *
      * @return 当前被钩住方法的参数数组
      */
@@ -225,9 +256,9 @@ public abstract class AbsHook {
     }
 
     /**
-     * 获取当前被钩住方法的指定索引参数
+     * 获取当前被钩住方法的指定索引参数。
      * <p>
-     * 如果参数已被修改，则返回修改后的值
+     * 如果参数已被修改，则返回修改后的值。
      *
      * @param index 参数索引
      * @return 指定索引的参数值
@@ -243,7 +274,7 @@ public abstract class AbsHook {
     }
 
     /**
-     * 设置当前被钩住方法的指定索引参数
+     * 设置当前被钩住方法的指定索引参数。
      *
      * @param index 参数索引
      * @param value 新的参数值
@@ -258,7 +289,7 @@ public abstract class AbsHook {
     }
 
     /**
-     * 设置当前被钩住方法的所有参数
+     * 设置当前被钩住方法的所有参数。
      *
      * @param args 新的参数数组
      * @throws IndexOutOfBoundsException 当参数数量不匹配时抛出
@@ -277,9 +308,9 @@ public abstract class AbsHook {
     }
 
     /**
-     * 获取当前被钩住方法的返回值
+     * 获取当前被钩住方法的返回值。
      * <p>
-     * 如果返回值已被修改，则返回修改后的值
+     * 如果返回值已被修改，则返回修改后的值。
      *
      * @return 当前被钩住方法的返回值
      */
@@ -289,7 +320,7 @@ public abstract class AbsHook {
     }
 
     /**
-     * 设置当前被钩住方法的返回值
+     * 设置当前被钩住方法的返回值。
      *
      * @param result 新的返回值
      */
@@ -300,7 +331,7 @@ public abstract class AbsHook {
     }
 
     /**
-     * 设置当前被钩住方法的异常
+     * 设置当前被钩住方法的异常。
      *
      * @param throwable 要抛出的异常
      */
@@ -309,7 +340,7 @@ public abstract class AbsHook {
     }
 
     /**
-     * 获取当前被钩住方法的异常
+     * 获取当前被钩住方法的异常。
      *
      * @return 当前被钩住方法的异常
      */
@@ -318,16 +349,35 @@ public abstract class AbsHook {
         return getState().throwable;
     }
 
+    /**
+     * 注册钩子句柄。
+     * <p>
+     * 将钩子句柄添加到内部列表中，用于后续解除钩子操作。
+     *
+     * @param handle 钩子句柄
+     */
     final void setHandle(@NonNull XposedInterface.HookHandle handle) {
         this.handles.add(handle);
     }
 
     // --- 生命周期管理 ---
 
+    /**
+     * 进入钩子拦截生命周期。
+     * <p>
+     * 将当前调用链压入线程状态栈，使后续的钩子回调方法可以访问调用上下文。
+     *
+     * @param chain 当前调用链
+     */
     final void enter(@NonNull XposedInterface.Chain chain) {
         Objects.requireNonNull(stackLocal.get()).push(chain);
     }
 
+    /**
+     * 退出钩子拦截生命周期。
+     * <p>
+     * 从线程状态栈中弹出当前调用状态，释放相关资源。
+     */
     final void exit() {
         StateStack stack = stackLocal.get();
         if (stack != null) {
@@ -335,14 +385,21 @@ public abstract class AbsHook {
         }
     }
 
+    /**
+     * 获取内部调用链。
+     * <p>
+     * 返回的调用链包装了原始调用链，支持参数和返回值的修改。
+     *
+     * @return 内部调用链实例
+     */
     @NonNull final XposedInterface.Chain getChain() {
         return getState().innerChain;
     }
 
     /**
-     * 调用原始方法
+     * 调用原始方法。
      * <p>
-     * 根据参数是否修改，决定使用修改后的参数还是原始参数调用原始方法
+     * 根据参数是否修改，决定使用修改后的参数还是原始参数调用原始方法。
      *
      * @return 原始方法的返回值
      * @throws Throwable 执行过程中可能抛出的异常
@@ -356,18 +413,30 @@ public abstract class AbsHook {
         }
     }
 
+    /**
+     * 设置原始方法的返回值。
+     * <p>
+     * 在 proceed 阶段由框架内部调用，记录原始方法的执行结果。
+     *
+     * @param originalResult 原始方法的返回值
+     */
     final void setOriginalResult(Object originalResult) {
         getState().originalResult = originalResult;
     }
 
+    /**
+     * 判断返回值是否已被修改。
+     *
+     * @return 如果返回值已被修改则返回 {@code true}，否则返回 {@code false}
+     */
     final boolean isResultChanged() {
         return getState().isResultChanged;
     }
 
     /**
-     * 解除自身钩子
+     * 解除自身钩子。
      * <p>
-     * 移除当前钩子的所有拦截
+     * 移除当前钩子的所有拦截。
      */
     final public void unHookSelf() {
         if (handles.isEmpty()) {
@@ -379,9 +448,9 @@ public abstract class AbsHook {
     }
 
     /**
-     * 观察调用信息
+     * 观察调用信息。
      * <p>
-     * 生成当前调用的详细信息字符串
+     * 生成当前调用的详细信息字符串。
      */
     @NonNull final public String observeCall() {
         return LogExpand.observeCall(this);
@@ -399,9 +468,9 @@ public abstract class AbsHook {
     }
 
     /**
-     * 内部调用链实现
+     * 内部调用链实现。
      * <p>
-     * 用于包装原始调用链，处理参数和返回值的修改
+     * 用于包装原始调用链，处理参数和返回值的修改。
      */
     @SuppressWarnings("ClassCanBeRecord")
     private static class InnerChain implements XposedInterface.Chain {

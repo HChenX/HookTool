@@ -19,13 +19,17 @@
 package com.hchen.hooktool.callback;
 
 /**
- * 消费者
+ * 可抛出异常的供应者接口。用于封装可能产生异常的计算逻辑。
  *
+ * @param <R> 返回值类型
  * @author 焕晨HChen
  */
 public interface IDecomposer<R> {
     /**
-     * 获取执行的结果，并主动抛出错误（如果有）
+     * 执行计算并返回结果，可能抛出异常。
+     *
+     * @return 计算结果
+     * @throws Throwable 执行过程中可能抛出的异常
      */
     R get() throws Throwable;
 }

@@ -51,7 +51,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * Shell 工具
+ * Shell 命令执行工具类。提供同步和异步的 Shell 命令执行能力，支持 Root 和非 Root 模式。
+ * 内部维护持久化的 Shell 流，通过 UUID 标记命令边界，实现多命令并发执行。
  * <p>
  * 使用方法:
  * <p>
@@ -121,9 +122,9 @@ public final class ShellTool {
     }
 
     /**
-     * 获取 Shell 实例
-     * <p>
-     * 请注意您只能创建一个全局 Shell 实例
+     * 获取 ShellTool 实例并初始化 Shell 流。
+     *
+     * @return ShellTool 实例
      */
     @NonNull
     public static ShellTool obtain() {
@@ -131,6 +132,12 @@ public final class ShellTool {
         return shellTool;
     }
 
+    /**
+     * 获取 ShellTool 实例并指定是否使用 Root 模式。
+     *
+     * @param isRoot 是否使用 Root 模式
+     * @return ShellTool 实例
+     */
     @NonNull
     public static ShellTool obtain(boolean isRoot) {
         setRoot(isRoot);
@@ -138,9 +145,10 @@ public final class ShellTool {
     }
 
     /**
-     * 是否使用 Root 模式运行
-     * <p>
-     * 请在 {@link #obtain()} 前调用
+     * 设置是否使用 Root 模式。
+     *
+     * @param isRoot 是否使用 Root 模式
+     * @return ShellTool 实例
      */
     @NonNull
     public static ShellTool setRoot(boolean isRoot) {
@@ -149,9 +157,10 @@ public final class ShellTool {
     }
 
     /**
-     * 设置自定义启动命令
-     * <p>
-     * 请在 {@link #obtain()} 前调用
+     * 设置自定义的 Shell 命令。
+     *
+     * @param commands Shell 命令数组，长度为 2，第一个为 Root 命令，第二个为非 Root 命令
+     * @return ShellTool 实例
      */
     @NonNull
     public static ShellTool setShellCommands(@Size(2) String[] commands) {
@@ -160,9 +169,10 @@ public final class ShellTool {
     }
 
     /**
-     * 添加全局执行回调，传入 null 则删除回调
-     * <p>
-     * 请在 {@link #obtain()} 前调用
+     * 设置全局执行监听器。
+     *
+     * @param iExecListener 执行监听器
+     * @return ShellTool 实例
      */
     @NonNull
     public static ShellTool setExecListener(@Nullable IExecListener iExecListener) {
@@ -171,11 +181,10 @@ public final class ShellTool {
     }
 
     /**
-     * 设置全局命令监听器
-     * <p>
-     * 您可以通过此监听器，判断命令是否可以被合法的输入并执行
-     * <p>
-     * 请在 {@link #obtain()} 前调用
+     * 设置全局命令监听器。
+     *
+     * @param listener 命令监听器
+     * @return ShellTool 实例
      */
     @NonNull
     public static ShellTool setCommandListener(@Nullable ICommandListener listener) {
@@ -184,32 +193,25 @@ public final class ShellTool {
     }
 
     /**
-     * Shell 是否处于活动状态
+     * 判断当前 Shell 流是否处于活跃状态。
+     *
+     * @return 是否活跃
      */
     public static boolean isActive() {
         return shellImpl.isActive();
     }
 
     /**
-     * 关闭 Shell 流
+     * 关闭当前 Shell 流。
      */
     public static void close() {
         shellImpl.close();
     }
 
     /**
-     * 是否使用命令拼接模式
-     * <p>
-     * 请注意：请务必在 {@link ShellTool#cmd(String)} 前调用！
-     * <p>
-     * 使用此模式后，在下次调用 {@link ShellTool#exec()} 或 {@link ShellTool#async()} 之前都会保持在拼接模式
-     * <pre>{@code
-     *     ShellTool.obtain().enableSplicingMode()
-     *          .cmd("if [[ hello == world ]]; then")
-     *          .cmd("  echo \"hello world\"       ")
-     *          .cmd("fi                           ")
-     *          .exec();
-     * }
+     * 启用命令拼接模式，后续通过 cmd 添加的命令将被拼接为一条命令执行。
+     *
+     * @return ShellTool 实例
      */
     @NonNull
     public ShellTool enableSplicingMode() {
@@ -217,7 +219,10 @@ public final class ShellTool {
     }
 
     /**
-     * 输入命令
+     * 添加待执行的命令。
+     *
+     * @param cmd 命令字符串
+     * @return ShellTool 实例
      */
     @NonNull
     public ShellTool cmd(@NonNull String cmd) {
@@ -225,7 +230,9 @@ public final class ShellTool {
     }
 
     /**
-     * 同步执行命令，并获取返回值
+     * 同步执行已添加的命令。
+     *
+     * @return 命令执行结果
      */
     @Nullable
     public ShellResult exec() {
@@ -233,12 +240,17 @@ public final class ShellTool {
     }
 
     /**
-     * 异步执行命令
+     * 异步执行已添加的命令。
      */
     public void async() {
         shellImpl.async(null);
     }
 
+    /**
+     * 异步执行已添加的命令，并指定执行监听器。
+     *
+     * @param iExecListener 执行监听器
+     */
     public void async(@NonNull IExecListener iExecListener) {
         shellImpl.async(iExecListener);
     }
@@ -246,21 +258,30 @@ public final class ShellTool {
     // --------------------------------------- Root Check -------------------------------------------
 
     /**
-     * 检查是否支持 Root
+     * 同步检查当前设备是否支持 Root 权限。
+     *
+     * @return 是否支持 Root
      */
     public static boolean isRootAvailable() {
         return isRootAvailable(true, null);
     }
 
     /**
-     * 检查是否支持 Root
+     * 同步检查当前设备是否支持 Root 权限并通过监听器返回结果。
+     *
+     * @param iExecListener 执行监听器
+     * @return 是否支持 Root
      */
     public static boolean isRootAvailable(@NonNull IExecListener iExecListener) {
         return isRootAvailable(true, iExecListener);
     }
 
     /**
-     * 检查是否支持 Root
+     * 检查当前设备是否支持 Root 权限。
+     *
+     * @param sync           是否同步执行
+     * @param iExecListener  执行监听器
+     * @return 是否支持 Root（同步模式下有效）
      */
     public static boolean isRootAvailable(boolean sync, @Nullable IExecListener iExecListener) {
         Callable<Integer> callable = new Callable<Integer>() {

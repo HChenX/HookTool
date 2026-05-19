@@ -26,15 +26,21 @@ import java.util.Arrays;
 import java.util.Objects;
 
 /**
- * Shell 返回数据
+ * Shell 命令执行结果。封装命令、退出码、标准输出和标准错误输出。
  *
+ * @param command  执行的命令
+ * @param exitCode 退出码
+ * @param outputs  标准输出内容
+ * @param errors   标准错误输出内容
  * @author 焕晨HChen
  * @noinspection DeconstructionCanBeUsed
  */
 public record ShellResult(@NonNull String command, @NonNull String exitCode,
                           @NonNull String[] outputs, @NonNull String[] errors) {
     /**
-     * 是否成功执行
+     * 判断命令是否执行成功。
+     *
+     * @return 退出码为 0 时返回 true
      */
     public boolean isSuccess() {
         return TextUtils.equals("0", exitCode);

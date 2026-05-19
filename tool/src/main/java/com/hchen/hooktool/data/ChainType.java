@@ -19,14 +19,29 @@
 package com.hchen.hooktool.data;
 
 /**
- * 链式类型
+ * 链式调用类型枚举。
  *
  * @author 焕晨HChen
  */
 public enum ChainType {
+    /**
+     * 使用指定的可执行对象。
+     */
     EXECUTABLE,
+    /**
+     * 查找指定方法。
+     */
     FIND_METHOD,
+    /**
+     * 查找所有指定名称的方法。
+     */
     FIND_ALL_METHOD,
+    /**
+     * 查找指定构造函数。
+     */
     FIND_CONSTRUCTOR,
+    /**
+     * 查找所有构造函数。
+     */
     FIND_ALL_CONSTRUCTOR
 }

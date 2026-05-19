@@ -28,19 +28,27 @@ import com.hchen.hooktool.data.AppData;
 import java.util.List;
 
 /**
- * 包信息获取器
+ * 应用数据获取器接口。定义了获取应用包信息列表和异步回调的契约。
  *
+ * @param <T> 包信息的类型参数
  * @author 焕晨HChen
  */
 public interface IAppDataGetter<T> {
     /**
-     * 需要获取 AppData 信息的包列表
+     * 获取需要查询的应用包列表。
+     *
+     * @param pm PackageManager 实例
+     * @return 包信息列表
+     * @throws PackageManager.NameNotFoundException 包未找到时抛出
      */
     @NonNull
     List<T> getPackages(@NonNull PackageManager pm) throws PackageManager.NameNotFoundException;
 
     /**
-     * 异步获取 AppData 数据或抛出错误
+     * 异步获取应用数据的回调方法。
+     *
+     * @param appData 应用数据数组
+     * @param e       异常信息，如果为 null 表示成功
      */
     default void getAsyncAppData(@NonNull AppData[] appData, @Nullable PackageManager.NameNotFoundException e) {
     }

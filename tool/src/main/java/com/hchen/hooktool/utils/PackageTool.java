@@ -44,7 +44,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * 包工具
+ * 包信息工具类。
+ * <p>
+ * 提供应用安装状态判断、系统应用判断以及应用信息查询等功能。
  *
  * @author 焕晨HChen
  */
@@ -55,7 +57,11 @@ public final class PackageTool {
     }
 
     /**
-     * 判断应用是否已被安装
+     * 判断应用是否已被安装。
+     *
+     * @param context     上下文
+     * @param packageName 应用包名
+     * @return 是否已安装
      */
     public static boolean isInstalled(@NonNull Context context, @NonNull String packageName) {
         try {
@@ -67,7 +73,11 @@ public final class PackageTool {
     }
 
     /**
-     * 判断应用是否被禁用
+     * 判断应用是否被禁用。
+     *
+     * @param context     上下文
+     * @param packageName 应用包名
+     * @return 是否被禁用
      */
     public static boolean isDisable(@NonNull Context context, @NonNull String packageName) {
         try {
@@ -80,9 +90,12 @@ public final class PackageTool {
     }
 
     /**
-     * 根据 uid 获取 user id
+     * 根据 uid 获取 user id。
      * <p>
-     * 获取失败则返回 -1
+     * 获取失败则返回 -1。
+     *
+     * @param uid 应用的 uid
+     * @return user id，获取失败则返回 -1
      */
     public static int getUserId(int uid) {
         return TryHelper.doTry(new IDecomposer<Integer>() {
@@ -100,7 +113,10 @@ public final class PackageTool {
     }
 
     /**
-     * 判断是否是系统应用
+     * 判断是否是系统应用。
+     *
+     * @param app ApplicationInfo 对象
+     * @return 是否为系统应用
      */
     public static boolean isSystem(@NonNull ApplicationInfo app) {
         if (app.uid < 10000) {
@@ -109,14 +125,22 @@ public final class PackageTool {
         return (app.flags & (ApplicationInfo.FLAG_SYSTEM | ApplicationInfo.FLAG_UPDATED_SYSTEM_APP)) != 0;
     }
 
+    /**
+     * 通过自定义代码同步获取应用数据。
+     *
+     * @param context       上下文
+     * @param iAppDataGetter 应用数据获取回调
+     * @param <T>           返回的包信息类型
+     * @return AppData 数组，包含应用详细信息
+     */
     public static <T> AppData[] getAppData(@NonNull Context context, @NonNull IAppDataGetter<T> iAppDataGetter) {
         return getAppData(context, false, iAppDataGetter);
     }
 
     /**
-     * 通过自定义代码获取 Package 信息
+     * 通过自定义代码获取应用数据。
      * <p>
-     * 支持: PackageInfo, ResolveInfo, ActivityInfo, ApplicationInfo, ProviderInfo. 类型的返回值
+     * 支持：PackageInfo、ResolveInfo、ActivityInfo、ApplicationInfo、ProviderInfo 类型的返回值。
      * <p>
      * 示例：
      * <p>
@@ -149,7 +173,11 @@ public final class PackageTool {
      * });
      * }
      *
-     * @return AppData[] 应用详细信息
+     * @param context       上下文
+     * @param async         是否异步获取
+     * @param iAppDataGetter 应用数据获取回调
+     * @param <T>           返回的包信息类型
+     * @return AppData 数组，包含应用详细信息；异步模式下返回 null
      * @see #createAppData(PackageManager, Object)
      */
     public static <T> AppData[] getAppData(@NonNull Context context, boolean async, @NonNull IAppDataGetter<T> iAppDataGetter) {
@@ -197,7 +225,12 @@ public final class PackageTool {
     }
 
     /**
-     * @noinspection IfCanBeSwitch
+     * 根据包信息对象创建 AppData 实例。
+     *
+     * @param pm PackageManager 实例
+     * @param t  包信息对象，支持 PackageInfo、ApplicationInfo、ResolveInfo、ActivityInfo、ServiceInfo、ProviderInfo
+     * @param <T> 包信息类型
+     * @return AppData 实例
      */
     @NonNull
     public static <T> AppData createAppData(@NonNull PackageManager pm, @NonNull T t) {

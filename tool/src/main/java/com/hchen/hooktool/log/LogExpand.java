@@ -28,7 +28,7 @@ import java.io.StringWriter;
 import java.util.Arrays;
 
 /**
- * 日志扩展
+ * 日志扩展工具类。提供堆栈跟踪获取、日志标签自动识别以及方法调用观察等增强日志功能。
  *
  * @author 焕晨HChen
  */
@@ -36,6 +36,12 @@ public final class LogExpand {
     private LogExpand() {
     }
 
+    /**
+     * 将异常堆栈跟踪转换为字符串。
+     *
+     * @param e 异常对象
+     * @return 堆栈跟踪字符串
+     */
     @NonNull
     public static String printStackTrace(@NonNull Throwable e) {
         StringWriter stringWriter = new StringWriter();
@@ -45,6 +51,11 @@ public final class LogExpand {
         return stringWriter.toString();
     }
 
+    /**
+     * 获取当前线程的堆栈跟踪信息。
+     *
+     * @return 堆栈跟踪信息字符串
+     */
     @NonNull
     public static String getStackTrace() {
         StringBuilder stringBuilder = new StringBuilder();
@@ -57,6 +68,11 @@ public final class LogExpand {
         return stringBuilder.toString();
     }
 
+    /**
+     * 根据调用栈自动识别日志标签。
+     *
+     * @return 日志标签
+     */
     @NonNull
     public static String getTag() {
         String[] logExpandPaths = ModuleConfig.getLogExpandPaths();
@@ -92,6 +108,12 @@ public final class LogExpand {
         return ModuleConfig.getLogTag();
     }
 
+    /**
+     * 生成当前钩子调用的详细信息字符串。
+     *
+     * @param hook 钩子对象
+     * @return 调用信息字符串
+     */
     @NonNull
     @SuppressWarnings("StringBufferReplaceableByString")
     public static String observeCall(@NonNull AbsHook hook) {

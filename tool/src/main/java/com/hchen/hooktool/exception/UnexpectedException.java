@@ -19,23 +19,42 @@
 package com.hchen.hooktool.exception;
 
 /**
- * 意外异常
+ * 意外异常。表示发生了预期之外的运行时错误。
  *
  * @author 焕晨HChen
  */
 public final class UnexpectedException extends RuntimeException {
+    /**
+     * 创建空的意外异常。
+     */
     public UnexpectedException() {
         super();
     }
 
+    /**
+     * 创建带有指定消息的意外异常。
+     *
+     * @param message 异常消息
+     */
     public UnexpectedException(String message) {
         super(message);
     }
 
+    /**
+     * 创建带有指定消息和原因的意外异常。
+     *
+     * @param message 异常消息
+     * @param cause   异常原因
+     */
     public UnexpectedException(String message, Throwable cause) {
         super(message, cause);
     }
 
+    /**
+     * 创建带有指定原因的意外异常。
+     *
+     * @param cause 异常原因
+     */
     public UnexpectedException(Throwable cause) {
         super(cause);
     }

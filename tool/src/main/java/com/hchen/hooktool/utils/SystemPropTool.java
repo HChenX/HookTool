@@ -25,7 +25,9 @@ import androidx.annotation.NonNull;
 import java.util.Optional;
 
 /**
- * Prop 工具
+ * Android 系统属性工具类。
+ * <p>
+ * 提供读取和设置 Android 系统属性（SystemProperties）的便捷方法。
  *
  * @author 焕晨HChen
  */
@@ -45,7 +47,11 @@ public final class SystemPropTool {
     }
 
     /**
-     * 获取 boolean 类型的 prop
+     * 获取布尔类型的系统属性值。
+     *
+     * @param key 属性名
+     * @param def 默认值
+     * @return 属性值，如果属性不存在或加载失败则返回默认值
      */
     public static boolean getProp(@NonNull String key, boolean def) {
         if (propClass == null) return def;
@@ -55,7 +61,11 @@ public final class SystemPropTool {
     }
 
     /**
-     * 获取 int 类型的 prop
+     * 获取整型的系统属性值。
+     *
+     * @param key 属性名
+     * @param def 默认值
+     * @return 属性值，如果属性不存在或加载失败则返回默认值
      */
     public static int getProp(@NonNull String key, int def) {
         if (propClass == null) return def;
@@ -65,7 +75,11 @@ public final class SystemPropTool {
     }
 
     /**
-     * 获取 long 类型的 prop
+     * 获取长整型的系统属性值。
+     *
+     * @param key 属性名
+     * @param def 默认值
+     * @return 属性值，如果属性不存在或加载失败则返回默认值
      */
     public static long getProp(@NonNull String key, long def) {
         if (propClass == null) return def;
@@ -75,7 +89,11 @@ public final class SystemPropTool {
     }
 
     /**
-     * 获取 String 类型的 prop
+     * 获取字符串类型的系统属性值。
+     *
+     * @param key 属性名
+     * @param def 默认值
+     * @return 属性值，如果属性不存在或加载失败则返回默认值
      */
     public static String getProp(@NonNull String key, String def) {
         if (propClass == null) return def;
@@ -85,7 +103,10 @@ public final class SystemPropTool {
     }
 
     /**
-     * 获取 String 类型的 prop，无默认值
+     * 获取字符串类型的系统属性值，如果不存在则返回空字符串。
+     *
+     * @param key 属性名
+     * @return 属性值，如果属性不存在则返回空字符串
      */
     public static String getProp(@NonNull String key) {
         if (propClass == null) return "";
@@ -95,7 +116,11 @@ public final class SystemPropTool {
     }
 
     /**
-     * 获取 String 类型的 prop，指定 ClassLoader
+     * 使用指定的类加载器获取字符串类型的系统属性值。
+     *
+     * @param key         属性名
+     * @param classLoader 类加载器
+     * @return 属性值，如果属性不存在则返回空字符串
      */
     public static String getProp(@NonNull String key, ClassLoader classLoader) {
         return (String) Optional.ofNullable(
@@ -110,9 +135,12 @@ public final class SystemPropTool {
     }
 
     /**
-     * 只有系统框架才可能可以调用
+     * 设置系统属性值。
      * <p>
-     * 可设置的 prop 类型非常有限，一般情况下使用不到
+     * 只有系统框架才可能可以调用，可设置的属性类型非常有限，一般情况下使用不到。
+     *
+     * @param key   属性名
+     * @param value 属性值
      */
     public static void setProp(@NonNull String key, String value) {
         if (propClass == null) return;

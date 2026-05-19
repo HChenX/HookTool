@@ -22,7 +22,13 @@ import androidx.annotation.NonNull;
 
 import com.hchen.hooktool.AbsModule;
 
+/**
+ * 示例 Hook 模块类。继承 {@link AbsModule}，用于演示 Hook 模块的基本结构。
+ */
 public class TestHook extends AbsModule {
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected void onLoaded(@NonNull StageEnum stage, @NonNull Object param) {
     }

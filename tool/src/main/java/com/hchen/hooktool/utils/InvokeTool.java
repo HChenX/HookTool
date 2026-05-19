@@ -31,7 +31,9 @@ import java.lang.reflect.Method;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * 反射工具
+ * 反射调用工具类。
+ * <p>
+ * 提供基于反射的方法调用、字段读写等便捷操作，内部使用 ConcurrentHashMap 缓存已解析的方法和字段。
  *
  * @author 焕晨HChen
  */
@@ -46,28 +48,57 @@ public final class InvokeTool {
     // ---------------------------- 调用方法 --------------------------------
 
     /**
-     * 调用指定方法
+     * 调用指定实例的方法。
+     *
+     * @param instance      目标实例
+     * @param methodName    方法名
+     * @param parameterTypes 参数类型数组
+     * @param args          方法参数
+     * @param <T>           返回值类型
+     * @return 方法返回值
      */
     public static <T> T callMethod(@NonNull Object instance, @NonNull String methodName, @NonNull Object[] parameterTypes, @NonNull Object... args) {
         return baseInvokeMethod(null, instance, methodName, getParameterTypes(instance.getClass().getClassLoader(), parameterTypes), args);
     }
 
     /**
-     * 调用静态方法
+     * 调用指定类的静态方法。
+     *
+     * @param clazz         目标类
+     * @param methodName    方法名
+     * @param parameterTypes 参数类型数组
+     * @param args          方法参数
+     * @param <T>           返回值类型
+     * @return 方法返回值
      */
     public static <T> T callStaticMethod(@NonNull Class<?> clazz, @NonNull String methodName, @NonNull Object[] parameterTypes, @NonNull Object... args) {
         return baseInvokeMethod(clazz, null, methodName, getParameterTypes(clazz.getClassLoader(), parameterTypes), args);
     }
 
     /**
-     * 调用静态方法
+     * 通过类路径调用静态方法。
+     *
+     * @param classPath     类路径
+     * @param methodName    方法名
+     * @param parameterTypes 参数类型数组
+     * @param args          方法参数
+     * @param <T>           返回值类型
+     * @return 方法返回值
      */
     public static <T> T callStaticMethod(@NonNull String classPath, @NonNull String methodName, @NonNull Object[] parameterTypes, @NonNull Object... args) {
         return baseInvokeMethod(findClass(classPath), null, methodName, getParameterTypes(parameterTypes), args);
     }
 
     /**
-     * 调用静态方法
+     * 使用指定的类加载器通过类路径调用静态方法。
+     *
+     * @param classPath     类路径
+     * @param classLoader   类加载器
+     * @param methodName    方法名
+     * @param parameterTypes 参数类型数组
+     * @param args          方法参数
+     * @param <T>           返回值类型
+     * @return 方法返回值
      */
     public static <T> T callStaticMethod(@NonNull String classPath, ClassLoader classLoader, @NonNull String methodName, @NonNull Object[] parameterTypes, @NonNull Object... args) {
         return baseInvokeMethod(findClass(classPath, classLoader), null, methodName, getParameterTypes(classLoader, parameterTypes), args);
@@ -76,56 +107,94 @@ public final class InvokeTool {
     // ---------------------------- 设置字段 --------------------------------
 
     /**
-     * 设置实例指定字段的值
+     * 设置指定实例的字段值。
+     *
+     * @param instance  目标实例
+     * @param fieldName 字段名
+     * @param value     字段值
      */
     public static void setField(@NonNull Object instance, @NonNull String fieldName, Object value) {
         baseInvokeField(null, instance, fieldName, true, value);
     }
 
     /**
-     * 获取指定实例的字段的值
+     * 获取指定实例的字段值。
+     *
+     * @param instance  目标实例
+     * @param fieldName 字段名
+     * @param <T>       返回值类型
+     * @return 字段值
      */
     public static <T> T getField(@NonNull Object instance, @NonNull String fieldName) {
         return baseInvokeField(null, instance, fieldName, false, null);
     }
 
     /**
-     * 设置静态字段的值
+     * 设置指定类的静态字段值。
+     *
+     * @param clazz     目标类
+     * @param fieldName 字段名
+     * @param value     字段值
      */
     public static void setStaticField(@NonNull Class<?> clazz, @NonNull String fieldName, Object value) {
         baseInvokeField(clazz, null, fieldName, true, value);
     }
 
     /**
-     * 设置静态字段的值
+     * 通过类路径设置静态字段值。
+     *
+     * @param classPath 类路径
+     * @param fieldName 字段名
+     * @param value     字段值
      */
     public static void setStaticField(@NonNull String classPath, @NonNull String fieldName, Object value) {
         baseInvokeField(findClass(classPath), null, fieldName, true, value);
     }
 
     /**
-     * 设置静态字段的值
+     * 使用指定的类加载器通过类路径设置静态字段值。
+     *
+     * @param classPath   类路径
+     * @param classLoader 类加载器
+     * @param fieldName   字段名
+     * @param value       字段值
      */
     public static void setStaticField(@NonNull String classPath, ClassLoader classLoader, @NonNull String fieldName, Object value) {
         baseInvokeField(findClass(classPath, classLoader), null, fieldName, true, value);
     }
 
     /**
-     * 获取静态字段的值
+     * 获取指定类的静态字段值。
+     *
+     * @param clazz     目标类
+     * @param fieldName 字段名
+     * @param <T>       返回值类型
+     * @return 字段值
      */
     public static <T> T getStaticField(@NonNull Class<?> clazz, @NonNull String fieldName) {
         return baseInvokeField(clazz, null, fieldName, false, null);
     }
 
     /**
-     * 获取静态字段的值
+     * 通过类路径获取静态字段值。
+     *
+     * @param classPath 类路径
+     * @param fieldName 字段名
+     * @param <T>       返回值类型
+     * @return 字段值
      */
     public static <T> T getStaticField(@NonNull String classPath, @NonNull String fieldName) {
         return baseInvokeField(findClass(classPath), null, fieldName, false, null);
     }
 
     /**
-     * 获取静态字段的值
+     * 使用指定的类加载器通过类路径获取静态字段值。
+     *
+     * @param classPath   类路径
+     * @param classLoader 类加载器
+     * @param fieldName   字段名
+     * @param <T>         返回值类型
+     * @return 字段值
      */
     public static <T> T getStaticField(@NonNull String classPath, ClassLoader classLoader, @NonNull String fieldName) {
         return baseInvokeField(findClass(classPath, classLoader), null, fieldName, false, null);
@@ -254,7 +323,10 @@ public final class InvokeTool {
     }
 
     /**
-     * 根据类名查找类
+     * 根据类路径查找类。
+     *
+     * @param classPath 类路径
+     * @return 查找到的类
      */
     @NonNull
     public static Class<?> findClass(@NonNull String classPath) {
@@ -262,7 +334,11 @@ public final class InvokeTool {
     }
 
     /**
-     * 根据类名和类加载器查找类
+     * 根据类路径和类加载器查找类。
+     *
+     * @param classPath   类路径
+     * @param classLoader 类加载器，如果为 null 则使用系统类加载器
+     * @return 查找到的类
      */
     @NonNull
     public static Class<?> findClass(@NonNull String classPath, ClassLoader classLoader) {
