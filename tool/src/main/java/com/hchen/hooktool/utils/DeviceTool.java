@@ -716,7 +716,7 @@ public final class DeviceTool {
 
     private static boolean isPadByProp() {
         String deviceType = getProp("ro.build.characteristics", "default");
-        boolean isTablet = (deviceType != null && deviceType.toLowerCase().contains("tablet"));
+        boolean isTablet = deviceType.toLowerCase().contains("tablet");
         if (isTablet) {
             return true;
         }

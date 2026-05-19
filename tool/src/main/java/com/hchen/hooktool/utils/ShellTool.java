@@ -366,6 +366,7 @@ public final class ShellTool {
         }
 
         private volatile boolean resultReady = false;
+        private volatile int shellGeneration = 0;
 
         private synchronized void init() {
             try {
@@ -375,6 +376,7 @@ public final class ShellTool {
                 process = Runtime.getRuntime().exec(isRoot ? shellCommands[0] : shellCommands[1]);
                 os = new DataOutputStream(process.getOutputStream());
 
+                shellGeneration++;
                 streamThread = new StreamThread(this, process.getInputStream(), process.getErrorStream());
                 streamThread.run();
             } catch (IOException e) {
@@ -415,6 +417,7 @@ public final class ShellTool {
                 .getBytes(StandardCharsets.UTF_8);
             streamThread.shellSyncMap.put(String.valueOf(command.hashCode()), command);
             resultReady = false;
+            int generation = shellGeneration;
             write("{");
             writeAll(commands);
             write("}");
@@ -422,11 +425,16 @@ public final class ShellTool {
             command = null;
 
             try {
-                while (!resultReady) {
+                while (!resultReady && isActive() && generation == shellGeneration) {
                     wait();
                 }
-            } catch (InterruptedException ignore) {
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                AndroidLog.logE(TAG, "Shell exec interrupted while waiting for result!!", e);
+                return null;
             }
+
+            if (!resultReady) return null;
 
             return streamThread.getResult();
         }
@@ -514,6 +522,7 @@ public final class ShellTool {
                 process = null;
                 os = null;
                 resultReady = false;
+                notifyAll();
             }
         }
 

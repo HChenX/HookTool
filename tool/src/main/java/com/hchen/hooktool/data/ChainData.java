@@ -202,7 +202,7 @@ public final class ChainData {
             // absHook,
             // throwable,
             // function,
-            Arrays.hashCode(parameterTypes),
+            Arrays.deepHashCode(parameterTypes),
             executable,
             methodName
         );

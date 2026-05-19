@@ -359,7 +359,6 @@ public final class ResInjectTool {
                 int[] data = (int[]) CoreTool.getField(getThisObject(), "mData");
                 if (data == null) return;
 
-                assert data != null;
                 int type = data[index + STYLE_TYPE];
                 int id = data[index + STYLE_RESOURCE_ID];
                 if (type != TypedValue.TYPE_NULL /* 不为空数据 */ && id != 0 /* 储存的是资源 */) {

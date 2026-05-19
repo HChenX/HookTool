@@ -131,7 +131,7 @@ public final class ModuleConfig {
      * <pre>{@code
      * -keepnames class com.hchen.demo.hook.**
      * -keepnames class com.hchen.demo.hook.**$*
-     * }
+     * }</pre>
      *
      * @param logExpandPaths 需要扫描的包路径数组，支持可变参数
      */
