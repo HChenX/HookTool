@@ -35,41 +35,41 @@ import java.util.function.Predicate;
 import io.github.libxposed.api.XposedModule;
 
 /**
- * Xposed 模块入口基类。
+ * Xposed 模块的启动入口基类，继承自 {@link XposedModule}。
  * <p>
- * 推荐模块实现此类作为入口点。继承自 {@link XposedModule}，提供模块的完整生命周期管理，
- * 包括模块加载、包加载、包就绪、系统服务器启动以及应用创建等阶段。
+ * 该类作为框架回调与业务逻辑之间的桥梁，负责管理从模块加载到 Application 创建
+ * 的完整生命周期流程。子类必须实现 {@link #initModuleConfig()} 完成配置初始化，
+ * 可选择性覆写 {@link #ignorePackages()} 排除不需要处理的目标包。
  * <p>
- * 子类必须实现 {@link #initModuleConfig()} 方法来初始化模块配置。
- * 可通过 {@link #ignorePackages()} 方法指定需要跳过的包名列表。
- * <p>
- * 当目标应用的 {@link Application#attach(Context)} 被调用时，会自动触发
- * {@link #handleApplicationCreated(Context)} 回调。
+ * 当目标应用的 {@link Application#attach(Context)} 被调用时，框架会自动
+ * 触发 {@link #handleApplicationCreated(Context)} 回调。
  *
  * @author 焕晨HChen
  * @see AbsModule
  * @see ModuleConfig
  */
 public abstract class ModuleEntrance extends XposedModule {
-    // 跳过被 ignorePackages 匹配上的包
+    // 标记当前包是否应被跳过处理
     private volatile boolean shouldSkip = false;
 
     /**
-     * 初始化模块配置。
+     * 初始化模块配置的抽象方法。
      * <p>
-     * 子类必须实现此方法，在其中调用 {@link ModuleConfig} 的相关方法来设置日志标签、
-     * 日志等级、共享首选项名称等基本配置。此方法在 {@link #onModuleLoaded(ModuleLoadedParam)} 中被调用。
+     * 子类必须实现此方法，在其中通过 {@link ModuleConfig} 的静态方法完成
+     * 日志标签、日志等级、SharedPreferences 名称等基本参数的设置。
+     * 此方法在 {@link #onModuleLoaded(ModuleLoadedParam)} 回调中最先被调用。
      */
     public abstract void initModuleConfig();
 
     /**
-     * 返回需要跳过的包名列表。
+     * 返回需要跳过处理的目标包名列表。
      * <p>
-     * 当目标包名匹配列表中的任意一项时，后续的 {@link #handlePackageLoaded(PackageLoadedParam)}、
-     * {@link #handlePackageReady(PackageReadyParam)} 以及 {@link #handleApplicationCreated(Context)}
-     * 回调将被跳过。
+     * 当目标应用的包名与列表中任一项匹配时，后续的
+     * {@link #handlePackageLoaded(PackageLoadedParam)}、
+     * {@link #handlePackageReady(PackageReadyParam)} 以及
+     * {@link #handleApplicationCreated(Context)} 回调将被自动跳过。
      *
-     * @return 需要忽略的包名数组，默认为空数组
+     * @return 需要忽略的包名数组，默认返回空数组表示不跳过任何包
      */
     @NonNull
     public String[] ignorePackages() {
@@ -77,50 +77,53 @@ public abstract class ModuleEntrance extends XposedModule {
     }
 
     /**
-     * 模块加载回调。
+     * 模块加载完成时的回调。
      * <p>
-     * 当模块被 Xposed 框架加载时调用。子类可重写此方法以执行模块级别的初始化逻辑。
+     * Xposed 框架完成模块加载后触发。子类可覆写此方法执行模块级别的初始化操作，
+     * 例如注册全局 Hook 或初始化共享资源。
      *
-     * @param param 模块加载参数
+     * @param param 模块加载参数，包含框架相关信息
      */
     public void handleModuleLoaded(@NonNull ModuleLoadedParam param) {
     }
 
     /**
-     * 包加载回调。
+     * 目标应用包加载时的回调。
      * <p>
-     * 当目标应用的包被加载时调用。子类可重写此方法以在包加载阶段执行 Hook 逻辑。
+     * 当目标应用的包被框架加载时触发。子类可覆写此方法在包加载阶段
+     * 提前进行 Hook 准备。
      *
-     * @param param 包加载参数
+     * @param param 包加载参数，包含目标包的相关信息
      */
     public void handlePackageLoaded(@NonNull PackageLoadedParam param) {
     }
 
     /**
-     * 包就绪回调。
+     * 目标应用包资源就绪时的回调。
      * <p>
-     * 当目标应用的包就绪时调用。子类可重写此方法以在包就绪阶段执行 Hook 逻辑。
+     * 当目标应用包的资源完成加载并就绪后触发。子类可覆写此方法在
+     * 包就绪阶段执行需要完整包资源的 Hook 操作。
      *
-     * @param param 包就绪参数
+     * @param param 包就绪参数，包含目标包的相关信息
      */
     public void handlePackageReady(@NonNull PackageReadyParam param) {
     }
 
     /**
-     * 应用创建回调。
+     * 目标应用 Application 创建时的回调。
      * <p>
-     * 当目标应用的 {@link Application#attach(Context)} 被调用时触发。
-     * 子类可重写此方法以在应用创建阶段执行 Hook 逻辑。
+     * 当目标应用的 {@link Application#attach(Context)} 被调用时触发，
+     * 此时应用 {@link Context} 已可用。子类可覆写此方法执行依赖应用上下文的 Hook 逻辑。
      *
-     * @param context 应用上下文
+     * @param context 目标应用的上下文对象
      */
     public void handleApplicationCreated(@NonNull Context context) {
     }
 
     /**
-     * 系统服务器启动回调。
+     * 系统服务器启动时的回调。
      * <p>
-     * 当系统服务器启动时调用。子类可重写此方法以在系统服务器启动阶段执行 Hook 逻辑。
+     * 当 Android 系统服务器进程启动时触发。子类可覆写此方法执行针对系统服务的 Hook 操作。
      *
      * @param param 系统服务器启动参数
      */

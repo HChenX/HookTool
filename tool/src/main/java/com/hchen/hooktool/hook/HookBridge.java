@@ -25,11 +25,15 @@ import java.util.Objects;
 import io.github.libxposed.api.XposedInterface;
 
 /**
- * 钩子桥接器。
+ * 钩子桥接器，负责将 {@link AbsHook} 实现适配并对接到 Xposed 拦截器接口。
  * <p>
- * 作为 {@link AbsHook} 与 {@link XposedInterface.HookBuilder} 之间的桥梁，
- * 负责将自定义的钩子实现适配到 Xposed API 的拦截器接口。
- * 内部处理钩子优先级设置、生命周期调度（before/proceed/after）以及异常传播逻辑。
+ * 本类在 {@link AbsHook} 与 {@link XposedInterface.HookBuilder} 之间起到桥接作用，主要职责包括：
+ * <ul>
+ *     <li>将钩子优先级传递至底层构建器</li>
+ *     <li>在拦截器回调中调度 {@link AbsHook} 的完整生命周期（{@code before → proceed → after}）</li>
+ *     <li>在各阶段捕获异常并委派给 {@link AbsHook#onThrow(AbsHook.StageEnum, Throwable)} 处理</li>
+ *     <li>管理拦截上下文的进入与退出</li>
+ * </ul>
  *
  * @author 焕晨HChen
  * @see AbsHook
@@ -38,18 +42,18 @@ public final class HookBridge {
     private final XposedInterface.HookBuilder builder;
 
     /**
-     * 构造钩子桥接器。
+     * 构造一个新的钩子桥接器实例。
      *
-     * @param builder Xposed API 的钩子构建器，用于配置和创建钩子
+     * @param builder 用于配置拦截参数并最终创建钩子的 Xposed API 构建器，不为 {@code null}
      */
     public HookBridge(@NonNull XposedInterface.HookBuilder builder) {
         this.builder = builder;
     }
 
     /**
-     * 设置钩子优先级
+     * 将钩子优先级设置到底层构建器中。
      *
-     * @param priority 优先级值
+     * @param priority 优先级数值，值越小优先级越高
      */
     private void setPriority(int priority) {
         Objects.requireNonNull(builder);
@@ -57,12 +61,24 @@ public final class HookBridge {
     }
 
     /**
-     * 设置钩子拦截器。
+     * 注册拦截器，将指定的 {@link AbsHook} 实现绑定到目标方法上。
      * <p>
-     * 将自定义的 AbsHook 实现与 Xposed API 连接起来。
+     * 内部创建匿名 {@link XposedInterface.Hooker} 实现，在拦截回调中按如下顺序调度钩子生命周期：
+     * <ol>
+     *     <li>进入拦截上下文（{@code enter}）</li>
+     *     <li>执行 {@link AbsHook#before()} 前置拦截</li>
+     *     <li>检查是否已有返回值替换或累积异常；若是则跳过原方法调用</li>
+     *     <li>执行 {@link AbsHook#proceed(XposedInterface.Chain)} 调用原方法</li>
+     *     <li>执行 {@link AbsHook#after()} 后置拦截</li>
+     *     <li>检查并抛出累积的异常</li>
+     *     <li>退出拦截上下文（{@code exit}，在 {@code finally} 块中确保执行）</li>
+     * </ol>
+     * <p>
+     * 各阶段捕获到的异常会先委派给 {@link AbsHook#onThrow(AbsHook.StageEnum, Throwable)}，
+     * 若未被消费则根据阶段决定是否立即抛出。
      *
-     * @param absHook 自定义的钩子实现
-     * @return 钩子句柄，可用于后续操作（如解除钩子）
+     * @param absHook 自定义钩子实例，不为 {@code null}
+     * @return 框架返回的钩子句柄，可用于后续解除钩子等操作，不为 {@code null}
      */
     @NonNull
     public XposedInterface.HookHandle intercept(@NonNull AbsHook absHook) {

@@ -34,13 +34,20 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import io.github.libxposed.api.XposedInterface;
 
 /**
- * 钩子核心抽象基类。
+ * 所有 Xposed 方法钩子的抽象基类。
  * <p>
- * 提供钩子执行的完整生命周期管理，包括 before（前置）、proceed（调用原方法）、after（后置）三个阶段。
- * 使用 {@link ThreadLocal} 结合状态栈实现可重入的线程安全状态管理，支持同一线程中嵌套调用同一钩子。
+ * 本类为方法拦截提供了一套完整的生命周期模型，子类只需覆写对应的回调方法即可实现自定义拦截逻辑。
+ * 生命周期由三个核心阶段组成：
+ * <ol>
+ *     <li>{@link #before()} —— 前置拦截阶段，在原方法执行前触发</li>
+ *     <li>{@link #proceed(XposedInterface.Chain)} —— 原方法调用阶段，执行被拦截的目标方法</li>
+ *     <li>{@link #after()} —— 后置拦截阶段，在原方法执行完成后触发</li>
+ * </ol>
  * <p>
- * 子类可通过重写 {@link #before()}、{@link #proceed(XposedInterface.Chain)}、{@link #after()}
- * 方法在不同阶段插入自定义逻辑，并通过 {@link #onThrow(StageEnum, Throwable)} 处理异常。
+ * 各阶段中发生的异常会统一回调至 {@link #onThrow(StageEnum, Throwable)}，由子类决定是否消费。
+ * <p>
+ * 本类内部通过 {@link ThreadLocal} 维护线程独立的状态栈，因此支持同一线程内对同一钩子的嵌套（可重入）调用。
+ * 在拦截过程中，子类可通过 {@link #getArgs()}、{@link #setResult(Object)} 等方法自由读写方法参数与返回值。
  *
  * @author 焕晨HChen
  * @see HookBridge
@@ -134,21 +141,22 @@ public abstract class AbsHook {
     private final CopyOnWriteArrayList<XposedInterface.HookHandle> handles = new CopyOnWriteArrayList<>();
 
     /**
-     * 钩子执行阶段枚举。
+     * 钩子拦截的生命周期阶段枚举。
      * <p>
-     * 标识钩子执行过程中所处的生命周期阶段，用于异常处理回调 {@link #onThrow(StageEnum, Throwable)} 中定位异常来源。
+     * 在 {@link #onThrow(StageEnum, Throwable)} 中用于标识异常发生的具体阶段，
+     * 以便调用方根据阶段进行差异化的异常处理。
      */
     public enum StageEnum {
-        /** 前置阶段，原始方法调用之前。 */
+        /** 前置拦截阶段，即原方法被调用之前。 */
         BEFORE,
-        /** 调用阶段，正在调用原始方法。 */
+        /** 原方法执行阶段，正在通过 proceed 调用目标方法。 */
         PROCEED,
-        /** 后置阶段，原始方法调用之后。 */
+        /** 后置拦截阶段，即原方法调用完成之后。 */
         AFTER
     }
 
     /**
-     * 使用默认优先级构造钩子实例。
+     * 使用框架默认优先级构造钩子实例。
      */
     public AbsHook() {
         this(PRIORITY_DEFAULT);
@@ -157,58 +165,68 @@ public abstract class AbsHook {
     /**
      * 使用指定优先级构造钩子实例。
      *
-     * @param priority 钩子优先级，值越小优先级越高
+     * @param priority 钩子优先级，数值越小优先级越高，越早被框架调用
      */
     public AbsHook(int priority) {
         this.priority = priority;
     }
 
     /**
-     * 钩子执行前的回调方法。
+     * 在原方法执行之前调用的前置拦截回调。
      * <p>
-     * 在原始方法执行前被调用，可用于修改参数或执行前置逻辑。
+     * 子类应覆写此方法以实现参数修改、前置校验等自定义逻辑。
+     * 若在此阶段调用 {@link #setResult(Object)} 设置了返回值，
+     * 则原方法将被完全跳过，直接进入后置拦截阶段。
      */
     public void before() {
     }
 
     /**
-     * 桥接新 API 的特殊方法。
+     * 原方法调用阶段的回调，为子类提供定制 proceed 行为的能力。
      * <p>
-     * 重写此方法可以自由调用 proceed 呼叫原方法。
+     * 默认实现直接委托至 {@link #callProceed()} 调用原方法。
+     * 子类可覆写此方法以在原方法调用前后注入额外逻辑，
+     * 或根据条件决定是否真正调用原方法。
      * <p>
-     * 此方法的返回值将作为原方法的默认返回值使用，除非设置了 setResult。
+     * 该方法的返回值会作为原方法的默认执行结果被记录，
+     * 后续可通过 {@link #setResult(Object)} 进行覆盖。
+     *
+     * @param chain 当前调用链对象，可用于传递修改后的 {@code this} 引用或参数
+     * @return 原方法的执行结果
+     * @throws Throwable 原方法执行过程中可能抛出的任意异常
      */
     public Object proceed(@NonNull XposedInterface.Chain chain) throws Throwable {
         return callProceed();
     }
 
     /**
-     * 钩子执行后的回调方法。
-     * 在原始方法执行后被调用，可用于修改返回值或执行后置逻辑。
+     * 在原方法执行完成之后调用的后置拦截回调。
+     * <p>
+     * 子类应覆写此方法以实现返回值读取/修改、资源清理、日志记录等后置处理逻辑。
      */
     public void after() {
     }
 
     /**
-     * 异常处理回调方法。
+     * 钩子生命周期中发生异常时的统一回调。
      * <p>
-     * 当钩子执行过程中发生异常时被调用。
+     * 当生命周期的任意阶段抛出异常时，框架会优先调用此方法。
+     * 返回 {@code true} 表示异常已被消费，框架不再继续传播；
+     * 返回 {@code false} 则由框架按默认策略处理（可能直接抛出）。
      *
-     * @param stage 异常发生的阶段
-     * @param e     发生的异常
-     * @return 是否处理了异常
+     * @param stage 异常发生的生命周期阶段，不为 {@code null}
+     * @param e     被捕获的异常对象，不为 {@code null}
+     * @return {@code true} 表示异常已被处理，{@code false} 表示交由框架继续处理
      */
     public boolean onThrow(@NonNull StageEnum stage, @NonNull Throwable e) {
         return false;
     }
 
     /**
-     * 获取当前线程的钩子调用状态。
-     * <p>
-     * 从 {@link ThreadLocal} 状态栈中获取当前调用状态，若不在拦截生命周期内调用则抛出异常。
+     * 从线程本地状态栈中获取当前调用上下文。
      *
-     * @return 当前调用状态
-     * @throws IllegalStateException 当钩子状态丢失或不在拦截生命周期内时抛出
+     * @return 当前线程对应的调用状态对象，不为 {@code null}
+     * @throws IllegalStateException 如果当前线程不在钩子拦截生命周期内（状态栈为空）
      */
     @NonNull
     private CallState getState() {
@@ -221,9 +239,11 @@ public abstract class AbsHook {
     }
 
     /**
-     * 获取当前被钩住的可执行对象。
+     * 获取当前被拦截方法对应的可执行对象。
+     * <p>
+     * 返回值可能是 {@link java.lang.reflect.Method} 或 {@link java.lang.reflect.Constructor}。
      *
-     * @return 当前被钩住的可执行对象（方法或构造函数）
+     * @return 当前被拦截方法的可执行对象，不为 {@code null}
      */
     @NonNull
     public final Executable getExecutable() {
@@ -231,20 +251,24 @@ public abstract class AbsHook {
     }
 
     /**
-     * 获取当前被钩住方法的 this 对象。
+     * 获取调用被拦截方法时的目标对象实例（即 {@code this} 引用）。
+     * <p>
+     * 若被拦截的方法是静态方法，则返回 {@code null}。
      *
-     * @return 当前被钩住方法的 this 对象
+     * @return 调用被拦截方法的对象实例；静态方法时为 {@code null}
      */
     public final Object getThisObject() {
         return getState().originalChain.getThisObject();
     }
 
     /**
-     * 获取当前被钩住方法的参数数组。
+     * 获取当前被拦截方法的全部参数。
      * <p>
-     * 如果参数已被修改，则返回修改后的值。
+     * 首次调用时会从原始调用链中缓存参数列表。
+     * 若之前已通过 {@link #setArg(int, Object)} 或 {@link #setArgs(Object...)} 修改过参数，
+     * 则返回修改后的参数值。
      *
-     * @return 当前被钩住方法的参数数组
+     * @return 方法参数数组，不为 {@code null}
      */
     @NonNull
     public final Object[] getArgs() {
@@ -256,14 +280,15 @@ public abstract class AbsHook {
     }
 
     /**
-     * 获取当前被钩住方法的指定索引参数。
+     * 获取当前被拦截方法在指定索引位置的参数值。
      * <p>
-     * 如果参数已被修改，则返回修改后的值。
+     * 若之前已通过 {@link #setArg(int, Object)} 修改过该位置的参数，
+     * 则返回修改后的值。
      *
-     * @param index 参数索引
-     * @return 指定索引的参数值
-     * @throws IndexOutOfBoundsException 当索引超出范围时抛出
-     * @throws ClassCastException        当参数类型转换失败时抛出
+     * @param index 参数索引（从 0 开始）
+     * @return 该索引位置的参数值
+     * @throws IndexOutOfBoundsException 当 {@code index} 超出参数数组的有效范围时抛出
+     * @throws ClassCastException        当返回值类型与预期不符时可能抛出
      */
     public final Object getArg(int index) throws IndexOutOfBoundsException, ClassCastException {
         CallState state = getState();
@@ -274,9 +299,11 @@ public abstract class AbsHook {
     }
 
     /**
-     * 设置当前被钩住方法的指定索引参数。
+     * 设置当前被拦截方法在指定索引位置的参数值。
+     * <p>
+     * 调用此方法后，框架将使用修改后的参数调用原方法。
      *
-     * @param index 参数索引
+     * @param index 要修改的参数索引（从 0 开始）
      * @param value 新的参数值
      */
     public final void setArg(int index, Object value) {
@@ -289,10 +316,12 @@ public abstract class AbsHook {
     }
 
     /**
-     * 设置当前被钩住方法的所有参数。
+     * 整体替换当前被拦截方法的全部参数。
+     * <p>
+     * 传入的数组长度必须与原始参数个数一致，否则将抛出异常。
      *
-     * @param args 新的参数数组
-     * @throws IndexOutOfBoundsException 当参数数量不匹配时抛出
+     * @param args 新的参数数组，长度须与原方法参数列表匹配
+     * @throws IndexOutOfBoundsException 当传入数组的长度与原始参数个数不一致时抛出
      */
     public final void setArgs(@NonNull Object... args) {
         CallState state = getState();
@@ -308,11 +337,12 @@ public abstract class AbsHook {
     }
 
     /**
-     * 获取当前被钩住方法的返回值。
+     * 获取当前被拦截方法的返回值。
      * <p>
-     * 如果返回值已被修改，则返回修改后的值。
+     * 若之前已通过 {@link #setResult(Object)} 替换了返回值，则返回替换后的值；
+     * 否则返回原方法执行完成后的原始返回值。
      *
-     * @return 当前被钩住方法的返回值
+     * @return 当前方法的返回值，可能为 {@code null}
      */
     public final Object getResult() {
         CallState state = getState();
@@ -320,9 +350,12 @@ public abstract class AbsHook {
     }
 
     /**
-     * 设置当前被钩住方法的返回值。
+     * 替换当前被拦截方法的返回值。
+     * <p>
+     * 设置后原方法的原始返回值将被忽略，框架会将此处设置的值作为最终返回值。
+     * 若在 {@link #before()} 阶段调用此方法，原方法将被完全跳过。
      *
-     * @param result 新的返回值
+     * @param result 要设置的新返回值
      */
     public final void setResult(Object result) {
         CallState state = getState();
@@ -331,18 +364,20 @@ public abstract class AbsHook {
     }
 
     /**
-     * 设置当前被钩住方法的异常。
+     * 设置当前被拦截方法的待抛出异常。
+     * <p>
+     * 设置后该异常将在后续阶段由框架自动抛出。可通过 {@link #getThrowable()} 读取。
      *
-     * @param throwable 要抛出的异常
+     * @param throwable 要设置的异常对象
      */
     public final void setThrowable(Throwable throwable) {
         getState().throwable = throwable;
     }
 
     /**
-     * 获取当前被钩住方法的异常。
+     * 获取当前被拦截方法执行过程中关联的异常信息。
      *
-     * @return 当前被钩住方法的异常
+     * @return 当前关联的异常对象；若无异常则返回 {@code null}
      */
     @Nullable
     public final Throwable getThrowable() {
@@ -350,11 +385,11 @@ public abstract class AbsHook {
     }
 
     /**
-     * 注册钩子句柄。
+     * 将钩子句柄注册到内部管理列表中。
      * <p>
-     * 将钩子句柄添加到内部列表中，用于后续解除钩子操作。
+     * 注册后的句柄可供 {@link #unHookSelf()} 使用，以便一次性解除所有钩子。
      *
-     * @param handle 钩子句柄
+     * @param handle 框架返回的钩子句柄，不为 {@code null}
      */
     final void setHandle(@NonNull XposedInterface.HookHandle handle) {
         this.handles.add(handle);
@@ -363,20 +398,21 @@ public abstract class AbsHook {
     // --- 生命周期管理 ---
 
     /**
-     * 进入钩子拦截生命周期。
+     * 进入钩子拦截上下文，将指定的调用链压入当前线程的状态栈。
      * <p>
-     * 将当前调用链压入线程状态栈，使后续的钩子回调方法可以访问调用上下文。
+     * 调用此方法后，当前线程内的所有钩子生命周期回调均可访问该次调用的上下文信息
+     * （包括方法参数、返回值等）。
      *
-     * @param chain 当前调用链
+     * @param chain 本次拦截对应的原始调用链，不为 {@code null}
      */
     final void enter(@NonNull XposedInterface.Chain chain) {
         Objects.requireNonNull(stackLocal.get()).push(chain);
     }
 
     /**
-     * 退出钩子拦截生命周期。
+     * 退出钩子拦截上下文，从当前线程的状态栈中弹出调用状态。
      * <p>
-     * 从线程状态栈中弹出当前调用状态，释放相关资源。
+     * 此方法会释放与本次拦截关联的上下文资源，使状态栈恢复到上一层嵌套调用。
      */
     final void exit() {
         StateStack stack = stackLocal.get();
@@ -386,23 +422,25 @@ public abstract class AbsHook {
     }
 
     /**
-     * 获取内部调用链。
+     * 获取当前钩子的内部调用链包装器。
      * <p>
-     * 返回的调用链包装了原始调用链，支持参数和返回值的修改。
+     * 返回的 {@link XposedInterface.Chain} 实例对原始调用链进行了包装，
+     * 在读取参数时会优先返回已被修改的值，保证拦截生命周期内参数读写的一致性。
      *
-     * @return 内部调用链实例
+     * @return 内部调用链实例，不为 {@code null}
      */
     @NonNull final XposedInterface.Chain getChain() {
         return getState().innerChain;
     }
 
     /**
-     * 调用原始方法。
+     * 调用被拦截的原始方法并返回执行结果。
      * <p>
-     * 根据参数是否修改，决定使用修改后的参数还是原始参数调用原始方法。
+     * 若参数已被修改（通过 {@link #setArg(int, Object)} 或 {@link #setArgs(Object...)}），
+     * 则使用修改后的参数调用原方法；否则以原始参数调用。
      *
      * @return 原始方法的返回值
-     * @throws Throwable 执行过程中可能抛出的异常
+     * @throws Throwable 原方法执行过程中可能抛出的任意异常
      */
     final Object callProceed() throws Throwable {
         CallState state = getState();
@@ -414,29 +452,32 @@ public abstract class AbsHook {
     }
 
     /**
-     * 设置原始方法的返回值。
+     * 记录原方法的原始执行结果。
      * <p>
-     * 在 proceed 阶段由框架内部调用，记录原始方法的执行结果。
+     * 由框架在 proceed 阶段内部调用，将原方法的返回值存储到当前调用状态中，
+     * 以供后续 {@link #after()} 阶段及 {@link #getResult()} 读取。
      *
-     * @param originalResult 原始方法的返回值
+     * @param originalResult 原方法的原始返回值
      */
     final void setOriginalResult(Object originalResult) {
         getState().originalResult = originalResult;
     }
 
     /**
-     * 判断返回值是否已被修改。
+     * 判断方法返回值是否已被替换。
      *
-     * @return 如果返回值已被修改则返回 {@code true}，否则返回 {@code false}
+     * @return 若已通过 {@link #setResult(Object)} 替换返回值则返回 {@code true}，否则返回 {@code false}
      */
     final boolean isResultChanged() {
         return getState().isResultChanged;
     }
 
     /**
-     * 解除自身钩子。
+     * 解除当前钩子实例注册的所有方法拦截。
      * <p>
-     * 移除当前钩子的所有拦截。
+     * 遍历内部已注册的全部钩子句柄并逐一解除。
+     *
+     * @throws IllegalStateException 当钩子尚未生效（句柄列表为空）时调用此方法将抛出
      */
     final public void unHookSelf() {
         if (handles.isEmpty()) {
@@ -448,9 +489,11 @@ public abstract class AbsHook {
     }
 
     /**
-     * 观察调用信息。
+     * 生成当前调用的可观测信息字符串。
      * <p>
-     * 生成当前调用的详细信息字符串。
+     * 返回内容包含被调用方法的类名、方法名、参数列表及返回值，便于调试与日志记录。
+     *
+     * @return 格式化的调用信息字符串，不为 {@code null}
      */
     @NonNull final public String observeCall() {
         return LogExpand.observeCall(this);
@@ -468,9 +511,11 @@ public abstract class AbsHook {
     }
 
     /**
-     * 内部调用链实现。
+     * 内部调用链实现，对原始 {@link XposedInterface.Chain} 进行包装。
      * <p>
-     * 用于包装原始调用链，处理参数和返回值的修改。
+     * 该实现会在读取参数时优先返回已被修改的值，从而保证在同一拦截生命周期内
+     * 参数读写行为的一致性。其余操作（{@code proceed}、{@code proceedWith} 等）
+     * 直接委托给原始调用链处理。
      */
     @SuppressWarnings("ClassCanBeRecord")
     private static class InnerChain implements XposedInterface.Chain {

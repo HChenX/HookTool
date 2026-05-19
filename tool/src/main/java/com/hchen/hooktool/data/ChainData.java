@@ -28,7 +28,19 @@ import java.util.Objects;
 import java.util.function.Function;
 
 /**
- * 链式钩子数据类。封装链式钩子操作所需的数据，包括链式调用类型、可执行对象、钩子对象、参数类型等。
+ * 链式 Hook 操作的数据载体，封装了一次链式调用所需的完整上下文信息。
+ * <p>
+ * 该类持有查找类型（{@link ChainType}）、目标方法名、参数类型列表、可执行对象引用、
+ * Hook 回调实例（{@link AbsHook}）以及异常处理策略等关键字段。
+ * <p>
+ * 通过不同的构造方法可分别创建以下五种场景的数据实例：
+ * <ul>
+ *   <li>按方法名与参数类型精确查找单一方法</li>
+ *   <li>仅按方法名查找所有同名方法</li>
+ *   <li>按参数类型精确查找单一构造函数</li>
+ *   <li>查找目标类中的全部构造函数</li>
+ *   <li>直接使用已有的可执行对象引用（跳过查找阶段）</li>
+ * </ul>
  *
  * @author 焕晨HChen
  */
@@ -36,59 +48,62 @@ public final class ChainData {
     // -------------------------- Data ------------------------------
 
     /**
-     * 链式调用类型。
+     * 当前链式调用所采用的查找策略类型，运行时据此决定执行哪种方法查找逻辑。
      */
     public ChainType chainType;
 
     /**
-     * 可执行对象数组。
+     * 查找阶段解析得到的目标可执行对象数组，初始大小为 1。
+     * 当使用 {@code findAll} 系列查找方式时，该数组将被替换为所有匹配到的可执行对象。
      */
     public Executable[] executables = new Executable[1];
 
     /**
-     * 钩子对象。
+     * 用户提供的 Hook 回调实现，在目标方法被调用时执行自定义拦截逻辑。
      */
     public AbsHook absHook;
 
     /**
-     * 异常对象。
+     * 查找阶段捕获的异常对象。若查找过程正常完成则为 {@code null}。
      */
     public Throwable throwable;
 
     /**
-     * 异常处理函数。
+     * 用户注册的异常处理函数，用于在查找失败时决定是否抑制异常或执行降级逻辑。
      */
     public Function<Throwable, Boolean> function;
 
     /**
-     * 是否忽略异常。
+     * 标记是否在查找失败时静默忽略异常。默认为 {@code false}（即不忽略，会向上抛出）。
      */
     public boolean isIgnoreThrow = false;
 
     // ---------------------------------------------------------------
 
     /**
-     * 参数类型数组。
+     * 目标方法或构造函数的参数类型列表，用于查找阶段的签名匹配。
      */
     public Object[] parameterTypes;
 
     /**
-     * 单个可执行对象。
+     * 用户直接提供的可执行对象引用，使用此字段时将跳过方法查找阶段。
      */
     public Executable executable;
 
     // -------------------------- Method ------------------------------
 
     /**
-     * 方法名。
+     * 待查找的目标方法名称。
      */
     public String methodName;
 
     /**
-     * 构造方法，用于查找指定方法。
+     * 构造用于"按方法名与参数类型精确查找单一方法"场景的数据实例。
+     * <p>
+     * 查找策略自动设为 {@link ChainType#FIND_METHOD}。
      *
-     * @param methodName     方法名
-     * @param parameterTypes 参数类型
+     * @param methodName     目标方法的名称
+     * @param parameterTypes 方法的参数类型列表
      */
     public ChainData(@NonNull String methodName, @NonNull Object... parameterTypes) {
         this.methodName = methodName;
@@ -97,9 +112,11 @@ public final class ChainData {
     }
 
     /**
-     * 构造方法，用于查找所有指定名称的方法。
+     * 构造用于"仅按方法名查找所有同名方法"场景的数据实例。
+     * <p>
+     * 查找策略自动设为 {@link ChainType#FIND_ALL_METHOD}。
      *
-     * @param methodName 方法名
+     * @param methodName 目标方法的名称
      */
     public ChainData(@NonNull String methodName) {
         this.methodName = methodName;
@@ -109,9 +126,11 @@ public final class ChainData {
     // -------------------------- Constructor ------------------------------
 
     /**
-     * 构造方法，用于查找指定构造函数。
+     * 构造用于"按参数类型精确查找单一构造函数"场景的数据实例。
+     * <p>
+     * 查找策略自动设为 {@link ChainType#FIND_CONSTRUCTOR}。
      *
-     * @param parameterTypes 参数类型
+     * @param parameterTypes 构造函数的参数类型列表
      */
     public ChainData(@NonNull Object... parameterTypes) {
         this.parameterTypes = parameterTypes;
@@ -119,7 +138,9 @@ public final class ChainData {
     }
 
     /**
-     * 构造方法，用于查找所有构造函数。
+     * 构造用于"查找目标类中的全部构造函数"场景的数据实例。
+     * <p>
+     * 查找策略自动设为 {@link ChainType#FIND_ALL_CONSTRUCTOR}。
      */
     public ChainData() {
         this.chainType = ChainType.FIND_ALL_CONSTRUCTOR;
@@ -128,9 +149,11 @@ public final class ChainData {
     // ----------------------- Executable ----------------------------
 
     /**
-     * 构造方法，用于指定可执行对象。
+     * 构造用于"直接使用已有可执行对象"场景的数据实例，跳过方法查找阶段。
+     * <p>
+     * 查找策略自动设为 {@link ChainType#EXECUTABLE}。
      *
-     * @param executable 可执行对象
+     * @param executable 已获取的目标方法或构造函数引用
      */
     public ChainData(@NonNull Executable executable) {
         this.executable = executable;

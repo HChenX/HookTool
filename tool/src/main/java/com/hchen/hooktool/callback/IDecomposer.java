@@ -19,17 +19,23 @@
 package com.hchen.hooktool.callback;
 
 /**
- * 可抛出异常的供应者接口。用于封装可能产生异常的计算逻辑。
+ * 支持抛出异常的函数式供应者接口。
+ * <p>
+ * 功能类似于 {@link java.util.function.Supplier}，但其 {@code get()} 方法
+ * 允许声明并抛出受检异常。适用于封装可能产生异常的延迟计算或资源获取场景。
  *
- * @param <R> 返回值类型
+ * @param <R> 供应者返回结果的类型
  * @author 焕晨HChen
  */
 public interface IDecomposer<R> {
     /**
-     * 执行计算并返回结果，可能抛出异常。
+     * 执行业务计算并返回结果。
+     * <p>
+     * 实现者应在此方法中封装实际的业务计算逻辑或资源获取逻辑。
+     * 调用方需自行处理可能抛出的异常。
      *
-     * @return 计算结果
-     * @throws Throwable 执行过程中可能抛出的异常
+     * @return 计算或获取到的结果值
+     * @throws Throwable 执行过程中可能抛出的任意异常
      */
     R get() throws Throwable;
 }

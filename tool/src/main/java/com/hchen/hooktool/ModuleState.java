@@ -36,7 +36,11 @@ import java.util.Objects;
 import kotlin.text.Charsets;
 
 /**
- * 模块状态检测工具类。提供检测太极（TaiChi）和 LSPatch 等第三方 Xposed 框架环境的能力。
+ * Xposed 模块运行环境检测工具类。
+ * <p>
+ * 提供对第三方 Xposed 宿主环境的检测能力，目前支持识别太极（TaiChi）和
+ * LSPatch 两种常见的 Xposed 框架宿主。开发者可在运行时据此判断模块所处的
+ * 环境类型并执行相应的适配策略。
  *
  * @author 焕晨HChen
  */
@@ -45,10 +49,14 @@ public final class ModuleState {
     }
 
     /**
-     * 检测当前是否处于太极（TaiChi）环境中。
+     * 检测当前设备是否运行在太极（TaiChi）Xposed 宿主环境中。
+     * <p>
+     * 检测逻辑分为两步：首先检查太极应用是否已安装，然后通过 ContentProvider
+     * 查询太极框架的激活状态。内部会执行两次 ContentProvider 调用以应对
+     * 首次调用可能失败的情况。
      *
-     * @param context 上下文
-     * @return 是否为太极环境
+     * @param context 应用上下文，用于访问 PackageManager 和 ContentResolver
+     * @return {@code true} 表示处于太极环境且框架已激活，{@code false} 表示不在太极环境中
      */
     public static boolean isExpActive(@NonNull Context context) {
         try {
@@ -75,12 +83,22 @@ public final class ModuleState {
     }
 
     /**
-     * 检测当前是否处于 LSPatch 环境中，并返回配置信息。
-     * 需要声明 android.permission.QUERY_ALL_PACKAGES 权限。
+     * 检测目标应用是否通过 LSPatch 框架加载，并提取其配置信息。
+     * <p>
+     * 通过读取目标应用 {@code AndroidManifest.xml} 中的 {@code lspatch}
+     * 元数据字段进行检测。该字段以 Base64 编码的 JSON 格式存储 LSPatch 配置。
+     * 解析成功后返回包含以下键值的 {@link HashMap}：
+     * <ul>
+     *   <li>{@code useManager} - 使用模式，值为 "本地模式" 或 "集成模式"</li>
+     *   <li>{@code versionName} - LSPatch 框架版本名称</li>
+     *   <li>{@code versionCode} - LSPatch 框架版本号</li>
+     * </ul>
+     * <p>
+     * 调用此方法需确保应用已声明 {@code android.permission.QUERY_ALL_PACKAGES} 权限。
      *
-     * @param context     上下文
-     * @param packageName 目标应用包名
-     * @return 包含配置信息的 HashMap，如果非 LSPatch 环境则返回空 Map
+     * @param context     应用上下文，用于访问 PackageManager
+     * @param packageName 目标应用的包名
+     * @return 包含 LSPatch 配置信息的 HashMap；若目标应用未使用 LSPatch 或解析失败则返回空 Map
      * @noinspection ExtractMethodRecommender
      */
     @NonNull

@@ -19,40 +19,43 @@
 package com.hchen.hooktool.exception;
 
 /**
- * 资源注入异常。当模块资源注入失败时抛出。
+ * 资源注入异常类，属于非受检异常（{@link RuntimeException} 的子类）。
+ * <p>
+ * 当 HookTool 在运行时向目标应用注入模块资源（如布局、字符串、drawable 等）失败时抛出。
+ * 常见触发场景包括资源 ID 冲突、资源表损坏或目标应用上下文不可用等。
  *
  * @author 焕晨HChen
  */
 public final class InjectResourcesException extends RuntimeException {
     /**
-     * 创建空的资源注入异常。
+     * 构造一个不携带详细消息和原因的资源注入异常实例。
      */
     public InjectResourcesException() {
     }
 
     /**
-     * 创建带有指定消息的资源注入异常。
+     * 构造一个携带指定描述消息的资源注入异常实例。
      *
-     * @param message 异常消息
+     * @param message 异常的描述信息
      */
     public InjectResourcesException(String message) {
         super(message);
     }
 
     /**
-     * 创建带有指定消息和原因的资源注入异常。
+     * 构造一个携带指定描述消息和根本原因的资源注入异常实例。
      *
-     * @param message 异常消息
-     * @param cause   异常原因
+     * @param message 异常的描述信息
+     * @param cause   导致此异常的根本原因（即原始异常）
      */
     public InjectResourcesException(String message, Throwable cause) {
         super(message, cause);
     }
 
     /**
-     * 创建带有指定原因的资源注入异常。
+     * 构造一个仅携带根本原因的资源注入异常实例。
      *
-     * @param cause 异常原因
+     * @param cause 导致此异常的根本原因（即原始异常）
      */
     public InjectResourcesException(Throwable cause) {
         super(cause);
