@@ -261,6 +261,22 @@ open class CoreTool : XposedLog() {
         }
 
         /**
+         * 获取指定类中与给定名称匹配的方法（使用默认 ClassLoader）。
+         *
+         * 此重载供 Java 调用方使用，等价于 `findAllMethod(defaultClassLoader, methodName)`。
+         *
+         * @param methodName 用以过滤的方法名称。
+         * @return 匹配条件的 [Method] 数组。
+         */
+        @JvmStatic
+        @JvmName("findAllMethod")
+        fun String.findAllMethodByName(
+            methodName: String
+        ): Array<Method> {
+            return this.findClass().findAllMethod(methodName)
+        }
+
+        /**
          * 获取当前 [Class] 中声明的全部方法，可选按名称进行过滤。
          *
          * @param methodName 用以过滤的方法名称；为 `null` 时不过滤，返回全部方法。
@@ -505,6 +521,29 @@ open class CoreTool : XposedLog() {
         }
 
         /**
+         * 尝试通过反射在当前对象上调用指定名称的实例方法，若方法不存在则返回 `null`。
+         *
+         * @param methodName 待调用的方法名称。
+         * @param parameterTypes 方法的参数类型数组，默认为空数组时由框架自动推断。
+         * @param args 传递给方法的实际参数。
+         * @return 方法的返回值；当方法不存在或返回类型为 `void` 时返回 `null`。
+         */
+        @JvmStatic
+        @JvmOverloads
+        fun Any.callMethodIfExists(
+            methodName: String,
+            parameterTypes: Array<Class<*>> = emptyArray(),
+            vararg args: Any?
+        ): Any? {
+            val method = if (parameterTypes.isEmpty()) {
+                this.javaClass.findMethodIfExists(methodName)
+            } else {
+                this.javaClass.findMethodIfExists(methodName, *parameterTypes)
+            } ?: return null
+            return method.callMethod(this, *args)
+        }
+
+        /**
          * 使用当前 [Method] 对象在指定实例上调用该方法。
          *
          * @param instance 目标对象实例。
@@ -534,6 +573,19 @@ open class CoreTool : XposedLog() {
         }
 
         /**
+         * 尝试获取当前对象上指定名称字段的值，若字段不存在则返回 `null`。
+         *
+         * @param fieldName 字段名称。
+         * @return 字段的当前值；若字段不存在则返回 `null`。
+         */
+        @JvmStatic
+        fun Any.getFieldIfExists(
+            fieldName: String,
+        ): Any? {
+            return this.javaClass.findFieldIfExists(fieldName)?.getField(this)
+        }
+
+        /**
          * 使用当前 [Field] 对象从指定实例中读取该字段的值。
          *
          * @param instance 目标对象实例。
@@ -559,6 +611,20 @@ open class CoreTool : XposedLog() {
             value: Any?
         ) {
             CoreHelper.setObjectField(this, fieldName, value)
+        }
+
+        /**
+         * 尝试设置当前对象上指定名称字段的值，若字段不存在则静默跳过。
+         *
+         * @param fieldName 字段名称。
+         * @param value 待写入的新值。
+         */
+        @JvmStatic
+        fun Any.setFieldIfExists(
+            fieldName: String,
+            value: Any?
+        ) {
+            this.javaClass.findFieldIfExists(fieldName)?.setField(this, value)
         }
 
         /**
@@ -714,6 +780,51 @@ open class CoreTool : XposedLog() {
         }
 
         /**
+         * 尝试调用当前 [Class] 上的静态方法，若方法不存在则返回 `null`。
+         *
+         * @param methodName 待调用的静态方法名称。
+         * @param parameterTypes 方法的参数类型数组，默认为空数组时由框架自动推断。
+         * @param args 传递给方法的实际参数。
+         * @return 方法的返回值；当方法不存在或返回类型为 `void` 时返回 `null`。
+         */
+        @JvmStatic
+        @JvmOverloads
+        fun Class<*>.callStaticMethodIfExists(
+            methodName: String,
+            parameterTypes: Array<Class<*>> = emptyArray(),
+            vararg args: Any?
+        ): Any? {
+            val method = if (parameterTypes.isEmpty()) {
+                this.findMethodIfExists(methodName)
+            } else {
+                this.findMethodIfExists(methodName, *parameterTypes)
+            } ?: return null
+            return method.callStaticMethod(*args)
+        }
+
+        /**
+         * 尝试调用指定类名所对应类上的静态方法，若类或方法不存在则返回 `null`。
+         *
+         * @param classLoader 用以加载目标类的 [ClassLoader]，默认值取自 [ModuleData.getClassLoader]。
+         * @param methodName 待调用的静态方法名称。
+         * @param parameterTypes 方法的参数类型数组，默认为空数组时由框架自动推断。
+         * @param args 传递给方法的实际参数。
+         * @return 方法的返回值；当类/方法不存在或返回类型为 `void` 时返回 `null`。
+         */
+        @JvmStatic
+        @JvmOverloads
+        fun String.callStaticMethodIfExists(
+            classLoader: ClassLoader? = ModuleData.getClassLoader(),
+            methodName: String,
+            parameterTypes: Array<Class<*>> = emptyArray(),
+            vararg args: Any?
+        ): Any? {
+            return this.findClassIfExists(classLoader)?.callStaticMethodIfExists(
+                methodName, parameterTypes, *args
+            )
+        }
+
+        /**
          * 获取指定类名所对应类中静态字段的值。
          *
          * @param classLoader 用以加载目标类的 [ClassLoader]，默认值取自 [ModuleData.getClassLoader]。
@@ -751,6 +862,35 @@ open class CoreTool : XposedLog() {
         fun Field.getStaticField(): Any? {
             this.isAccessible = true
             return this.get(null)
+        }
+
+        /**
+         * 尝试获取当前 [Class] 中静态字段的值，若字段不存在则返回 `null`。
+         *
+         * @param fieldName 待获取的字段名称。
+         * @return 该静态字段的值；若字段不存在则返回 `null`。
+         */
+        @JvmStatic
+        fun Class<*>.getStaticFieldIfExists(
+            fieldName: String
+        ): Any? {
+            return this.findFieldIfExists(fieldName)?.getStaticField()
+        }
+
+        /**
+         * 尝试获取指定类名所对应类中静态字段的值，若类或字段不存在则返回 `null`。
+         *
+         * @param classLoader 用以加载目标类的 [ClassLoader]，默认值取自 [ModuleData.getClassLoader]。
+         * @param fieldName 待获取的字段名称。
+         * @return 该静态字段的值；若类/字段不存在则返回 `null`。
+         */
+        @JvmStatic
+        @JvmOverloads
+        fun String.getStaticFieldIfExists(
+            classLoader: ClassLoader? = ModuleData.getClassLoader(),
+            fieldName: String
+        ): Any? {
+            return this.findClassIfExists(classLoader)?.getStaticFieldIfExists(fieldName)
         }
 
         /**
@@ -795,6 +935,37 @@ open class CoreTool : XposedLog() {
         ) {
             this.isAccessible = true
             this.set(null, value)
+        }
+
+        /**
+         * 尝试设置当前 [Class] 中静态字段的值，若字段不存在则静默跳过。
+         *
+         * @param fieldName 待设置的字段名称。
+         * @param value 待写入的新值。
+         */
+        @JvmStatic
+        fun Class<*>.setStaticFieldIfExists(
+            fieldName: String,
+            value: Any?
+        ) {
+            this.findFieldIfExists(fieldName)?.setStaticField(value)
+        }
+
+        /**
+         * 尝试设置指定类名所对应类中静态字段的值，若类或字段不存在则静默跳过。
+         *
+         * @param classLoader 用以加载目标类的 [ClassLoader]，默认值取自 [ModuleData.getClassLoader]。
+         * @param fieldName 待设置的字段名称。
+         * @param value 待写入的新值。
+         */
+        @JvmStatic
+        @JvmOverloads
+        fun String.setStaticFieldIfExists(
+            classLoader: ClassLoader? = ModuleData.getClassLoader(),
+            fieldName: String,
+            value: Any?
+        ) {
+            this.findClassIfExists(classLoader)?.setStaticFieldIfExists(fieldName, value)
         }
 
         /**
@@ -1349,6 +1520,21 @@ open class CoreTool : XposedLog() {
             methodName: String? = null
         ) {
             this.findAllMethod(classLoader, methodName).deoptimizeAll()
+        }
+
+        /**
+         * 批量反优化指定类中与给定名称匹配的方法（使用默认 ClassLoader）。
+         *
+         * 此重载供 Java 调用方使用，等价于 `deoptimizeAllMethod(defaultClassLoader, methodName)`。
+         *
+         * @param methodName 用以过滤的方法名称。
+         */
+        @JvmStatic
+        @JvmName("deoptimizeAllMethod")
+        fun String.deoptimizeAllMethodByName(
+            methodName: String
+        ) {
+            this.findClass().findAllMethod(methodName).deoptimizeAll()
         }
 
         /**
