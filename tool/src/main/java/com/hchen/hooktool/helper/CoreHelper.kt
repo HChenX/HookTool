@@ -58,22 +58,54 @@ import java.util.concurrent.ConcurrentHashMap
  * @author 焕晨HChen
  */
 object CoreHelper {
+    /** 字段缓存，以 [Class] 为键，字段名到 [Optional] 包装的 [Field] 的并发映射为值。 */
     private val fieldCache = WeakHashMap<Class<*>, ConcurrentHashMap<String, Optional<Field>>>()
+
+    /** 方法缓存，以 [Class] 为键，方法签名到 [Optional] 包装的 [Method] 的并发映射为值。 */
     private val methodCache = WeakHashMap<Class<*>, ConcurrentHashMap<String, Optional<Method>>>()
+
+    /** 构造函数缓存，以 [Class] 为键，构造函数签名到 [Optional] 包装的 [Constructor] 的并发映射为值。 */
     private val constructorCache = WeakHashMap<Class<*>, ConcurrentHashMap<String, Optional<Constructor<*>>>>()
 
+    /**
+     * 获取指定类对应的字段缓存映射。
+     *
+     * 如果缓存中不存在该类的映射，则创建一个新的 [ConcurrentHashMap] 并存入缓存。
+     * 通过 [synchronized] 保证并发安全。
+     *
+     * @param clazz 目标类。
+     * @return 该类对应的字段缓存映射。
+     */
     private fun getFieldCacheMap(clazz: Class<*>): ConcurrentHashMap<String, Optional<Field>> {
         synchronized(fieldCache) {
             return fieldCache.getOrPut(clazz) { ConcurrentHashMap() }
         }
     }
 
+    /**
+     * 获取指定类对应的方法缓存映射。
+     *
+     * 如果缓存中不存在该类的映射，则创建一个新的 [ConcurrentHashMap] 并存入缓存。
+     * 通过 [synchronized] 保证并发安全。
+     *
+     * @param clazz 目标类。
+     * @return 该类对应的方法缓存映射。
+     */
     private fun getMethodCacheMap(clazz: Class<*>): ConcurrentHashMap<String, Optional<Method>> {
         synchronized(methodCache) {
             return methodCache.getOrPut(clazz) { ConcurrentHashMap() }
         }
     }
 
+    /**
+     * 获取指定类对应的构造函数缓存映射。
+     *
+     * 如果缓存中不存在该类的映射，则创建一个新的 [ConcurrentHashMap] 并存入缓存。
+     * 通过 [synchronized] 保证并发安全。
+     *
+     * @param clazz 目标类。
+     * @return 该类对应的构造函数缓存映射。
+     */
     private fun getConstructorCacheMap(clazz: Class<*>): ConcurrentHashMap<String, Optional<Constructor<*>>> {
         synchronized(constructorCache) {
             return constructorCache.getOrPut(clazz) { ConcurrentHashMap() }
@@ -110,6 +142,7 @@ object CoreHelper {
         }
 
         companion object {
+            /** 全局共享的空 [Optional] 单例，避免重复创建空实例。 */
             private val EMPTY = Optional<Any>(null)
 
             /**
@@ -422,15 +455,17 @@ object CoreHelper {
     /**
      * 计算源类型到目标类型之间的对象转换代价。
      *
-     * 如果目标类型为基本类型，委托给 [getPrimitivePromotionCost] 计算。
-     * 否则沿继承链向上遍历，计算类层次距离：
-     * - 实现接口的代价为 0.25
-     * - 每向上一级父类的代价为 1.0
-     * - 源类型为 `null` 时代价固定为 1.5
+     * 处理逻辑按优先级排列：
+     * - 目标类型为基本类型时，委托给 [getPrimitivePromotionCost]；若源类型为 `null` 则返回 [Float.MAX_VALUE]
+     * - 源类型为 `null`（非基本类型目标）时代价固定为 1.5
+     * - 源类型与目标类型完全相同时代价为 0
+     * - 双方均为数组类型时，递归计算组件类型的转换代价并加收 0.1 的数组维度附加代价
+     * - 否则沿继承链向上遍历，若目标为接口则委托 [getInterfaceDistance] 计算精确的接口距离代价，
+     *   每向上一级父类的代价为 1.0
      *
      * @param srcType  源类型，为 `null` 表示运行时值为 `null`。
      * @param destType 目标类型。
-     * @return 转换代价，数值越小表示兼容性越好。
+     * @return 转换代价，数值越小表示兼容性越好；不可转换时返回 [Float.MAX_VALUE]。
      */
     private fun getObjectTransformationCost(srcType: Class<*>?, destType: Class<*>): Float {
         if (destType.isPrimitive) {
@@ -458,6 +493,17 @@ object CoreHelper {
         return cost
     }
 
+    /**
+     * 递归计算源类型到目标接口之间的继承距离代价。
+     *
+     * 沿源类型的接口和父类递归搜索，记录到达目标接口的最短路径：
+     * - 每经过一个直接接口的代价为 0.25
+     * - 每经过一个父类的代价为 1.0
+     *
+     * @param src  源类型。
+     * @param dest 目标接口类型。
+     * @return 到达目标接口的最小转换代价；无法到达时返回 [Float.MAX_VALUE]。
+     */
     private fun getInterfaceDistance(src: Class<*>, dest: Class<*>): Float {
         if (src == dest) return 0f
         var minCost = Float.MAX_VALUE
@@ -495,10 +541,11 @@ object CoreHelper {
     /**
      * 在类的继承链及接口树中收集与指定名称和参数类型兼容的所有方法。
      *
-     * 搜索顺序：
-     * 1. 当前类直接声明的所有方法（仅第一轮包含 `private` 方法）
-     * 2. 当前类实现的接口（深度优先递归，排除静态方法）
-     * 3. 父类（逐级向上）
+     * 搜索分两轮进行：
+     * 1. 沿继承链向上遍历（当前类 → 父类），收集直接声明的方法；bridge 方法和 synthetic 方法会被过滤，
+     *    仅第一轮（当前类）包含 `private` 方法。
+     * 2. 从当前类出发沿继承链向上遍历接口树（深度优先递归），收集接口中声明的 default 方法，
+     *    排除静态、私有、bridge 和 synthetic 方法。
      *
      * 通过 [seen] 集合对方法签名进行去重，避免同一方法被重复收集。
      *
@@ -537,10 +584,11 @@ object CoreHelper {
     }
 
     /**
-     * 在接口及其父接口中递归收集与指定名称和参数类型兼容的非静态方法。
+     * 在接口及其父接口中递归收集与指定名称和参数类型兼容的方法。
      *
-     * 用于支持 Java 8+ 接口 default 方法的深度查找。接口中的静态方法会被跳过，
-     * 因为静态方法不可被实现类继承。通过 [seen] 集合对方法签名进行去重。
+     * 用于支持 Java 8+ 接口 default 方法的深度查找。接口中的静态方法、私有方法、
+     * bridge 方法和 synthetic 方法会被跳过，因为它们不可被实现类继承或为编译器生成的辅助方法。
+     * 通过 [seen] 集合对方法签名进行去重。
      *
      * @param iface          需要搜索的接口。
      * @param name           需要查找的方法名称。
@@ -791,7 +839,10 @@ object CoreHelper {
     /**
      * 递归查找精确匹配的方法，支持从实体类及接口树中查找继承的 default 方法。
      *
-     * 搜索顺序：当前类声明的方法 → 当前类实现的接口（深度优先，排除静态方法）→ 父类（逐级向上）。
+     * 搜索分两轮进行：
+     * 1. 沿继承链向上遍历（当前类 → 父类），在直接声明的方法中查找。
+     * 2. 从当前类出发沿继承链向上遍历接口树（深度优先），在接口声明的方法中查找，
+     *    排除静态和私有方法。
      *
      * @param clazz          开始搜索的类。
      * @param name           需要查找的方法名称。
@@ -821,10 +872,10 @@ object CoreHelper {
     }
 
     /**
-     * 在接口及其父接口中递归查找精确匹配的非静态方法。
+     * 在接口及其父接口中递归查找精确匹配的方法。
      *
-     * 用于支持 Java 8+ 接口 default 方法的查找。接口中的静态方法会被排除，
-     * 因为静态方法不可被实现类继承。
+     * 用于支持 Java 8+ 接口 default 方法的查找。接口中的静态方法和私有方法会被排除，
+     * 因为静态方法不可被实现类继承，私有方法对外不可见。
      *
      * @param iface          需要搜索的接口。
      * @param name           需要查找的方法名称。
@@ -1318,13 +1369,15 @@ object CoreHelper {
     /**
      * 读取指定类的静态字段值（支持接口静态常量）。
      *
-     * 通过 [findField] 查找字段并以 `null` 作为接收者反射读取其值。
+     * 通过 [findField] 查找字段，校验其为静态字段后以 `null` 作为接收者反射读取值。
+     * 如果字段存在但不是静态字段，将抛出 [IllegalArgumentException]。
      *
      * @param clazz     目标类或接口。
      * @param fieldName 字段名称。
      * @return 字段的值，可能为 `null`。
-     * @throws NoSuchFieldError   未找到该字段时抛出。
-     * @throws IllegalAccessError 字段无法访问时抛出。
+     * @throws NoSuchFieldError      未找到该字段时抛出。
+     * @throws IllegalAccessError    字段无法访问时抛出。
+     * @throws IllegalArgumentException 字段不是静态字段时抛出。
      */
     @JvmStatic
     fun getStaticObjectField(clazz: Class<*>, fieldName: String): Any? {
@@ -1342,13 +1395,15 @@ object CoreHelper {
     /**
      * 设置指定类的静态字段值。
      *
-     * 通过 [findField] 查找字段并以 `null` 作为接收者反射设置其值。
+     * 通过 [findField] 查找字段，校验其为静态字段后以 `null` 作为接收者反射设置值。
+     * 如果字段存在但不是静态字段，将抛出 [IllegalArgumentException]。
      *
      * @param clazz     目标类。
      * @param fieldName 字段名称。
      * @param value     需要设置的值，可为 `null`。
-     * @throws NoSuchFieldError   未找到该字段时抛出。
-     * @throws IllegalAccessError 字段无法访问时抛出。
+     * @throws NoSuchFieldError      未找到该字段时抛出。
+     * @throws IllegalAccessError    字段无法访问时抛出。
+     * @throws IllegalArgumentException 字段不是静态字段时抛出。
      */
     @JvmStatic
     fun setStaticObjectField(clazz: Class<*>, fieldName: String, value: Any?) {
