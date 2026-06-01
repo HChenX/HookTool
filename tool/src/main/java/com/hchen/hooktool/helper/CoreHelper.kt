@@ -18,6 +18,19 @@
  */
 package com.hchen.hooktool.helper
 
+import com.hchen.hooktool.helper.CoreHelper.findClass
+import com.hchen.hooktool.helper.CoreHelper.findConstructorBestMatch
+import com.hchen.hooktool.helper.CoreHelper.findConstructorExact
+import com.hchen.hooktool.helper.CoreHelper.findConstructorExactWithClasses
+import com.hchen.hooktool.helper.CoreHelper.findField
+import com.hchen.hooktool.helper.CoreHelper.findMethodBestMatch
+import com.hchen.hooktool.helper.CoreHelper.findMethodExact
+import com.hchen.hooktool.helper.CoreHelper.findMethodExactWithClasses
+import com.hchen.hooktool.helper.CoreHelper.getAdditionalInstanceField
+import com.hchen.hooktool.helper.CoreHelper.getObjectTransformationCost
+import com.hchen.hooktool.helper.CoreHelper.getPrimitivePromotionCost
+import com.hchen.hooktool.helper.CoreHelper.removeAdditionalInstanceField
+import com.hchen.hooktool.helper.CoreHelper.setAdditionalInstanceField
 import java.lang.reflect.Constructor
 import java.lang.reflect.Field
 import java.lang.reflect.InvocationTargetException
@@ -45,92 +58,25 @@ import java.util.concurrent.ConcurrentHashMap
  * @author 焕晨HChen
  */
 object CoreHelper {
-    /**
-     * 字段解析结果缓存。
-     *
-     * 以 [FieldCacheKey]（包含声明类与字段名）作为键，
-     * 以 [Optional] 包装的 [Field] 作为值。
-     */
-    private val fieldCache = ConcurrentHashMap<FieldCacheKey, Optional<Field>>()
+    private val fieldCache = WeakHashMap<Class<*>, ConcurrentHashMap<String, Optional<Field>>>()
+    private val methodCache = WeakHashMap<Class<*>, ConcurrentHashMap<String, Optional<Method>>>()
+    private val constructorCache = WeakHashMap<Class<*>, ConcurrentHashMap<String, Optional<Constructor<*>>>>()
 
-    /**
-     * 方法解析结果缓存。
-     *
-     * 以 [MethodCacheKey]（包含声明类、方法名、参数类型数组及是否精确匹配）作为键，
-     * 以 [Optional] 包装的 [Method] 作为值。
-     */
-    private val methodCache = ConcurrentHashMap<MethodCacheKey, Optional<Method>>()
-
-    /**
-     * 构造函数解析结果缓存。
-     *
-     * 以 [ConstructorCacheKey]（包含声明类、参数类型数组及是否精确匹配）作为键，
-     * 以 [Optional] 包装的 [Constructor] 作为值。
-     */
-    private val constructorCache = ConcurrentHashMap<ConstructorCacheKey, Optional<Constructor<*>>>()
-
-    /**
-     * 字段缓存键，唯一标识某个类中声明的某个字段。
-     *
-     * @property clazz  字段所属的声明类。
-     * @property name   字段的名称。
-     */
-    private data class FieldCacheKey(val clazz: Class<*>, val name: String)
-
-    /**
-     * 方法缓存键，唯一标识某个类中声明的某个方法。
-     *
-     * @property clazz       方法所属的声明类。
-     * @property name        方法的名称。
-     * @property parameters  参数类型数组，其中元素允许为 `null`，表示该位置可通配。
-     * @property isExact     `true` 表示精确匹配模式；`false` 表示最佳匹配模式。
-     */
-    private data class MethodCacheKey(
-        val clazz: Class<*>,
-        val name: String,
-        val parameters: Array<Class<*>?>,
-        val isExact: Boolean
-    ) {
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (other !is MethodCacheKey) return false
-            return isExact == other.isExact && clazz == other.clazz && name == other.name &&
-                    parameters.contentEquals(other.parameters)
-        }
-
-        override fun hashCode(): Int {
-            var result = clazz.hashCode()
-            result = 31 * result + name.hashCode()
-            result = 31 * result + parameters.contentHashCode()
-            result = 31 * result + isExact.hashCode()
-            return result
+    private fun getFieldCacheMap(clazz: Class<*>): ConcurrentHashMap<String, Optional<Field>> {
+        synchronized(fieldCache) {
+            return fieldCache.getOrPut(clazz) { ConcurrentHashMap() }
         }
     }
 
-    /**
-     * 构造函数缓存键，唯一标识某个类中声明的某个构造函数。
-     *
-     * @property clazz       构造函数所属的声明类。
-     * @property parameters  参数类型数组，其中元素允许为 `null`，表示该位置可通配。
-     * @property isExact     `true` 表示精确匹配模式；`false` 表示最佳匹配模式。
-     */
-    private data class ConstructorCacheKey(
-        val clazz: Class<*>,
-        val parameters: Array<Class<*>?>,
-        val isExact: Boolean
-    ) {
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (other !is ConstructorCacheKey) return false
-            return isExact == other.isExact && clazz == other.clazz &&
-                    parameters.contentEquals(other.parameters)
+    private fun getMethodCacheMap(clazz: Class<*>): ConcurrentHashMap<String, Optional<Method>> {
+        synchronized(methodCache) {
+            return methodCache.getOrPut(clazz) { ConcurrentHashMap() }
         }
+    }
 
-        override fun hashCode(): Int {
-            var result = clazz.hashCode()
-            result = 31 * result + parameters.contentHashCode()
-            result = 31 * result + isExact.hashCode()
-            return result
+    private fun getConstructorCacheMap(clazz: Class<*>): ConcurrentHashMap<String, Optional<Constructor<*>>> {
+        synchronized(constructorCache) {
+            return constructorCache.getOrPut(clazz) { ConcurrentHashMap() }
         }
     }
 
@@ -258,7 +204,8 @@ object CoreHelper {
      */
     private fun findInterfaceFieldRecursive(iface: Class<*>, fieldName: String): Field? {
         try {
-            return iface.getDeclaredField(fieldName)
+            val f = iface.getDeclaredField(fieldName)
+            if (Modifier.isStatic(f.modifiers)) return f
         } catch (_: NoSuchFieldException) {
         }
         for (superIface in iface.interfaces) {
@@ -487,15 +434,21 @@ object CoreHelper {
      */
     private fun getObjectTransformationCost(srcType: Class<*>?, destType: Class<*>): Float {
         if (destType.isPrimitive) {
-            if (srcType == null) return 1.5f
+            if (srcType == null) return Float.MAX_VALUE
             return getPrimitivePromotionCost(srcType, destType)
         }
         if (srcType == null) return 1.5f
+        if (srcType == destType) return 0.0f
+
+        if (srcType.isArray && destType.isArray) {
+            return getObjectTransformationCost(srcType.componentType, destType.componentType!!) + 0.1f
+        }
+
         var cost = 0f
         var src: Class<*>? = srcType
         while (src != null && src != destType) {
             if (destType.isInterface && destType.isAssignableFrom(src)) {
-                cost += 0.25f
+                cost += getInterfaceDistance(src, destType)
                 break
             }
             cost++
@@ -503,6 +456,23 @@ object CoreHelper {
         }
         if (src == null) cost += 1.5f
         return cost
+    }
+
+    private fun getInterfaceDistance(src: Class<*>, dest: Class<*>): Float {
+        if (src == dest) return 0f
+        var minCost = Float.MAX_VALUE
+        for (iface in src.interfaces) {
+            if (dest.isAssignableFrom(iface)) {
+                val cost = 0.25f + getInterfaceDistance(iface, dest)
+                if (cost < minCost) minCost = cost
+            }
+        }
+        val superclass = src.superclass
+        if (superclass != null && dest.isAssignableFrom(superclass)) {
+            val cost = 1.0f + getInterfaceDistance(superclass, dest)
+            if (cost < minCost) minCost = cost
+        }
+        return minCost
     }
 
     /**
@@ -539,10 +509,12 @@ object CoreHelper {
      */
     private fun collectMethodsBestMatch(clazz: Class<*>, name: String, parameterTypes: Array<Class<*>?>, result: MutableList<Method>) {
         val seen = HashSet<String>()
+
         var clz: Class<*>? = clazz
         var considerPrivate = true
         while (clz != null) {
             for (method in clz.declaredMethods) {
+                if (method.isBridge || method.isSynthetic) continue
                 if (!considerPrivate && Modifier.isPrivate(method.modifiers)) continue
                 if (method.name == name && isAssignable(parameterTypes, method.parameterTypes)) {
                     val sig = method.name + method.parameterTypes.contentToString()
@@ -551,10 +523,15 @@ object CoreHelper {
                     }
                 }
             }
+            considerPrivate = false
+            clz = clz.superclass
+        }
+
+        clz = clazz
+        while (clz != null) {
             for (iface in clz.interfaces) {
                 collectInterfaceMethodsRecursive(iface, name, parameterTypes, seen, result)
             }
-            considerPrivate = false
             clz = clz.superclass
         }
     }
@@ -573,7 +550,7 @@ object CoreHelper {
      */
     private fun collectInterfaceMethodsRecursive(iface: Class<*>, name: String, parameterTypes: Array<Class<*>?>, seen: HashSet<String>, result: MutableList<Method>) {
         for (method in iface.declaredMethods) {
-            if (Modifier.isStatic(method.modifiers)) continue
+            if (Modifier.isStatic(method.modifiers) || Modifier.isPrivate(method.modifiers) || method.isBridge || method.isSynthetic) continue
             if (method.name == name && isAssignable(parameterTypes, method.parameterTypes)) {
                 val sig = method.name + method.parameterTypes.contentToString()
                 if (seen.add(sig)) {
@@ -714,10 +691,9 @@ object CoreHelper {
      */
     @JvmStatic
     fun findField(clazz: Class<*>, fieldName: String): Field {
-        val key = FieldCacheKey(clazz, fieldName)
-        return fieldCache.computeIfAbsent(key) { k ->
+        return getFieldCacheMap(clazz).computeIfAbsent(fieldName) { k ->
             try {
-                val field = findFieldRecursiveImpl(k.clazz, k.name)
+                val field = findFieldRecursiveImpl(clazz, k)
                 field.isAccessible = true
                 Optional.of(field)
             } catch (_: NoSuchFieldException) {
@@ -800,11 +776,10 @@ object CoreHelper {
      */
     @JvmStatic
     fun findMethodExactWithClasses(clazz: Class<*>, methodName: String, vararg parameterTypes: Class<*>): Method {
-        val key = MethodCacheKey(clazz, methodName, arrayOf(*parameterTypes), true)
-        return methodCache.computeIfAbsent(key) { k ->
+        val sig = "$methodName#${parameterTypes.joinToString { it.name }}#exact"
+        return getMethodCacheMap(clazz).computeIfAbsent(sig) {
             try {
-                @Suppress("UNCHECKED_CAST")
-                val method = findMethodExactRecursive(k.clazz, k.name, k.parameters as Array<Class<*>>)
+                val method = findMethodExactRecursive(clazz, methodName, arrayOf(*parameterTypes))
                 method.isAccessible = true
                 Optional.of(method)
             } catch (_: NoSuchMethodException) {
@@ -831,6 +806,11 @@ object CoreHelper {
                 return clz.getDeclaredMethod(name, *parameterTypes)
             } catch (_: NoSuchMethodException) {
             }
+            clz = clz.superclass
+        }
+
+        clz = clazz
+        while (clz != null) {
             for (iface in clz.interfaces) {
                 val m = findInterfaceMethodExactRecursive(iface, name, parameterTypes)
                 if (m != null) return m
@@ -854,7 +834,7 @@ object CoreHelper {
     private fun findInterfaceMethodExactRecursive(iface: Class<*>, name: String, parameterTypes: Array<Class<*>>): Method? {
         try {
             val m = iface.getDeclaredMethod(name, *parameterTypes)
-            if (!Modifier.isStatic(m.modifiers)) return m
+            if (!Modifier.isStatic(m.modifiers) && !Modifier.isPrivate(m.modifiers)) return m
         } catch (_: NoSuchMethodException) {
         }
         for (superIface in iface.interfaces) {
@@ -933,13 +913,13 @@ object CoreHelper {
             }
         }
 
-        val key = MethodCacheKey(clazz, methodName, arrayOf(*parameterTypes), false)
-        return methodCache.computeIfAbsent(key) { k ->
+        val sig = "$methodName#${parameterTypes.joinToString { it?.name ?: "null" }}#best"
+        return getMethodCacheMap(clazz).computeIfAbsent(sig) {
             val candidates = mutableListOf<Method>()
-            collectMethodsBestMatch(k.clazz, k.name, k.parameters, candidates)
+            collectMethodsBestMatch(clazz, methodName, arrayOf(*parameterTypes), candidates)
             var bestMatch: Method? = null
             for (method in candidates) {
-                if (bestMatch == null || compareFit(method.parameterTypes, bestMatch.parameterTypes, k.parameters) < 0) {
+                if (bestMatch == null || compareFit(method.parameterTypes, bestMatch.parameterTypes, arrayOf(*parameterTypes)) < 0) {
                     bestMatch = method
                 }
             }
@@ -1046,11 +1026,10 @@ object CoreHelper {
      */
     @JvmStatic
     fun findConstructorExactWithClasses(clazz: Class<*>, vararg parameterTypes: Class<*>): Constructor<*> {
-        val key = ConstructorCacheKey(clazz, arrayOf(*parameterTypes), true)
-        return constructorCache.computeIfAbsent(key) { k ->
+        val sig = "${parameterTypes.joinToString { it.name }}#exact"
+        return getConstructorCacheMap(clazz).computeIfAbsent(sig) {
             try {
-                @Suppress("UNCHECKED_CAST")
-                val constructor = k.clazz.getDeclaredConstructor(*(k.parameters as Array<Class<*>>))
+                val constructor = clazz.getDeclaredConstructor(*parameterTypes)
                 constructor.isAccessible = true
                 Optional.of(constructor)
             } catch (_: NoSuchMethodException) {
@@ -1125,12 +1104,12 @@ object CoreHelper {
             }
         }
 
-        val key = ConstructorCacheKey(clazz, arrayOf(*parameterTypes), false)
-        return constructorCache.computeIfAbsent(key) { k ->
+        val sig = "${parameterTypes.joinToString { it?.name ?: "null" }}#best"
+        return getConstructorCacheMap(clazz).computeIfAbsent(sig) {
             var bestMatch: Constructor<*>? = null
-            for (constructor in k.clazz.declaredConstructors) {
-                if (isAssignable(k.parameters, constructor.parameterTypes)) {
-                    if (bestMatch == null || compareFit(constructor.parameterTypes, bestMatch.parameterTypes, k.parameters) < 0) {
+            for (constructor in clazz.declaredConstructors) {
+                if (isAssignable(arrayOf(*parameterTypes), constructor.parameterTypes)) {
+                    if (bestMatch == null || compareFit(constructor.parameterTypes, bestMatch.parameterTypes, arrayOf(*parameterTypes)) < 0) {
                         bestMatch = constructor
                     }
                 }
@@ -1351,6 +1330,9 @@ object CoreHelper {
     fun getStaticObjectField(clazz: Class<*>, fieldName: String): Any? {
         return try {
             val field = findField(clazz, fieldName)
+            if (!Modifier.isStatic(field.modifiers)) {
+                throw IllegalArgumentException("Expected static field, but ${clazz.name}#$fieldName is an instance field.")
+            }
             field.get(null)
         } catch (e: IllegalAccessException) {
             throw IllegalAccessError(e.message)
@@ -1372,6 +1354,9 @@ object CoreHelper {
     fun setStaticObjectField(clazz: Class<*>, fieldName: String, value: Any?) {
         try {
             val field = findField(clazz, fieldName)
+            if (!Modifier.isStatic(field.modifiers)) {
+                throw IllegalArgumentException("Expected static field, but ${clazz.name}#$fieldName is an instance field.")
+            }
             field.set(null, value)
         } catch (e: IllegalAccessException) {
             throw IllegalAccessError(e.message)
