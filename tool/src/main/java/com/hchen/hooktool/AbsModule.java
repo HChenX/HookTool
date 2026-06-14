@@ -18,6 +18,7 @@
  */
 package com.hchen.hooktool;
 
+import android.app.Application;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
@@ -81,7 +82,15 @@ public abstract class AbsModule extends CoreTool {
         /**
          * 目标应用的 Application 已创建。回调参数类型为 {@link Context}。
          */
-        ON_APPLICATION_CREATED
+        ON_APPLICATION_CREATED,
+        /**
+         * 模块即将被热更新（在旧代码中执行）。回调参数类型为 {@link XposedModuleInterface.HotReloadingParam}。
+         */
+        HOT_RELOADING,
+        /**
+         * 模块已完成热更新（在新代码中执行）。回调参数类型为 {@link XposedModuleInterface.HotReloadedParam}。
+         */
+        HOT_RELOADED
     }
 
     /**
@@ -106,6 +115,8 @@ public abstract class AbsModule extends CoreTool {
      *   <li>{@link StageEnum#PACKAGE_LOADED} → {@link XposedModuleInterface.PackageLoadedParam}</li>
      *   <li>{@link StageEnum#PACKAGE_READY} → {@link XposedModuleInterface.PackageReadyParam}</li>
      *   <li>{@link StageEnum#SYSTEM_SERVER_STARTING} → {@link XposedModuleInterface.SystemServerStartingParam}</li>
+     *   <li>{@link StageEnum#HOT_RELOADING} → {@link XposedModuleInterface.HotReloadingParam}</li>
+     *   <li>{@link StageEnum#HOT_RELOADED} → {@link XposedModuleInterface.HotReloadedParam}</li>
      * </ul>
      *
      * @param stage 当前生命周期阶段
@@ -131,6 +142,20 @@ public abstract class AbsModule extends CoreTool {
      * @param context 目标应用的上下文对象
      */
     protected void onApplicationCreated(@NonNull Context context) {
+    }
+
+    /**
+     * 模块即将被热更新时的回调（在旧代码中执行）。
+     * <p>
+     * 此方法在旧模块代码中运行，返回 {@code true} 表示允许热更新继续进行。
+     * 子类可在此方法中保存需要在热更新后恢复的状态。
+     * 默认返回 {@code false} 表示不支持热更新。
+     *
+     * @param param 热更新参数，包含触发时传递的附加数据
+     * @return {@code true} 允许热更新，{@code false} 取消热更新
+     */
+    protected boolean onHotReloading(@NonNull XposedModuleInterface.HotReloadingParam param) {
+        return false;
     }
 
     /**
@@ -273,6 +298,44 @@ public abstract class AbsModule extends CoreTool {
             @Override
             public void accept(Context context) {
                 onApplicationCreated(context);
+            }
+        });
+    }
+
+    /**
+     * 分发模块热更新前事件（在旧代码中执行）。
+     * <p>
+     * 由模块入口类调用，将事件转发至
+     * {@link #onHotReloading(XposedModuleInterface.HotReloadingParam)}。
+     *
+     * @param param 热更新参数
+     * @return {@code true} 允许热更新，{@code false} 取消热更新
+     */
+    final public boolean handleHotReloading(@NonNull XposedModuleInterface.HotReloadingParam param) {
+        if (!isEnabled()) return false;
+        try {
+            Objects.requireNonNull(param);
+            return onHotReloading(param);
+        } catch (Throwable e) {
+            onThrow(StageEnum.HOT_RELOADING, e);
+            logE(TAG, e);
+            return false;
+        }
+    }
+
+    /**
+     * 分发模块热更新完成事件（在新代码中执行）。
+     * <p>
+     * 由模块入口类调用，通过 {@link #dispatch} 将事件转发至
+     * {@link #onLoaded(StageEnum, Object)}，阶段标识为 {@link StageEnum#HOT_RELOADED}。
+     *
+     * @param param 热更新完成参数
+     */
+    final public void handleHotReloaded(@NonNull XposedModuleInterface.HotReloadedParam param) {
+        dispatch(StageEnum.HOT_RELOADED, param, new Consumer<XposedModuleInterface.HotReloadedParam>() {
+            @Override
+            public void accept(XposedModuleInterface.HotReloadedParam p) {
+                onLoaded(StageEnum.HOT_RELOADED, p);
             }
         });
     }

@@ -1,7 +1,7 @@
 [versions]
 agp = "9.2.1"
-xposed = "101.0.1"
-service = "101.0.0"
+xposed = "102.0.0"
+service = "102.0.0"
 
 appcompat = "1.7.1"
 activity = "1.13.0"

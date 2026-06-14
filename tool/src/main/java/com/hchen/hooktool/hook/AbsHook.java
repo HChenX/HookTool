@@ -476,6 +476,7 @@ public abstract class AbsHook {
      * 解除当前钩子实例注册的所有方法拦截。
      * <p>
      * 遍历内部已注册的全部钩子句柄并逐一解除。
+     * 解除完成后内部句柄列表将被清空，以便后续重新注册。
      *
      * @throws IllegalStateException 当钩子尚未生效（句柄列表为空）时调用此方法将抛出
      */
@@ -486,6 +487,19 @@ public abstract class AbsHook {
         for (XposedInterface.HookHandle handle : handles) {
             handle.unhook();
         }
+        handles.clear();
+    }
+
+    /**
+     * 获取当前钩子实例已注册的全部 Hook 句柄。
+     * <p>
+     * 返回的列表是线程安全的快照副本，可用于在热更新等场景中逐一处理旧 Hook。
+     *
+     * @return 已注册的句柄数组；若尚未注册任何句柄则返回空数组
+     */
+    @NonNull
+    final public XposedInterface.HookHandle[] getHookHandles() {
+        return handles.toArray(new XposedInterface.HookHandle[0]);
     }
 
     /**

@@ -130,6 +130,36 @@ public abstract class ModuleEntrance extends XposedModule {
     public void handleSystemServerStarting(@NonNull SystemServerStartingParam param) {
     }
 
+    /**
+     * 模块即将被热更新时触发的回调（在旧代码中执行）。
+     * <p>
+     * 此回调在热更新触发时于旧模块代码中运行。返回 {@code true} 表示允许热更新继续进行，
+     * 返回 {@code false} 表示取消热更新。默认返回 {@code false} 表示默认不支持热更新。
+     * <p>
+     * 子类若需支持热更新，应覆写此方法并在其中执行必要的资源释放操作，
+     * 同时配合 {@link #handleHotReloaded(HotReloadedParam)} 完成新代码的重新挂钩。
+     *
+     * @param param 热更新参数，包含触发时传递的附加数据
+     * @return {@code true} 允许热更新，{@code false} 取消热更新
+     */
+    public boolean handleHotReloading(@NonNull HotReloadingParam param) {
+        return false;
+    }
+
+    /**
+     * 模块已完成热更新时触发的回调（在新代码中执行）。
+     * <p>
+     * 此回调在热更新完成后于新模块代码中运行。框架默认会解除所有旧 Hook，
+     * 子类可覆写此方法执行重新挂钩或特定的初始化操作。
+     *
+     * @param param 热更新完成参数，包含旧 Hook 句柄、保存的状态等信息
+     */
+    public void handleHotReloaded(@NonNull HotReloadedParam param) {
+        for (HookHandle hookHandle : param.getOldHookHandles()) {
+            hookHandle.unhook();
+        }
+    }
+
     // ------------------------- Inner -----------------------------
     @Override
     public final void onModuleLoaded(@NonNull ModuleLoadedParam param) {
@@ -176,6 +206,16 @@ public abstract class ModuleEntrance extends XposedModule {
     @Override
     public final void onSystemServerStarting(@NonNull SystemServerStartingParam param) {
         handleSystemServerStarting(param);
+    }
+
+    @Override
+    public final boolean onHotReloading(@NonNull HotReloadingParam param) {
+        return handleHotReloading(param);
+    }
+
+    @Override
+    public final void onHotReloaded(@NonNull HotReloadedParam param) {
+        handleHotReloaded(param);
     }
 
     private volatile HookHandle handle;

@@ -19,6 +19,7 @@
 package com.hchen.hooktool.hook;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.util.Objects;
 
@@ -48,6 +49,40 @@ public final class HookBridge {
      */
     public HookBridge(@NonNull XposedInterface.HookBuilder builder) {
         this.builder = builder;
+    }
+
+    /**
+     * 设置钩子的唯一标识符。
+     * <p>
+     * 标识符用于在同一个模块中对同一可执行对象上的 Hook 进行唯一标识。
+     * 具有相同 ID 的新 Hook 会原子性地替换旧 Hook。Hook ID 在模块之间隔离。
+     * <p>
+     * 此 API 从 libxposed API 102 开始可用。
+     *
+     * @param id Hook 的唯一标识符；为 {@code null} 则表示不关心后续替换
+     * @return 当前构建器实例，便于链式调用
+     */
+    @NonNull
+    public HookBridge setId(@Nullable String id) {
+        Objects.requireNonNull(builder);
+        builder.setId(id);
+        return this;
+    }
+
+    /**
+     * 设置钩子的异常处理模式。
+     * <p>
+     * 通过此方法可以配置当钩子拦截器抛出异常时框架的处理策略。
+     * 此 API 从 libxposed API 102 开始可用。
+     *
+     * @param mode 异常处理模式
+     * @return 当前构建器实例，便于链式调用
+     */
+    @NonNull
+    public HookBridge setExceptionMode(@NonNull XposedInterface.ExceptionMode mode) {
+        Objects.requireNonNull(builder);
+        builder.setExceptionMode(mode);
+        return this;
     }
 
     /**
