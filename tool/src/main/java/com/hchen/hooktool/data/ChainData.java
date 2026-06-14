@@ -183,11 +183,6 @@ public final class ChainData {
         if (!(object instanceof ChainData chainData)) return false;
 
         return chainType == chainData.chainType &&
-            // isIgnoreThrow == chainData.isIgnoreThrow &&
-            // Objects.deepEquals(executables, chainData.executables) &&
-            // Objects.equals(absHook, chainData.absHook) &&
-            // Objects.equals(throwable, chainData.throwable) &&
-            // Objects.equals(function, chainData.function) &&
             Arrays.deepEquals(parameterTypes, chainData.parameterTypes) &&
             Objects.equals(executable, chainData.executable) &&
             Objects.equals(methodName, chainData.methodName);
@@ -197,11 +192,6 @@ public final class ChainData {
     public int hashCode() {
         return Objects.hash(
             chainType,
-            // isIgnoreThrow,
-            // Arrays.hashCode(executables),
-            // absHook,
-            // throwable,
-            // function,
             Arrays.deepHashCode(parameterTypes),
             executable,
             methodName

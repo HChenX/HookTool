@@ -31,7 +31,6 @@ import androidx.annotation.NonNull;
 import org.json.JSONObject;
 
 import java.util.HashMap;
-import java.util.Objects;
 
 import kotlin.text.Charsets;
 
@@ -105,7 +104,8 @@ public final class ModuleState {
     public static HashMap<String, String> isLSPatchActive(@NonNull Context context, @NonNull String packageName) {
         try {
             PackageInfo info = context.getPackageManager().getPackageInfo(packageName, PackageManager.GET_META_DATA);
-            String config = Objects.requireNonNull(info.applicationInfo).metaData.getString("lspatch");
+            if (info.applicationInfo == null || info.applicationInfo.metaData == null) return new HashMap<>();
+            String config = info.applicationInfo.metaData.getString("lspatch");
             if (config == null) return new HashMap<>();
 
             String json = new String(Base64.decode(config, Base64.DEFAULT), Charsets.UTF_8);

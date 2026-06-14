@@ -23,6 +23,7 @@ import androidx.annotation.NonNull;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.Arrays;
 
 /**
  * HookTool 模块的全局配置中心。
@@ -201,7 +202,7 @@ public final class ModuleConfig {
      */
     @NonNull
     public static String[] getLogExpandPaths() {
-        return logExpandPaths;
+        return Arrays.copyOf(logExpandPaths, logExpandPaths.length);
     }
 
     /**
@@ -211,7 +212,7 @@ public final class ModuleConfig {
      */
     @NonNull
     public static String[] getLogExpandIgnoreClassNames() {
-        return logExpandIgnoreClassNames;
+        return Arrays.copyOf(logExpandIgnoreClassNames, logExpandIgnoreClassNames.length);
     }
 
     /**
