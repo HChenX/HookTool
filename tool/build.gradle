@@ -6,13 +6,10 @@ plugins {
 def defVersion = '3.0.6'
 int defVersionCode = 2026061400
 
-group = 'com.github.HChenX'
-version = defVersion
-
 android {
     namespace 'com.hchen.hooktool'
     compileSdk {
-        version = release(36)
+        version = release(37)
     }
 
     defaultConfig {
