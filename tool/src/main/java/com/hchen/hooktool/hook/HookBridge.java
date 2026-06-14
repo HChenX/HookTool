@@ -31,6 +31,8 @@ import io.github.libxposed.api.XposedInterface;
  * 本类在 {@link AbsHook} 与 {@link XposedInterface.HookBuilder} 之间起到桥接作用，主要职责包括：
  * <ul>
  *     <li>将钩子优先级传递至底层构建器</li>
+ *     <li>设置钩子唯一标识符（API 102）</li>
+ *     <li>设置异常处理模式（API 102）</li>
  *     <li>在拦截器回调中调度 {@link AbsHook} 的完整生命周期（{@code before → proceed → after}）</li>
  *     <li>在各阶段捕获异常并委派给 {@link AbsHook#onThrow(AbsHook.StageEnum, Throwable)} 处理</li>
  *     <li>管理拦截上下文的进入与退出</li>

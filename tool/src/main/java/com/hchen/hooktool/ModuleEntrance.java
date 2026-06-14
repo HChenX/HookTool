@@ -43,14 +43,26 @@ import io.github.libxposed.api.XposedModule;
  * <p>
  * 当目标应用的 {@link Application#attach(Context)} 被调用时，框架会自动
  * 触发 {@link #handleApplicationCreated(Context)} 回调。
+ * <p>
+ * 从 API 102 开始支持热更新（Hot Reload）：
+ * <ul>
+ *   <li>{@link #handleHotReloading(HotReloadingParam)} — 热更新前在旧代码中执行，决定是否允许更新</li>
+ *   <li>{@link #handleHotReloaded(HotReloadedParam)} — 热更新完成后在新代码中执行，自动解除旧 Hook 并触发重新挂钩</li>
+ * </ul>
+ * 如需使用 AbsModule 生命周期框架，请在 {@link #handleModuleLoaded(ModuleLoadedParam)} 中
+ * 调用 {@link #setAbsModule(AbsModule)} 注册实例。
  *
  * @author 焕晨HChen
  * @see AbsModule
  * @see ModuleConfig
+ * @see XposedModuleInterface
  */
 public abstract class ModuleEntrance extends XposedModule {
     // 标记当前包是否应被跳过处理
     private volatile boolean shouldSkip = false;
+
+    /** 全局的 AbsModule 实例引用，用于路由热更新等生命周期回调。 */
+    private AbsModule absModule;
 
     /**
      * 初始化模块配置的抽象方法。
@@ -149,8 +161,11 @@ public abstract class ModuleEntrance extends XposedModule {
     /**
      * 模块已完成热更新时触发的回调（在新代码中执行）。
      * <p>
-     * 此回调在热更新完成后于新模块代码中运行。框架默认会解除所有旧 Hook，
-     * 子类可覆写此方法执行重新挂钩或特定的初始化操作。
+     * 此回调在热更新完成后于新模块代码中运行。子类可覆写此方法执行
+     * 重新挂钩或特定的初始化操作。默认实现会解除所有传入的旧 Hook 句柄。
+     * <p>
+     * 注意：即使覆写了此方法，框架仍会在调用 {@link #onHotReloaded(HotReloadedParam)}
+     * 中自动解除所有旧 Hook 并触发 AbsModule 的重新加载流程。
      *
      * @param param 热更新完成参数，包含旧 Hook 句柄、保存的状态等信息
      */
@@ -158,6 +173,19 @@ public abstract class ModuleEntrance extends XposedModule {
         for (HookHandle hookHandle : param.getOldHookHandles()) {
             hookHandle.unhook();
         }
+    }
+
+    /**
+     * 注册全局 AbsModule 实例，用于路由生命周期回调和热更新事件。
+     * <p>
+     * 子类应在 {@link #handleModuleLoaded(ModuleLoadedParam)} 或
+     * {@link #handlePackageReady(PackageReadyParam)} 中调用此方法注册
+     * 自定义的 AbsModule 实现。
+     *
+     * @param module AbsModule 实例，不可为 {@code null}
+     */
+    protected final void setAbsModule(@NonNull AbsModule module) {
+        this.absModule = module;
     }
 
     // ------------------------- Inner -----------------------------
@@ -210,12 +238,26 @@ public abstract class ModuleEntrance extends XposedModule {
 
     @Override
     public final boolean onHotReloading(@NonNull HotReloadingParam param) {
-        return handleHotReloading(param);
+        // 先调用子类回调，再调用 AbsModule 回调，两者都同意才允许热更新
+        boolean result = handleHotReloading(param);
+        AbsModule module = absModule;
+        if (module != null) {
+            return module.handleHotReloading(param) && result;
+        }
+        return result;
     }
 
     @Override
     public final void onHotReloaded(@NonNull HotReloadedParam param) {
+        // 1. 解除所有旧 Hook
         handleHotReloaded(param);
+
+        // 2. 通知 AbsModule 热更新已就绪，触发重新挂钩
+        AbsModule module = absModule;
+        if (module != null) {
+            module.handleHotReloaded(param);  // → onLoaded(HOT_RELOADED, param)
+            module.handleModuleLoaded(param); // → onLoaded(MODULE_LOADED, param)
+        }
     }
 
     private volatile HookHandle handle;
@@ -238,6 +280,10 @@ public abstract class ModuleEntrance extends XposedModule {
                             Context context = (Context) getArg(0);
                             Objects.requireNonNull(context);
                             handleApplicationCreated(context);
+                            AbsModule module = absModule;
+                            if (module != null) {
+                                module.handleApplicationCreated(context);
+                            }
                         }
                     }
                 );

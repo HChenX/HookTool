@@ -37,6 +37,12 @@ import io.github.libxposed.api.XposedModuleInterface;
  * 以 {@link StageEnum} 标识阶段的事件流。子类只需覆写 {@link #onLoaded(StageEnum, Object)}
  * 即可在不同生命周期节点插入自定义 Hook 逻辑。
  * <p>
+ * 从 API 102 开始支持热更新生命周期：
+ * <ul>
+ *   <li>{@link StageEnum#HOT_RELOADING} — 热更新前在旧代码中执行，可保存状态</li>
+ *   <li>{@link StageEnum#HOT_RELOADED} — 热更新完成后在新代码中执行，可重新挂钩</li>
+ * </ul>
+ * <p>
  * 每个生命周期回调在执行前均会经过 {@link #isEnabled()} 的守卫判断，
  * 若返回 {@code false} 则该回调及其后续逻辑将被整体跳过。回调执行期间
  * 抛出的异常会被捕获并转发至 {@link #onThrow(StageEnum, Throwable)}。
