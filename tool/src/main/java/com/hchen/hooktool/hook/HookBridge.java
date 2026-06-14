@@ -21,6 +21,8 @@ package com.hchen.hooktool.hook;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.hchen.hooktool.ModuleData;
+
 import java.util.Objects;
 
 import io.github.libxposed.api.XposedInterface;
@@ -32,7 +34,7 @@ import io.github.libxposed.api.XposedInterface;
  * <ul>
  *     <li>将钩子优先级传递至底层构建器</li>
  *     <li>设置钩子唯一标识符（API 102）</li>
- *     <li>设置异常处理模式（API 102）</li>
+ *     <li>设置异常处理模式</li>
  *     <li>在拦截器回调中调度 {@link AbsHook} 的完整生命周期（{@code before → proceed → after}）</li>
  *     <li>在各阶段捕获异常并委派给 {@link AbsHook#onThrow(AbsHook.StageEnum, Throwable)} 处理</li>
  *     <li>管理拦截上下文的进入与退出</li>
@@ -62,29 +64,24 @@ public final class HookBridge {
      * 此 API 从 libxposed API 102 开始可用。
      *
      * @param id Hook 的唯一标识符；为 {@code null} 则表示不关心后续替换
-     * @return 当前构建器实例，便于链式调用
      */
-    @NonNull
-    public HookBridge setId(@Nullable String id) {
-        Objects.requireNonNull(builder);
-        builder.setId(id);
-        return this;
+    private void setId(@Nullable String id) {
+        if (ModuleData.getApiVersion() >= 102) {
+            Objects.requireNonNull(builder);
+            builder.setId(id);
+        }
     }
 
     /**
      * 设置钩子的异常处理模式。
      * <p>
      * 通过此方法可以配置当钩子拦截器抛出异常时框架的处理策略。
-     * 此 API 从 libxposed API 102 开始可用。
      *
      * @param mode 异常处理模式
-     * @return 当前构建器实例，便于链式调用
      */
-    @NonNull
-    public HookBridge setExceptionMode(@NonNull XposedInterface.ExceptionMode mode) {
+    private void setExceptionMode(@NonNull XposedInterface.ExceptionMode mode) {
         Objects.requireNonNull(builder);
         builder.setExceptionMode(mode);
-        return this;
     }
 
     /**
@@ -102,6 +99,7 @@ public final class HookBridge {
      * <p>
      * 内部创建匿名 {@link XposedInterface.Hooker} 实现，在拦截回调中按如下顺序调度钩子生命周期：
      * <ol>
+     *     <li>将钩子优先级、标识符及异常处理模式传递至底层构建器</li>
      *     <li>进入拦截上下文（{@code enter}）</li>
      *     <li>执行 {@link AbsHook#before()} 前置拦截</li>
      *     <li>检查是否已有返回值替换或累积异常；若是则跳过原方法调用</li>
@@ -113,6 +111,9 @@ public final class HookBridge {
      * <p>
      * 各阶段捕获到的异常会先委派给 {@link AbsHook#onThrow(AbsHook.StageEnum, Throwable)}，
      * 若未被消费则根据阶段决定是否立即抛出。
+     * <p>
+     * 注意：{@code id} 和 {@code mode} 字段仅在非 {@code null} 时才会传递至底层；
+     * 当 {@code id} 不为 {@code null} 时，相同可执行对象 + 相同 id 的旧 Hook 会被原子替换。
      *
      * @param absHook 自定义钩子实例，不为 {@code null}
      * @return 框架返回的钩子句柄，可用于后续解除钩子等操作，不为 {@code null}
@@ -121,6 +122,12 @@ public final class HookBridge {
     public XposedInterface.HookHandle intercept(@NonNull AbsHook absHook) {
         Objects.requireNonNull(builder);
         setPriority(absHook.priority);
+        if (absHook.id != null) {
+            setId(absHook.id);
+        }
+        if (absHook.mode != null) {
+            setExceptionMode(absHook.mode);
+        }
         XposedInterface.HookHandle handle = builder.intercept(new XposedInterface.Hooker() {
             @Override
             public Object intercept(@NonNull XposedInterface.Chain chain) throws Throwable {

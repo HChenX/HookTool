@@ -54,6 +54,8 @@ import io.github.libxposed.api.XposedInterface;
  */
 public abstract class AbsHook {
     int priority; // 钩子优先级
+    String id; // 钩子 id
+    XposedInterface.ExceptionMode mode; // 异常模式
 
     private static class CallState {
         XposedInterface.Chain originalChain;
@@ -147,19 +149,27 @@ public abstract class AbsHook {
      * 以便调用方根据阶段进行差异化的异常处理。
      */
     public enum StageEnum {
-        /** 前置拦截阶段，即原方法被调用之前。 */
+        /**
+         * 前置拦截阶段，即原方法被调用之前。
+         */
         BEFORE,
-        /** 原方法执行阶段，正在通过 proceed 调用目标方法。 */
+        /**
+         * 原方法执行阶段，正在通过 proceed 调用目标方法。
+         */
         PROCEED,
-        /** 后置拦截阶段，即原方法调用完成之后。 */
+        /**
+         * 后置拦截阶段，即原方法调用完成之后。
+         */
         AFTER
     }
 
     /**
-     * 使用框架默认优先级构造钩子实例。
+     * 使用全部默认参数构造钩子实例。
+     * <p>
+     * 等价于 {@code AbsHook(PRIORITY_DEFAULT, null, null)}。
      */
     public AbsHook() {
-        this(PRIORITY_DEFAULT);
+        this(PRIORITY_DEFAULT, null, null);
     }
 
     /**
@@ -168,7 +178,68 @@ public abstract class AbsHook {
      * @param priority 钩子优先级，数值越小优先级越高，越早被框架调用
      */
     public AbsHook(int priority) {
+        this(priority, null, null);
+    }
+
+    /**
+     * 使用指定标识符构造钩子实例，优先级为默认值。
+     *
+     * @param id 钩子唯一标识符，用于在相同可执行对象上原子替换旧 Hook；为 {@code null} 表示不关心后续替换
+     */
+    public AbsHook(@Nullable String id) {
+        this(PRIORITY_DEFAULT, id, null);
+    }
+
+    /**
+     * 使用指定异常处理模式构造钩子实例，优先级为默认值。
+     *
+     * @param mode 钩子异常处理模式；为 {@code null} 表示使用框架默认行为
+     */
+    public AbsHook(@Nullable XposedInterface.ExceptionMode mode) {
+        this(PRIORITY_DEFAULT, null, mode);
+    }
+
+    /**
+     * 使用指定优先级和标识符构造钩子实例。
+     *
+     * @param priority 钩子优先级，数值越小优先级越高
+     * @param id       钩子唯一标识符；为 {@code null} 表示不关心后续替换
+     */
+    public AbsHook(int priority, @Nullable String id) {
+        this(priority, id, null);
+    }
+
+    /**
+     * 使用指定优先级和异常处理模式构造钩子实例。
+     *
+     * @param priority 钩子优先级，数值越小优先级越高
+     * @param mode     钩子异常处理模式；为 {@code null} 表示使用框架默认行为
+     */
+    public AbsHook(int priority, @Nullable XposedInterface.ExceptionMode mode) {
+        this(priority, null, mode);
+    }
+
+    /**
+     * 使用指定标识符和异常处理模式构造钩子实例，优先级为默认值。
+     *
+     * @param id   钩子唯一标识符；为 {@code null} 表示不关心后续替换
+     * @param mode 钩子异常处理模式；为 {@code null} 表示使用框架默认行为
+     */
+    public AbsHook(@Nullable String id, @Nullable XposedInterface.ExceptionMode mode) {
+        this(PRIORITY_DEFAULT, id, mode);
+    }
+
+    /**
+     * 完整参数的钩子实例构造器。
+     *
+     * @param priority 钩子优先级，数值越小优先级越高
+     * @param id       钩子唯一标识符，用于在相同可执行对象上原子替换旧 Hook；为 {@code null} 表示不关心后续替换
+     * @param mode     钩子异常处理模式；为 {@code null} 表示使用框架默认行为
+     */
+    public AbsHook(int priority, @Nullable String id, @Nullable XposedInterface.ExceptionMode mode) {
         this.priority = priority;
+        this.id = id;
+        this.mode = mode;
     }
 
     /**
@@ -321,7 +392,7 @@ public abstract class AbsHook {
      * 传入的数组长度必须与原始参数个数一致，否则将抛出异常。
      *
      * @param args 新的参数数组，长度须与原方法参数列表匹配
-     * @throws IndexOutOfBoundsException 当传入数组的长度与原始参数个数不一致时抛出
+     * @throws IllegalArgumentException 当传入数组的长度与原始参数个数不一致时抛出
      */
     public final void setArgs(@NonNull Object... args) {
         CallState state = getState();
@@ -329,7 +400,7 @@ public abstract class AbsHook {
             state.args = state.originalChain.getArgs().toArray(new Object[0]);
         }
         if (state.args.length != args.length) {
-            throw new IndexOutOfBoundsException("Parameter quantity mismatch. " +
+            throw new IllegalArgumentException("Parameter quantity mismatch. " +
                 "Target length:" + state.args.length + ", Actual length: " + args.length);
         }
         state.args = args;
@@ -497,8 +568,7 @@ public abstract class AbsHook {
      *
      * @return 已注册的句柄数组；若尚未注册任何句柄则返回空数组
      */
-    @NonNull
-    final public XposedInterface.HookHandle[] getHookHandles() {
+    @NonNull final public XposedInterface.HookHandle[] getHookHandles() {
         return handles.toArray(new XposedInterface.HookHandle[0]);
     }
 
