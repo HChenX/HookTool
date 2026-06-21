@@ -3,8 +3,8 @@ plugins {
     id 'maven-publish'
 }
 
-def defVersion = '3.0.7'
-int defVersionCode = 2026062100
+def defVersion = '3.0.8'
+int defVersionCode = 2026062101
 
 android {
     namespace 'com.hchen.hooktool'

@@ -98,7 +98,7 @@ public abstract class AbsHook {
      * <p>
      * 此字段用于在热重载流程中区分静态与非静态上下文：
      * 静态方法的 {@link #thisObject} 始终为 {@code null}，且在
-     * {@link HookRegistry#reloaded(Map)} 中不会从状态快照中查找
+     * {@link HookRegistry#reloaded(io.github.libxposed.api.XposedModuleInterface.HotReloadedParam)} 中不会从状态快照中查找
      * {@code thisObject}，避免静态钩子误读到同类的非静态实例数据。
      */
     boolean isStatic;
@@ -376,13 +376,13 @@ public abstract class AbsHook {
      * <p>
      * 默认实现返回一个空的 {@link HashMap}（始终非 {@code null}）。
      *
-     * @param extra 热重载的附加信息，包含触发重载的上下文数据；可能为 {@code null}
+     * @param extras 热重载的附加信息，包含触发重载的上下文数据；可能为 {@code null}
      *               （当框架未传递额外数据时）
      * @return 需要保存的状态键值对，不为 {@code null}；默认返回空 {@link HashMap}
      * @see HookRegistry#reloading(Bundle)
      */
     @NonNull
-    public Map<String, Object> onHotReloading(@Nullable Bundle extra) {
+    public Map<String, Object> onHotReloading(@Nullable Bundle extras) {
         return new HashMap<>();
     }
 
@@ -390,23 +390,26 @@ public abstract class AbsHook {
      * 热重载完成回调，在模块热重载完成后触发。
      * <p>
      * 子类可覆写此方法以从传入的状态快照中恢复之前保存的数据。
-     * 传入的 {@code thisObject} 是 {@link HookRegistry#reloaded(Map)} 根据当前实例的
-     * {@link #key} 从全局状态快照中查找到的宿主对象实例。
+     * 传入的 {@code thisObject} 是 {@link HookRegistry#reloaded(io.github.libxposed.api.XposedModuleInterface.HotReloadedParam)}
+     * 根据当前实例的 {@link #key} 从全局状态快照中查找到的宿主对象实例。
      * 传入的 {@code inState} 是在 {@link #onHotReloading(Bundle)} 阶段由
      * 所有旧钩子实例收集并合并后的全局状态快照。
      * <p>
-     * 此回调在 {@link HookRegistry#reloaded(Map)} 中被调用，
+     * 此回调在 {@link HookRegistry#reloaded(io.github.libxposed.api.XposedModuleInterface.HotReloadedParam)} 中被调用，
      * 此时注册表中已注册的是热重载后新创建的钩子实例。
+     * <p>
+     * 注意：{@code thisObject} 现已被标注为 {@link Nullable}，
+     * 子类覆写时需要进行空安全判断。
      *
-     * @param thisObject 从全局状态快照中恢复的宿主对象实例，
-     *                   可能为 {@code null}（若保存时 {@link #thisObject} 为 {@code null} 或
-     *                   {@link #key} 未设置）
+     * @param thisObject 从全局状态快照中恢复的宿主对象实例；
+     *                   可能为 {@code null}（静态方法、{@code <clinit>} 钩子、
+     *                   {@link #key} 未设置或保存时 {@link #thisObject} 为 {@code null} 的情况）
      * @param inState    之前通过 {@link #onHotReloading(Bundle)} 保存并合并后的全局状态快照，
      *                   不为 {@code null}
-     * @see HookRegistry#reloaded(Map)
+     * @see HookRegistry#reloaded(io.github.libxposed.api.XposedModuleInterface.HotReloadedParam)
      * @see #key
      */
-    public void onHotReloaded(@NonNull Object thisObject, @NonNull Map<String, Object> inState) {
+    public void onHotReloaded(@Nullable Object thisObject, @NonNull Map<String, Object> inState) {
     }
 
     /**

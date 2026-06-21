@@ -20,15 +20,20 @@ package com.hchen.hooktool;
 
 import android.app.Application;
 import android.content.Context;
+import android.os.Bundle;
 import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.hchen.hooktool.core.CoreTool;
 import com.hchen.hooktool.hook.AbsHook;
+import com.hchen.hooktool.hook.HookRegistry;
 import com.hchen.hooktool.log.AndroidLog;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Predicate;
 
@@ -47,8 +52,10 @@ import io.github.libxposed.api.XposedModuleInterface;
  * <p>
  * 从 API 102 开始支持热更新（Hot Reload）：
  * <ul>
- *   <li>{@link #handleHotReloading(HotReloadingParam)} — 热更新前在旧代码中执行，决定是否允许更新</li>
- *   <li>{@link #handleHotReloaded(HotReloadedParam)} — 热更新完成后在新代码中执行，自动解除旧 Hook 并触发重新挂钩</li>
+ *   <li>{@link #handleHotReloading(Bundle)} — 热更新前在旧代码中执行，返回需保存的状态数据</li>
+ *   <li>{@link #handleHotReloadingFailed(Throwable)} — 热更新准备阶段发生异常时的回调</li>
+ *   <li>{@link #handleHotReloaded(HotReloadedParam, ClassLoader)} — 热更新完成后在新代码中执行，
+ *       携带恢复的 ClassLoader，自动解除旧 Hook 并重新分发状态</li>
  * </ul>
  *
  * @author 焕晨HChen
@@ -59,6 +66,7 @@ import io.github.libxposed.api.XposedModuleInterface;
 public abstract class ModuleEntrance extends XposedModule {
     // 标记当前包是否应被跳过处理
     private volatile boolean shouldSkip = false;
+    private volatile String processName = "";
 
     /**
      * 初始化模块配置的抽象方法。
@@ -141,36 +149,63 @@ public abstract class ModuleEntrance extends XposedModule {
     /**
      * 模块即将被热更新时触发的回调（在旧代码中执行）。
      * <p>
-     * 此回调在热更新触发时于旧模块代码中运行。返回 {@code true} 表示允许热更新继续进行，
-     * 返回 {@code false} 表示取消热更新。默认返回 {@code false} 表示默认不支持热更新。
+     * 此回调在热更新触发时于旧模块代码中运行，子类应覆写此方法返回需要
+     * 在热更新后恢复的状态键值对。返回的 {@link Map} 会被
+     * {@link ModuleEntrance#onHotReloading(HotReloadingParam)} 合并到全局快照中，
+     * 并通过 {@code param.setSavedInstanceState(merged)} 持久化。
      * <p>
-     * 子类若需支持热更新，应覆写此方法并在其中执行必要的资源释放操作，
-     * 同时配合 {@link #handleHotReloaded(HotReloadedParam)} 完成新代码的重新挂钩。
+     * 注意：该方法不再直接控制是否允许热更新——允许/拒绝逻辑统一由
+     * {@code onHotReloading} 的顶层实现管理。子类仅需关心状态数据的保存。
      *
-     * @param param 热更新参数，包含触发时传递的附加数据
-     * @return {@code true} 允许热更新，{@code false} 取消热更新
+     * @param extras 热更新触发的附加数据 {@link Bundle}，可能为 {@code null}
+     *               （当框架未传递额外数据时）
+     * @return 模块级状态键值对的 {@link Map}；默认返回空 {@link HashMap}，
+     *         表示无需保存任何状态
+     * @see #handleHotReloaded(HotReloadedParam, ClassLoader)
+     * @see HookRegistry#reloading(Bundle)
      */
-    public boolean handleHotReloading(@NonNull HotReloadingParam param) {
-        return false;
+    @NonNull
+    public Map<String, Object> handleHotReloading(@Nullable Bundle extras) {
+        return new HashMap<>();
+    }
+
+    /**
+     * 热更新准备阶段发生异常时的回调。
+     * <p>
+     * 当 {@link #handleHotReloading(Bundle)} 或其内部钩子的状态收集过程
+     * 抛出异常时触发。子类可覆写此方法执行资源清理或异常记录。
+     * <p>
+     * 注意：此回调执行完毕后，异常会通过 {@link CoreTool#throwIt(Throwable)}
+     * 继续向上传播，最终 {@code onHotReloading} 返回 {@code false} 拒绝热更新。
+     *
+     * @param throwable 在热更新准备阶段被捕获的异常实例，不为 {@code null}
+     * @see #handleHotReloading(Bundle)
+     */
+    public void handleHotReloadingFailed(Throwable throwable) {
     }
 
     /**
      * 模块已完成热更新时触发的回调（在新代码中执行）。
      * <p>
-     * 此回调在热更新完成后于新模块代码中运行。子类可覆写此方法执行
-     * 重新挂钩或特定的初始化操作。默认实现会解除所有传入的旧 Hook 句柄。
+     * 此回调在热更新完成后于新模块代码中运行，此时已从旧代码保存的状态中
+     * 恢复了宿主应用的 {@link ClassLoader}（通过 {@link ModuleData#setClassLoader(ClassLoader)}）。
+     * 子类可覆写此方法执行重新挂钩或特定的初始化操作。
+     * <p>
+     * 旧 Hook 句柄的解除由 {@code onHotReloaded} 的 {@code finally} 块统一处理，
+     * 子类无需手动解除。
      *
-     * @param param 热更新完成参数，包含旧 Hook 句柄、保存的状态等信息
+     * @param param       热更新完成参数，包含旧 Hook 句柄、保存的状态等信息，不为 {@code null}
+     * @param classLoader 从旧代码保存的状态中恢复的宿主应用 ClassLoader，不为 {@code null}
+     * @see #handleHotReloading(Bundle)
+     * @see ModuleData#MODULE_HOST_CLASSLOADER
      */
-    public void handleHotReloaded(@NonNull HotReloadedParam param) {
-        for (HookHandle hookHandle : param.getOldHookHandles()) {
-            hookHandle.unhook();
-        }
+    public void handleHotReloaded(@NonNull HotReloadedParam param, @NonNull ClassLoader classLoader) {
     }
 
     // ------------------------- Inner -----------------------------
     @Override
     public final void onModuleLoaded(@NonNull ModuleLoadedParam param) {
+        processName = param.getProcessName();
         ModuleData.setXposedEnvironment(true);
         ModuleData.setWrapper(this);
 
@@ -218,39 +253,74 @@ public abstract class ModuleEntrance extends XposedModule {
 
     @Override
     public final boolean onHotReloading(@NonNull HotReloadingParam param) {
-        return handleHotReloading(param);
+        try {
+            Map<String, Object> merged = new HashMap<>();
+
+            merged.putAll(handleHotReloading(param.getExtras()));
+            merged.putAll(HookRegistry.reloading(param.getExtras()));
+            merged.put(ModuleData.MODULE_HOST_CLASSLOADER, ModuleData.getClassLoader());
+
+            param.setSavedInstanceState(merged);
+            return true;
+        } catch (Throwable throwable) {
+            handleHotReloadingFailed(throwable);
+            CoreTool.throwIt(throwable);
+            return false;
+        }
     }
 
     @Override
     public final void onHotReloaded(@NonNull HotReloadedParam param) {
-        handleHotReloaded(param);
+        try {
+            processName = param.getProcessName();
+            ModuleData.setXposedEnvironment(true);
+            ModuleData.setWrapper(this);
+
+            initModuleConfig();
+
+            ClassLoader classLoader = null;
+            @SuppressWarnings("unchecked")
+            Map<String, Object> map = (Map<String, Object>) param.getSavedInstanceState();
+            if (map != null) {
+                classLoader = (ClassLoader) map.get(ModuleData.MODULE_HOST_CLASSLOADER);
+            }
+            Objects.requireNonNull(classLoader);
+            handleHotReloaded(param, classLoader);
+            HookRegistry.reloaded(param);
+        } finally {
+            for (HookHandle handle : param.getOldHookHandles()) {
+                handle.unhook();
+            }
+        }
     }
 
     private volatile HookHandle handle;
 
     private void hookApplication(@NonNull PackageLoadedParam param) {
         if (param.isFirstPackage()) {
-            if (handle != null) {
-                handle.unhook();
-                handle = null;
-            }
+            if (TextUtils.equals(param.getPackageName(), processName)) {
+                if (handle != null) {
+                    handle.unhook();
+                    handle = null;
+                }
 
-            try {
-                handle = CoreTool.hookMethod(
-                    Application.class,
-                    "attach",
-                    Context.class,
-                    new AbsHook() {
-                        @Override
-                        public void before() {
-                            Context context = (Context) getArg(0);
-                            Objects.requireNonNull(context);
-                            handleApplicationCreated(context);
+                try {
+                    handle = CoreTool.hookMethod(
+                        Application.class,
+                        "attach",
+                        Context.class,
+                        new AbsHook() {
+                            @Override
+                            public void before() {
+                                Context context = (Context) getArg(0);
+                                Objects.requireNonNull(context);
+                                handleApplicationCreated(context);
+                            }
                         }
-                    }
-                );
-            } catch (Throwable e) {
-                AndroidLog.logW("ModuleEntrance", "Failed to hook Application.attach()", e);
+                    );
+                } catch (Throwable e) {
+                    AndroidLog.logW("ModuleEntrance", "Failed to hook Application.attach()", e);
+                }
             }
         }
     }

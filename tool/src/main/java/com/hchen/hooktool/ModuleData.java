@@ -46,6 +46,18 @@ import io.github.libxposed.api.XposedInterfaceWrapper;
  * @see ModuleEntrance
  */
 public final class ModuleData {
+    /**
+     * 在热更新（Hot Reload）流程中，用于保存和恢复宿主应用 ClassLoader 的键名。
+     * <p>
+     * 热更新 {@code onHotReloading} 阶段，{@link ModuleEntrance} 会将当前
+     * {@link #getClassLoader()} 返回的 ClassLoader 以此键存入 {@code Bundle}；
+     * 在 {@code onHotReloaded} 阶段，再以此键从 {@code Bundle} 中取出并恢复，
+     * 确保新代码能继续使用之前正确的类加载器进行反射或 Hook 操作。
+     *
+     * @see ModuleEntrance#onHotReloading(io.github.libxposed.api.XposedModuleInterface.HotReloadingParam)
+     * @see ModuleEntrance#onHotReloaded(io.github.libxposed.api.XposedModuleInterface.HotReloadedParam)
+     */
+    public static final String MODULE_HOST_CLASSLOADER = "module_host_classloader";
     private static volatile boolean isXposedEnvironment;
     private static volatile XposedInterfaceWrapper wrapper;
     private static volatile ClassLoader classLoader;

@@ -99,17 +99,19 @@ public class TestHook extends AbsModule {
 
                     @NonNull
                     @Override
-                    public Map<String, Object> onHotReloading(@Nullable Bundle extra) {
+                    public Map<String, Object> onHotReloading(@Nullable Bundle extras) {
                         Map<String, Object> map = new HashMap<>();
                         map.put("CONTEXT_INNER", context);
                         return map;
                     }
 
                     @Override
-                    public void onHotReloaded(@NonNull Object thisObject, @NonNull Map<String, Object> inState) {
+                    public void onHotReloaded(@Nullable Object thisObject, @NonNull Map<String, Object> inState) {
                         super.onHotReloaded(thisObject, inState);
                         context = (Context) inState.get("CONTEXT_INNER");
-                        setField(thisObject, "field", true);
+                        if (thisObject != null) {
+                            setField(thisObject, "field", true);
+                        }
                     }
                 }
             );
@@ -123,11 +125,11 @@ public class TestHook extends AbsModule {
      * 返回的 {@link Map} 会被 {@link com.hchen.hooktool.hook.HookRegistry#reloading(Bundle)}
      * 合并到全局快照中。
      *
-     * @param extra 热重载附加数据，可能为 {@code null}
+     * @param extras 热重载附加数据，可能为 {@code null}
      * @return 模块级状态键值对
      */
     @Override
-    protected Map<String, Object> onHotReloading(@Nullable Bundle extra) {
+    protected Map<String, Object> onHotReloading(@Nullable Bundle extras) {
         Map<String, Object> map = new HashMap<>();
         map.put("CONTEXT", context);
         return map;

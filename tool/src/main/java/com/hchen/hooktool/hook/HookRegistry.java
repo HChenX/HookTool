@@ -23,6 +23,8 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.hchen.hooktool.ModuleEntrance;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -30,6 +32,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.WeakHashMap;
+
+import io.github.libxposed.api.XposedModuleInterface;
 
 /**
  * 全局钩子注册表，以弱引用的方式存储所有 {@link AbsHook} 实例。
@@ -159,7 +163,7 @@ public final class HookRegistry {
      * <p>
      * 合并完成后注册表会被清空（因为热重载结束后旧注册表已废弃）。
      *
-     * @param extra 热重载的附加信息，包含触发重载的上下文数据；可能为 {@code null}
+     * @param extras 热重载的附加信息，包含触发重载的上下文数据；可能为 {@code null}
      *               （当框架未传递额外数据时）
      * @return 所有实例返回的状态数据合并后的全局快照；若所有实例均未返回任何数据则返回空 {@link HashMap}
      * @throws IllegalStateException 当不同实例返回的 {@link Map} 中存在重复的键时抛出
@@ -167,7 +171,7 @@ public final class HookRegistry {
      * @see AbsHook#key
      */
     @NonNull
-    public static Map<String, Object> reloading(@Nullable Bundle extra) {
+    public static Map<String, Object> reloading(@Nullable Bundle extras) {
         synchronized (hooks) {
             Map<String, Object> merged = new HashMap<>();
 
@@ -177,7 +181,7 @@ public final class HookRegistry {
                 // 防止子类返回不可变 Map（如 Collections.emptyMap() 或 Map.of()）
                 // 导致后续操作抛出 UnsupportedOperationException。
                 // 注：热更新属于低频操作，此拷贝的性能开销可忽略不计。
-                Map<String, Object> state = new HashMap<>(hook.onHotReloading(extra));
+                Map<String, Object> state = new HashMap<>(hook.onHotReloading(extras));
                 for (Map.Entry<String, Object> entry : state.entrySet()) {
                     if (merged.containsKey(entry.getKey())) {
                         throw new IllegalStateException(
@@ -205,37 +209,49 @@ public final class HookRegistry {
     /**
      * 触发所有已注册钩子的热重载完成阶段，将之前保存的状态快照分发给各实例。
      * <p>
-     * 遍历当前注册表中所有未被 GC 回收的 {@link AbsHook} 实例，
-     * 依次调用各实例的 {@link AbsHook#onHotReloaded(Object, Map)} 方法，
-     * 并将由 {@link #reloading(Bundle)} 收集并合并后的全局状态快照传入。
+     * 从 {@link XposedModuleInterface.HotReloadedParam} 中提取之前通过
+     * {@link #reloading(Bundle)} 保存的 {@code savedInstanceState}，
+     * 并遍历当前注册表中所有未被 GC 回收的 {@link AbsHook} 实例，
+     * 依次调用各实例的 {@link AbsHook#onHotReloaded(Object, Map)} 方法。
      * <p>
-     * 每个实例的 {@code thisObject} 参数不再直接使用 {@link AbsHook#thisObject} 字段，
-     * 而是根据该实例的 {@link AbsHook#key} 从 {@code inState} 中查找之前保存的值。
-     * 这样的好处是：在热重载后新创建的钩子实例的 {@code thisObject} 字段尚未被实际
-     * 调用所更新，但通过 key 可以从旧实例保存的状态中恢复正确的宿主对象。
-     * <p>
-     * 对于静态方法或 {@code <clinit>} 的钩子（{@link AbsHook#isStatic} 为 {@code true}），
-     * 不会从 {@code inState} 中查找 {@code thisObject}，而是直接传入 {@code null}，
-     * 避免静态钩子误读到同类的非静态实例数据。
+     * <b>{@code thisObject} 恢复逻辑：</b>
+     * <ol>
+     *   <li>优先使用 {@link AbsHook#thisObject} 字段的已有值（如果非 {@code null}，
+     *       表示该钩子实例已经过至少一次实际调用，持有最新的宿主对象）。</li>
+     *   <li>若字段值为 {@code null}，则根据该实例的 {@link AbsHook#key} 从
+     *       {@code inState} 中查找之前保存的值并回写，同时更新
+     *       {@code hook.thisObject} 以便后续子类可读。</li>
+     *   <li>对于静态方法或 {@code <clinit>} 的钩子（{@link AbsHook#isStatic}
+     *       为 {@code true}），不会从 {@code inState} 中查找 {@code thisObject}，
+     *       而是直接传入 {@code null}，避免静态钩子误读到同类的非静态实例数据。</li>
+     * </ol>
      * <p>
      * 与 {@link #reloading(Bundle)} 不同，此方法<strong>不会</strong>清空注册表，
      * 因为热重载完成后新创建的钩子实例需要继续被追踪。
-     * <p>
-     * <strong>调用时机建议：</strong>此方法应<strong>最后</strong>在热重载流程中调用，
-     * 确保所有新的 hook 操作已经重新完成、注册表已由新创建的 {@link AbsHook} 实例重建之后，
-     * 再分发之前保存的状态快照。调用越晚，新实例的注册越完整，数据恢复的准确性越高。
+     * 注册表的清空在 {@link #reloading(Bundle)} 中已完成。
      *
-     * @param inState 之前通过 {@link #reloading(Bundle)} 收集并合并后的全局状态快照，
-     *                不为 {@code null}
+     * @param param 热重载完成参数，包含之前通过 {@code param.setSavedInstanceState(merged)}
+     *              保存的全局状态快照，不为 {@code null}
+     * @throws NullPointerException 如果 {@code param} 或
+     *                              {@code param.getSavedInstanceState()} 为 {@code null}
      * @see AbsHook#onHotReloaded(Object, Map)
      * @see AbsHook#key
+     * @see ModuleEntrance#onHotReloaded(XposedModuleInterface.HotReloadedParam)
      */
-    public static void reloaded(@NonNull Map<String, Object> inState) {
-        Objects.requireNonNull(inState);
+    public static void reloaded(@NonNull XposedModuleInterface.HotReloadedParam param) {
+        Objects.requireNonNull(param);
         synchronized (hooks) {
+            Map<String, Object> inState = (Map<String, Object>) param.getSavedInstanceState();
+            Objects.requireNonNull(inState);
+
             for (AbsHook hook : hooks) {
                 Object savedThisObject = (hook.key != null && !hook.isStatic)
                     ? inState.get(hook.key) : null;
+
+                if (!hook.isStatic) {
+                    if (hook.thisObject != null) savedThisObject = hook.thisObject;
+                    else hook.thisObject = savedThisObject;
+                }
                 hook.onHotReloaded(savedThisObject, inState);
             }
         }

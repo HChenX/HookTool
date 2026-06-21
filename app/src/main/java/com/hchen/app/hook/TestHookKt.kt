@@ -101,10 +101,10 @@ class TestHookKt : AbsModule() {
                     /**
                      * 热重载准备回调，返回需要保存的内部状态。
                      *
-                     * @param extra 热重载附加数据
+                     * @param extras 热重载附加数据
                      * @return 需保存的状态键值对
                      */
-                    override fun onHotReloading(extra: Bundle?): MutableMap<String, Any?> {
+                    override fun onHotReloading(extras: Bundle?): MutableMap<String, Any?> {
                         val map = HashMap<String, Any?>()
                         map["CONTEXT_INNER"] = context
                         return map
@@ -113,13 +113,14 @@ class TestHookKt : AbsModule() {
                     /**
                      * 热重载完成回调，恢复之前保存的状态。
                      *
-                     * @param thisObject 该实例最新的宿主对象实例
+                     * @param thisObject 该实例最新的宿主对象实例，
+                     *                   可能为 {@code null}（静态方法或 key 未设置时）
                      * @param inState    合并后的全局状态快照
                      */
-                    override fun onHotReloaded(thisObject: Any, inState: MutableMap<String, Any?>) {
+                    override fun onHotReloaded(thisObject: Any?, inState: MutableMap<String, Any?>) {
                         super.onHotReloaded(thisObject, inState)
                         context = inState["CONTEXT_INNER"] as Context?
-                        thisObject.setField("field", true)
+                        thisObject?.setField("field", true)
                     }
                 }
             )
@@ -132,10 +133,10 @@ class TestHookKt : AbsModule() {
      * 在此保存需要在热重载后恢复的模块级状态数据。
      * 返回的 {@link Map} 会被 {@link HookRegistry#reloading(Bundle)} 合并到全局快照中。
      *
-     * @param extra 热重载附加数据，可能为 {@code null}
+     * @param extras 热重载附加数据，可能为 {@code null}
      * @return 模块级状态键值对
      */
-    override fun onHotReloading(extra: Bundle?): MutableMap<String, Any?> {
+    override fun onHotReloading(extras: Bundle?): MutableMap<String, Any?> {
         val map = java.util.HashMap<String, Any?>()
         map["CONTEXT"] = context
         return map

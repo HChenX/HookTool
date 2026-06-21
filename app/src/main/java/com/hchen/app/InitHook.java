@@ -19,8 +19,10 @@
 package com.hchen.app;
 
 import android.content.Context;
+import android.os.Bundle;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.hchen.app.hook.TestHook;
 import com.hchen.app.hook.TestHookKt;
@@ -179,49 +181,46 @@ public class InitHook extends ModuleEntrance {
     /**
      * 分发模块热更新前事件（在旧代码中执行）。
      * <p>
-     * 收集所有已注册钩子的状态数据并通过 {@link param#setSavedInstanceState} 保存，
-     * 以便在热更新完成后恢复。此方法会依次收集 {@link TestHook} 和 {@link TestHookKt}
-     * 中导出的状态。
+     * 收集子模块（{@link TestHook} 和 {@link TestHookKt}）返回的状态数据，
+     * 合并后返回给 {@link ModuleEntrance#onHotReloading(HotReloadingParam)}，
+     * 由其统一与 {@link HookRegistry#reloading(Bundle)} 的结果合并。
      *
-     * @param param 热更新参数，包含触发时传递的附加数据
-     * @return {@code true} 表示允许热更新继续进行
-     * @see ModuleEntrance#handleHotReloading(HotReloadingParam)
+     * @param extras 热更新触发的附加数据 {@link Bundle}，可能为 {@code null}
+     * @return 子模块级状态键值对合并后的 {@link Map}；异常时返回空 {@link HashMap}
+     * @see ModuleEntrance#handleHotReloading(Bundle)
      */
+    @NonNull
     @Override
-    public boolean handleHotReloading(@NonNull HotReloadingParam param) {
-        AndroidLog.logD(TAG, "handleHotReloading: " + param);
-        try {
-            Map<String, Object> map = new HashMap<>();
-            map.putAll(HookRegistry.reloading(param.getExtras()));
-            map.putAll(Objects.requireNonNull(new TestHook().handleHotReloading(param)));
-            map.putAll(Objects.requireNonNull(new TestHookKt().handleHotReloading(param)));
-            param.setSavedInstanceState(map);
-        } catch (Throwable e) {
-            return false;
-        }
-        return true;
+    public Map<String, Object> handleHotReloading(@Nullable Bundle extras) {
+        AndroidLog.logD(TAG, "handleHotReloading: " + extras);
+
+        Map<String, Object> map = new HashMap<>();
+        map.putAll(Objects.requireNonNull(new TestHook().handleHotReloading(extras)));
+        map.putAll(Objects.requireNonNull(new TestHookKt().handleHotReloading(extras)));
+        return map;
     }
 
     /**
      * 分发模块热更新完成事件（在新代码中执行）。
      * <p>
-     * 将之前保存的全局状态快照通过 {@link HookRegistry#reloaded(Map)} 分发给
-     * 所有新创建的钩子实例，并依次通知 {@link TestHook} 和 {@link TestHookKt}
-     * 完成其内部状态恢复。
+     * 先通过父类恢复框架级状态（ClassLoader、Xposed 环境等），
+     * 再将恢复的 ClassLoader 设置到 {@link ModuleData} 中供后续 Hook 使用，
+     * 最后依次通知子模块执行其内部状态恢复。
+     * <p>
+     * 注意：旧 Hook 句柄的解除由 {@code onHotReloaded} 的 {@code finally} 块统一处理，
+     * 此处不再需要手动调用 {@link HookRegistry#reloaded(HotReloadedParam)}。
      *
-     * @param param 热更新完成参数，包含之前保存的状态数据
-     * @see ModuleEntrance#handleHotReloaded(HotReloadedParam)
+     * @param param       热更新完成参数，不为 {@code null}
+     * @param classLoader 从旧代码保存的状态中恢复的宿主应用 ClassLoader，不为 {@code null}
+     * @see ModuleEntrance#handleHotReloaded(HotReloadedParam, ClassLoader)
      */
     @Override
-    public void handleHotReloaded(@NonNull HotReloadedParam param) {
+    public void handleHotReloaded(@NonNull HotReloadedParam param, @NonNull ClassLoader classLoader) {
         AndroidLog.logD(TAG, "handleHotReloaded: " + param);
-        super.handleHotReloaded(param);
+        super.handleHotReloaded(param, classLoader);
+        ModuleData.setClassLoader(classLoader);
+
         new TestHook().handleHotReloaded(param);
         new TestHookKt().handleHotReloaded(param);
-
-        Map<String, Object> map = (Map<String, Object>) param.getSavedInstanceState();
-        if (map != null) {
-            HookRegistry.reloaded(map);
-        }
     }
 }

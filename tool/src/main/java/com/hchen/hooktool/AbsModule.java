@@ -161,11 +161,11 @@ public abstract class AbsModule extends CoreTool {
      * <p>
      * 此方法在旧模块代码中运行，用于收集需要在热更新后恢复的状态数据。
      *
-     * @param extra 热更新触发时传递的附加数据，可能为 {@code null}
+     * @param extras 热更新触发时传递的附加数据，可能为 {@code null}
      *              （当通过应用更新触发热更新或未传递额外数据时）
      * @return 需要保存的状态键值对；若无需保存则返回空 {@link HashMap}
      */
-    protected Map<String, Object> onHotReloading(@Nullable Bundle extra) {
+    protected Map<String, Object> onHotReloading(@Nullable Bundle extras) {
         return new HashMap<>();
     }
 
@@ -207,7 +207,7 @@ public abstract class AbsModule extends CoreTool {
             action.accept(param);
         } catch (Throwable e) {
             onThrow(stage, e);
-            logE(TAG, e);
+            CoreTool.throwIt(e);
         }
     }
 
@@ -316,23 +316,24 @@ public abstract class AbsModule extends CoreTool {
     /**
      * 分发模块热更新前事件（在旧代码中执行）。
      * <p>
-     * 由模块入口类调用，将事件转发至
-     * {@link #onHotReloading(Bundle)}，并传入 {@code param.getExtras()}。
+     * 由模块入口类调用，将事件转发至 {@link #onHotReloading(Bundle)}，
+     * 并传入 {@code extras} Bundle。若当前实例已被禁用则会跳过此次回调。
+     * <p>
+     * 该方法返回类型已标注 {@link NonNull}，异常路径通过
+     * {@link CoreTool#throwIt(Throwable)} 重新抛出异常，因此调用方
+     * 不应假定异常情况下会返回有效值。
      *
-     * @param param 热更新参数
-     * @return 所有已注册钩子返回的状态数据合并后的全局快照；
-     *         发生异常时返回 {@code null}
+     * @param extras 热更新附加数据 {@link Bundle}，可能为 {@code null}
+     * @return 当前实例返回的状态数据；若被禁用或被跳过则返回空 {@link HashMap}
      */
-    @Nullable
-    final public Map<String, Object> handleHotReloading(@NonNull XposedModuleInterface.HotReloadingParam param) {
+    @NonNull final public Map<String, Object> handleHotReloading(@Nullable Bundle extras) {
         if (!isEnabled()) return new HashMap<>();
         try {
-            Objects.requireNonNull(param);
-            return onHotReloading(param.getExtras());
+            return onHotReloading(extras);
         } catch (Throwable e) {
             onThrow(StageEnum.HOT_RELOADING, e);
-            logE(TAG, e);
-            return null;
+            CoreTool.throwIt(e);
+            return new HashMap<>();
         }
     }
 
