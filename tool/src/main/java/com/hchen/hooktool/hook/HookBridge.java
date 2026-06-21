@@ -38,6 +38,8 @@ import io.github.libxposed.api.XposedInterface;
  *     <li>在拦截器回调中调度 {@link AbsHook} 的完整生命周期（{@code before → proceed → after}）</li>
  *     <li>在各阶段捕获异常并委派给 {@link AbsHook#onThrow(AbsHook.StageEnum, Throwable)} 处理</li>
  *     <li>管理拦截上下文的进入与退出</li>
+ *     <li>将调用方预先计算的声明类名（{@link #key}）和静态性标志（{@link #isStatic}）
+ *         注入到 {@link AbsHook} 中，供热重载时按类去重存储 {@code thisObject}</li>
  * </ul>
  *
  * @author 焕晨HChen
@@ -45,6 +47,8 @@ import io.github.libxposed.api.XposedInterface;
  */
 public final class HookBridge {
     private final XposedInterface.HookBuilder builder;
+    private final String key;
+    private final boolean isStatic;
 
     /**
      * 构造一个新的钩子桥接器实例。
@@ -53,6 +57,30 @@ public final class HookBridge {
      */
     public HookBridge(@NonNull XposedInterface.HookBuilder builder) {
         this.builder = builder;
+        this.key = null;
+        this.isStatic = false;
+    }
+
+    /**
+     * 构造一个新的钩子桥接器实例，并指定类级标识键与静态性。
+     * <p>
+     * 键与静态性由调用方（通常是 {@code CoreTool}）根据可执行对象预先计算：
+     * <ul>
+     *   <li><b>key</b>：声明类的全限定类名，同一类的所有方法/构造函数共享相同 key</li>
+     *   <li><b>isStatic</b>：{@code true} 表示静态方法或 {@code <clinit>}，
+     *       {@code false} 表示实例方法或构造函数</li>
+     * </ul>
+     *
+     * @param builder  用于配置拦截参数并最终创建钩子的 Xposed API 构建器，不为 {@code null}
+     * @param key      声明类的全限定类名，用于热重载时按类去重存储 {@code thisObject}；
+     *                 为 {@code null} 表示不参与热重载的自动状态管理
+     * @param isStatic 是否为静态上下文；静态钩子在热重载时不会读取/写入 {@code thisObject}
+     */
+    public HookBridge(@NonNull XposedInterface.HookBuilder builder,
+                      @Nullable String key, boolean isStatic) {
+        this.builder = builder;
+        this.key = key;
+        this.isStatic = isStatic;
     }
 
     /**
@@ -128,6 +156,10 @@ public final class HookBridge {
         if (absHook.mode != null) {
             setExceptionMode(absHook.mode);
         }
+        if (key != null) {
+            absHook.setKey(key);
+        }
+        absHook.isStatic = isStatic;
         XposedInterface.HookHandle handle = builder.intercept(new XposedInterface.Hooker() {
             @Override
             public Object intercept(@NonNull XposedInterface.Chain chain) throws Throwable {

@@ -20,11 +20,15 @@ package com.hchen.hooktool;
 
 import android.app.Application;
 import android.content.Context;
+import android.os.Bundle;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.hchen.hooktool.core.CoreTool;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 
@@ -55,7 +59,9 @@ public abstract class AbsModule extends CoreTool {
 
     // -------------------------- hook 类内使用 -----------------------------
 
-    /** 当前实例的日志标签，取值为子类的简单类名，用于标识日志来源。 */
+    /**
+     * 当前实例的日志标签，取值为子类的简单类名，用于标识日志来源。
+     */
     protected final String TAG = getClass().getSimpleName();
 
     /**
@@ -153,15 +159,14 @@ public abstract class AbsModule extends CoreTool {
     /**
      * 模块即将被热更新时的回调（在旧代码中执行）。
      * <p>
-     * 此方法在旧模块代码中运行，返回 {@code true} 表示允许热更新继续进行。
-     * 子类可在此方法中保存需要在热更新后恢复的状态。
-     * 默认返回 {@code false} 表示不支持热更新。
+     * 此方法在旧模块代码中运行，用于收集需要在热更新后恢复的状态数据。
      *
-     * @param param 热更新参数，包含触发时传递的附加数据
-     * @return {@code true} 允许热更新，{@code false} 取消热更新
+     * @param extra 热更新触发时传递的附加数据，可能为 {@code null}
+     *              （当通过应用更新触发热更新或未传递额外数据时）
+     * @return 需要保存的状态键值对；若无需保存则返回空 {@link HashMap}
      */
-    protected boolean onHotReloading(@NonNull XposedModuleInterface.HotReloadingParam param) {
-        return false;
+    protected Map<String, Object> onHotReloading(@Nullable Bundle extra) {
+        return new HashMap<>();
     }
 
     /**
@@ -312,20 +317,22 @@ public abstract class AbsModule extends CoreTool {
      * 分发模块热更新前事件（在旧代码中执行）。
      * <p>
      * 由模块入口类调用，将事件转发至
-     * {@link #onHotReloading(XposedModuleInterface.HotReloadingParam)}。
+     * {@link #onHotReloading(Bundle)}，并传入 {@code param.getExtras()}。
      *
      * @param param 热更新参数
-     * @return {@code true} 允许热更新，{@code false} 取消热更新
+     * @return 所有已注册钩子返回的状态数据合并后的全局快照；
+     *         发生异常时返回 {@code null}
      */
-    final public boolean handleHotReloading(@NonNull XposedModuleInterface.HotReloadingParam param) {
-        if (!isEnabled()) return false;
+    @Nullable
+    final public Map<String, Object> handleHotReloading(@NonNull XposedModuleInterface.HotReloadingParam param) {
+        if (!isEnabled()) return new HashMap<>();
         try {
             Objects.requireNonNull(param);
-            return onHotReloading(param);
+            return onHotReloading(param.getExtras());
         } catch (Throwable e) {
             onThrow(StageEnum.HOT_RELOADING, e);
             logE(TAG, e);
-            return false;
+            return null;
         }
     }
 

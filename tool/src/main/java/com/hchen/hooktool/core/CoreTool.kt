@@ -115,19 +115,33 @@ open class CoreTool : XposedLog() {
         /**
          * 判定指定类中是否存在与给定名称及参数签名完全匹配的方法。
          *
-         * @param classLoader 用以加载目标类的 [ClassLoader]，默认值取自 [ModuleData.getClassLoader]。
+         * @param classLoader 用以加载目标类的 [ClassLoader]。
          * @param methodName 待检测的方法名称。
          * @param parameterTypes 方法的参数类型序列。
          * @return 方法存在时返回 `true`，否则返回 `false`。
          */
         @JvmStatic
-        @JvmOverloads
         fun String.hasMethod(
-            classLoader: ClassLoader? = ModuleData.getClassLoader(),
+            classLoader: ClassLoader?,
             methodName: String,
             vararg parameterTypes: Any
         ): Boolean {
             return this.findClassIfExists(classLoader)?.hasMethod(methodName, *parameterTypes) ?: false
+        }
+
+        /**
+         * 判定指定类中是否存在与给定名称及参数签名完全匹配的方法，使用默认 ClassLoader。
+         *
+         * @param methodName 待检测的方法名称。
+         * @param parameterTypes 方法的参数类型序列。
+         * @return 方法存在时返回 `true`，否则返回 `false`。
+         */
+        @JvmStatic
+        fun String.hasMethod(
+            methodName: String,
+            vararg parameterTypes: Any
+        ): Boolean {
+            return this.hasMethod(ModuleData.getClassLoader(), methodName, *parameterTypes)
         }
 
         /**
@@ -179,20 +193,35 @@ open class CoreTool : XposedLog() {
         /**
          * 在指定类中精确查找与给定名称及参数签名匹配的方法，并将其设为可访问。
          *
-         * @param classLoader 用以加载目标类的 [ClassLoader]，默认值取自 [ModuleData.getClassLoader]。
+         * @param classLoader 用以加载目标类的 [ClassLoader]。
          * @param methodName 待查找的方法名称。
          * @param parameterTypes 方法的参数类型序列。
          * @return 已设为可访问状态的 [Method] 对象。
          * @throws NoSuchMethodError 未找到匹配方法时抛出。
          */
         @JvmStatic
-        @JvmOverloads
         fun String.findMethod(
-            classLoader: ClassLoader? = ModuleData.getClassLoader(),
+            classLoader: ClassLoader?,
             methodName: String,
             vararg parameterTypes: Any
         ): Method {
             return CoreHelper.findMethodExact(this, classLoader, methodName, *parameterTypes)
+        }
+
+        /**
+         * 在指定类中精确查找与给定名称及参数签名匹配的方法，并将其设为可访问，使用默认 ClassLoader。
+         *
+         * @param methodName 待查找的方法名称。
+         * @param parameterTypes 方法的参数类型序列。
+         * @return 已设为可访问状态的 [Method] 对象。
+         * @throws NoSuchMethodError 未找到匹配方法时抛出。
+         */
+        @JvmStatic
+        fun String.findMethod(
+            methodName: String,
+            vararg parameterTypes: Any
+        ): Method {
+            return this.findMethod(ModuleData.getClassLoader(), methodName, *parameterTypes)
         }
 
         /**
@@ -214,19 +243,33 @@ open class CoreTool : XposedLog() {
         /**
          * 尝试在指定类中精确查找方法，未找到时返回 `null` 而非抛出异常。
          *
-         * @param classLoader 用以加载目标类的 [ClassLoader]，默认值取自 [ModuleData.getClassLoader]。
+         * @param classLoader 用以加载目标类的 [ClassLoader]。
          * @param methodName 待查找的方法名称。
          * @param parameterTypes 方法的参数类型序列。
          * @return [Method] 对象；方法不存在时返回 `null`。
          */
         @JvmStatic
-        @JvmOverloads
         fun String.findMethodIfExists(
-            classLoader: ClassLoader? = ModuleData.getClassLoader(),
+            classLoader: ClassLoader?,
             methodName: String,
             vararg parameterTypes: Any
         ): Method? {
             return CoreHelper.findMethodExactIfExists(this, classLoader, methodName, *parameterTypes)
+        }
+
+        /**
+         * 尝试在指定类中精确查找方法，未找到时返回 `null`，使用默认 ClassLoader。
+         *
+         * @param methodName 待查找的方法名称。
+         * @param parameterTypes 方法的参数类型序列。
+         * @return [Method] 对象；方法不存在时返回 `null`。
+         */
+        @JvmStatic
+        fun String.findMethodIfExists(
+            methodName: String,
+            vararg parameterTypes: Any
+        ): Method? {
+            return this.findMethodIfExists(ModuleData.getClassLoader(), methodName, *parameterTypes)
         }
 
         /**
@@ -296,17 +339,29 @@ open class CoreTool : XposedLog() {
         /**
          * 判定指定类中是否存在与给定参数类型列表匹配的构造函数。
          *
-         * @param classLoader 用以加载目标类的 [ClassLoader]，默认值取自 [ModuleData.getClassLoader]。
+         * @param classLoader 用以加载目标类的 [ClassLoader]。
          * @param parameterTypes 构造函数的参数类型序列。
          * @return 构造函数存在时返回 `true`，否则返回 `false`。
          */
         @JvmStatic
-        @JvmOverloads
         fun String.hasConstructor(
-            classLoader: ClassLoader? = ModuleData.getClassLoader(),
+            classLoader: ClassLoader?,
             vararg parameterTypes: Any
         ): Boolean {
             return CoreHelper.findConstructorExactIfExists(this, classLoader, *parameterTypes) != null
+        }
+
+        /**
+         * 判定指定类中是否存在与给定参数类型列表匹配的构造函数，使用默认 ClassLoader。
+         *
+         * @param parameterTypes 构造函数的参数类型序列。
+         * @return 构造函数存在时返回 `true`，否则返回 `false`。
+         */
+        @JvmStatic
+        fun String.hasConstructor(
+            vararg parameterTypes: Any
+        ): Boolean {
+            return this.hasConstructor(classLoader = ModuleData.getClassLoader(), *parameterTypes)
         }
 
         /**
@@ -325,18 +380,31 @@ open class CoreTool : XposedLog() {
         /**
          * 在指定类中精确查找与给定参数类型列表匹配的构造函数，并将其设为可访问。
          *
-         * @param classLoader 用以加载目标类的 [ClassLoader]，默认值取自 [ModuleData.getClassLoader]。
+         * @param classLoader 用以加载目标类的 [ClassLoader]。
          * @param parameterTypes 构造函数的参数类型序列。
          * @return 已设为可访问状态的 [Constructor] 对象。
          * @throws NoSuchMethodError 未找到匹配的构造函数时抛出。
          */
         @JvmStatic
-        @JvmOverloads
         fun String.findConstructor(
-            classLoader: ClassLoader? = ModuleData.getClassLoader(),
+            classLoader: ClassLoader?,
             vararg parameterTypes: Any
         ): Constructor<*> {
             return CoreHelper.findConstructorExact(this, classLoader, *parameterTypes)
+        }
+
+        /**
+         * 在指定类中精确查找与给定参数类型列表匹配的构造函数，并将其设为可访问，使用默认 ClassLoader。
+         *
+         * @param parameterTypes 构造函数的参数类型序列。
+         * @return 已设为可访问状态的 [Constructor] 对象。
+         * @throws NoSuchMethodError 未找到匹配的构造函数时抛出。
+         */
+        @JvmStatic
+        fun String.findConstructor(
+            vararg parameterTypes: Any
+        ): Constructor<*> {
+            return this.findConstructor(classLoader = ModuleData.getClassLoader(), *parameterTypes)
         }
 
         /**
@@ -356,17 +424,29 @@ open class CoreTool : XposedLog() {
         /**
          * 尝试在指定类中查找构造函数，未找到时返回 `null` 而非抛出异常。
          *
-         * @param classLoader 用以加载目标类的 [ClassLoader]，默认值取自 [ModuleData.getClassLoader]。
+         * @param classLoader 用以加载目标类的 [ClassLoader]。
          * @param parameterTypes 构造函数的参数类型序列。
          * @return [Constructor] 对象；构造函数不存在时返回 `null`。
          */
         @JvmStatic
-        @JvmOverloads
         fun String.findConstructorIfExists(
-            classLoader: ClassLoader? = ModuleData.getClassLoader(),
+            classLoader: ClassLoader?,
             vararg parameterTypes: Any
         ): Constructor<*>? {
             return CoreHelper.findConstructorExactIfExists(this, classLoader, *parameterTypes)
+        }
+
+        /**
+         * 尝试在指定类中查找构造函数，未找到时返回 `null`，使用默认 ClassLoader。
+         *
+         * @param parameterTypes 构造函数的参数类型序列。
+         * @return [Constructor] 对象；构造函数不存在时返回 `null`。
+         */
+        @JvmStatic
+        fun String.findConstructorIfExists(
+            vararg parameterTypes: Any
+        ): Constructor<*>? {
+            return this.findConstructorIfExists(classLoader = ModuleData.getClassLoader(), *parameterTypes)
         }
 
         /**
@@ -688,19 +768,31 @@ open class CoreTool : XposedLog() {
         /**
          * 根据指定类名创建该类的新实例。
          *
-         * @param classLoader 用以加载目标类的 [ClassLoader]，默认值取自 [ModuleData.getClassLoader]。
+         * @param classLoader 用以加载目标类的 [ClassLoader]。
          * @param parameterTypes 构造函数的参数类型数组，默认为空数组时由框架自动推断。
          * @param args 传递给构造函数的实际参数。
          * @return 创建成功的新实例对象。
          */
         @JvmStatic
-        @JvmOverloads
         fun String.newInstance(
-            classLoader: ClassLoader? = ModuleData.getClassLoader(),
+            classLoader: ClassLoader?,
             parameterTypes: Array<Class<*>> = emptyArray(),
             vararg args: Any?
         ): Any {
             return this.findClass(classLoader).newInstance(parameterTypes, *args)
+        }
+
+        /**
+         * 根据指定类名创建该类的新实例，使用默认 ClassLoader 与自动推断参数类型。
+         *
+         * @param args 传递给构造函数的实际参数。
+         * @return 创建成功的新实例对象。
+         */
+        @JvmStatic
+        fun String.newInstance(
+            vararg args: Any?
+        ): Any {
+            return this.newInstance(classLoader = ModuleData.getClassLoader(), emptyArray(), *args)
         }
 
         /**
@@ -726,21 +818,35 @@ open class CoreTool : XposedLog() {
         /**
          * 调用指定类名所对应类上的静态方法。
          *
-         * @param classLoader 用以加载目标类的 [ClassLoader]，默认值取自 [ModuleData.getClassLoader]。
+         * @param classLoader 用以加载目标类的 [ClassLoader]。
          * @param methodName 待调用的静态方法名称。
          * @param parameterTypes 方法的参数类型数组，默认为空数组时由框架自动推断。
          * @param args 传递给方法的实际参数。
          * @return 方法的返回值；当方法返回类型为 `void` 时返回 `null`。
          */
         @JvmStatic
-        @JvmOverloads
         fun String.callStaticMethod(
-            classLoader: ClassLoader? = ModuleData.getClassLoader(),
+            classLoader: ClassLoader?,
             methodName: String,
             parameterTypes: Array<Class<*>> = emptyArray(),
             vararg args: Any?
         ): Any? {
             return this.findClass(classLoader).callStaticMethod(methodName, parameterTypes, *args)
+        }
+
+        /**
+         * 调用指定类名所对应类上的静态方法，使用默认 ClassLoader 与自动推断参数类型。
+         *
+         * @param methodName 待调用的静态方法名称。
+         * @param args 传递给方法的实际参数。
+         * @return 方法的返回值；当方法返回类型为 `void` 时返回 `null`。
+         */
+        @JvmStatic
+        fun String.callStaticMethod(
+            methodName: String,
+            vararg args: Any?
+        ): Any? {
+            return this.callStaticMethod(ModuleData.getClassLoader(), methodName, emptyArray(), *args)
         }
 
         /**
@@ -805,16 +911,15 @@ open class CoreTool : XposedLog() {
         /**
          * 尝试调用指定类名所对应类上的静态方法，若类或方法不存在则返回 `null`。
          *
-         * @param classLoader 用以加载目标类的 [ClassLoader]，默认值取自 [ModuleData.getClassLoader]。
+         * @param classLoader 用以加载目标类的 [ClassLoader]。
          * @param methodName 待调用的静态方法名称。
          * @param parameterTypes 方法的参数类型数组，默认为空数组时由框架自动推断。
          * @param args 传递给方法的实际参数。
          * @return 方法的返回值；当类/方法不存在或返回类型为 `void` 时返回 `null`。
          */
         @JvmStatic
-        @JvmOverloads
         fun String.callStaticMethodIfExists(
-            classLoader: ClassLoader? = ModuleData.getClassLoader(),
+            classLoader: ClassLoader?,
             methodName: String,
             parameterTypes: Array<Class<*>> = emptyArray(),
             vararg args: Any?
@@ -822,6 +927,21 @@ open class CoreTool : XposedLog() {
             return this.findClassIfExists(classLoader)?.callStaticMethodIfExists(
                 methodName, parameterTypes, *args
             )
+        }
+
+        /**
+         * 尝试调用指定类名所对应类上的静态方法，若类或方法不存在则返回 `null`，使用默认 ClassLoader 与自动推断参数类型。
+         *
+         * @param methodName 待调用的静态方法名称。
+         * @param args 传递给方法的实际参数。
+         * @return 方法的返回值；当类/方法不存在或返回类型为 `void` 时返回 `null`。
+         */
+        @JvmStatic
+        fun String.callStaticMethodIfExists(
+            methodName: String,
+            vararg args: Any?
+        ): Any? {
+            return this.callStaticMethodIfExists(ModuleData.getClassLoader(), methodName, emptyArray(), *args)
         }
 
         /**
@@ -1064,20 +1184,35 @@ open class CoreTool : XposedLog() {
         /**
          * 对指定类中的指定方法执行 Hook 操作。
          *
-         * @param classLoader 用以加载目标类的 [ClassLoader]，默认值取自 [ModuleData.getClassLoader]。
+         * @param classLoader 用以加载目标类的 [ClassLoader]。
          * @param methodName 待 Hook 的方法名称。
          * @param parameterTypes 方法的参数类型序列，最后一个元素必须为 [AbsHook] 实例。
          * @return [XposedInterface.HookHandle] Hook 句柄对象。
          * @throws IllegalArgumentException 若最后一个参数不是 [AbsHook] 实例时抛出。
          */
         @JvmStatic
-        @JvmOverloads
         fun String.hookMethod(
-            classLoader: ClassLoader? = ModuleData.getClassLoader(),
+            classLoader: ClassLoader?,
             methodName: String,
             vararg parameterTypes: Any
         ): XposedInterface.HookHandle {
             return this.findClass(classLoader).hookMethod(methodName, *parameterTypes)
+        }
+
+        /**
+         * 对指定类中的指定方法执行 Hook 操作，使用默认 ClassLoader。
+         *
+         * @param methodName 待 Hook 的方法名称。
+         * @param parameterTypes 方法的参数类型序列，最后一个元素必须为 [AbsHook] 实例。
+         * @return [XposedInterface.HookHandle] Hook 句柄对象。
+         * @throws IllegalArgumentException 若最后一个参数不是 [AbsHook] 实例时抛出。
+         */
+        @JvmStatic
+        fun String.hookMethod(
+            methodName: String,
+            vararg parameterTypes: Any
+        ): XposedInterface.HookHandle {
+            return this.hookMethod(ModuleData.getClassLoader(), methodName, *parameterTypes)
         }
 
         /**
@@ -1105,19 +1240,33 @@ open class CoreTool : XposedLog() {
         /**
          * 尝试对指定类的方法执行 Hook，若目标类不存在则返回 `null`。
          *
-         * @param classLoader 用以加载目标类的 [ClassLoader]，默认值取自 [ModuleData.getClassLoader]。
+         * @param classLoader 用以加载目标类的 [ClassLoader]。
          * @param methodName 待 Hook 的方法名称。
          * @param parameterTypes 方法的参数类型序列，最后一个元素必须为 [AbsHook] 实例。
          * @return [XposedInterface.HookHandle] Hook 句柄对象；若目标类不存在则返回 `null`。
          */
         @JvmStatic
-        @JvmOverloads
         fun String.hookMethodIfExists(
-            classLoader: ClassLoader? = ModuleData.getClassLoader(),
+            classLoader: ClassLoader?,
             methodName: String,
             vararg parameterTypes: Any
         ): XposedInterface.HookHandle? {
             return this.findClassIfExists(classLoader)?.hookMethod(methodName, *parameterTypes)
+        }
+
+        /**
+         * 尝试对指定类的方法执行 Hook，若目标类不存在则返回 `null`，使用默认 ClassLoader。
+         *
+         * @param methodName 待 Hook 的方法名称。
+         * @param parameterTypes 方法的参数类型序列，最后一个元素必须为 [AbsHook] 实例。
+         * @return [XposedInterface.HookHandle] Hook 句柄对象；若目标类不存在则返回 `null`。
+         */
+        @JvmStatic
+        fun String.hookMethodIfExists(
+            methodName: String,
+            vararg parameterTypes: Any
+        ): XposedInterface.HookHandle? {
+            return this.hookMethodIfExists(ModuleData.getClassLoader(), methodName, *parameterTypes)
         }
 
         /**
@@ -1144,18 +1293,31 @@ open class CoreTool : XposedLog() {
         /**
          * 对指定类的构造函数执行 Hook 操作。
          *
-         * @param classLoader 用以加载目标类的 [ClassLoader]，默认值取自 [ModuleData.getClassLoader]。
+         * @param classLoader 用以加载目标类的 [ClassLoader]。
          * @param parameterTypes 构造函数的参数类型序列，最后一个元素必须为 [AbsHook] 实例。
          * @return [XposedInterface.HookHandle] Hook 句柄对象。
          * @throws IllegalArgumentException 若最后一个参数不是 [AbsHook] 实例时抛出。
          */
         @JvmStatic
-        @JvmOverloads
         fun String.hookConstructor(
-            classLoader: ClassLoader? = ModuleData.getClassLoader(),
+            classLoader: ClassLoader?,
             vararg parameterTypes: Any
         ): XposedInterface.HookHandle {
             return this.findClass(classLoader).hookConstructor(*parameterTypes)
+        }
+
+        /**
+         * 对指定类的构造函数执行 Hook 操作，使用默认 ClassLoader。
+         *
+         * @param parameterTypes 构造函数的参数类型序列，最后一个元素必须为 [AbsHook] 实例。
+         * @return [XposedInterface.HookHandle] Hook 句柄对象。
+         * @throws IllegalArgumentException 若最后一个参数不是 [AbsHook] 实例时抛出。
+         */
+        @JvmStatic
+        fun String.hookConstructor(
+            vararg parameterTypes: Any
+        ): XposedInterface.HookHandle {
+            return this.hookConstructor(classLoader = ModuleData.getClassLoader(), *parameterTypes)
         }
 
         /**
@@ -1181,17 +1343,29 @@ open class CoreTool : XposedLog() {
         /**
          * 尝试对指定类的构造函数执行 Hook，若目标类不存在则返回 `null`。
          *
-         * @param classLoader 用以加载目标类的 [ClassLoader]，默认值取自 [ModuleData.getClassLoader]。
+         * @param classLoader 用以加载目标类的 [ClassLoader]。
          * @param parameterTypes 构造函数的参数类型序列，最后一个元素必须为 [AbsHook] 实例。
          * @return [XposedInterface.HookHandle] Hook 句柄对象；若目标类不存在则返回 `null`。
          */
         @JvmStatic
-        @JvmOverloads
         fun String.hookConstructorIfExists(
-            classLoader: ClassLoader? = ModuleData.getClassLoader(),
+            classLoader: ClassLoader?,
             vararg parameterTypes: Any
         ): XposedInterface.HookHandle? {
             return this.findClassIfExists(classLoader)?.hookConstructor(*parameterTypes)
+        }
+
+        /**
+         * 尝试对指定类的构造函数执行 Hook，若目标类不存在则返回 `null`，使用默认 ClassLoader。
+         *
+         * @param parameterTypes 构造函数的参数类型序列，最后一个元素必须为 [AbsHook] 实例。
+         * @return [XposedInterface.HookHandle] Hook 句柄对象；若目标类不存在则返回 `null`。
+         */
+        @JvmStatic
+        fun String.hookConstructorIfExists(
+            vararg parameterTypes: Any
+        ): XposedInterface.HookHandle? {
+            return this.hookConstructorIfExists(classLoader = ModuleData.getClassLoader(), *parameterTypes)
         }
 
         /**
@@ -1215,6 +1389,10 @@ open class CoreTool : XposedLog() {
 
         /**
          * 对当前 [Executable]（方法或构造函数）执行 Hook 操作。
+         * <p>
+         * 在注册钩子的同时，会将声明类的全限定类名作为键存入 [AbsHook] 中，
+         * 并判断目标是否为静态方法。热重载时，同一类的所有实例方法共享相同的
+         * 类级键去重存储 [thisObject]，静态方法则不参与此流程。
          *
          * @param absHook Hook 回调的实现对象。
          * @return [XposedInterface.HookHandle] Hook 句柄对象。
@@ -1222,7 +1400,11 @@ open class CoreTool : XposedLog() {
         @JvmStatic
         fun Executable.hook(absHook: AbsHook): XposedInterface.HookHandle {
             return runCatching {
-                HookBridge(ModuleData.getWrapper().hook(this)).intercept(absHook)
+                HookBridge(
+                    ModuleData.getWrapper().hook(this),
+                    declaringClass.name,
+                    java.lang.reflect.Modifier.isStatic(modifiers)
+                ).intercept(absHook)
             }.onSuccess {
                 if (ModuleConfig.isShowHookSuccessLog()) {
                     logI(getTag(), "Success to hook: $this")
@@ -1335,6 +1517,10 @@ open class CoreTool : XposedLog() {
 
         /**
          * 对当前 [Class] 的类初始化器（`<clinit>`）执行 Hook 操作。
+         * <p>
+         * 在注册钩子的同时，会以类名作为键存入 [AbsHook]，
+         * 并将静态性标志设为 [true]。类初始化器为静态上下文，
+         * 在热重载时不参与 [thisObject] 的自动存储与恢复。
          *
          * @param absHook Hook 回调的实现对象。
          * @return [XposedInterface.HookHandle] Hook 句柄对象。
@@ -1342,7 +1528,10 @@ open class CoreTool : XposedLog() {
         @JvmStatic
         fun Class<*>.hookClassInitializer(absHook: AbsHook): XposedInterface.HookHandle {
             return runCatching {
-                HookBridge(ModuleData.getWrapper().hookClassInitializer(this)).intercept(absHook)
+                HookBridge(
+                    ModuleData.getWrapper().hookClassInitializer(this),
+                    name, true
+                ).intercept(absHook)
             }.onSuccess {
                 if (ModuleConfig.isShowHookSuccessLog()) {
                     logI(getTag(), "Success to hook: $this")
@@ -1395,19 +1584,33 @@ open class CoreTool : XposedLog() {
         /**
          * 获取指定类中指定方法的调用器，用于绕过 Hook 直接调用原始方法。
          *
-         * @param classLoader 用以加载目标类的 [ClassLoader]，默认值取自 [ModuleData.getClassLoader]。
+         * @param classLoader 用以加载目标类的 [ClassLoader]。
          * @param methodName 方法名称。
          * @param parameterTypes 方法的参数类型序列。
          * @return [XposedInterface.Invoker] 方法调用器对象。
          */
         @JvmStatic
-        @JvmOverloads
         fun String.getMethodInvoker(
-            classLoader: ClassLoader? = ModuleData.getClassLoader(),
+            classLoader: ClassLoader?,
             methodName: String,
             vararg parameterTypes: Any
         ): XposedInterface.Invoker<*, Method> {
             return this.findMethod(classLoader, methodName, *parameterTypes).getMethodInvoker()
+        }
+
+        /**
+         * 获取指定类中指定方法的调用器，用于绕过 Hook 直接调用原始方法，使用默认 ClassLoader。
+         *
+         * @param methodName 方法名称。
+         * @param parameterTypes 方法的参数类型序列。
+         * @return [XposedInterface.Invoker] 方法调用器对象。
+         */
+        @JvmStatic
+        fun String.getMethodInvoker(
+            methodName: String,
+            vararg parameterTypes: Any
+        ): XposedInterface.Invoker<*, Method> {
+            return this.getMethodInvoker(ModuleData.getClassLoader(), methodName, *parameterTypes)
         }
 
         /**
@@ -1438,17 +1641,29 @@ open class CoreTool : XposedLog() {
         /**
          * 获取指定类中指定构造函数的调用器，用于绕过 Hook 直接调用原始构造逻辑。
          *
-         * @param classLoader 用以加载目标类的 [ClassLoader]，默认值取自 [ModuleData.getClassLoader]。
+         * @param classLoader 用以加载目标类的 [ClassLoader]。
          * @param parameterTypes 构造函数的参数类型序列。
          * @return [XposedInterface.CtorInvoker] 构造函数调用器对象。
          */
         @JvmStatic
-        @JvmOverloads
         fun String.getConstructorInvoker(
-            classLoader: ClassLoader? = ModuleData.getClassLoader(),
+            classLoader: ClassLoader?,
             vararg parameterTypes: Any
         ): XposedInterface.CtorInvoker<*> {
             return this.findConstructor(classLoader, *parameterTypes).getConstructorInvoker()
+        }
+
+        /**
+         * 获取指定类中指定构造函数的调用器，用于绕过 Hook 直接调用原始构造逻辑，使用默认 ClassLoader。
+         *
+         * @param parameterTypes 构造函数的参数类型序列。
+         * @return [XposedInterface.CtorInvoker] 构造函数调用器对象。
+         */
+        @JvmStatic
+        fun String.getConstructorInvoker(
+            vararg parameterTypes: Any
+        ): XposedInterface.CtorInvoker<*> {
+            return this.getConstructorInvoker(classLoader = ModuleData.getClassLoader(), *parameterTypes)
         }
 
         /**
@@ -1479,18 +1694,31 @@ open class CoreTool : XposedLog() {
         /**
          * 反优化指定类中的指定方法，使其每次调用时均进入解释执行模式。
          *
-         * @param classLoader 用以加载目标类的 [ClassLoader]，默认值取自 [ModuleData.getClassLoader]。
+         * @param classLoader 用以加载目标类的 [ClassLoader]。
          * @param methodName 待反优化的方法名称。
          * @param parameterTypes 方法的参数类型序列。
          */
         @JvmStatic
-        @JvmOverloads
         fun String.deoptimizeMethod(
-            classLoader: ClassLoader? = ModuleData.getClassLoader(),
+            classLoader: ClassLoader?,
             methodName: String,
             vararg parameterTypes: Any
         ) {
             this.findMethod(classLoader, methodName, *parameterTypes).deoptimize()
+        }
+
+        /**
+         * 反优化指定类中的指定方法，使其每次调用时均进入解释执行模式，使用默认 ClassLoader。
+         *
+         * @param methodName 待反优化的方法名称。
+         * @param parameterTypes 方法的参数类型序列。
+         */
+        @JvmStatic
+        fun String.deoptimizeMethod(
+            methodName: String,
+            vararg parameterTypes: Any
+        ) {
+            this.deoptimizeMethod(ModuleData.getClassLoader(), methodName, *parameterTypes)
         }
 
         /**
@@ -1553,16 +1781,27 @@ open class CoreTool : XposedLog() {
         /**
          * 反优化指定类中的指定构造函数。
          *
-         * @param classLoader 用以加载目标类的 [ClassLoader]，默认值取自 [ModuleData.getClassLoader]。
+         * @param classLoader 用以加载目标类的 [ClassLoader]。
          * @param parameterTypes 构造函数的参数类型序列。
          */
         @JvmStatic
-        @JvmOverloads
         fun String.deoptimizeConstructor(
-            classLoader: ClassLoader? = ModuleData.getClassLoader(),
+            classLoader: ClassLoader?,
             vararg parameterTypes: Any
         ) {
             this.findConstructor(classLoader, *parameterTypes).deoptimize()
+        }
+
+        /**
+         * 反优化指定类中的指定构造函数，使用默认 ClassLoader。
+         *
+         * @param parameterTypes 构造函数的参数类型序列。
+         */
+        @JvmStatic
+        fun String.deoptimizeConstructor(
+            vararg parameterTypes: Any
+        ) {
+            this.deoptimizeConstructor(classLoader = ModuleData.getClassLoader(), *parameterTypes)
         }
 
         /**
@@ -1768,15 +2007,14 @@ open class CoreTool : XposedLog() {
         /**
          * 将混合类型（类名字符串或 [Class] 对象）的参数类型声明统一转换为 [Class] 数组。
          *
-         * @param classLoader 用以加载目标类的 [ClassLoader]，默认值取自 [ModuleData.getClassLoader]。
+         * @param classLoader 用以加载目标类的 [ClassLoader]。
          * @param parameterTypes 可包含 [String]（类名）或 [Class] 对象的参数类型列表。
          * @return 转换后的 [Class] 数组。
          * @throws UnexpectedException 当参数类型既非 [String] 也非 [Class] 时抛出。
          */
         @JvmStatic
-        @JvmOverloads
         fun getParameterTypes(
-            classLoader: ClassLoader? = ModuleData.getClassLoader(),
+            classLoader: ClassLoader?,
             vararg parameterTypes: Any
         ): Array<Class<*>> {
             val classes = mutableListOf<Class<*>>()
@@ -1797,6 +2035,20 @@ open class CoreTool : XposedLog() {
                 }
             }
             return classes.toTypedArray()
+        }
+
+        /**
+         * 将混合类型的参数类型声明统一转换为 [Class] 数组，使用默认 ClassLoader。
+         *
+         * @param parameterTypes 可包含 [String]（类名）或 [Class] 对象的参数类型列表。
+         * @return 转换后的 [Class] 数组。
+         * @throws UnexpectedException 当参数类型既非 [String] 也非 [Class] 时抛出。
+         */
+        @JvmStatic
+        fun getParameterTypes(
+            vararg parameterTypes: Any
+        ): Array<Class<*>> {
+            return getParameterTypes(classLoader = ModuleData.getClassLoader(), *parameterTypes)
         }
 
         /**

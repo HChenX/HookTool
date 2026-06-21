@@ -18,7 +18,13 @@
  */
 package com.hchen.app.hook
 
+import android.annotation.SuppressLint
+import android.content.Context
+import android.os.Bundle
 import com.hchen.hooktool.AbsModule
+import com.hchen.hooktool.hook.AbsHook
+import io.github.libxposed.api.XposedInterface
+import io.github.libxposed.api.XposedModuleInterface.HotReloadedParam
 
 /**
  * Hook 功能的 Kotlin 示例模块实现。
@@ -29,6 +35,8 @@ import com.hchen.hooktool.AbsModule
  * @see AbsModule
  */
 class TestHookKt : AbsModule() {
+    private var context: Context? = null
+
     /**
      * 模块加载阶段的回调入口。
      *
@@ -39,6 +47,97 @@ class TestHookKt : AbsModule() {
      * @param stage 当前模块所处的加载阶段枚举值
      * @param param 与当前阶段关联的参数对象，具体类型取决于所处阶段
      */
+    @SuppressLint("XposedNewApi")
     override fun onLoaded(stage: StageEnum, param: Any) {
+        if (stage == StageEnum.PACKAGE_READY || stage == StageEnum.HOT_RELOADED) {
+            if (stage == StageEnum.HOT_RELOADED) {
+                val hot = param as HotReloadedParam
+                context = (hot.savedInstanceState as MutableMap<String, Any>)["CONTEXT"] as Context?
+            }
+
+            "com.hchen.test.Test".hookMethod(
+                "test",
+                String::class.java,
+                object : AbsHook() {
+                    private var context: Context? = null
+
+                    /**
+                     * 前置拦截回调，在目标方法执行之前调用。
+                     */
+                    override fun before() {
+                        super.before()
+                    }
+
+                    /**
+                     * 原方法调用回调，调用被拦截的目标方法。
+                     *
+                     * @param chain 当前调用链对象
+                     * @return 原方法的执行结果
+                     */
+                    @Throws(Throwable::class)
+                    override fun proceed(chain: XposedInterface.Chain): Any? {
+                        return super.proceed(chain)
+                    }
+
+                    /**
+                     * 后置拦截回调，在目标方法执行完成后调用。
+                     */
+                    override fun after() {
+                        super.after()
+                        thisObject.setField("field", true)
+                    }
+
+                    /**
+                     * 异常回调，当钩子生命周期中发生异常时触发。
+                     *
+                     * @param stage 异常发生的生命周期阶段
+                     * @param e     被捕获的异常对象
+                     * @return 返回 `true` 表示异常已被消费
+                     */
+                    override fun onThrow(stage: StageEnum, e: Throwable): Boolean {
+                        return super.onThrow(stage, e)
+                    }
+
+                    /**
+                     * 热重载准备回调，返回需要保存的内部状态。
+                     *
+                     * @param extra 热重载附加数据
+                     * @return 需保存的状态键值对
+                     */
+                    override fun onHotReloading(extra: Bundle?): MutableMap<String, Any?> {
+                        val map = HashMap<String, Any?>()
+                        map["CONTEXT_INNER"] = context
+                        return map
+                    }
+
+                    /**
+                     * 热重载完成回调，恢复之前保存的状态。
+                     *
+                     * @param thisObject 该实例最新的宿主对象实例
+                     * @param inState    合并后的全局状态快照
+                     */
+                    override fun onHotReloaded(thisObject: Any, inState: MutableMap<String, Any?>) {
+                        super.onHotReloaded(thisObject, inState)
+                        context = inState["CONTEXT_INNER"] as Context?
+                        thisObject.setField("field", true)
+                    }
+                }
+            )
+        }
+    }
+
+    /**
+     * 模块级热重载准备回调。
+     * <p>
+     * 在此保存需要在热重载后恢复的模块级状态数据。
+     * 返回的 {@link Map} 会被 {@link HookRegistry#reloading(Bundle)} 合并到全局快照中。
+     *
+     * @param extra 热重载附加数据，可能为 {@code null}
+     * @return 模块级状态键值对
+     */
+    override fun onHotReloading(extra: Bundle?): MutableMap<String, Any?> {
+        val map = java.util.HashMap<String, Any?>()
+        map["CONTEXT"] = context
+        return map
     }
 }

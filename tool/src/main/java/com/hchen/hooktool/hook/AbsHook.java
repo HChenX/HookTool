@@ -25,9 +25,13 @@ import androidx.annotation.Nullable;
 
 import com.hchen.hooktool.log.LogExpand;
 
+import android.os.Bundle;
+
 import java.lang.reflect.Executable;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -37,25 +41,89 @@ import io.github.libxposed.api.XposedInterface;
  * 所有 Xposed 方法钩子的抽象基类。
  * <p>
  * 本类为方法拦截提供了一套完整的生命周期模型，子类只需覆写对应的回调方法即可实现自定义拦截逻辑。
- * 生命周期由三个核心阶段组成：
+ * <p>
+ * <b>核心拦截生命周期</b>（每次方法调用触发一轮）：
  * <ol>
  *     <li>{@link #before()} —— 前置拦截阶段，在原方法执行前触发</li>
  *     <li>{@link #proceed(XposedInterface.Chain)} —— 原方法调用阶段，执行被拦截的目标方法</li>
  *     <li>{@link #after()} —— 后置拦截阶段，在原方法执行完成后触发</li>
+ * </ol>
+ * <b>热重载生命周期</b>（模块热更新时触发）：
+ * <ol>
+ *     <li>{@link #onHotReloading(Bundle)} —— 热重载准备阶段，返回需保存的状态数据</li>
+ *     <li>{@link #onHotReloaded(Object, Map)} —— 热重载完成阶段，恢复之前保存的状态</li>
  * </ol>
  * <p>
  * 各阶段中发生的异常会统一回调至 {@link #onThrow(StageEnum, Throwable)}，由子类决定是否消费。
  * <p>
  * 本类内部通过 {@link ThreadLocal} 维护线程独立的状态栈，因此支持同一线程内对同一钩子的嵌套（可重入）调用。
  * 在拦截过程中，子类可通过 {@link #getArgs()}、{@link #setResult(Object)} 等方法自由读写方法参数与返回值。
+ * <p>
+ * 每个钩子实例在创建时自动注册到 {@link HookRegistry}（弱引用），
+ * 并会自动捕获最近一次调用时的宿主对象（{@link #thisObject}）。
+ * 热重载时，{@link HookRegistry} 会按声明类名（{@link #key}）去重存储 {@link #thisObject}，
+ * 并在新钩子实例上恢复。静态方法钩子（{@link #isStatic}）不参与此流程。
  *
  * @author 焕晨HChen
  * @see HookBridge
+ * @see HookRegistry
  */
 public abstract class AbsHook {
     int priority; // 钩子优先级
     String id; // 钩子 id
     XposedInterface.ExceptionMode mode; // 异常模式
+
+    /**
+     * 当前钩子绑定的声明类名，作为热重载时 {@code thisObject} 的存储键。
+     * <p>
+     * 由 {@link HookBridge} 在注册钩子时自动设置，取值为
+     * {@link java.lang.reflect.Executable#getDeclaringClass()} 的全限定类名
+     * （方法/构造函数），或 {@link Class#getName()}（类初始化器）。
+     * <p>
+     * 同一个类的所有方法/构造函数共享相同的类级 key，使得热重载时
+     * {@code thisObject} 只需按类存储一份即可，避免多个方法重复保存同一对象。
+     * 静态方法的 {@code thisObject} 始终为 {@code null}，因此不会实际保存。
+     */
+    String key; // 热重载用类级标识键
+
+    /**
+     * 标识当前钩子是否绑定到静态上下文。
+     * <p>
+     * 由 {@link HookBridge} 在注册钩子时自动设置：
+     * <ul>
+     *   <li>对于方法/构造函数，取 {@code java.lang.reflect.Modifier.isStatic(executable.getModifiers())}</li>
+     *   <li>对于类初始化器 {@code <clinit>}，始终为 {@code true}</li>
+     *   <li>通过无参或旧版构造器注册时，默认为 {@code false}</li>
+     * </ul>
+     * <p>
+     * 此字段用于在热重载流程中区分静态与非静态上下文：
+     * 静态方法的 {@link #thisObject} 始终为 {@code null}，且在
+     * {@link HookRegistry#reloaded(Map)} 中不会从状态快照中查找
+     * {@code thisObject}，避免静态钩子误读到同类的非静态实例数据。
+     */
+    boolean isStatic;
+
+    /**
+     * 当前最新一次被拦截的方法调用的宿主对象实例（即 {@code this} 引用）。
+     * <p>
+     * 该字段会在每次进入钩子拦截上下文时，从当前调用链 {@link XposedInterface.Chain} 中获取最新值并自动更新。
+     * 若被拦截的方法是静态方法，则该字段为 {@code null}。
+     * <p>
+     * 外部代码可通过此字段直接获取该钩子最近一次拦截到的目标对象实例，
+     * 而无需在钩子回调中手动调用 {@link #getThisObject()}。
+     * <p>
+     * 注意：该字段的值是实时更新的，但仅在钩子生命周期内（即 {@link #before()} 至 {@link #after()} 之间）
+     * 具有有效含义；在生命周期之外仍保留上一次拦截的值。
+     * <p>
+     * 使用 {@code volatile} 保证跨线程可见性：{@link #enter(XposedInterface.Chain)} 在回调线程中
+     * 写入此字段，而 {@link HookRegistry#reloading} 在热更新触发线程中读取。
+     * 若无 {@code volatile}，读取线程可能看到过期的 {@code null} 值，
+     * 导致热重载时 {@code thisObject} 状态丢失。
+     *
+     * @see #getThisObject()
+     * @see XposedInterface.Chain#getThisObject()
+     */
+    volatile Object thisObject;
 
     private static class CallState {
         XposedInterface.Chain originalChain;
@@ -240,6 +308,7 @@ public abstract class AbsHook {
         this.priority = priority;
         this.id = id;
         this.mode = mode;
+        HookRegistry.register(this);
     }
 
     /**
@@ -291,6 +360,53 @@ public abstract class AbsHook {
      */
     public boolean onThrow(@NonNull StageEnum stage, @NonNull Throwable e) {
         return false;
+    }
+
+    /**
+     * 热重载准备回调，在当前模块即将被热重载时触发。
+     * <p>
+     * 子类可覆写此方法以返回需要保存的状态数据。返回的 {@link Map} 中的键值对
+     * 会在 {@link HookRegistry#reloading(Bundle)} 的阶段一中被合并到全局状态快照中。
+     * 若返回的 Map 中存在与其他实例重复的键，合并过程会显式抛出
+     * {@link IllegalStateException} 以提示冲突。
+     * <p>
+     * {@link #thisObject} 的自动保存由框架在阶段二中以声明类名（{@link #key}）
+     * 去重处理，无需在此方法中手动保存。
+     * 若无需保存任何额外状态，返回空 {@link HashMap} 即可。
+     * <p>
+     * 默认实现返回一个空的 {@link HashMap}（始终非 {@code null}）。
+     *
+     * @param extra 热重载的附加信息，包含触发重载的上下文数据；可能为 {@code null}
+     *               （当框架未传递额外数据时）
+     * @return 需要保存的状态键值对，不为 {@code null}；默认返回空 {@link HashMap}
+     * @see HookRegistry#reloading(Bundle)
+     */
+    @NonNull
+    public Map<String, Object> onHotReloading(@Nullable Bundle extra) {
+        return new HashMap<>();
+    }
+
+    /**
+     * 热重载完成回调，在模块热重载完成后触发。
+     * <p>
+     * 子类可覆写此方法以从传入的状态快照中恢复之前保存的数据。
+     * 传入的 {@code thisObject} 是 {@link HookRegistry#reloaded(Map)} 根据当前实例的
+     * {@link #key} 从全局状态快照中查找到的宿主对象实例。
+     * 传入的 {@code inState} 是在 {@link #onHotReloading(Bundle)} 阶段由
+     * 所有旧钩子实例收集并合并后的全局状态快照。
+     * <p>
+     * 此回调在 {@link HookRegistry#reloaded(Map)} 中被调用，
+     * 此时注册表中已注册的是热重载后新创建的钩子实例。
+     *
+     * @param thisObject 从全局状态快照中恢复的宿主对象实例，
+     *                   可能为 {@code null}（若保存时 {@link #thisObject} 为 {@code null} 或
+     *                   {@link #key} 未设置）
+     * @param inState    之前通过 {@link #onHotReloading(Bundle)} 保存并合并后的全局状态快照，
+     *                   不为 {@code null}
+     * @see HookRegistry#reloaded(Map)
+     * @see #key
+     */
+    public void onHotReloaded(@NonNull Object thisObject, @NonNull Map<String, Object> inState) {
     }
 
     /**
@@ -466,6 +582,21 @@ public abstract class AbsHook {
         this.handles.add(handle);
     }
 
+    /**
+     * 设置当前钩子绑定的声明类名作为热重载存储键。
+     * <p>
+     * 此键由 {@link HookBridge} 在注册钩子时调用，取值为声明类的全限定类名。
+     * 同一类的所有方法/构造函数共享相同的类级 key，使得热重载时
+     * {@link #thisObject} 只需按类存储一份即可，避免重复。
+     *
+     * @param key 声明类的全限定类名，不为 {@code null}
+     * @see #key
+     * @see HookBridge
+     */
+    final void setKey(@NonNull String key) {
+        this.key = key;
+    }
+
     // --- 生命周期管理 ---
 
     /**
@@ -477,6 +608,7 @@ public abstract class AbsHook {
      * @param chain 本次拦截对应的原始调用链，不为 {@code null}
      */
     final void enter(@NonNull XposedInterface.Chain chain) {
+        thisObject = chain.getThisObject();
         Objects.requireNonNull(stackLocal.get()).push(chain);
     }
 

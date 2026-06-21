@@ -23,10 +23,16 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 
 import com.hchen.app.hook.TestHook;
+import com.hchen.app.hook.TestHookKt;
 import com.hchen.hooktool.ModuleConfig;
 import com.hchen.hooktool.ModuleData;
 import com.hchen.hooktool.ModuleEntrance;
+import com.hchen.hooktool.hook.HookRegistry;
 import com.hchen.hooktool.log.AndroidLog;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * HookTool 模块的主入口类。
@@ -168,5 +174,54 @@ public class InitHook extends ModuleEntrance {
     public void handleApplicationCreated(@NonNull Context context) {
         AndroidLog.logD(TAG, "handleApplicationCreated: " + context);
         super.handleApplicationCreated(context);
+    }
+
+    /**
+     * 分发模块热更新前事件（在旧代码中执行）。
+     * <p>
+     * 收集所有已注册钩子的状态数据并通过 {@link param#setSavedInstanceState} 保存，
+     * 以便在热更新完成后恢复。此方法会依次收集 {@link TestHook} 和 {@link TestHookKt}
+     * 中导出的状态。
+     *
+     * @param param 热更新参数，包含触发时传递的附加数据
+     * @return {@code true} 表示允许热更新继续进行
+     * @see ModuleEntrance#handleHotReloading(HotReloadingParam)
+     */
+    @Override
+    public boolean handleHotReloading(@NonNull HotReloadingParam param) {
+        AndroidLog.logD(TAG, "handleHotReloading: " + param);
+        try {
+            Map<String, Object> map = new HashMap<>();
+            map.putAll(HookRegistry.reloading(param.getExtras()));
+            map.putAll(Objects.requireNonNull(new TestHook().handleHotReloading(param)));
+            map.putAll(Objects.requireNonNull(new TestHookKt().handleHotReloading(param)));
+            param.setSavedInstanceState(map);
+        } catch (Throwable e) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * 分发模块热更新完成事件（在新代码中执行）。
+     * <p>
+     * 将之前保存的全局状态快照通过 {@link HookRegistry#reloaded(Map)} 分发给
+     * 所有新创建的钩子实例，并依次通知 {@link TestHook} 和 {@link TestHookKt}
+     * 完成其内部状态恢复。
+     *
+     * @param param 热更新完成参数，包含之前保存的状态数据
+     * @see ModuleEntrance#handleHotReloaded(HotReloadedParam)
+     */
+    @Override
+    public void handleHotReloaded(@NonNull HotReloadedParam param) {
+        AndroidLog.logD(TAG, "handleHotReloaded: " + param);
+        super.handleHotReloaded(param);
+        new TestHook().handleHotReloaded(param);
+        new TestHookKt().handleHotReloaded(param);
+
+        Map<String, Object> map = (Map<String, Object>) param.getSavedInstanceState();
+        if (map != null) {
+            HookRegistry.reloaded(map);
+        }
     }
 }

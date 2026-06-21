@@ -18,9 +18,22 @@
  */
 package com.hchen.app.hook;
 
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.os.Bundle;
+
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.hchen.hooktool.AbsModule;
+import com.hchen.hooktool.hook.AbsHook;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+
+import io.github.libxposed.api.XposedInterface;
+import io.github.libxposed.api.XposedModuleInterface;
 
 /**
  * Hook 功能的示例模块实现。
@@ -34,6 +47,8 @@ import com.hchen.hooktool.AbsModule;
  * @see AbsModule
  */
 public class TestHook extends AbsModule {
+    private Context context;
+
     /**
      * 模块加载阶段的回调入口。
      *
@@ -45,7 +60,76 @@ public class TestHook extends AbsModule {
      * @param param 与当前阶段关联的参数对象，具体类型取决于所处阶段
      * @see AbsModule#onLoaded(StageEnum, Object)
      */
+    @SuppressLint("XposedNewApi")
     @Override
     protected void onLoaded(@NonNull StageEnum stage, @NonNull Object param) {
+        if (stage == StageEnum.PACKAGE_READY || stage == StageEnum.HOT_RELOADED) {
+            if (stage == StageEnum.HOT_RELOADED) {
+                XposedModuleInterface.HotReloadedParam hot = (XposedModuleInterface.HotReloadedParam) param;
+                // noinspection unchecked
+                context = (Context) ((Map<String, Object>) Objects.requireNonNull(hot.getSavedInstanceState())).get("CONTEXT");
+            }
+
+            hookMethod("com.hchen.test.Test",
+                "test",
+                String.class,
+                new AbsHook() {
+                    private Context context;
+
+                    @Override
+                    public void before() {
+                        super.before();
+                    }
+
+                    @Override
+                    public Object proceed(@NonNull XposedInterface.Chain chain) throws Throwable {
+                        return super.proceed(chain);
+                    }
+
+                    @Override
+                    public void after() {
+                        super.after();
+                        setField(getThisObject(), "field", true);
+                    }
+
+                    @Override
+                    public boolean onThrow(@NonNull StageEnum stage, @NonNull Throwable e) {
+                        return super.onThrow(stage, e);
+                    }
+
+                    @NonNull
+                    @Override
+                    public Map<String, Object> onHotReloading(@Nullable Bundle extra) {
+                        Map<String, Object> map = new HashMap<>();
+                        map.put("CONTEXT_INNER", context);
+                        return map;
+                    }
+
+                    @Override
+                    public void onHotReloaded(@NonNull Object thisObject, @NonNull Map<String, Object> inState) {
+                        super.onHotReloaded(thisObject, inState);
+                        context = (Context) inState.get("CONTEXT_INNER");
+                        setField(thisObject, "field", true);
+                    }
+                }
+            );
+        }
+    }
+
+    /**
+     * 模块级热重载准备回调。
+     * <p>
+     * 在此保存需要在热重载后恢复的模块级状态数据。
+     * 返回的 {@link Map} 会被 {@link com.hchen.hooktool.hook.HookRegistry#reloading(Bundle)}
+     * 合并到全局快照中。
+     *
+     * @param extra 热重载附加数据，可能为 {@code null}
+     * @return 模块级状态键值对
+     */
+    @Override
+    protected Map<String, Object> onHotReloading(@Nullable Bundle extra) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("CONTEXT", context);
+        return map;
     }
 }
