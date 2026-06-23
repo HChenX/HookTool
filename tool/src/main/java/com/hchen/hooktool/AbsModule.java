@@ -26,6 +26,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.hchen.hooktool.core.CoreTool;
+import com.hchen.hooktool.log.XposedLog;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -37,14 +38,21 @@ import io.github.libxposed.api.XposedModuleInterface;
 /**
  * Hook 模块的抽象基类，提供 Xposed 模块生命周期的统一管理框架。
  * <p>
- * 本类继承自 {@link CoreTool}，将 Xposed 框架的原始生命周期回调统一封装为
- * 以 {@link StageEnum} 标识阶段的事件流。子类只需覆写 {@link #onLoaded(StageEnum, Object)}
- * 即可在不同生命周期节点插入自定义 Hook 逻辑。
+ * 本类继承自 {@link CoreTool}，将 Xposed 框架的原始生命周期回调封装为
+ * 独立的可覆写方法。子类需覆写 {@link #onPackageReady(XposedModuleInterface.PackageReadyParam)}
+ * 以注册 Hook 逻辑，并可选择性覆写其他阶段方法：
+ * <ul>
+ *   <li>{@link #onModuleLoaded(XposedModuleInterface.ModuleLoadedParam)} — 模块加载完成</li>
+ *   <li>{@link #onPackageLoaded(XposedModuleInterface.PackageLoadedParam)} — 目标包加载完成</li>
+ *   <li>{@link #onPackageReady(XposedModuleInterface.PackageReadyParam)} — 目标包资源就绪{@code （必须覆写）}</li>
+ *   <li>{@link #onSystemServerStarting(XposedModuleInterface.SystemServerStartingParam)} — 系统服务启动</li>
+ *   <li>{@link #onHotReloaded(XposedModuleInterface.HotReloadedParam)} — 热更新完成后恢复</li>
+ * </ul>
  * <p>
  * 从 API 102 开始支持热更新生命周期：
  * <ul>
- *   <li>{@link StageEnum#HOT_RELOADING} — 热更新前在旧代码中执行，可保存状态</li>
- *   <li>{@link StageEnum#HOT_RELOADED} — 热更新完成后在新代码中执行，可重新挂钩</li>
+ *   <li>{@link #onHotReloading(Bundle)} — 热更新前在旧代码中执行，返回需保存的状态</li>
+ *   <li>{@link #onHotReloaded(XposedModuleInterface.HotReloadedParam)} — 热更新完成后在新代码中执行</li>
  * </ul>
  * <p>
  * 每个生命周期回调在执行前均会经过 {@link #isEnabled()} 的守卫判断，
@@ -67,8 +75,7 @@ public abstract class AbsModule extends CoreTool {
     /**
      * 模块生命周期阶段枚举，用于标识当前回调所处的处理节点。
      * <p>
-     * 每个枚举常量对应 {@link #onLoaded(StageEnum, Object)} 中的一个回调时机，
-     * 开发者可据此针对不同阶段编写差异化的 Hook 处理策略。
+     * 该枚举主要用于框架内部的事件分发与异常回溯，开发者无需直接操作此枚举。
      */
     public enum StageEnum {
         /**
@@ -118,23 +125,58 @@ public abstract class AbsModule extends CoreTool {
     }
 
     /**
-     * Hook 逻辑的核心入口，子类必须实现此方法以注册自定义 Hook 代码。
+     * 模块加载完成时的回调。
      * <p>
-     * 根据 {@code stage} 参数可判断当前所处的生命周期阶段，并将 {@code param}
-     * 转换为对应的类型后使用：
-     * <ul>
-     *   <li>{@link StageEnum#MODULE_LOADED} → {@link XposedModuleInterface.ModuleLoadedParam}</li>
-     *   <li>{@link StageEnum#PACKAGE_LOADED} → {@link XposedModuleInterface.PackageLoadedParam}</li>
-     *   <li>{@link StageEnum#PACKAGE_READY} → {@link XposedModuleInterface.PackageReadyParam}</li>
-     *   <li>{@link StageEnum#SYSTEM_SERVER_STARTING} → {@link XposedModuleInterface.SystemServerStartingParam}</li>
-     *   <li>{@link StageEnum#HOT_RELOADING} → {@link XposedModuleInterface.HotReloadingParam}</li>
-     *   <li>{@link StageEnum#HOT_RELOADED} → {@link XposedModuleInterface.HotReloadedParam}</li>
-     * </ul>
+     * 当 Xposed 框架完成模块加载后触发。
+     * 子类可覆写此方法执行模块级别的初始化操作。
      *
-     * @param stage 当前生命周期阶段
-     * @param param 与当前阶段匹配的生命周期参数对象
+     * @param param 模块加载参数，包含框架相关信息
      */
-    protected abstract void onLoaded(@NonNull StageEnum stage, @NonNull Object param);
+    protected void onModuleLoaded(@NonNull XposedModuleInterface.ModuleLoadedParam param) {
+    }
+
+    /**
+     * 目标应用包加载完成时的回调。
+     * <p>
+     * 当目标应用的包被框架加载后触发。
+     * 子类可覆写此方法在包加载阶段进行准备。
+     *
+     * @param param 包加载参数，包含目标包的相关信息
+     */
+    protected void onPackageLoaded(@NonNull XposedModuleInterface.PackageLoadedParam param) {
+    }
+
+    /**
+     * 目标应用包资源就绪时的回调。
+     * <p>
+     * 当目标应用包的资源已加载并就绪后触发，子类<strong>必须</strong>实现此方法
+     * 以注册自定义 Hook 代码。这是绝大多数 Hook 注册的入口。
+     *
+     * @param param 包就绪参数，包含目标包的类加载器等信息
+     */
+    protected abstract void onPackageReady(@NonNull XposedModuleInterface.PackageReadyParam param);
+
+    /**
+     * 系统服务器启动时的回调。
+     * <p>
+     * 当系统服务进程启动时触发。
+     * 子类可覆写此方法执行系统服务相关的 Hook 操作。
+     *
+     * @param param 系统服务器启动参数
+     */
+    protected void onSystemServerStarting(@NonNull XposedModuleInterface.SystemServerStartingParam param) {
+    }
+
+    /**
+     * 模块热更新完成时的回调（在新代码中执行）。
+     * <p>
+     * 此回调在热更新完成后于新模块代码中触发，子类可覆写此方法从保存的状态中
+     * 恢复数据并重新注册 Hook。该方法的默认实现为空，无需保存状态时可不覆写。
+     *
+     * @param param 热更新完成参数，包含保存的状态等信息
+     */
+    protected void onHotReloaded(@NonNull XposedModuleInterface.HotReloadedParam param) {
+    }
 
     /**
      * 当外部注入自定义 {@link ClassLoader} 时触发的回调。
@@ -188,6 +230,7 @@ public abstract class AbsModule extends CoreTool {
      * <p>
      * 执行流程如下：
      * <ol>
+     *   <li>记录生命周期阶段进入日志（DEBUG 级别）</li>
      *   <li>通过 {@link #isEnabled()} 检查模块是否启用</li>
      *   <li>对参数执行非空校验</li>
      *   <li>执行指定的回调动作</li>
@@ -201,11 +244,17 @@ public abstract class AbsModule extends CoreTool {
      */
     private <T> void dispatch(@NonNull StageEnum stage, @NonNull T param, @NonNull Consumer<T> action) {
         try {
-            if (!isEnabled()) return;
+            XposedLog.logD(TAG, "==> " + stage.name());
+            if (!isEnabled()) {
+                XposedLog.logD(TAG, "<== " + stage.name() + " (disabled)");
+                return;
+            }
 
             Objects.requireNonNull(param);
             action.accept(param);
+            XposedLog.logD(TAG, "<== " + stage.name() + " (done)");
         } catch (Throwable e) {
+            XposedLog.logD(TAG, "<== " + stage.name() + " (exception)");
             onThrow(stage, e);
             CoreTool.throwIt(e);
         }
@@ -215,68 +264,48 @@ public abstract class AbsModule extends CoreTool {
      * 分发模块加载事件。
      * <p>
      * 由模块入口类调用，通过 {@link #dispatch} 将事件转发至
-     * {@link #onLoaded(StageEnum, Object)}，阶段标识为 {@link StageEnum#MODULE_LOADED}。
+     * {@link #onModuleLoaded(XposedModuleInterface.ModuleLoadedParam)}。
      *
      * @param param Xposed 框架传入的模块加载参数
      */
     final public void handleModuleLoaded(@NonNull XposedModuleInterface.ModuleLoadedParam param) {
-        dispatch(StageEnum.MODULE_LOADED, param, new Consumer<XposedModuleInterface.ModuleLoadedParam>() {
-            @Override
-            public void accept(XposedModuleInterface.ModuleLoadedParam p) {
-                onLoaded(StageEnum.MODULE_LOADED, p);
-            }
-        });
+        dispatch(StageEnum.MODULE_LOADED, param, p -> onModuleLoaded(p));
     }
 
     /**
      * 分发目标应用包加载事件。
      * <p>
      * 由模块入口类调用，通过 {@link #dispatch} 将事件转发至
-     * {@link #onLoaded(StageEnum, Object)}，阶段标识为 {@link StageEnum#PACKAGE_LOADED}。
+     * {@link #onPackageLoaded(XposedModuleInterface.PackageLoadedParam)}。
      *
      * @param param Xposed 框架传入的包加载参数
      */
     final public void handlePackageLoaded(@NonNull XposedModuleInterface.PackageLoadedParam param) {
-        dispatch(StageEnum.PACKAGE_LOADED, param, new Consumer<XposedModuleInterface.PackageLoadedParam>() {
-            @Override
-            public void accept(XposedModuleInterface.PackageLoadedParam p) {
-                onLoaded(StageEnum.PACKAGE_LOADED, p);
-            }
-        });
+        dispatch(StageEnum.PACKAGE_LOADED, param, p -> onPackageLoaded(p));
     }
 
     /**
      * 分发目标应用包就绪事件。
      * <p>
      * 由模块入口类调用，通过 {@link #dispatch} 将事件转发至
-     * {@link #onLoaded(StageEnum, Object)}，阶段标识为 {@link StageEnum#PACKAGE_READY}。
+     * {@link #onPackageReady(XposedModuleInterface.PackageReadyParam)}。
      *
      * @param param Xposed 框架传入的包就绪参数
      */
     final public void handlePackageReady(@NonNull XposedModuleInterface.PackageReadyParam param) {
-        dispatch(StageEnum.PACKAGE_READY, param, new Consumer<XposedModuleInterface.PackageReadyParam>() {
-            @Override
-            public void accept(XposedModuleInterface.PackageReadyParam p) {
-                onLoaded(StageEnum.PACKAGE_READY, p);
-            }
-        });
+        dispatch(StageEnum.PACKAGE_READY, param, p -> onPackageReady(p));
     }
 
     /**
      * 分发系统服务器启动事件。
      * <p>
      * 由模块入口类调用，通过 {@link #dispatch} 将事件转发至
-     * {@link #onLoaded(StageEnum, Object)}，阶段标识为 {@link StageEnum#SYSTEM_SERVER_STARTING}。
+     * {@link #onSystemServerStarting(XposedModuleInterface.SystemServerStartingParam)}。
      *
      * @param param Xposed 框架传入的系统服务器启动参数
      */
     final public void handleSystemServerStarting(@NonNull XposedModuleInterface.SystemServerStartingParam param) {
-        dispatch(StageEnum.SYSTEM_SERVER_STARTING, param, new Consumer<XposedModuleInterface.SystemServerStartingParam>() {
-            @Override
-            public void accept(XposedModuleInterface.SystemServerStartingParam p) {
-                onLoaded(StageEnum.SYSTEM_SERVER_STARTING, p);
-            }
-        });
+        dispatch(StageEnum.SYSTEM_SERVER_STARTING, param, p -> onSystemServerStarting(p));
     }
 
     /**
@@ -288,12 +317,7 @@ public abstract class AbsModule extends CoreTool {
      * @param classLoader 由外部注入的目标应用类加载器
      */
     final public void handleClassLoader(@NonNull ClassLoader classLoader) {
-        dispatch(StageEnum.ON_CLASSLOADER, classLoader, new Consumer<ClassLoader>() {
-            @Override
-            public void accept(ClassLoader classLoader) {
-                onClassLoader(classLoader);
-            }
-        });
+        dispatch(StageEnum.ON_CLASSLOADER, classLoader, cl -> onClassLoader(cl));
     }
 
     /**
@@ -305,12 +329,7 @@ public abstract class AbsModule extends CoreTool {
      * @param context 目标应用的上下文对象
      */
     final public void handleApplicationCreated(@NonNull Context context) {
-        dispatch(StageEnum.ON_APPLICATION_CREATED, context, new Consumer<Context>() {
-            @Override
-            public void accept(Context context) {
-                onApplicationCreated(context);
-            }
-        });
+        dispatch(StageEnum.ON_APPLICATION_CREATED, context, ctx -> onApplicationCreated(ctx));
     }
 
     /**
@@ -327,10 +346,18 @@ public abstract class AbsModule extends CoreTool {
      * @return 当前实例返回的状态数据；若被禁用或被跳过则返回空 {@link HashMap}
      */
     @NonNull final public Map<String, Object> handleHotReloading(@Nullable Bundle extras) {
-        if (!isEnabled()) return new HashMap<>();
+        XposedLog.logD(TAG, "==> HOT_RELOADING");
+        if (!isEnabled()) {
+            XposedLog.logD(TAG, "<== HOT_RELOADING (disabled)");
+            return new HashMap<>();
+        }
         try {
-            return onHotReloading(extras);
+            Objects.requireNonNull(extras);
+            Map<String, Object> result = onHotReloading(extras);
+            XposedLog.logD(TAG, "<== HOT_RELOADING (done)");
+            return result;
         } catch (Throwable e) {
+            XposedLog.logD(TAG, "<== HOT_RELOADING (exception)");
             onThrow(StageEnum.HOT_RELOADING, e);
             CoreTool.throwIt(e);
             return new HashMap<>();
@@ -341,16 +368,11 @@ public abstract class AbsModule extends CoreTool {
      * 分发模块热更新完成事件（在新代码中执行）。
      * <p>
      * 由模块入口类调用，通过 {@link #dispatch} 将事件转发至
-     * {@link #onLoaded(StageEnum, Object)}，阶段标识为 {@link StageEnum#HOT_RELOADED}。
+     * {@link #onHotReloaded(XposedModuleInterface.HotReloadedParam)}。
      *
      * @param param 热更新完成参数
      */
     final public void handleHotReloaded(@NonNull XposedModuleInterface.HotReloadedParam param) {
-        dispatch(StageEnum.HOT_RELOADED, param, new Consumer<XposedModuleInterface.HotReloadedParam>() {
-            @Override
-            public void accept(XposedModuleInterface.HotReloadedParam p) {
-                onLoaded(StageEnum.HOT_RELOADED, p);
-            }
-        });
+        dispatch(StageEnum.HOT_RELOADED, param, p -> onHotReloaded(p));
     }
 }

@@ -50,7 +50,7 @@ import io.github.libxposed.api.XposedInterface;
  * </ol>
  * <b>热重载生命周期</b>（模块热更新时触发）：
  * <ol>
- *     <li>{@link #onHotReloading(Bundle)} —— 热重载准备阶段，返回需保存的状态数据</li>
+ *     <li>{@link #onHotReloading(Bundle, Map)} —— 热重载准备阶段，向 state 写入需保存的状态数据</li>
  *     <li>{@link #onHotReloaded(Object, Map)} —— 热重载完成阶段，恢复之前保存的状态</li>
  * </ol>
  * <p>
@@ -365,25 +365,24 @@ public abstract class AbsHook {
     /**
      * 热重载准备回调，在当前模块即将被热重载时触发。
      * <p>
-     * 子类可覆写此方法以返回需要保存的状态数据。返回的 {@link Map} 中的键值对
-     * 会在 {@link HookRegistry#reloading(Bundle)} 的阶段一中被合并到全局状态快照中。
-     * 若返回的 Map 中存在与其他实例重复的键，合并过程会显式抛出
+     * 子类可覆写此方法，将需要保存的状态数据写入 {@code state} 中。
+     * 写入的键值对会在 {@link HookRegistry#reloading(Bundle)} 的阶段一中被合并到全局状态快照中。
+     * 若不同钩子实例的 state 中存在重复的键，合并过程会显式抛出
      * {@link IllegalStateException} 以提示冲突。
      * <p>
      * {@link #thisObject} 的自动保存由框架在阶段二中以声明类名（{@link #key}）
      * 去重处理，无需在此方法中手动保存。
-     * 若无需保存任何额外状态，返回空 {@link HashMap} 即可。
+     * 若无需保存任何额外状态，保持 {@code state} 为空即可。
      * <p>
-     * 默认实现返回一个空的 {@link HashMap}（始终非 {@code null}）。
+     * 默认实现为空，不保存任何状态。
      *
      * @param extras 热重载的附加信息，包含触发重载的上下文数据；可能为 {@code null}
      *               （当框架未传递额外数据时）
-     * @return 需要保存的状态键值对，不为 {@code null}；默认返回空 {@link HashMap}
+     * @param state  用于写入状态数据的可变 Map，由框架为每个钩子实例单独创建，
+     *               不会与其他钩子共享，不为 {@code null}
      * @see HookRegistry#reloading(Bundle)
      */
-    @NonNull
-    public Map<String, Object> onHotReloading(@Nullable Bundle extras) {
-        return new HashMap<>();
+    public void onHotReloading(@Nullable Bundle extras, @NonNull Map<String, Object> state) {
     }
 
     /**
@@ -392,7 +391,7 @@ public abstract class AbsHook {
      * 子类可覆写此方法以从传入的状态快照中恢复之前保存的数据。
      * 传入的 {@code thisObject} 是 {@link HookRegistry#reloaded(io.github.libxposed.api.XposedModuleInterface.HotReloadedParam)}
      * 根据当前实例的 {@link #key} 从全局状态快照中查找到的宿主对象实例。
-     * 传入的 {@code inState} 是在 {@link #onHotReloading(Bundle)} 阶段由
+     * 传入的 {@code inState} 是在 {@link #onHotReloading(Bundle, Map)} 阶段由
      * 所有旧钩子实例收集并合并后的全局状态快照。
      * <p>
      * 此回调在 {@link HookRegistry#reloaded(io.github.libxposed.api.XposedModuleInterface.HotReloadedParam)} 中被调用，
@@ -404,7 +403,7 @@ public abstract class AbsHook {
      * @param thisObject 从全局状态快照中恢复的宿主对象实例；
      *                   可能为 {@code null}（静态方法、{@code <clinit>} 钩子、
      *                   {@link #key} 未设置或保存时 {@link #thisObject} 为 {@code null} 的情况）
-     * @param inState    之前通过 {@link #onHotReloading(Bundle)} 保存并合并后的全局状态快照，
+     * @param inState    之前通过 {@link #onHotReloading(Bundle, Map)} 保存并合并后的全局状态快照，
      *                   不为 {@code null}
      * @see HookRegistry#reloaded(io.github.libxposed.api.XposedModuleInterface.HotReloadedParam)
      * @see #key

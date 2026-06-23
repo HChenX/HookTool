@@ -65,9 +65,9 @@ public final class ModuleConfig {
     public static final int LOG_D = 4;
 
     @IntDef(value = {
-        LOG_I,
-        LOG_W,
         LOG_E,
+        LOG_W,
+        LOG_I,
         LOG_D
     })
     @Retention(RetentionPolicy.SOURCE)

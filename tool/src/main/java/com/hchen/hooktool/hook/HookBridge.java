@@ -95,7 +95,6 @@ public final class HookBridge {
      */
     private void setId(@Nullable String id) {
         if (ModuleData.getApiVersion() >= 102) {
-            Objects.requireNonNull(builder);
             builder.setId(id);
         }
     }
@@ -108,7 +107,6 @@ public final class HookBridge {
      * @param mode 异常处理模式
      */
     private void setExceptionMode(@NonNull XposedInterface.ExceptionMode mode) {
-        Objects.requireNonNull(builder);
         builder.setExceptionMode(mode);
     }
 
@@ -118,7 +116,6 @@ public final class HookBridge {
      * @param priority 优先级数值，值越小优先级越高
      */
     private void setPriority(int priority) {
-        Objects.requireNonNull(builder);
         builder.setPriority(priority);
     }
 

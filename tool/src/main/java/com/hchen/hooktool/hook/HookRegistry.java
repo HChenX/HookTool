@@ -144,13 +144,13 @@ public final class HookRegistry {
     }
 
     /**
-     * 触发所有已注册钩子的热重载准备阶段，收集并合并各实例返回的状态快照。
+     * 触发所有已注册钩子的热重载准备阶段，收集并合并各实例填写的状态快照。
      * <p>
      * 收集过程分为两个阶段：
      * <ol>
      *   <li><b>用户自定义状态</b>：遍历所有钩子，依次调用
-     *       {@link AbsHook#onHotReloading(Bundle)}，将各实例返回的 {@link Map}
-     *       合并到全局快照中。此阶段严格检测重复键——不同实例返回的 Map 中存在
+     *       {@link AbsHook#onHotReloading(Bundle, Map)}，将各实例填写的状态数据
+     *       合并到全局快照中。此阶段严格检测重复键——不同实例填写的 Map 中存在
      *       相同键时抛出 {@link IllegalStateException}。</li>
      *   <li><b>{@code thisObject} 自动保存</b>：遍历所有钩子，对每个非静态实例的钩子
      *       将其 {@link AbsHook#thisObject} 按 {@link AbsHook#key}（类名）存入全局快照。
@@ -165,9 +165,9 @@ public final class HookRegistry {
      *
      * @param extras 热重载的附加信息，包含触发重载的上下文数据；可能为 {@code null}
      *               （当框架未传递额外数据时）
-     * @return 所有实例返回的状态数据合并后的全局快照；若所有实例均未返回任何数据则返回空 {@link HashMap}
-     * @throws IllegalStateException 当不同实例返回的 {@link Map} 中存在重复的键时抛出
-     * @see AbsHook#onHotReloading(Bundle)
+     * @return 所有实例填写的状态数据合并后的全局快照；若所有实例均未写入任何数据则返回空 {@link HashMap}
+     * @throws IllegalStateException 当不同实例填写的 {@link Map} 中存在重复的键时抛出
+     * @see AbsHook#onHotReloading(Bundle, Map)
      * @see AbsHook#key
      */
     @NonNull
@@ -177,11 +177,10 @@ public final class HookRegistry {
 
             // Phase 1: 收集用户自定义状态（严格去重检测）
             for (AbsHook hook : hooks) {
-                // 用 new HashMap<>() 包裹以确保 state 始终可变，
-                // 防止子类返回不可变 Map（如 Collections.emptyMap() 或 Map.of()）
-                // 导致后续操作抛出 UnsupportedOperationException。
-                // 注：热更新属于低频操作，此拷贝的性能开销可忽略不计。
-                Map<String, Object> state = new HashMap<>(hook.onHotReloading(extras));
+                // 为每个钩子单独创建 state map，传入钩子由其填写。
+                // 各钩子写入的 state 互不影响，合并时的碰撞检测由下方循环保证。
+                Map<String, Object> state = new HashMap<>();
+                hook.onHotReloading(extras, state);
                 for (Map.Entry<String, Object> entry : state.entrySet()) {
                     if (merged.containsKey(entry.getKey())) {
                         throw new IllegalStateException(

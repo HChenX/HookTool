@@ -35,7 +35,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Predicate;
 
 import io.github.libxposed.api.XposedModule;
 import io.github.libxposed.api.XposedModuleInterface;
@@ -218,12 +217,7 @@ public abstract class ModuleEntrance extends XposedModule {
         String[] ignored = ignorePackages();
         if (ignored.length > 0) {
             shouldSkip = Arrays.stream(ignored).anyMatch(
-                new Predicate<String>() {
-                    @Override
-                    public boolean test(String packageName) {
-                        return TextUtils.equals(packageName, param.getPackageName());
-                    }
-                }
+                p -> TextUtils.equals(p, param.getPackageName())
             );
         } else {
             shouldSkip = false;
@@ -282,7 +276,10 @@ public abstract class ModuleEntrance extends XposedModule {
             @SuppressWarnings("unchecked")
             Map<String, Object> map = (Map<String, Object>) param.getSavedInstanceState();
             if (map != null) {
-                classLoader = (ClassLoader) map.get(ModuleData.MODULE_HOST_CLASSLOADER);
+                Object cl = map.get(ModuleData.MODULE_HOST_CLASSLOADER);
+                if (cl instanceof ClassLoader) {
+                    classLoader = (ClassLoader) cl;
+                }
             }
             Objects.requireNonNull(classLoader);
             handleHotReloaded(param, classLoader);

@@ -31,6 +31,7 @@ import androidx.annotation.NonNull;
 import org.json.JSONObject;
 
 import java.util.HashMap;
+import java.util.Map;
 
 import kotlin.text.Charsets;
 
@@ -86,7 +87,7 @@ public final class ModuleState {
      * <p>
      * 通过读取目标应用 {@code AndroidManifest.xml} 中的 {@code lspatch}
      * 元数据字段进行检测。该字段以 Base64 编码的 JSON 格式存储 LSPatch 配置。
-     * 解析成功后返回包含以下键值的 {@link HashMap}：
+     * 解析成功后返回包含以下键值的 {@link Map}：
      * <ul>
      *   <li>{@code useManager} - 使用模式，值为 "本地模式" 或 "集成模式"</li>
      *   <li>{@code versionName} - LSPatch 框架版本名称</li>
@@ -97,11 +98,11 @@ public final class ModuleState {
      *
      * @param context     应用上下文，用于访问 PackageManager
      * @param packageName 目标应用的包名
-     * @return 包含 LSPatch 配置信息的 HashMap；若目标应用未使用 LSPatch 或解析失败则返回空 Map
+     * @return 包含 LSPatch 配置信息的 Map；若目标应用未使用 LSPatch 或解析失败则返回空 Map
      * @noinspection ExtractMethodRecommender
      */
     @NonNull
-    public static HashMap<String, String> isLSPatchActive(@NonNull Context context, @NonNull String packageName) {
+    public static Map<String, String> isLSPatchActive(@NonNull Context context, @NonNull String packageName) {
         try {
             PackageInfo info = context.getPackageManager().getPackageInfo(packageName, PackageManager.GET_META_DATA);
             if (info.applicationInfo == null || info.applicationInfo.metaData == null) return new HashMap<>();
