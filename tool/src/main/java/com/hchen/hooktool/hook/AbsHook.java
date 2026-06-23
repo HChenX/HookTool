@@ -20,16 +20,15 @@ package com.hchen.hooktool.hook;
 
 import static io.github.libxposed.api.XposedInterface.PRIORITY_DEFAULT;
 
+import android.os.Bundle;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.hchen.hooktool.log.LogExpand;
 
-import android.os.Bundle;
-
 import java.lang.reflect.Executable;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;

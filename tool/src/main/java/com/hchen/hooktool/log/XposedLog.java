@@ -43,6 +43,7 @@ public class XposedLog {
     }
 
     // -------- logE -------------
+
     /**
      * 以 ERROR 级别输出一条纯文本日志至 Xposed 运行时日志系统。
      * <p>
@@ -92,6 +93,7 @@ public class XposedLog {
     }
 
     // ----------- logW --------------
+
     /**
      * 以 WARN 级别输出一条纯文本日志至 Xposed 运行时日志系统。
      * <p>
@@ -141,6 +143,7 @@ public class XposedLog {
     }
 
     // ----------- logI --------------
+
     /**
      * 以 INFO 级别输出一条纯文本日志至 Xposed 运行时日志系统。
      * <p>
@@ -190,6 +193,7 @@ public class XposedLog {
     }
 
     // ------------ logD --------------
+
     /**
      * 以 DEBUG 级别输出一条纯文本日志至 Xposed 运行时日志系统。
      * <p>

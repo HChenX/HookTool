@@ -105,7 +105,8 @@ public final class ModuleState {
     public static Map<String, String> isLSPatchActive(@NonNull Context context, @NonNull String packageName) {
         try {
             PackageInfo info = context.getPackageManager().getPackageInfo(packageName, PackageManager.GET_META_DATA);
-            if (info.applicationInfo == null || info.applicationInfo.metaData == null) return new HashMap<>();
+            if (info.applicationInfo == null || info.applicationInfo.metaData == null)
+                return new HashMap<>();
             String config = info.applicationInfo.metaData.getString("lspatch");
             if (config == null) return new HashMap<>();
 

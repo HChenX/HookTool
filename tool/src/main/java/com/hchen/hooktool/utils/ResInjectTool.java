@@ -72,11 +72,17 @@ public final class ResInjectTool {
      * 资源替换类型枚举。
      */
     private enum ReplacementType {
-        /** 按资源 ID 替换 */
+        /**
+         * 按资源 ID 替换
+         */
         ID,
-        /** 按密度值替换 */
+        /**
+         * 按密度值替换
+         */
         DENSITY,
-        /** 按任意对象替换 */
+        /**
+         * 按任意对象替换
+         */
         OBJECT
     }
 

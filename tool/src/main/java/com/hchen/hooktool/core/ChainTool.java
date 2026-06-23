@@ -23,6 +23,7 @@ import static com.hchen.hooktool.core.CoreTool.findClass;
 import androidx.annotation.NonNull;
 
 import com.hchen.hooktool.data.ChainData;
+import com.hchen.hooktool.data.ChainType;
 import com.hchen.hooktool.exception.UnexpectedException;
 import com.hchen.hooktool.hook.AbsHook;
 

@@ -52,16 +52,24 @@ public final class ModuleConfig {
 
     // -------- 可选日志等级 --------
 
-    /** 错误级别，仅输出错误信息。 */
+    /**
+     * 错误级别，仅输出错误信息。
+     */
     public static final int LOG_E = 1;
 
-    /** 警告级别，输出警告及以上等级信息。 */
+    /**
+     * 警告级别，输出警告及以上等级信息。
+     */
     public static final int LOG_W = 2;
 
-    /** 信息级别，输出一般信息及以上等级信息。 */
+    /**
+     * 信息级别，输出一般信息及以上等级信息。
+     */
     public static final int LOG_I = 3;
 
-    /** 调试级别，输出全部等级的详细调试信息。 */
+    /**
+     * 调试级别，输出全部等级的详细调试信息。
+     */
     public static final int LOG_D = 4;
 
     @IntDef(value = {

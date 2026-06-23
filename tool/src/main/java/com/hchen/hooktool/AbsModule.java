@@ -179,6 +179,19 @@ public abstract class AbsModule extends CoreTool {
     }
 
     /**
+     * 模块即将被热更新时的回调（在旧代码中执行）。
+     * <p>
+     * 此方法在旧模块代码中运行，用于收集需要在热更新后恢复的状态数据。
+     *
+     * @param extras 热更新触发时传递的附加数据，可能为 {@code null}
+     *               （当通过应用更新触发热更新或未传递额外数据时）
+     * @return 需要保存的状态键值对；若无需保存则返回空 {@link HashMap}
+     */
+    protected Map<String, Object> onHotReloading(@Nullable Bundle extras) {
+        return new HashMap<>();
+    }
+
+    /**
      * 当外部注入自定义 {@link ClassLoader} 时触发的回调。
      * <p>
      * 注意：此方法不受 {@link #isEnabled()} 守卫控制，调用方需自行管理使用场景。
@@ -196,19 +209,6 @@ public abstract class AbsModule extends CoreTool {
      * @param context 目标应用的上下文对象
      */
     protected void onApplicationCreated(@NonNull Context context) {
-    }
-
-    /**
-     * 模块即将被热更新时的回调（在旧代码中执行）。
-     * <p>
-     * 此方法在旧模块代码中运行，用于收集需要在热更新后恢复的状态数据。
-     *
-     * @param extras 热更新触发时传递的附加数据，可能为 {@code null}
-     *              （当通过应用更新触发热更新或未传递额外数据时）
-     * @return 需要保存的状态键值对；若无需保存则返回空 {@link HashMap}
-     */
-    protected Map<String, Object> onHotReloading(@Nullable Bundle extras) {
-        return new HashMap<>();
     }
 
     /**

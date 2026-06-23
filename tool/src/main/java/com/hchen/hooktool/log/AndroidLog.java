@@ -42,6 +42,7 @@ public class AndroidLog {
     }
 
     // ----------- logE ----------
+
     /**
      * 以 ERROR 级别输出一条纯文本日志。
      * <p>
@@ -99,6 +100,7 @@ public class AndroidLog {
     }
 
     // -------- logW --------------
+
     /**
      * 以 WARN 级别输出一条纯文本日志。
      * <p>
@@ -148,6 +150,7 @@ public class AndroidLog {
     }
 
     // ------------ logI -------------
+
     /**
      * 以 INFO 级别输出一条纯文本日志。
      * <p>
@@ -197,6 +200,7 @@ public class AndroidLog {
     }
 
     // ---------- logD ---------------
+
     /**
      * 以 DEBUG 级别输出一条纯文本日志。
      * <p>

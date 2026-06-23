@@ -24,7 +24,36 @@ import android.content.res.Resources
 import androidx.annotation.IdRes
 import com.hchen.hooktool.ModuleConfig
 import com.hchen.hooktool.ModuleData
+import com.hchen.hooktool.core.CoreTool.Companion.buildChain
+import com.hchen.hooktool.core.CoreTool.Companion.callStaticMethod
+import com.hchen.hooktool.core.CoreTool.Companion.createFakeResId
+import com.hchen.hooktool.core.CoreTool.Companion.deoptimizeConstructor
+import com.hchen.hooktool.core.CoreTool.Companion.deoptimizeMethod
+import com.hchen.hooktool.core.CoreTool.Companion.findClass
+import com.hchen.hooktool.core.CoreTool.Companion.findClassIfExists
+import com.hchen.hooktool.core.CoreTool.Companion.findConstructor
+import com.hchen.hooktool.core.CoreTool.Companion.findField
+import com.hchen.hooktool.core.CoreTool.Companion.findMethod
+import com.hchen.hooktool.core.CoreTool.Companion.getField
+import com.hchen.hooktool.core.CoreTool.Companion.getParameterTypes
+import com.hchen.hooktool.core.CoreTool.Companion.getStackTrace
+import com.hchen.hooktool.core.CoreTool.Companion.getStaticField
+import com.hchen.hooktool.core.CoreTool.Companion.hasClass
+import com.hchen.hooktool.core.CoreTool.Companion.hookAllConstructor
+import com.hchen.hooktool.core.CoreTool.Companion.hookAllMethod
+import com.hchen.hooktool.core.CoreTool.Companion.hookConstructor
+import com.hchen.hooktool.core.CoreTool.Companion.hookMethod
+import com.hchen.hooktool.core.CoreTool.Companion.hookMethodIfExists
+import com.hchen.hooktool.core.CoreTool.Companion.newInstance
+import com.hchen.hooktool.core.CoreTool.Companion.prefs
+import com.hchen.hooktool.core.CoreTool.Companion.setAdditionalInstanceField
+import com.hchen.hooktool.core.CoreTool.Companion.setAdditionalStaticField
+import com.hchen.hooktool.core.CoreTool.Companion.setField
+import com.hchen.hooktool.core.CoreTool.Companion.setResReplacement
+import com.hchen.hooktool.core.CoreTool.Companion.setStaticField
+import com.hchen.hooktool.core.CoreTool.Companion.timeConsumption
 import com.hchen.hooktool.exception.UnexpectedException
+import com.hchen.hooktool.helper.CoreHelper
 import com.hchen.hooktool.hook.AbsHook
 import com.hchen.hooktool.hook.HookBridge
 import com.hchen.hooktool.log.LogExpand
@@ -32,7 +61,6 @@ import com.hchen.hooktool.log.LogExpand.getTag
 import com.hchen.hooktool.log.XposedLog
 import com.hchen.hooktool.utils.PrefsTool
 import com.hchen.hooktool.utils.ResInjectTool
-import com.hchen.hooktool.helper.CoreHelper
 import io.github.libxposed.api.XposedInterface
 import java.lang.reflect.Constructor
 import java.lang.reflect.Executable
@@ -65,7 +93,7 @@ import java.util.Objects
  */
 @Suppress("unused")
 open class CoreTool : XposedLog() {
-     companion object {
+    companion object {
         // -------------------------------- class ---------------------------------
         /**
          * 检测给定类名所对应的类是否可以被加载。

@@ -159,7 +159,7 @@ public abstract class ModuleEntrance extends XposedModule {
      * @param extras 热更新触发的附加数据 {@link Bundle}，可能为 {@code null}
      *               （当框架未传递额外数据时）
      * @return 模块级状态键值对的 {@link Map}；默认返回空 {@link HashMap}，
-     *         表示无需保存任何状态
+     * 表示无需保存任何状态
      * @see #handleHotReloaded(HotReloadedParam, ClassLoader)
      * @see HookRegistry#reloading(Bundle)
      */

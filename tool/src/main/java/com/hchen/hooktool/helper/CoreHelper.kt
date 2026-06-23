@@ -27,6 +27,7 @@ import com.hchen.hooktool.helper.CoreHelper.findMethodBestMatch
 import com.hchen.hooktool.helper.CoreHelper.findMethodExact
 import com.hchen.hooktool.helper.CoreHelper.findMethodExactWithClasses
 import com.hchen.hooktool.helper.CoreHelper.getAdditionalInstanceField
+import com.hchen.hooktool.helper.CoreHelper.getInterfaceDistance
 import com.hchen.hooktool.helper.CoreHelper.getObjectTransformationCost
 import com.hchen.hooktool.helper.CoreHelper.getPrimitivePromotionCost
 import com.hchen.hooktool.helper.CoreHelper.removeAdditionalInstanceField
