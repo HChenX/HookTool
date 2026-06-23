@@ -352,7 +352,6 @@ public abstract class AbsModule extends CoreTool {
             return new HashMap<>();
         }
         try {
-            Objects.requireNonNull(extras);
             Map<String, Object> result = onHotReloading(extras);
             XposedLog.logD(TAG, "<== HOT_RELOADING (done)");
             return result;
