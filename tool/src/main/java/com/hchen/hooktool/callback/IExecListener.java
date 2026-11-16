@@ -39,9 +39,9 @@ public interface IExecListener {
      * 注意：该回调对同步命令与异步命令均会触发（异步命令结果可通过
      * {@code Future} 或本回调获取）。
      *
-     * @param command  已执行的 Shell 命令字符串，不为 {@code null}
-     * @param exitCode 命令的退出码字符串，不为 {@code null}
-     * @param outputs  标准输出内容数组，每个元素为一行输出，不为 {@code null}
+     * @param command  已执行的 Shell 命令字符串
+     * @param exitCode 命令的退出码字符串
+     * @param outputs  标准输出内容数组，每个元素为一行输出
      */
     default void output(@NonNull String command, @NonNull String exitCode, @NonNull String[] outputs) {
     }
@@ -54,9 +54,9 @@ public interface IExecListener {
      * <p>
      * 注意：该回调对同步命令与异步命令均会触发。
      *
-     * @param command  已执行的 Shell 命令字符串，不为 {@code null}
-     * @param exitCode 命令的退出码字符串，不为 {@code null}
-     * @param errors   标准错误输出内容数组，每个元素为一行错误信息，不为 {@code null}
+     * @param command  已执行的 Shell 命令字符串
+     * @param exitCode 命令的退出码字符串
+     * @param errors   标准错误输出内容数组，每个元素为一行错误信息
      */
     default void error(@NonNull String command, @NonNull String exitCode, @NonNull String[] errors) {
     }
@@ -67,7 +67,7 @@ public interface IExecListener {
      * 当系统完成 Root 权限可用性检测后触发此回调，报告当前设备是否具备 Root 权限。
      *
      * @param hasRoot  {@code true} 表示设备已获取 Root 权限，{@code false} 表示未获取
-     * @param exitCode 检测命令的退出码字符串，不为 {@code null}
+     * @param exitCode 检测命令的退出码字符串
      */
     default void onRootResult(boolean hasRoot, @NonNull String exitCode) {
     }
@@ -76,12 +76,10 @@ public interface IExecListener {
      * Shell 管道破裂的回调方法。
      * <p>
      * 在以下两种场景触发一次：Shell 进程<strong>异常死亡</strong>（崩溃、被外部杀死、底层通信异常）；
-     * 或进程仍存活但标准流已终止（如命令执行 {@code exec >/dev/null} 重定向导致会话失效）。
-     * 正常的 {@code close()} 关闭不会触发。回调触发后框架会自动关闭内部进程流，且
-     * <strong>不会自动重建</strong>；调用方需要重新通过 {@code ShellTool.obtain()} 显式恢复。
+     * 或进程仍存活但标准流已终止。
      *
-     * @param reason 管道破裂的原因描述文本，不为 {@code null}
-     * @param errors 管道破裂时附带的错误输出内容数组，不为 {@code null}
+     * @param reason 管道破裂的原因描述文本
+     * @param errors 管道破裂时附带的错误输出内容数组
      */
     default void brokenPipe(@NonNull String reason, @NonNull String[] errors) {
     }

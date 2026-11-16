@@ -39,11 +39,6 @@ import java.io.ByteArrayOutputStream;
 
 /**
  * Bitmap 图像处理工具集。
- * <p>
- * 提供 {@link Drawable} 与 {@link Bitmap} 之间的双向转换、圆角图片生成、图像缩放以及
- * Bitmap 与 {@code byte[]} 之间的序列化与反序列化等常用位图操作方法。
- * <p>
- * 该类为纯工具类，所有方法均为静态方法，不允许实例化。
  *
  * @author 焕晨HChen
  */
@@ -60,11 +55,10 @@ public final class BitmapTool {
     /**
      * 将 {@link Drawable} 对象转换为 {@link Bitmap}。
      * <p>
-     * 如果传入的 Drawable 已经是 {@link BitmapDrawable} 类型且其内部持有的 Bitmap 不为 null，
-     * 则直接返回该 Bitmap，避免不必要的像素拷贝。否则将使用 Drawable 自身的固有宽高进行绘制转换。
+     * 传入 {@link BitmapDrawable} 时直接返回其内部 Bitmap，不会拷贝像素。
      *
-     * @param drawable 非空 Drawable 对象
-     * @return 转换得到的 {@link Bitmap} 对象，永不为 {@code null}
+     * @param drawable Drawable 对象
+     * @return 转换得到的 {@link Bitmap} 对象
      */
     @NonNull
     public static Bitmap drawableToBitmap(@NonNull Drawable drawable) {
@@ -80,14 +74,12 @@ public final class BitmapTool {
     /**
      * 将 {@link Drawable} 对象转换为指定尺寸的 {@link Bitmap}。
      * <p>
-     * 当 {@code width} 或 {@code height} 不大于 0 时，自动使用 Drawable 的固有宽高；
-     * 若固有宽高同样无效，则退化为 1x1 像素。根据 Drawable 的不透明度自动选取
-     * {@link Bitmap.Config#ARGB_8888} 或 {@link Bitmap.Config#RGB_565} 作为像素格式。
+     * 宽高无效时退化为 1x1 像素，像素格式按 Drawable 的不透明度选取。
      *
-     * @param drawable 非空 Drawable 对象
+     * @param drawable Drawable 对象
      * @param width    目标宽度（单位：px），不大于 0 时取 Drawable 固有宽度
      * @param height   目标高度（单位：px），不大于 0 时取 Drawable 固有高度
-     * @return 转换得到的 {@link Bitmap} 对象，永不为 {@code null}
+     * @return 转换得到的 {@link Bitmap} 对象
      */
     @NonNull
     public static Bitmap drawableToBitmap(@NonNull Drawable drawable, int width, int height) {
@@ -109,13 +101,10 @@ public final class BitmapTool {
 
     /**
      * 对指定 {@link Bitmap} 进行圆角裁剪，生成四角带有圆弧效果的新 Bitmap。
-     * <p>
-     * 实现原理：先在画布上绘制一个圆角矩形，然后通过 {@link PorterDuff.Mode#SRC_IN}
-     * 混合模式将原图绘制到该圆角矩形之上，从而仅保留圆角矩形区域内的像素。
      *
-     * @param bitmap 待处理的原始 Bitmap，不得为 {@code null}
+     * @param bitmap 待处理的原始 Bitmap
      * @param radius 圆角半径（单位：px）
-     * @return 带有圆角效果的新 {@link Bitmap} 实例，永不为 {@code null}
+     * @return 带有圆角效果的新 {@link Bitmap} 实例
      */
     @NonNull
     public static Bitmap getRoundedCornerBitmap(@NonNull Bitmap bitmap, float radius) {
@@ -141,14 +130,11 @@ public final class BitmapTool {
 
     /**
      * 按照指定的目标宽高对 {@link Bitmap} 进行缩放。
-     * <p>
-     * 通过 {@link Bitmap#createScaledBitmap} 实现，原始 Bitmap 不会被回收。
-     * 该方法支持等比与非等比缩放。
      *
-     * @param bitmap    待缩放的原始 Bitmap，不得为 {@code null}
+     * @param bitmap    待缩放的原始 Bitmap
      * @param newWidth  缩放后的目标宽度（单位：px），必须大于 0
      * @param newHeight 缩放后的目标高度（单位：px），必须大于 0
-     * @return 缩放后的新 {@link Bitmap} 实例，永不为 {@code null}
+     * @return 缩放后的新 {@link Bitmap} 实例
      * @throws IllegalArgumentException 当 {@code newWidth} 或 {@code newHeight} 不大于 0 时抛出
      */
     @NonNull
@@ -164,12 +150,10 @@ public final class BitmapTool {
     /**
      * 将 {@link Bitmap} 以 PNG 格式压缩为 {@code byte[]}。
      * <p>
-     * PNG 为无损格式，压缩参数 {@code quality} 不适用（仅对 JPEG 有意义）。
-     * 若 {@link Bitmap#compress} 返回 {@code false}（如内存不足等编码失败），
-     * 返回长度为 0 的字节数组，调用方可通过判空数组感知失败。
+     * 编码失败时返回长度为 0 的数组，不抛异常。
      *
-     * @param bitmap 待压缩的 Bitmap 对象，不得为 {@code null}
-     * @return PNG 格式的字节数组；若编码失败则返回长度为 0 的数组，永不为 {@code null}
+     * @param bitmap 待压缩的 Bitmap 对象
+     * @return PNG 格式的字节数组，编码失败时为长度为 0 的数组
      */
     @NonNull
     public static byte[] bitmapToBytes(@NonNull Bitmap bitmap) {
@@ -184,10 +168,8 @@ public final class BitmapTool {
 
     /**
      * 将 {@code byte[]} 解码还原为 {@link Bitmap} 对象。
-     * <p>
-     * 若传入的字节数组长度为 0，则直接返回 {@code null}，不执行解码操作。
      *
-     * @param bytes 包含 Bitmap 编码数据的字节数组，不得为 {@code null}
+     * @param bytes 包含 Bitmap 编码数据的字节数组
      * @return 解码成功返回 {@link Bitmap} 对象；若数组为空或解码失败则返回 {@code null}
      */
     @Nullable

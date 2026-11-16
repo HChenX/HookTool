@@ -27,25 +27,14 @@ import com.hchen.hooktool.hook.AbsHook;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 日志辅助功能扩展工具类。
- * <p>
- * 本类为 {@link AndroidLog} 和 {@link XposedLog} 提供底层辅助能力，
- * 主要包含以下功能：
- * <ul>
- *     <li>将异常堆栈跟踪序列化为字符串形式（{@link #printStackTrace(Throwable)}）</li>
- *     <li>获取当前线程的格式化调用栈信息（{@link #getStackTrace()}）</li>
- *     <li>基于调用栈自动推断并生成日志标签（{@link #getTag()}）</li>
- *     <li>将钩子的调用上下文格式化为结构化观测日志（{@link #observeCall(AbsHook)}）</li>
- * </ul>
- * <p>
- * 本类为纯工具类，不允许实例化。
  *
  * @author 焕晨HChen
- * @see AndroidLog
- * @see XposedLog
  */
 public final class LogExpand {
     private LogExpand() {
@@ -54,11 +43,11 @@ public final class LogExpand {
     /**
      * 日志增强路径配置快照，用于检测配置变更并失效 TAG 缓存。
      */
-    private static volatile String[] cachedPaths = new String[0];
+    private static volatile Set<String> sCachedPaths = Collections.emptySet();
     /**
      * 日志增强忽略类名配置快照。
      */
-    private static volatile String[] cachedIgnores = new String[0];
+    private static volatile Set<String> sCachedIgnores = Collections.emptySet();
     /**
      * TAG 解析结果缓存：键为命中的栈帧全限定类名，值为解析出的标签。
      */
@@ -67,8 +56,8 @@ public final class LogExpand {
     /**
      * 将指定异常的完整堆栈跟踪序列化为字符串。
      *
-     * @param e 待序列化的异常实例，不得为 {@code null}
-     * @return 包含完整堆栈跟踪信息的字符串，保证不为 {@code null}
+     * @param e 待序列化的异常实例
+     * @return 包含完整堆栈跟踪信息的字符串
      */
     @NonNull
     public static String printStackTrace(@NonNull Throwable e) {
@@ -81,11 +70,8 @@ public final class LogExpand {
 
     /**
      * 获取当前线程的完整调用栈，并格式化为可读字符串。
-     * <p>
-     * 遍历当前线程的堆栈帧数组，将每一帧以 {@link StackTraceElement#toString()} 的
-     * 标准格式输出（native 帧正确显示为 {@code (Native Method)}），各帧之间以换行符分隔。
      *
-     * @return 格式化后的调用栈信息，保证不为 {@code null}
+     * @return 格式化后的调用栈信息
      */
     @NonNull
     public static String getStackTrace() {
@@ -98,24 +84,16 @@ public final class LogExpand {
 
     /**
      * 根据调用栈自动推断当前日志应使用的标签名。
-     * <p>
-     * 从当前线程堆栈中向下扫描，查找首个类名匹配
-     * {@link ModuleConfig#getLogExpandPaths()} 中任一路径前缀（按包前缀边界匹配）的栈帧，
-     * 取其简单类名（去除 {@code $} 之后的内部类后缀）作为标签返回。
-     * 堆栈遍历过程中会跳过类名命中 {@link ModuleConfig#getLogExpandIgnoreClassNames()}
-     * 配置列表的帧。
-     * <p>
-     * 配置变更会失效缓存；解析结果按命中帧类名缓存，避免重复计算。若没有任何栈帧
-     * 匹配配置路径，则回退为 {@link ModuleConfig#getLogTag()} 的默认值。
+     * 无栈帧匹配配置路径时回退为 {@link ModuleConfig#getLogTag()}。
      *
-     * @return 推断得到的日志标签，保证不为 {@code null}
+     * @return 推断得到的日志标签
      */
     @NonNull
     public static String getTag() {
-        String[] logExpandPaths = ModuleConfig.getLogExpandPaths();
-        String[] ignoreClassNames = ModuleConfig.getLogExpandIgnoreClassNames();
+        Set<String> logExpandPaths = ModuleConfig.getLogExpandPaths();
+        Set<String> ignoreClassNames = ModuleConfig.getLogExpandIgnoreClassNames();
         refreshConfigCache(logExpandPaths, ignoreClassNames);
-        if (logExpandPaths.length == 0) return ModuleConfig.getLogTag();
+        if (logExpandPaths.isEmpty()) return ModuleConfig.getLogTag();
 
         StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
 
@@ -140,9 +118,7 @@ public final class LogExpand {
 
     /**
      * 判断类名是否匹配指定的包前缀（含包边界）。
-     * <p>
-     * 与单纯 {@code startsWith} 不同，要求前缀后紧跟包分隔符 {@code .} 或类名与前缀等长，
-     * 避免 {@code "com.hchen.app.hook"} 误匹配 {@code "com.hchen.app.hooker.X"}。
+     * 前缀后须紧跟 {@code .} 或与前缀等长，避免同类名前缀误匹配。
      *
      * @param className 全限定类名
      * @param prefix    待匹配的前缀
@@ -176,28 +152,19 @@ public final class LogExpand {
      * @param paths   当前日志增强路径配置
      * @param ignores 当前忽略类名配置
      */
-    private static void refreshConfigCache(@NonNull String[] paths, @NonNull String[] ignores) {
-        if (!Arrays.equals(cachedPaths, paths) || !Arrays.equals(cachedIgnores, ignores)) {
-            cachedPaths = paths;
-            cachedIgnores = ignores;
+    private static void refreshConfigCache(@NonNull Set<String> paths, @NonNull Set<String> ignores) {
+        if (!sCachedPaths.equals(paths) || !sCachedIgnores.equals(ignores)) {
+            sCachedPaths = paths;
+            sCachedIgnores = ignores;
             TAG_CACHE.clear();
         }
     }
 
     /**
      * 生成钩子方法当前调用的结构化观测日志。
-     * <p>
-     * 输出内容以树形结构呈现，包含以下字段：
-     * <ul>
-     *     <li>{@code Class} — 被拦截方法所属类的全限定名</li>
-     *     <li>{@code Method} — 被拦截方法的名称</li>
-     *     <li>{@code Params} — 各参数的索引、类型简名及值</li>
-     *     <li>{@code Return} — 方法的返回值</li>
-     * </ul>
-     * 参数中若包含数组类型，会自动进行深度格式化（基本类型数组与对象数组均支持）。
      *
-     * @param hook 当前正在执行的钩子实例，不得为 {@code null}
-     * @return 格式化后的结构化观测信息字符串，保证不为 {@code null}
+     * @param hook 当前正在执行的钩子实例
+     * @return 格式化后的结构化观测信息字符串
      */
     @NonNull
     @SuppressWarnings("StringBufferReplaceableByString")
@@ -257,14 +224,9 @@ public final class LogExpand {
 
     /**
      * 将方法参数对象转换为可读的字符串表示。
-     * <p>
-     * 对数组类型做特殊处理：对象数组调用 {@link Arrays#deepToString(Object[])}，
-     * 各基本类型数组调用对应的 {@link Arrays#toString} 重载方法。
-     * 非数组类型直接调用 {@link Object#toString()}。转换全程具备防御性，
-     * 对象 {@code toString()} 抛异常或数组自引用时降级为占位描述。
      *
      * @param param 待转换的参数对象，允许为 {@code null}
-     * @return 参数的字符串表示；入参为 {@code null} 时返回字面量 {@code "null"}，保证不为 {@code null}
+     * @return 参数的字符串表示；入参为 {@code null} 时返回字面量 {@code "null"}
      */
     @NonNull
     private static String paramToString(Object param) {

@@ -23,35 +23,27 @@ import androidx.annotation.NonNull;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * HookTool 模块的全局配置中心。
- * <p>
- * 以静态方式集中管理模块的各项运行时配置，包括日志标签、日志等级阈值、
- * SharedPreferences 名称、日志增强扫描路径以及 Hook 成功日志开关等。
- * 所有配置项均通过静态 setter 方法写入、静态 getter 方法读取。
- * <p>
- * <strong>副作用提示</strong>：所有 setter 修改的都是<strong>进程级</strong>的静态全局状态，
- * 仅作用于当前进程；在多进程 Xposed 模块（宿主进程 + 模块进程）中，需在每个进程各自初始化。
- * <p>
- * 建议在 {@link com.hchen.hooktool.ModuleEntrance#initModuleConfig()} 中
- * 完成全部配置的初始化工作。
  *
  * @author 焕晨HChen
  */
 public final class ModuleConfig {
     @NonNull
-    private static volatile String logTag;
+    private static volatile String sLogTag;
     @LogLevel
-    private static volatile int logLevel;
+    private static volatile int sLogLevel;
     @NonNull
-    private static volatile String prefsName;
+    private static volatile String sPrefsName;
     @NonNull
-    private static volatile String[] logExpandPaths;
+    private static volatile Set<String> sLogExpandPaths;
     @NonNull
-    private static volatile String[] logExpandIgnoreClassNames;
-    private static volatile boolean isShowHookSuccessLog;
+    private static volatile Set<String> sLogExpandIgnoreClassNames;
+    private static volatile boolean sShowHookSuccessLog;
 
     // -------- 可选日志等级 --------
 
@@ -86,12 +78,12 @@ public final class ModuleConfig {
     }
 
     static {
-        logTag = "Unknown";
-        logLevel = LOG_I;
-        prefsName = "";
-        logExpandPaths = new String[]{};
-        logExpandIgnoreClassNames = new String[]{};
-        isShowHookSuccessLog = false;
+        sLogTag = "Unknown";
+        sLogLevel = LOG_I;
+        sPrefsName = "";
+        sLogExpandPaths = Collections.emptySet();
+        sLogExpandIgnoreClassNames = Collections.emptySet();
+        sShowHookSuccessLog = false;
     }
 
     private ModuleConfig() {
@@ -104,10 +96,10 @@ public final class ModuleConfig {
      * <p>
      * 推荐在模块初始化时调用，设置一个有意义的标签以便在 Logcat 中过滤日志。
      *
-     * @param logTag 日志标签，不可为 null
+     * @param logTag 日志标签
      */
     public static void setLogTag(@NonNull String logTag) {
-        ModuleConfig.logTag = logTag;
+        ModuleConfig.sLogTag = logTag;
     }
 
     /**
@@ -119,7 +111,7 @@ public final class ModuleConfig {
      * @param logLevel 日志等级常量
      */
     public static void setLogLevel(@LogLevel int logLevel) {
-        ModuleConfig.logLevel = logLevel;
+        ModuleConfig.sLogLevel = logLevel;
     }
 
     /**
@@ -127,10 +119,10 @@ public final class ModuleConfig {
      * <p>
      * 该名称用于通过远程 SharedPreferences 接口存取模块的持久化配置。
      *
-     * @param prefsName SharedPreferences 文件名称，不可为 null
+     * @param prefsName SharedPreferences 文件名称
      */
     public static void setPrefsName(@NonNull String prefsName) {
-        ModuleConfig.prefsName = prefsName;
+        ModuleConfig.sPrefsName = prefsName;
     }
 
     /**
@@ -145,11 +137,10 @@ public final class ModuleConfig {
      * -keepnames class com.hchen.demo.hook.**$*
      * }</pre>
      *
-     * @param logExpandPaths 需要扫描的包路径数组，支持可变参数
+     * @param paths 需要扫描的包路径数组，支持可变参数
      */
-    public static void setLogExpandPaths(@NonNull String... logExpandPaths) {
-        // 防御性拷贝：避免外部数组元素修改穿透 volatile 字段（元素 String 不可变，浅拷贝足够）
-        ModuleConfig.logExpandPaths = logExpandPaths.clone();
+    public static void setLogExpandPaths(@NonNull Set<String> paths) {
+        ModuleConfig.sLogExpandPaths = new HashSet<>(paths);
     }
 
     /**
@@ -157,23 +148,22 @@ public final class ModuleConfig {
      * <p>
      * 扫描调用栈时会跳过此处指定的类，以排除干扰项并提高 TAG 识别准确性。
      *
-     * @param logExpandIgnoreClassNames 需要忽略的完整类名数组，支持可变参数
+     * @param names 需要忽略的完整类名数组，支持可变参数
      */
-    public static void setLogExpandIgnoreClassNames(@NonNull String... logExpandIgnoreClassNames) {
-        // 防御性拷贝：避免外部数组元素修改穿透 volatile 字段（元素 String 不可变，浅拷贝足够）
-        ModuleConfig.logExpandIgnoreClassNames = logExpandIgnoreClassNames.clone();
+    public static void setLogExpandIgnoreClassNames(@NonNull Set<String> names) {
+        ModuleConfig.sLogExpandIgnoreClassNames = new HashSet<>(names);
     }
 
     /**
      * 设置是否在 Hook 成功时输出日志，默认关闭。
      * <p>
-     * 启用前须先通过 {@link #setLogExpandPaths(String...)} 配置日志增强路径，
+     * 启用前须先通过 {@link ModuleConfig#setLogExpandPaths(Set<String>)} 配置日志增强路径，
      * 否则在代码混淆场景下可能无法正确输出日志标签。
      *
-     * @param isShowHookSuccessLog {@code true} 开启，{@code false} 关闭
+     * @param show {@code true} 开启，{@code false} 关闭
      */
-    public static void setShowHookSuccessLog(boolean isShowHookSuccessLog) {
-        ModuleConfig.isShowHookSuccessLog = isShowHookSuccessLog;
+    public static void setShowHookSuccessLog(boolean show) {
+        ModuleConfig.sShowHookSuccessLog = show;
     }
 
     // -------------------- getter ----------------------
@@ -185,7 +175,7 @@ public final class ModuleConfig {
      */
     @NonNull
     public static String getLogTag() {
-        return logTag;
+        return sLogTag;
     }
 
     /**
@@ -195,7 +185,7 @@ public final class ModuleConfig {
      */
     @LogLevel
     public static int getLogLevel() {
-        return logLevel;
+        return sLogLevel;
     }
 
     /**
@@ -205,7 +195,7 @@ public final class ModuleConfig {
      */
     @NonNull
     public static String getPrefsName() {
-        return prefsName;
+        return sPrefsName;
     }
 
     /**
@@ -214,8 +204,8 @@ public final class ModuleConfig {
      * @return 扫描路径数组
      */
     @NonNull
-    public static String[] getLogExpandPaths() {
-        return Arrays.copyOf(logExpandPaths, logExpandPaths.length);
+    public static Set<String> getLogExpandPaths() {
+        return new HashSet<>(sLogExpandPaths);
     }
 
     /**
@@ -224,8 +214,8 @@ public final class ModuleConfig {
      * @return 忽略类名数组
      */
     @NonNull
-    public static String[] getLogExpandIgnoreClassNames() {
-        return Arrays.copyOf(logExpandIgnoreClassNames, logExpandIgnoreClassNames.length);
+    public static Set<String> getLogExpandIgnoreClassNames() {
+        return new HashSet<>(sLogExpandIgnoreClassNames);
     }
 
     /**
@@ -234,6 +224,6 @@ public final class ModuleConfig {
      * @return {@code true} 表示已启用，{@code false} 表示已关闭
      */
     public static boolean isShowHookSuccessLog() {
-        return isShowHookSuccessLog;
+        return sShowHookSuccessLog;
     }
 }

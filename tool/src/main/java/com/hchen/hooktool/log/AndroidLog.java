@@ -24,16 +24,8 @@ import com.hchen.hooktool.ModuleConfig;
 
 /**
  * Android 平台原生日志输出工具类。
- * <p>
- * 封装 {@link android.util.Log} 的系统级 API，为 HookTool 框架提供统一的日志输出通道。
- * 输出逻辑复用 {@link AbstractLog} 的等级门控与消息格式化，本类仅负责将消息交给
- * {@link android.util.Log}。所有日志输出受全局配置约束：等级由 {@link ModuleConfig#getLogLevel()}
- * 控制，标签由 {@link ModuleConfig#getLogTag()} 统一指定；调用者提供的 {@code tag}
- * 参数以 {@code [tag]} 的格式嵌入日志消息体中。
  *
  * @author 焕晨HChen
- * @see AbstractLog
- * @see XposedLog
  */
 public class AndroidLog extends AbstractLog {
     /**
@@ -48,9 +40,6 @@ public class AndroidLog extends AbstractLog {
 
     /**
      * 以 ERROR 级别输出一条纯文本日志。
-     * <p>
-     * 日志格式为：{@code [tag][E]: message}。
-     * 当全局日志等级低于 {@link ModuleConfig#LOG_E} 时，此调用将被静默跳过。
      *
      * @param tag     业务侧自定义标识，将嵌入消息头部的方括号中
      * @param message 待输出的日志正文
@@ -61,8 +50,6 @@ public class AndroidLog extends AbstractLog {
 
     /**
      * 以 ERROR 级别输出一条仅包含异常信息的日志。
-     * <p>
-     * 异常对象的完整堆栈将由 {@link android.util.Log} 底层自动格式化输出。
      *
      * @param tag       业务侧自定义标识
      * @param throwable 待记录的异常实例
@@ -73,8 +60,6 @@ public class AndroidLog extends AbstractLog {
 
     /**
      * 以 ERROR 级别输出一条同时包含文本描述和异常信息的日志。
-     * <p>
-     * 异常对象的完整堆栈将由 {@link android.util.Log} 底层自动格式化输出。
      *
      * @param tag       业务侧自定义标识，将嵌入消息头部的方括号中
      * @param message   待输出的日志正文
@@ -88,8 +73,6 @@ public class AndroidLog extends AbstractLog {
 
     /**
      * 以 WARN 级别输出一条纯文本日志。
-     * <p>
-     * 当全局日志等级低于 {@link ModuleConfig#LOG_W} 时，此调用将被静默跳过。
      *
      * @param tag     业务侧自定义标识，将嵌入消息头部的方括号中
      * @param message 待输出的日志正文
@@ -123,8 +106,6 @@ public class AndroidLog extends AbstractLog {
 
     /**
      * 以 INFO 级别输出一条纯文本日志。
-     * <p>
-     * 当全局日志等级低于 {@link ModuleConfig#LOG_I} 时，此调用将被静默跳过。
      *
      * @param tag     业务侧自定义标识，将嵌入消息头部的方括号中
      * @param message 待输出的日志正文
@@ -158,8 +139,6 @@ public class AndroidLog extends AbstractLog {
 
     /**
      * 以 DEBUG 级别输出一条纯文本日志。
-     * <p>
-     * 当全局日志等级低于 {@link ModuleConfig#LOG_D} 时，此调用将被静默跳过。
      *
      * @param tag     业务侧自定义标识，将嵌入消息头部的方括号中
      * @param message 待输出的日志正文
@@ -191,10 +170,7 @@ public class AndroidLog extends AbstractLog {
 
     /**
      * 包级私有输出桥：将格式化消息输出到 {@link android.util.Log}。
-     * <p>
-     * 调用者 {@code tag} 以 {@code [tag]} 嵌入消息体（{@link android.util.Log} 只能按全局
-     * {@link ModuleConfig#getLogTag()} 过滤），异常按优先级分发到对应 {@code Log.x} 方法。
-     * 该桥同时被 {@link XposedLog} 在非 Xposed 环境回落时复用。
+     * 调用者 {@code tag} 以 {@code [tag]} 嵌入消息体，因为原生 Log 只能按全局 {@link ModuleConfig#getLogTag()} 过滤。
      *
      * @param priority  {@link android.util.Log} 优先级常量
      * @param tag       调用方自定义标识

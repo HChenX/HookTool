@@ -35,13 +35,8 @@ import io.github.libxposed.api.XposedModuleInterface;
 
 /**
  * Hook 功能的示例模块实现。
- * <p>
- * 继承自 {@link AbsModule}，是 HookTool 框架中具体 Hook 逻辑的承载单元。
- * <p>
- * 开发者应覆写 {@link #onPackageReady(XposedModuleInterface.PackageReadyParam)} 方法以注册 Hook 逻辑。
  *
  * @author 焕晨HChen
- * @see AbsModule
  */
 public class TestHook extends AbsModule {
     /**
@@ -103,10 +98,6 @@ public class TestHook extends AbsModule {
 
     /**
      * 模块级热重载准备回调。
-     * <p>
-     * 在此保存需要在热重载后恢复的模块级状态数据。
-     * 返回的 {@link Map} 会被 {@link com.hchen.hooktool.hook.HookRegistry#reloading(Bundle)}
-     * 合并到全局快照中。本示例无模块级状态需要保存，返回空映射以演示 API 用法。
      *
      * @param extras 热重载附加数据，可能为 {@code null}
      * @return 模块级状态键值对

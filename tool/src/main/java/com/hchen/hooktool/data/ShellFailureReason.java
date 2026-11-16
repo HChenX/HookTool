@@ -20,12 +20,8 @@ package com.hchen.hooktool.data;
 
 /**
  * Shell 执行流程失败的分类原因。
- * <p>
- * 这些原因均指向"命令未被正常执行并产出数据"的流程层失败，
- * 而非命令自身退出码非零的命令级失败（后者由 {@link CommandResult#isSuccess()} 表达）。
  *
  * @author 焕晨HChen
- * @see ShellResult
  */
 public enum ShellFailureReason {
     /**

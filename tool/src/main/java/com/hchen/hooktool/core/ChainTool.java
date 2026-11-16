@@ -34,16 +34,6 @@ import java.util.function.Function;
 
 /**
  * 提供链式调用风格的 Hook 操作工具类。
- * <p>
- * 本类是整个链式 Hook 流程的入口。使用者首先通过 {@link #buildChain(String)}、
- * {@link #buildChain(String, ClassLoader)} 或 {@link #buildChain(Class)} 等静态工厂方法
- * 创建实例，然后借助 {@link #findMethod}、{@link #findAllMethod}、{@link #findConstructor}、
- * {@link #findAllConstructor} 或 {@link #withExecutable} 定位待 Hook 的方法或构造函数，
- * 最终通过返回的 {@link ChainHook} 对象指定具体的 Hook 策略（例如替换返回值、拦截调用、
- * 修改参数等）。
- * <p>
- * 每个 {@code ChainTool} 实例内部维护一个哈希集合，用于在运行阶段对已执行过的链式数据
- * 进行去重校验，从而避免对同一目标进行重复 Hook。
  *
  * @author 焕晨HChen
  */
@@ -52,34 +42,29 @@ public final class ChainTool {
      * 本次 Hook 操作所指向的目标类。
      */
     @NonNull
-    private final Class<?> clazz;
+    private final Class<?> mClazz;
 
     /**
      * 负责执行各类 Hook 策略的内部链式钩子对象。
      */
     @NonNull
-    private final ChainHook chainHook;
+    private final ChainHook mChainHook;
 
     /**
-     * 当前正在组装的链式数据实例，用于暂存本次链式调用过程中的全部配置信息。
+     * 当前正在组装的链式数据实例。
      */
-    private ChainData chainData;
+    private ChainData mChainData;
 
     /**
      * 已成功执行的链式数据标识集合，用于运行时去重，防止对相同目标重复 Hook。
      */
-    private final HashSet<String> executedKeys = new HashSet<>();
+    private final HashSet<String> mExecutedKeys = new HashSet<>();
 
-    /**
-     * 以指定的目标类初始化链式工具实例。
-     *
-     * @param clazz 待 Hook 的目标类，不得为 {@code null}
-     */
     private ChainTool(@NonNull Class<?> clazz) {
         Objects.requireNonNull(clazz, "Class must not be null.");
 
-        this.clazz = clazz;
-        this.chainHook = new ChainHook();
+        this.mClazz = clazz;
+        this.mChainHook = new ChainHook();
     }
 
     /**
@@ -108,7 +93,7 @@ public final class ChainTool {
     /**
      * 直接传入 {@link Class} 对象创建 {@link ChainTool} 实例。
      *
-     * @param clazz 目标类的 {@link Class} 对象，不得为 {@code null}
+     * @param clazz 目标类的 {@link Class} 对象
      * @return 已绑定目标类的 {@link ChainTool} 实例
      */
     public static ChainTool buildChain(@NonNull Class<?> clazz) {
@@ -117,17 +102,14 @@ public final class ChainTool {
 
     /**
      * 在目标类中按方法名和参数类型查找唯一匹配的方法。
-     * <p>
-     * 成功定位后会创建一条 {@link ChainData} 记录，并返回 {@link ChainHook} 对象供调用方
-     * 进一步指定 Hook 策略。
      *
      * @param methodName     待查找的方法名称
      * @param parameterTypes 方法的形参类型列表，每个元素可以是 {@link Class} 对象或表示基本类型名称的字符串
      * @return {@link ChainHook} 实例，用于配置具体的 Hook 行为
      */
     public ChainHook findMethod(@NonNull String methodName, @NonNull Object... parameterTypes) {
-        this.chainData = new ChainData(methodName, parameterTypes);
-        return chainHook;
+        this.mChainData = new ChainData(methodName, parameterTypes);
+        return mChainHook;
     }
 
     /**
@@ -139,8 +121,8 @@ public final class ChainTool {
      * @return {@link ChainHook} 实例，用于配置具体的 Hook 行为
      */
     public ChainHook findAllMethod(@NonNull String methodName) {
-        this.chainData = new ChainData(methodName);
-        return chainHook;
+        this.mChainData = new ChainData(methodName);
+        return mChainHook;
     }
 
     /**
@@ -150,8 +132,8 @@ public final class ChainTool {
      * @return {@link ChainHook} 实例，用于配置具体的 Hook 行为
      */
     public ChainHook findConstructor(@NonNull Object... parameterTypes) {
-        this.chainData = new ChainData(parameterTypes);
-        return chainHook;
+        this.mChainData = new ChainData(parameterTypes);
+        return mChainHook;
     }
 
     /**
@@ -162,8 +144,8 @@ public final class ChainTool {
      * @return {@link ChainHook} 实例，用于配置具体的 Hook 行为
      */
     public ChainHook findAllConstructor() {
-        this.chainData = new ChainData();
-        return chainHook;
+        this.mChainData = new ChainData();
+        return mChainHook;
     }
 
     /**
@@ -173,70 +155,58 @@ public final class ChainTool {
      * 无需再通过方法名或参数类型进行查找。
      *
      * @param executable 待 Hook 的可执行对象（{@link java.lang.reflect.Method} 或
-     *                   {@link java.lang.reflect.Constructor}），不得为 {@code null}
+     *                   {@link java.lang.reflect.Constructor}）
      * @return {@link ChainHook} 实例，用于配置具体的 Hook 行为
      */
     public ChainHook withExecutable(@NonNull Executable executable) {
         Objects.requireNonNull(executable, "Executable must not be null.");
-        this.chainData = new ChainData(executable);
-        return chainHook;
+        this.mChainData = new ChainData(executable);
+        return mChainHook;
     }
 
     /**
      * 执行完整的链式 Hook 流程：先查找目标方法或构造函数，随后对其应用 Hook。
-     * <p>
-     * 本方法内置去重机制——若检测到当前链式数据已在先前被处理过，将抛出
-     * {@link IllegalStateException}。执行完毕后会自动将 {@code chainData} 置为 {@code null}，
-     * 以避免被意外复用。
      *
      * @throws IllegalStateException 当检测到重复的链式数据时抛出
      */
     private void runChain() {
-        Objects.requireNonNull(chainData, "chainData is null; do not reuse ChainHook after hook().");
+        Objects.requireNonNull(mChainData, "chainData is null; do not reuse ChainHook after hook().");
 
         try {
-            String chainKey = chainKey(chainData);
-            if (executedKeys.contains(chainKey)) {
-                throw new IllegalStateException("Duplicate chain data: " + chainData);
+            String chainKey = chainKey(mChainData);
+            if (mExecutedKeys.contains(chainKey)) {
+                throw new IllegalStateException("Duplicate chain data: " + mChainData);
             }
             runFind();
-            if (chainData.throwable != null) {
-                if (chainData.isIgnoreThrow) {
+            if (mChainData.throwable != null) {
+                if (mChainData.isIgnoreThrow) {
                     return;
                 }
-                if (chainData.function != null) {
-                    if (Boolean.TRUE.equals(chainData.function.apply(chainData.throwable))) {
+                if (mChainData.function != null) {
+                    if (Boolean.TRUE.equals(mChainData.function.apply(mChainData.throwable))) {
                         return;
                     } else {
-                        CoreTool.throwIt(chainData.throwable);
+                        CoreTool.throwIt(mChainData.throwable);
                     }
                 } else {
-                    CoreTool.throwIt(chainData.throwable);
+                    CoreTool.throwIt(mChainData.throwable);
                 }
             }
 
-            if (chainData.executables == null || chainData.executables.length == 0) {
+            if (mChainData.executables == null || mChainData.executables.length == 0) {
                 return;
             }
-            for (Executable executable : chainData.executables) {
-                CoreTool.hook(executable, chainData.absHook);
+            for (Executable executable : mChainData.executables) {
+                CoreTool.hook(executable, mChainData.absHook);
             }
-            executedKeys.add(chainKey);
+            mExecutedKeys.add(chainKey);
         } finally {
-            chainData = null;
+            mChainData = null;
         }
     }
 
     /**
      * 生成链式数据的稳定去重键。
-     * <p>
-     * 基于查找类型、方法名与参数类型生成，避免使用 {@code hashCode()} 的 int 碰撞风险。
-     * 不包含 {@link ChainData#absHook} 等运行时可变字段，保证同一目标的多次链式调用
-     * 产生相同键。
-     * <p>
-     * 对于 {@link ChainType#EXECUTABLE} 类型，由于方法名与参数均为 {@code null}，
-     * 额外并入可执行对象自身的身份描述（声明类 + 签名），避免同一链上对
-     * 两个不同的可执行对象去重误判。
      *
      * @param data 待处理的链式数据
      * @return 稳定的去重键字符串
@@ -252,69 +222,47 @@ public final class ChainTool {
 
     /**
      * 根据当前 {@link ChainData} 中记录的 {@link ChainType} 类型执行相应的查找操作，
-     * 并将查找到的结果填充到 {@code chainData.executables} 数组中。
-     * <p>
-     * 若查找过程中发生异常，异常对象会被暂存到 {@code chainData.throwable} 字段中，
-     * 供后续 {@link #runChain()} 统一处理。
+     * 并将查找到的结果填充到 {@code mChainData.executables} 数组中。
      */
     private void runFind() {
         try {
-            switch (chainData.chainType) {
+            switch (mChainData.chainType) {
                 case EXECUTABLE -> {
-                    chainData.executables[0] = chainData.executable;
+                    mChainData.executables[0] = mChainData.executable;
                 }
                 case FIND_METHOD -> {
-                    chainData.executables[0] = CoreTool.findMethod(clazz, chainData.methodName, chainData.parameterTypes);
+                    mChainData.executables[0] = CoreTool.findMethod(mClazz, mChainData.methodName, mChainData.parameterTypes);
                 }
                 case FIND_ALL_METHOD -> {
-                    chainData.executables = CoreTool.findAllMethod(clazz, chainData.methodName);
+                    mChainData.executables = CoreTool.findAllMethod(mClazz, mChainData.methodName);
                 }
                 case FIND_CONSTRUCTOR -> {
-                    chainData.executables[0] = CoreTool.findConstructor(clazz, chainData.parameterTypes);
+                    mChainData.executables[0] = CoreTool.findConstructor(mClazz, mChainData.parameterTypes);
                 }
                 case FIND_ALL_CONSTRUCTOR -> {
-                    chainData.executables = CoreTool.findAllConstructor(clazz);
+                    mChainData.executables = CoreTool.findAllConstructor(mClazz);
                 }
             }
         } catch (Throwable throwable) {
-            chainData.throwable = throwable;
+            mChainData.throwable = throwable;
         }
     }
 
     /**
      * 链式钩子内部类，为已定位的方法或构造函数提供多种 Hook 策略配置。
-     * <p>
-     * 支持的 Hook 策略包括：
-     * <ul>
-     *   <li>{@link #hook(AbsHook)} — 使用自定义回调执行 Hook</li>
-     *   <li>{@link #returnResult(Object)} — 替换方法的返回值</li>
-     *   <li>{@link #doNothing()} — 完全拦截原方法使其不执行</li>
-     *   <li>{@link #setArg(int, Object)} — 修改方法调用时的实参</li>
-     * </ul>
-     * 此外还提供异常处理相关的配置方法：
-     * <ul>
-     *   <li>{@link #onThrow(Function)} — 注册自定义异常处理函数</li>
-     *   <li>{@link #ignoreThrow()} — 静默忽略查找阶段的异常</li>
-     * </ul>
      */
     public final class ChainHook {
-        /**
-         * 构造方法，仅供外部类 {@link ChainTool} 创建实例。
-         */
         private ChainHook() {
         }
 
         /**
          * 使用指定的 {@link AbsHook} 回调对目标方法或构造函数执行 Hook。
-         * <p>
-         * 本方法将触发完整的链式执行流程（查找 + Hook），随后返回外部 {@link ChainTool} 实例，
-         * 以便调用方继续对其他方法发起新的链式调用。
          *
-         * @param absHook 自定义的 Hook 回调实现，不得为 {@code null}
+         * @param absHook 自定义的 Hook 回调实现
          * @return 外部 {@link ChainTool} 实例，便于继续链式调用
          */
         public ChainTool hook(@NonNull AbsHook absHook) {
-            chainData.absHook = absHook;
+            mChainData.absHook = absHook;
             runChain();
             return ChainTool.this;
         }
@@ -360,24 +308,21 @@ public final class ChainTool {
          * 该函数接收捕获到的 {@link Throwable} 对象：返回 {@code true} 表示异常已被妥善处理，
          * 后续流程将正常退出；返回 {@code false} 则表示异常未被处理，将继续向上抛出。
          *
-         * @param function 异常处理函数，不得为 {@code null}
+         * @param function 异常处理函数
          * @return 当前 {@link ChainHook} 实例，便于继续链式配置
          */
         public ChainHook onThrow(@NonNull Function<Throwable, Boolean> function) {
-            chainData.function = function;
+            mChainData.function = function;
             return this;
         }
 
         /**
          * 指定在查找阶段发生异常时静默忽略，不做任何额外处理。
-         * <p>
-         * 启用后，若目标方法或构造函数查找失败，将直接跳过本次 Hook 操作，
-         * 不会向调用方抛出任何异常。
          *
          * @return 当前 {@link ChainHook} 实例，便于继续链式配置
          */
         public ChainHook ignoreThrow() {
-            chainData.isIgnoreThrow = true;
+            mChainData.isIgnoreThrow = true;
             return this;
         }
     }

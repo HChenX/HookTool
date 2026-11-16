@@ -22,18 +22,8 @@ import com.hchen.hooktool.ModuleConfig;
 
 /**
  * 日志输出抽象基类。
- * <p>
- * 收敛 {@link AndroidLog} 与 {@link XposedLog} 共有的逻辑：等级门控、消息格式化
- * （等级前缀 + 调用栈拼接）与日志调度骨架。子类只需实现抽象输出点
- * {@link #log(int, String, String, Throwable)}，将格式化后的消息交给各自的输出目标
- * （{@link android.util.Log} 或 Xposed 运行时日志代理）。
- * <p>
- * 公开日志入口（{@code logE/logW/logI/logD} 的四种重载）仍保留在子类，
- * 以静态门面形式一行委托 {@link #logAt}，保证调用方签名零改动。
  *
  * @author 焕晨HChen
- * @see AndroidLog
- * @see XposedLog
  */
 @SuppressWarnings("EnhancedSwitchMigration")
 public abstract class AbstractLog {

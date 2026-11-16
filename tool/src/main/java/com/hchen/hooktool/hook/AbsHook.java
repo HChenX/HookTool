@@ -39,79 +39,28 @@ import io.github.libxposed.api.XposedInterface;
 
 /**
  * 所有 Xposed 方法钩子的抽象基类。
- * <p>
- * 本类为方法拦截提供了一套完整的生命周期模型，子类只需覆写对应的回调方法即可实现自定义拦截逻辑。
- * <p>
- * <b>核心拦截生命周期</b>（每次方法调用触发一轮）：
- * <ol>
- *     <li>{@link #before()} —— 前置拦截阶段，在原方法执行前触发</li>
- *     <li>{@link #proceed(XposedInterface.Chain)} —— 原方法调用阶段，执行被拦截的目标方法</li>
- *     <li>{@link #after()} —— 后置拦截阶段，在原方法执行完成后触发</li>
- * </ol>
- * <b>热重载生命周期</b>（模块热更新时触发）：
- * <ol>
- *     <li>{@link #onHotReloading(Bundle, Map)} —— 热重载准备阶段，向 state 写入需保存的状态数据</li>
- *     <li>{@link #onHotReloaded(Object, Map)} —— 热重载完成阶段，恢复之前保存的状态</li>
- * </ol>
- * <p>
- * 各阶段中发生的异常会统一回调至 {@link #onThrow(StageEnum, Throwable)}，由子类决定是否消费。
- * <p>
- * 本类内部通过 {@link ThreadLocal} 维护线程独立的状态栈，因此支持同一线程内对同一钩子的嵌套（可重入）调用。
- * 在拦截过程中，子类可通过 {@link #getArgs()}、{@link #setResult(Object)} 等方法自由读写方法参数与返回值。
- * <p>
- * 每个钩子实例在创建时自动注册到 {@link HookRegistry}（弱引用），
- * 并会自动捕获最近一次调用时的宿主对象（{@link #thisObject}）。
- * 热重载时，{@link HookRegistry} 会按声明类名（{@link #key}）去重存储 {@link #thisObject}，
- * 并在新钩子实例上恢复。静态方法钩子（{@link #isStatic}）不参与此流程。
  *
  * @author 焕晨HChen
- * @see HookBridge
- * @see HookRegistry
  */
 public abstract class AbsHook {
-    int priority; // 钩子优先级
-    String id; // 钩子 id
-    XposedInterface.ExceptionMode mode; // 异常模式
+    int priority;
+    String id;
+    XposedInterface.ExceptionMode mode;
 
     /**
      * 当前钩子绑定的声明类名，作为热重载时 {@code thisObject} 的存储键。
-     * <p>
-     * 由 {@link HookBridge} 在注册钩子时自动设置，取值为
-     * {@link java.lang.reflect.Executable#getDeclaringClass()} 的全限定类名
-     * （方法/构造函数），或 {@link Class#getName()}（类初始化器）。
-     * <p>
-     * 同一个类的所有方法/构造函数共享相同的类级 key，使得热重载时
-     * {@code thisObject} 只需按类存储一份即可，避免多个方法重复保存同一对象。
-     * 静态方法的 {@code thisObject} 始终为 {@code null}，因此不会实际保存。
      */
-    String key; // 热重载用类级标识键
+    String key;
 
     /**
      * 标识当前钩子是否绑定到静态上下文。
-     * <p>
-     * 由 {@link HookBridge} 在注册钩子时自动设置：
-     * <ul>
-     *   <li>对于方法/构造函数，取 {@code java.lang.reflect.Modifier.isStatic(executable.getModifiers())}</li>
-     *   <li>对于类初始化器 {@code <clinit>}，始终为 {@code true}</li>
-     *   <li>通过无参或旧版构造器注册时，默认为 {@code false}</li>
-     * </ul>
-     * <p>
-     * 此字段用于在热重载流程中区分静态与非静态上下文：
-     * 静态方法的 {@link #thisObject} 始终为 {@code null}，且在
-     * {@link HookRegistry#reloaded(io.github.libxposed.api.XposedModuleInterface.HotReloadedParam)} 中不会从状态快照中查找
-     * {@code thisObject}，避免静态钩子误读到同类的非静态实例数据。
      */
     boolean isStatic;
 
     /**
      * 当前最新一次被拦截的方法调用的宿主对象实例（即 {@code this} 引用）。
      * <p>
-     * 每次进入钩子拦截上下文时自动更新；静态方法钩子恒为 {@code null}。
-     * 仅在 {@link #before()} 至 {@link #after()} 之间有效，生命周期之外保留上一次的值。
-     * 以 {@code volatile} 保证回调线程写入、热更新线程读取的跨线程可见性。
-     *
-     * @see #getThisObject()
-     * @see XposedInterface.Chain#getThisObject()
+     * 静态方法钩子恒为 {@code null}，且仅在 {@link #before()} 至 {@link #after()} 之间有效。
      */
     volatile Object thisObject;
 
@@ -192,19 +141,16 @@ public abstract class AbsHook {
         }
     }
 
-    private final ThreadLocal<StateStack> stackLocal = new ThreadLocal<StateStack>() {
+    private final ThreadLocal<StateStack> mStackLocal = new ThreadLocal<StateStack>() {
         @Override
         protected StateStack initialValue() {
             return new StateStack();
         }
     };
-    private final CopyOnWriteArrayList<XposedInterface.HookHandle> handles = new CopyOnWriteArrayList<>();
+    private final CopyOnWriteArrayList<XposedInterface.HookHandle> mHandles = new CopyOnWriteArrayList<>();
 
     /**
      * 钩子拦截的生命周期阶段枚举。
-     * <p>
-     * 在 {@link #onThrow(StageEnum, Throwable)} 中用于标识异常发生的具体阶段，
-     * 以便调用方根据阶段进行差异化的异常处理。
      */
     public enum StageEnum {
         /**
@@ -221,68 +167,30 @@ public abstract class AbsHook {
         AFTER
     }
 
-    /**
-     * 使用全部默认参数构造钩子实例。
-     * <p>
-     * 等价于 {@code AbsHook(PRIORITY_DEFAULT, null, null)}。
-     */
     public AbsHook() {
         this(PRIORITY_DEFAULT, null, null);
     }
 
-    /**
-     * 使用指定优先级构造钩子实例。
-     *
-     * @param priority 钩子优先级，数值越小优先级越高，越早被框架调用
-     */
     public AbsHook(int priority) {
         this(priority, null, null);
     }
 
-    /**
-     * 使用指定标识符构造钩子实例，优先级为默认值。
-     *
-     * @param id 钩子唯一标识符，用于在相同可执行对象上原子替换旧 Hook；为 {@code null} 表示不关心后续替换
-     */
     public AbsHook(@Nullable String id) {
         this(PRIORITY_DEFAULT, id, null);
     }
 
-    /**
-     * 使用指定异常处理模式构造钩子实例，优先级为默认值。
-     *
-     * @param mode 钩子异常处理模式；为 {@code null} 表示使用框架默认行为
-     */
     public AbsHook(@Nullable XposedInterface.ExceptionMode mode) {
         this(PRIORITY_DEFAULT, null, mode);
     }
 
-    /**
-     * 使用指定优先级和标识符构造钩子实例。
-     *
-     * @param priority 钩子优先级，数值越小优先级越高
-     * @param id       钩子唯一标识符；为 {@code null} 表示不关心后续替换
-     */
     public AbsHook(int priority, @Nullable String id) {
         this(priority, id, null);
     }
 
-    /**
-     * 使用指定优先级和异常处理模式构造钩子实例。
-     *
-     * @param priority 钩子优先级，数值越小优先级越高
-     * @param mode     钩子异常处理模式；为 {@code null} 表示使用框架默认行为
-     */
     public AbsHook(int priority, @Nullable XposedInterface.ExceptionMode mode) {
         this(priority, null, mode);
     }
 
-    /**
-     * 使用指定标识符和异常处理模式构造钩子实例，优先级为默认值。
-     *
-     * @param id   钩子唯一标识符；为 {@code null} 表示不关心后续替换
-     * @param mode 钩子异常处理模式；为 {@code null} 表示使用框架默认行为
-     */
     public AbsHook(@Nullable String id, @Nullable XposedInterface.ExceptionMode mode) {
         this(PRIORITY_DEFAULT, id, mode);
     }
@@ -304,10 +212,7 @@ public abstract class AbsHook {
     /**
      * 在原方法执行之前调用的前置拦截回调。
      * <p>
-     * 子类应覆写此方法以实现参数修改、前置校验等自定义逻辑。
-     * 若在此阶段调用 {@link #setResult(Object)} 设置了返回值，
-     * 则原方法将被完全跳过，且<strong>不会执行</strong> {@link #after()} 回调，
-     * 返回值将直接作为本次调用的最终结果返回。
+     * 若在此阶段通过 {@link #setResult(Object)} 设置了返回值，则原方法被完全跳过且不执行 {@link #after()}。
      */
     public void before() {
     }
@@ -315,12 +220,7 @@ public abstract class AbsHook {
     /**
      * 原方法调用阶段的回调，为子类提供定制 proceed 行为的能力。
      * <p>
-     * 默认实现直接委托至 {@link #callProceed()} 调用原方法。
-     * 子类可覆写此方法以在原方法调用前后注入额外逻辑，
-     * 或根据条件决定是否真正调用原方法。
-     * <p>
-     * 该方法的返回值会作为原方法的默认执行结果被记录，
-     * 后续可通过 {@link #setResult(Object)} 进行覆盖。
+     * 返回值会作为原方法的默认执行结果被记录，后续可通过 {@link #setResult(Object)} 覆盖。
      *
      * @param chain 当前调用链对象，可用于传递修改后的 {@code this} 引用或参数
      * @return 原方法的执行结果
@@ -332,8 +232,6 @@ public abstract class AbsHook {
 
     /**
      * 在原方法执行完成之后调用的后置拦截回调。
-     * <p>
-     * 子类应覆写此方法以实现返回值读取/修改、资源清理、日志记录等后置处理逻辑。
      */
     public void after() {
     }
@@ -341,12 +239,10 @@ public abstract class AbsHook {
     /**
      * 钩子生命周期中发生异常时的统一回调。
      * <p>
-     * 当生命周期的任意阶段抛出异常时，框架会优先调用此方法。
-     * 返回 {@code true} 表示异常已被消费，框架不再继续传播；
-     * 返回 {@code false} 则由框架按默认策略处理（可能直接抛出）。
+     * 返回 {@code true} 表示异常已被消费，框架不再继续传播；返回 {@code false} 则由框架按默认策略处理。
      *
-     * @param stage 异常发生的生命周期阶段，不为 {@code null}
-     * @param e     被捕获的异常对象，不为 {@code null}
+     * @param stage 异常发生的生命周期阶段
+     * @param e     被捕获的异常对象
      * @return {@code true} 表示异常已被处理，{@code false} 表示交由框架继续处理
      */
     public boolean onThrow(@NonNull StageEnum stage, @NonNull Throwable e) {
@@ -356,48 +252,19 @@ public abstract class AbsHook {
     /**
      * 热重载准备回调，在当前模块即将被热重载时触发。
      * <p>
-     * 子类可覆写此方法，将需要保存的状态数据写入 {@code state} 中。
-     * 写入的键值对会在 {@link HookRegistry#reloading(Bundle)} 的阶段一中被合并到全局状态快照中。
-     * 若不同钩子实例的 state 中存在重复的键，合并过程会显式抛出
-     * {@link IllegalStateException} 以提示冲突。
-     * <p>
-     * {@link #thisObject} 的自动保存由框架在阶段二中以声明类名（{@link #key}）
-     * 去重处理，无需在此方法中手动保存。
-     * 若无需保存任何额外状态，保持 {@code state} 为空即可。
-     * <p>
-     * 默认实现为空，不保存任何状态。
+     * 若不同钩子实例的 state 中存在重复的键，合并过程会显式抛出 {@link IllegalStateException} 以提示冲突。
      *
-     * @param extras 热重载的附加信息，包含触发重载的上下文数据；可能为 {@code null}
-     *               （当框架未传递额外数据时）
-     * @param state  用于写入状态数据的可变 Map，由框架为每个钩子实例单独创建，
-     *               不会与其他钩子共享，不为 {@code null}
-     * @see HookRegistry#reloading(Bundle)
+     * @param extras 热重载的附加信息，可能为 {@code null}（框架未传递额外数据时）
+     * @param state  用于写入状态数据的可变 Map，由框架为每个钩子实例单独创建，不会与其他钩子共享
      */
     public void onHotReloading(@Nullable Bundle extras, @NonNull Map<String, Object> state) {
     }
 
     /**
      * 热重载完成回调，在模块热重载完成后触发。
-     * <p>
-     * 子类可覆写此方法以从传入的状态快照中恢复之前保存的数据。
-     * 传入的 {@code thisObject} 是 {@link HookRegistry#reloaded(io.github.libxposed.api.XposedModuleInterface.HotReloadedParam)}
-     * 根据当前实例的 {@link #key} 从全局状态快照中查找到的宿主对象实例。
-     * 传入的 {@code inState} 是在 {@link #onHotReloading(Bundle, Map)} 阶段由
-     * 所有旧钩子实例收集并合并后的全局状态快照。
-     * <p>
-     * 此回调在 {@link HookRegistry#reloaded(io.github.libxposed.api.XposedModuleInterface.HotReloadedParam)} 中被调用，
-     * 此时注册表中已注册的是热重载后新创建的钩子实例。
-     * <p>
-     * 注意：{@code thisObject} 现已被标注为 {@link Nullable}，
-     * 子类覆写时需要进行空安全判断。
      *
-     * @param thisObject 从全局状态快照中恢复的宿主对象实例；
-     *                   可能为 {@code null}（静态方法、{@code <clinit>} 钩子、
-     *                   {@link #key} 未设置或保存时 {@link #thisObject} 为 {@code null} 的情况）
-     * @param inState    之前通过 {@link #onHotReloading(Bundle, Map)} 保存并合并后的全局状态快照，
-     *                   不为 {@code null}
-     * @see HookRegistry#reloaded(io.github.libxposed.api.XposedModuleInterface.HotReloadedParam)
-     * @see #key
+     * @param thisObject 从全局状态快照中恢复的宿主对象实例，可能为 {@code null}（静态方法或 {@code <clinit>} 钩子）
+     * @param inState    之前通过 {@link #onHotReloading(Bundle, Map)} 保存并合并后的全局状态快照
      */
     public void onHotReloaded(@Nullable Object thisObject, @NonNull Map<String, Object> inState) {
     }
@@ -405,12 +272,12 @@ public abstract class AbsHook {
     /**
      * 从线程本地状态栈中获取当前调用上下文。
      *
-     * @return 当前线程对应的调用状态对象，不为 {@code null}
+     * @return 当前线程对应的调用状态对象
      * @throws IllegalStateException 如果当前线程不在钩子拦截生命周期内（状态栈为空）
      */
     @NonNull
     private CallState getState() {
-        StateStack stack = stackLocal.get();
+        StateStack stack = mStackLocal.get();
         CallState state = stack != null ? stack.current() : null;
         if (state == null) {
             throw new IllegalStateException("Hook state has been lost or is not being called within the interception lifecycle.");
@@ -420,10 +287,8 @@ public abstract class AbsHook {
 
     /**
      * 获取当前被拦截方法对应的可执行对象。
-     * <p>
-     * 返回值可能是 {@link java.lang.reflect.Method} 或 {@link java.lang.reflect.Constructor}。
      *
-     * @return 当前被拦截方法的可执行对象，不为 {@code null}
+     * @return 当前被拦截方法的可执行对象
      */
     @NonNull
     public final Executable getExecutable() {
@@ -444,11 +309,9 @@ public abstract class AbsHook {
     /**
      * 获取当前被拦截方法的全部参数。
      * <p>
-     * 首次调用时会从原始调用链中缓存参数列表。
-     * 若之前已通过 {@link #setArg(int, Object)} 或 {@link #setArgs(Object...)} 修改过参数，
-     * 则返回修改后的参数值。
+     * 若之前已通过 {@link #setArg(int, Object)} 或 {@link #setArgs(Object...)} 修改过参数，则返回修改后的参数值。
      *
-     * @return 方法参数数组，不为 {@code null}
+     * @return 方法参数数组
      */
     @NonNull
     public final Object[] getArgs() {
@@ -462,8 +325,7 @@ public abstract class AbsHook {
     /**
      * 获取当前被拦截方法在指定索引位置的参数值。
      * <p>
-     * 若之前已通过 {@link #setArg(int, Object)} 修改过该位置的参数，
-     * 则返回修改后的值。
+     * 若之前已通过 {@link #setArg(int, Object)} 修改过该位置的参数，则返回修改后的值。
      *
      * @param index 参数索引（从 0 开始）
      * @return 该索引位置的参数值
@@ -499,7 +361,6 @@ public abstract class AbsHook {
      * 整体替换当前被拦截方法的全部参数。
      * <p>
      * 传入的数组长度必须与原始参数个数一致，否则将抛出异常。
-     * 内部会对传入数组做防御性拷贝，调用方后续修改原数组不影响本次调用。
      *
      * @param args 新的参数数组，长度须与原方法参数列表匹配
      * @throws IllegalArgumentException 当传入数组的长度与原始参数个数不一致时抛出
@@ -524,8 +385,7 @@ public abstract class AbsHook {
     /**
      * 获取当前被拦截方法的返回值。
      * <p>
-     * 若之前已通过 {@link #setResult(Object)} 替换了返回值，则返回替换后的值；
-     * 否则返回原方法执行完成后的原始返回值。
+     * 若之前已通过 {@link #setResult(Object)} 替换了返回值，则返回替换后的值；否则返回原方法执行完成后的原始返回值。
      *
      * @return 当前方法的返回值，可能为 {@code null}
      */
@@ -537,9 +397,7 @@ public abstract class AbsHook {
     /**
      * 替换当前被拦截方法的返回值。
      * <p>
-     * 设置后原方法的原始返回值将被忽略，框架会将此处设置的值作为最终返回值。
-     * 若在 {@link #before()} 阶段调用此方法，原方法将被完全跳过，
-     * 且<strong>不执行</strong> {@link #after()} 回调（见 {@link #before()} 的说明）。
+     * 设置后原方法的原始返回值将被忽略；若在 {@link #before()} 阶段调用，原方法将被完全跳过且不执行 {@link #after()}。
      *
      * @param result 要设置的新返回值
      */
@@ -552,7 +410,7 @@ public abstract class AbsHook {
     /**
      * 设置当前被拦截方法的待抛出异常。
      * <p>
-     * 设置后该异常将在后续阶段由框架自动抛出。可通过 {@link #getThrowable()} 读取。
+     * 设置后该异常将在后续阶段由框架自动抛出，可通过 {@link #getThrowable()} 读取。
      *
      * @param throwable 要设置的异常对象
      */
@@ -563,12 +421,9 @@ public abstract class AbsHook {
     /**
      * 记录非主动抛出中首个未消费的异常。
      * <p>
-     * 与 {@link #setThrowable(Throwable)} 不同，本方法仅在当前尚未记录任何异常时生效，
-     * 保证主动设置的异常不会被后续阶段的异常覆盖。
-     * <p>
-     * 仅在 {@link HookBridge} 内部调用。
+     * 仅在当前尚未记录任何异常时生效，保证主动设置的异常不会被后续阶段的异常覆盖。
      *
-     * @param throwable 非主动抛出的异常，不为 {@code null}
+     * @param throwable 非主动抛出的异常
      */
     final void setNonActiveThrowable(@NonNull Throwable throwable) {
         CallState state = getState();
@@ -591,22 +446,18 @@ public abstract class AbsHook {
      * <p>
      * 注册后的句柄可供 {@link #unhookSelf()} 使用，以便一次性解除所有钩子。
      *
-     * @param handle 框架返回的钩子句柄，不为 {@code null}
+     * @param handle 框架返回的钩子句柄
      */
     final void setHandle(@NonNull XposedInterface.HookHandle handle) {
-        this.handles.add(handle);
+        this.mHandles.add(handle);
     }
 
     /**
      * 设置当前钩子绑定的声明类名作为热重载存储键。
      * <p>
-     * 此键由 {@link HookBridge} 在注册钩子时调用，取值为声明类的全限定类名。
-     * 同一类的所有方法/构造函数共享相同的类级 key，使得热重载时
-     * {@link #thisObject} 只需按类存储一份即可，避免重复。
+     * 同一类的所有方法/构造函数共享相同的类级 key，避免热重载时重复保存同一 {@link #thisObject}。
      *
-     * @param key 声明类的全限定类名，不为 {@code null}
-     * @see #key
-     * @see HookBridge
+     * @param key 声明类的全限定类名
      */
     final void setKey(@NonNull String key) {
         this.key = key;
@@ -617,23 +468,20 @@ public abstract class AbsHook {
     /**
      * 进入钩子拦截上下文，将指定的调用链压入当前线程的状态栈。
      * <p>
-     * 调用此方法后，当前线程内的所有钩子生命周期回调均可访问该次调用的上下文信息
-     * （包括方法参数、返回值等）。
+     * 调用此方法后，当前线程内的所有钩子生命周期回调均可访问该次调用的上下文信息。
      *
-     * @param chain 本次拦截对应的原始调用链，不为 {@code null}
+     * @param chain 本次拦截对应的原始调用链
      */
     final void enter(@NonNull XposedInterface.Chain chain) {
         thisObject = chain.getThisObject();
-        Objects.requireNonNull(stackLocal.get()).push(chain);
+        Objects.requireNonNull(mStackLocal.get()).push(chain);
     }
 
     /**
      * 退出钩子拦截上下文，从当前线程的状态栈中弹出调用状态。
-     * <p>
-     * 此方法会释放与本次拦截关联的上下文资源，使状态栈恢复到上一层嵌套调用。
      */
     final void exit() {
-        StateStack stack = stackLocal.get();
+        StateStack stack = mStackLocal.get();
         if (stack != null) {
             stack.pop();
         }
@@ -642,10 +490,9 @@ public abstract class AbsHook {
     /**
      * 获取当前钩子的内部调用链包装器。
      * <p>
-     * 返回的 {@link XposedInterface.Chain} 实例对原始调用链进行了包装，
-     * 在读取参数时会优先返回已被修改的值，保证拦截生命周期内参数读写的一致性。
+     * 读取参数时会优先返回已被修改的值。
      *
-     * @return 内部调用链实例，不为 {@code null}
+     * @return 内部调用链实例
      */
     @NonNull final XposedInterface.Chain getChain() {
         return getState().innerChain;
@@ -654,8 +501,7 @@ public abstract class AbsHook {
     /**
      * 调用被拦截的原始方法并返回执行结果。
      * <p>
-     * 若参数已被修改（通过 {@link #setArg(int, Object)} 或 {@link #setArgs(Object...)}），
-     * 则使用修改后的参数调用原方法；否则以原始参数调用。
+     * 若参数已被修改（通过 {@link #setArg(int, Object)} 或 {@link #setArgs(Object...)}），则使用修改后的参数调用原方法。
      *
      * @return 原始方法的返回值
      * @throws Throwable 原方法执行过程中可能抛出的任意异常
@@ -671,9 +517,6 @@ public abstract class AbsHook {
 
     /**
      * 记录原方法的原始执行结果。
-     * <p>
-     * 由框架在 proceed 阶段内部调用，将原方法的返回值存储到当前调用状态中，
-     * 以供后续 {@link #after()} 阶段及 {@link #getResult()} 读取。
      *
      * @param originalResult 原方法的原始返回值
      */
@@ -693,17 +536,16 @@ public abstract class AbsHook {
     /**
      * 解除当前钩子实例注册的所有方法拦截。
      * <p>
-     * 遍历内部已注册的全部钩子句柄并逐一解除，任一句柄解除失败不会阻断其余句柄；
-     * 解除完成后内部句柄列表必然被清空（{@code finally} 兜底），以便后续重新注册。
+     * 任一句柄解除失败不会阻断其余句柄，解除完成后内部句柄列表必然被清空。
      *
      * @throws IllegalStateException 当钩子尚未生效（句柄列表为空）时调用此方法将抛出
      */
     final public void unhookSelf() {
-        if (handles.isEmpty()) {
+        if (mHandles.isEmpty()) {
             throw new IllegalStateException("Hook handle is not initialized. Cannot unhook before the hook is applied.");
         }
         try {
-            for (XposedInterface.HookHandle handle : handles) {
+            for (XposedInterface.HookHandle handle : mHandles) {
                 try {
                     handle.unhook();
                 } catch (Throwable e) {
@@ -711,19 +553,19 @@ public abstract class AbsHook {
                 }
             }
         } finally {
-            handles.clear();
+            mHandles.clear();
         }
     }
 
     /**
      * 获取当前钩子实例已注册的全部 Hook 句柄。
      * <p>
-     * 返回的列表是线程安全的快照副本，可用于在热更新等场景中逐一处理旧 Hook。
+     * 返回的列表是快照副本，可用于在热更新等场景中逐一处理旧 Hook。
      *
      * @return 已注册的句柄数组；若尚未注册任何句柄则返回空数组
      */
     @NonNull final public XposedInterface.HookHandle[] getHookHandles() {
-        return handles.toArray(new XposedInterface.HookHandle[0]);
+        return mHandles.toArray(new XposedInterface.HookHandle[0]);
     }
 
     /**
@@ -731,7 +573,7 @@ public abstract class AbsHook {
      * <p>
      * 返回内容包含被调用方法的类名、方法名、参数列表及返回值，便于调试与日志记录。
      *
-     * @return 格式化的调用信息字符串，不为 {@code null}
+     * @return 格式化的调用信息字符串
      */
     @NonNull final public String observeCall() {
         return LogExpand.observeCall(this);
@@ -740,20 +582,16 @@ public abstract class AbsHook {
     @NonNull
     @Override
     public String toString() {
-        StateStack stack = stackLocal.get();
+        StateStack stack = mStackLocal.get();
         CallState state = stack != null ? stack.current() : null;
         return "AbsHook{" +
-            "handles=" + handles +
+            "handles=" + mHandles +
             ", callState=" + (state != null ? state.toString() : "null") +
             '}';
     }
 
     /**
      * 内部调用链实现，对原始 {@link XposedInterface.Chain} 进行包装。
-     * <p>
-     * 该实现会在读取参数时优先返回已被修改的值，从而保证在同一拦截生命周期内
-     * 参数读写行为的一致性。其余操作（{@code proceed}、{@code proceedWith} 等）
-     * 直接委托给原始调用链处理。
      */
     @SuppressWarnings("ClassCanBeRecord")
     private static class InnerChain implements XposedInterface.Chain {
@@ -777,13 +615,11 @@ public abstract class AbsHook {
         @NonNull
         @Override
         public List<Object> getArgs() {
-            // 保持与旧 API 逻辑同步
             return state.isArgsChanged ? Arrays.asList(state.args) : state.originalChain.getArgs();
         }
 
         @Override
         public Object getArg(int index) throws IndexOutOfBoundsException, ClassCastException {
-            // 保持与旧 API 逻辑同步
             return state.isArgsChanged ? state.args[index] : state.originalChain.getArg(index);
         }
 

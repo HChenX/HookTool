@@ -29,12 +29,7 @@ import io.github.libxposed.api.XposedModuleInterface.PackageReadyParam
 /**
  * Hook 功能的 Kotlin 示例模块实现。
  *
- * 继承自 [AbsModule]，以 Kotlin 语法展示了 Hook 模块的基本结构。
- *
- * 开发者应覆写 [onPackageReady] 方法以注册 Hook 逻辑。
- *
  * @author 焕晨HChen
- * @see AbsModule
  */
 class TestHookKt : AbsModule() {
     /**
@@ -113,9 +108,6 @@ class TestHookKt : AbsModule() {
 
     /**
      * 模块级热重载准备回调。
-     * <p>
-     * 在此保存需要在热重载后恢复的模块级状态数据。
-     * 本示例无模块级状态需要保存，返回空映射以演示 API 用法。
      *
      * @param extras 热重载附加数据，可能为 `null`
      * @return 模块级状态键值对

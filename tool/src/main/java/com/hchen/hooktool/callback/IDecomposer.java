@@ -20,9 +20,6 @@ package com.hchen.hooktool.callback;
 
 /**
  * 支持抛出异常的函数式供应者接口。
- * <p>
- * 功能类似于 {@link java.util.function.Supplier}，但其 {@code get()} 方法
- * 允许声明并抛出受检异常。适用于封装可能产生异常的延迟计算或资源获取场景。
  *
  * @param <R> 供应者返回结果的类型
  * @author 焕晨HChen

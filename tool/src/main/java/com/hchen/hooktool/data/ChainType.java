@@ -20,9 +20,6 @@ package com.hchen.hooktool.data;
 
 /**
  * 链式 Hook 调用中可用的方法查找策略枚举。
- * <p>
- * 每个枚举常量对应 {@link ChainData} 的一种构造场景，运行时由框架据此
- * 决定采用何种方式在目标类中定位可执行对象。
  *
  * @author 焕晨HChen
  */

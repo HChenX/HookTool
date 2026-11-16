@@ -53,15 +53,7 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * Shell 命令执行工具类。
  * <p>
- * 提供同步（{@link #exec()}）和异步（{@link #async()}）两种 Shell 命令执行能力，
- * 支持 Root 和普通两种模式（默认分别使用 {@code su} / {@code sh}，可通过
- * {@link #setShellCommands} 自定义）。内部维护持久化的 Shell 进程流，
- * 通过自增命令 ID 与带随机 nonce 的结束标记关联每条命令的输出，实现多命令执行时结果的正确分离。
- * <p>
- * 命令以 {@link CompletableFuture}{@code <ShellResult>} 作为统一执行句柄：同步与异步
- * 走同一条提交路径，仅调用方是否阻塞等待不同。成功与各类失败统一以 {@link ShellResult}
- * 建模（不再用 {@code null} 隐式表达失败），命令必然收敛（配对完成 / 流结束兜底 / 命令超时兜底），
- * 不会永久阻塞。
+ * 提供同步（{@link #exec()}）和异步（{@link #async()}）两种 Shell 命令执行能力，支持 Root 和普通两种模式。
  * <p>
  * 使用示例：
  * <pre>{@code
@@ -112,16 +104,16 @@ public final class ShellTool {
      */
     private static final long ROOT_CHECK_TIMEOUT_S = 5;
 
-    private static final ShellTool instance = new ShellTool();
-    private static volatile boolean isRoot = false;
-    private static volatile String[] shellCommands = new String[]{"su", "sh"};
-    private static volatile IExecListener globalExecListeners;
-    private static volatile ICommandListener globalCommandListener;
-    private static volatile ShellImpl shellImpl;
+    private static final ShellTool sInstance = new ShellTool();
+    private static volatile boolean sIsRoot = false;
+    private static volatile String[] sShellCommands = new String[]{"su", "sh"};
+    private static volatile IExecListener sGlobalExecListeners;
+    private static volatile ICommandListener sGlobalCommandListener;
+    private static volatile ShellImpl sShellImpl;
     /**
      * 全局自增命令 ID，跨进程重建持续递增，永不复用。
      */
-    private static final AtomicLong nextCommandId = new AtomicLong();
+    private static final AtomicLong sNextCommandId = new AtomicLong();
 
     private static final ScheduledExecutorService SCHEDULER = Executors.newSingleThreadScheduledExecutor(r -> {
         Thread thread = new Thread(r, "HookTool-Shell-Scheduler");
@@ -135,7 +127,7 @@ public final class ShellTool {
     });
 
     private ShellTool() {
-        shellImpl = new ShellImpl();
+        sShellImpl = new ShellImpl();
     }
 
     /**
@@ -147,8 +139,8 @@ public final class ShellTool {
      */
     @NonNull
     public static ShellTool obtain() {
-        shellImpl.init();
-        return instance;
+        sShellImpl.init();
+        return sInstance;
     }
 
     /**
@@ -171,40 +163,36 @@ public final class ShellTool {
      */
     @NonNull
     public static ShellTool setRoot(boolean isRoot) {
-        ShellTool.isRoot = isRoot;
-        return instance;
+        ShellTool.sIsRoot = isRoot;
+        return sInstance;
     }
 
     /**
      * 自定义 Shell 启动命令。
      * <p>
      * 数组长度必须为 2：第一个元素为 Root 模式命令，第二个为普通模式命令。
-     * 数组的合法性在下次 {@link #obtain()} 初始化进程时校验，长度不足 2 或含空元素将抛出
-     * {@link IllegalArgumentException}。该方法修改的是全局静态配置，仅作用于当前进程。
      *
      * @param commands Shell 命令数组，长度必须为 2
      * @return {@link ShellTool} 单例实例，支持链式调用
      */
     @NonNull
     public static ShellTool setShellCommands(@NonNull String[] commands) {
-        shellCommands = commands.clone();
-        return instance;
+        sShellCommands = commands.clone();
+        return sInstance;
     }
 
     /**
      * 设置全局执行监听器，用于接收所有命令（同步与异步）的输出和错误回调。
      * <p>
-     * 设置新监听器会<strong>覆盖此前注册的全局监听器</strong>（全局仅保留单个槽位）；传 {@code null} 可取消监听。
-     * 监听器回调在读取线程上执行，回调内请勿同步调用 {@link #exec()}——那会阻塞读取线程自身，
-     * 导致回调内发起的新命令因输出无人读取而在 10 秒后超时返回。
+     * 设置新监听器会<strong>覆盖此前注册的全局监听器</strong>；回调在读取线程上执行，回调内请勿同步调用 {@link #exec()}。
      *
      * @param execListener 执行监听器实例；传 {@code null} 可取消监听
      * @return {@link ShellTool} 单例实例，支持链式调用
      */
     @NonNull
     public static ShellTool setExecListener(@Nullable IExecListener execListener) {
-        globalExecListeners = execListener;
-        return instance;
+        sGlobalExecListeners = execListener;
+        return sInstance;
     }
 
     /**
@@ -217,8 +205,8 @@ public final class ShellTool {
      */
     @NonNull
     public static ShellTool setCommandListener(@Nullable ICommandListener listener) {
-        globalCommandListener = listener;
-        return instance;
+        sGlobalCommandListener = listener;
+        return sInstance;
     }
 
     /**
@@ -227,86 +215,72 @@ public final class ShellTool {
      * @return Shell 进程存活且读取线程正常运行时返回 {@code true}
      */
     public static boolean isActive() {
-        return shellImpl.isActive();
+        return sShellImpl.isActive();
     }
 
     /**
      * 关闭当前 Shell 进程流并释放所有相关资源。
      * <p>
-     * 关闭流程包括：发送 {@code exit} 命令、等待进程退出、关闭输出流、终止读取线程。
      * 关闭后<strong>不会自动重建</strong>，需要重建请重新调用 {@link #obtain()}。
      */
     public static void close() {
-        shellImpl.close();
+        sShellImpl.close();
     }
 
     /**
      * 启用命令拼接模式。
      * <p>
-     * 启用后，通过 {@link #cmd(String)} 添加的多条命令将以换行符连接后拼接为一条命令一次性执行。
-     * 拼接模式在执行一次后自动关闭。
+     * 启用后，通过 {@link #cmd(String)} 添加的多条命令将以换行符连接后拼接为一条命令一次性执行；拼接模式在执行一次后自动关闭。
      *
      * @return {@link ShellTool} 单例实例，支持链式调用
      */
     @NonNull
     public ShellTool enableSplicingMode() {
-        shellImpl.enableSplicingMode();
-        return instance;
+        sShellImpl.enableSplicingMode();
+        return sInstance;
     }
 
     /**
      * 添加一条待执行的 Shell 命令。
      * <p>
-     * 若处于拼接模式，命令将被暂存到拼接列表中；否则直接覆盖当前待执行命令。
-     * 注意：命令内容若包含 {@code exit} 会终止持久化 Shell 会话，之后需重新 {@link #obtain()}。
+     * 命令内容若包含 {@code exit} 会终止持久化 Shell 会话，之后需重新 {@link #obtain()}。
      *
-     * @param cmd 命令字符串，不可为 {@code null}
+     * @param cmd 命令字符串
      * @return {@link ShellTool} 单例实例，支持链式调用
      */
     @NonNull
     public ShellTool cmd(@NonNull String cmd) {
-        shellImpl.cmd(cmd);
-        return instance;
+        sShellImpl.cmd(cmd);
+        return sInstance;
     }
 
     /**
      * 同步执行已添加的命令，阻塞当前线程直到命令执行完毕并返回结果。
      * <p>
-     * 阻塞等待存在超时（默认 10 秒），超时返回 {@link ShellFailureReason#TIMEOUT} 失败结果，
-     * 不会永久阻塞。若需长时间运行，请改用 {@link #async()}。
+     * 阻塞等待存在超时（默认 10 秒），超时返回 {@link ShellFailureReason#TIMEOUT} 失败结果，不会永久阻塞。
      *
-     * @return 命令执行流程结果：流程收敛为 {@link ShellResult.Completed}，流程失败为 {@link ShellResult.Failed}；
-     * 不会为 {@code null}
+     * @return 命令执行流程结果：流程收敛为 {@link ShellResult.Completed}，流程失败为 {@link ShellResult.Failed}
      */
     @NonNull
     public ShellResult exec() {
-        return shellImpl.exec();
+        return sShellImpl.exec();
     }
 
     /**
      * 异步执行已添加的命令，立即返回结果句柄，不阻塞当前线程。
      * <p>
-     * 返回的 {@link CompletableFuture} 在命令收敛时携带 {@link ShellResult}；可通过 {@code get()} 阻塞等待
-     * 或 {@code whenComplete} 异步监听。预飞行失败（未添加命令、被拦截）直接返回已完成的
-     * {@code ShellResult.Failed} 结果，不会返回 {@code null}。同时命令完成会触发全局执行监听器
-     * （{@link #setExecListener}）的对应回调。
+     * 命令完成会触发全局执行监听器（{@link #setExecListener}）的对应回调。
      *
-     * @return 命令结果的 {@link CompletableFuture} 句柄，不为 {@code null}
+     * @return 命令结果的 {@link CompletableFuture} 句柄
      */
     @NonNull
     public CompletableFuture<ShellResult> async() {
-        return shellImpl.submitCommand(null);
+        return sShellImpl.submitCommand(null);
     }
 
-    /**
-     * 异步执行已添加的命令，并通过指定的监听器接收结果。
-     *
-     * @param execListener 用于接收本次命令执行结果的监听器，不为 {@code null}
-     * @return 命令结果的 {@link CompletableFuture} 句柄，不为 {@code null}
-     */
     @NonNull
     public CompletableFuture<ShellResult> async(@NonNull IExecListener execListener) {
-        return shellImpl.submitCommand(execListener);
+        return sShellImpl.submitCommand(execListener);
     }
 
     // --------------------------------------- Root Check -------------------------------------------
@@ -320,12 +294,6 @@ public final class ShellTool {
         return checkRootSync(null);
     }
 
-    /**
-     * 同步检查当前设备是否具备 Root 权限，并通过监听器返回检测结果。
-     *
-     * @param execListener 接收 Root 检测结果的监听器
-     * @return 具备 Root 权限返回 {@code true}
-     */
     public static boolean isRootAvailable(@NonNull IExecListener execListener) {
         return checkRootSync(execListener);
     }
@@ -334,7 +302,6 @@ public final class ShellTool {
      * 检查当前设备是否具备 Root 权限。
      * <p>
      * 历史方法：{@code sync} 参数已无意义，本方法始终执行<strong>真实同步检测</strong>并返回真实结果。
-     * 需要异步检测请使用 {@link #isRootAvailableAsync(IExecListener)}。
      *
      * @param sync         已忽略，统一为真实同步检测
      * @param execListener 接收 Root 检测结果的监听器，可为 {@code null}
@@ -349,11 +316,10 @@ public final class ShellTool {
     /**
      * 异步检查当前设备是否具备 Root 权限。
      * <p>
-     * 在独立后台线程中执行检测，结果通过返回的 {@link CompletableFuture} 获取，
-     * 同时通过监听器的 {@code onRootResult} 回调返回。
+     * 在独立后台线程中执行检测，结果通过返回的 {@link CompletableFuture} 与监听器的 {@code onRootResult} 回调返回。
      *
      * @param execListener 接收 Root 检测结果的监听器，可为 {@code null}
-     * @return 携带检测结果的 {@link CompletableFuture}，不为 {@code null}
+     * @return 携带检测结果的 {@link CompletableFuture}
      */
     @NonNull
     public static CompletableFuture<Boolean> isRootAvailableAsync(@Nullable IExecListener execListener) {
@@ -362,9 +328,6 @@ public final class ShellTool {
 
     /**
      * 通过执行 {@code su -c true} 并检查退出码，同步判断 Root 权限是否可用。
-     * <p>
-     * 等待子进程退出带 5 秒超时，避免个别设备上 {@code su} 授权弹窗挂起导致单线程
-     * {@link #ROOT_EXECUTOR} 被永久占死、后续异步检测全部排队。
      *
      * @param execListener 接收 Root 检测结果的监听器，可为 {@code null}
      * @return 具备 Root 权限返回 {@code true}
@@ -373,12 +336,10 @@ public final class ShellTool {
         Process process = null;
         try {
             process = Runtime.getRuntime().exec("su -c true");
-            // 丢弃子进程的 stdout/stderr，防止输出填满管道缓冲导致 waitFor 永久阻塞，
-            // 并避免每次调用泄漏两个输入流。
+            // 丢弃子进程输出，防止输出填满管道缓冲导致 waitFor 永久阻塞。
             try (InputStream ignored = process.getInputStream();
                  InputStream ignoredErr = process.getErrorStream()) {
                 if (!process.waitFor(ROOT_CHECK_TIMEOUT_S, TimeUnit.SECONDS)) {
-                    // 超时未退出：视为无 Root 权限，释放进程。
                     if (execListener != null) {
                         execListener.onRootResult(false, "-1");
                     }
@@ -414,10 +375,6 @@ public final class ShellTool {
 
     /**
      * Shell 流内部实现类。
-     * <p>
-     * 负责管理 Shell 进程的完整生命周期：进程启动、命令提交、写入、同步等待、关闭与异常处理。
-     * 命令统一经 {@link #submitCommand} 提交为 {@link CompletableFuture}{@code <ShellResult>}，
-     * 同步/异步共用同一路径。
      */
     final class ShellImpl {
         private final Object writeLock = new Object();
@@ -448,7 +405,7 @@ public final class ShellTool {
 
             Process newProcess = null;
             try {
-                newProcess = Runtime.getRuntime().exec(isRoot ? shellCommands[0] : shellCommands[1]);
+                newProcess = Runtime.getRuntime().exec(sIsRoot ? sShellCommands[0] : sShellCommands[1]);
                 DataOutputStream newOs = new DataOutputStream(newProcess.getOutputStream());
                 token = UUID.randomUUID().toString().replace("-", "").substring(0, 8);
                 generation++;
@@ -469,7 +426,7 @@ public final class ShellTool {
         }
 
         private void validateShellCommands() {
-            String[] commands = shellCommands;
+            String[] commands = sShellCommands;
             if (commands == null || commands.length < 2
                 || commands[0] == null || commands[0].isEmpty()
                 || commands[1] == null || commands[1].isEmpty()) {
@@ -497,7 +454,7 @@ public final class ShellTool {
          * 统一提交命令入口：将当前待执行命令（或拼接结果）写入 Shell 流并返回结果句柄。
          *
          * @param perCmdListener 本次命令专属监听器，可为 {@code null}
-         * @return 命令结果句柄，不为 {@code null}；无待执行命令或被拦截时返回已完成的失败结果
+         * @return 命令结果句柄；无待执行命令或被拦截时返回已完成的失败结果
          * @throws IllegalStateException 当 Shell 流已失效时抛出
          */
         @NonNull
@@ -510,10 +467,10 @@ public final class ShellTool {
             if (command == null) {
                 return CompletableFuture.completedFuture(new ShellResult.Failed(ShellFailureReason.NOT_CONFIGURED));
             }
-            if (globalCommandListener != null) {
+            if (sGlobalCommandListener != null) {
                 boolean allowed;
                 try {
-                    allowed = globalCommandListener.onCommand(command);
+                    allowed = sGlobalCommandListener.onCommand(command);
                 } catch (Throwable e) {
                     // 监听器回调异常隔离：不中断执行，保守拦截该命令。
                     AndroidLog.logW(TAG, "Error during global command listener callback.", e);
@@ -527,7 +484,7 @@ public final class ShellTool {
 
             String cmd = command;
             command = null;
-            long id = nextCommandId.incrementAndGet();
+            long id = sNextCommandId.incrementAndGet();
             // 每命令独立随机 nonce：结束标记前缀不可预测，防止命令输出内容伪造标记截断/污染结果。
             String nonce = UUID.randomUUID().toString().replace("-", "").substring(0, 8);
             StreamThread.PendingCommand pc =
@@ -587,15 +544,12 @@ public final class ShellTool {
             }
             isSplicingMode = false;
             splicingCommands.clear();
-            // 注意：builder.isEmpty() 依赖 CharSequence.isEmpty()（API 35），minSdk 30 下不可用，用 length() == 0
+            // builder.isEmpty() 依赖 API 35 的 CharSequence.isEmpty()，minSdk 30 下不可用。
             command = builder.length() == 0 ? null : builder.toString();
         }
 
         /**
          * 为命令调度兜底超时任务：超时仍未收敛时以失败结果完成，防止命令句柄泄漏。
-         * <p>
-         * 与 {@link StreamThread#completeCommand} 共用 {@code completed} CAS：超时与正常完成
-         * 只能胜出一方，杜绝"回调已分发真实结果而句柄却报超时"的窗口。
          *
          * @param pc 待调度的命令数据
          */
@@ -707,8 +661,7 @@ public final class ShellTool {
                 st = streamThread;
                 streamThread = null;
             }
-            // 在 ShellImpl monitor 之外 join 读取线程：避免与读取线程内的 onBrokenPipe→close()
-            // 互等（持锁 join 会造成 3 秒停顿并阻塞所有 Shell 操作）。
+            // 在 ShellImpl monitor 之外 join 读取线程：避免与读取线程内的 onBrokenPipe→close() 互等（持锁 join 会造成 3 秒停顿）。
             if (st != null) {
                 st.close();
             }
@@ -745,9 +698,9 @@ public final class ShellTool {
                         pc.timeoutTask.cancel(false);
                     }
                 }
-                if (globalExecListeners != null) {
+                if (sGlobalExecListeners != null) {
                     try {
-                        globalExecListeners.brokenPipe(
+                        sGlobalExecListeners.brokenPipe(
                             "Incorrect shell code causing pipeline rupture. In-flight commands: " + inFlight,
                             leftoverErrors
                         );
@@ -761,9 +714,7 @@ public final class ShellTool {
 
         /**
          * 处理"进程仍存活但某条流已终止"的会话失效（如命令执行 {@code exec >/dev/null} 重定向）：
-         * 在途命令不再以伪造的成功收敛（旧行为会以 {@code exitCode="-1"} 产出假结果），
-         * 改为以 {@link ShellFailureReason#IO_ERROR} 失败完成，并保留流结束残留输出供
-         * {@code brokenPipe} 回调诊断。
+         * 在途命令改为以 {@link ShellFailureReason#IO_ERROR} 失败完成，残留输出供 {@code brokenPipe} 回调诊断。
          *
          * @param leftover 流终止时残留的未归属输出行
          */
@@ -780,9 +731,9 @@ public final class ShellTool {
                 }
             }
             if (brokenReported.compareAndSet(false, true)) {
-                if (globalExecListeners != null) {
+                if (sGlobalExecListeners != null) {
                     try {
-                        globalExecListeners.brokenPipe(
+                        sGlobalExecListeners.brokenPipe(
                             "Shell stream ended while process alive (e.g. exec redirect).",
                             leftover
                         );
@@ -791,16 +742,11 @@ public final class ShellTool {
                     }
                 }
             }
-            // 两条流均已终止后 streamThread.isActive() 为 false，会话自然失效；无需额外重置。
         }
     }
 
     /**
      * Shell 标准输出和错误输出的读取线程管理类。
-     * <p>
-     * 通过两条独立的后台读取线程分别读取标准输出流与错误输出流，利用带随机 nonce 的结束标记行关联命令。
-     * 读取线程<strong>永不阻塞等待</strong>：普通行追加到当前流缓冲，标记行将缓冲移交对应命令；
-     * 命令收敛由「双流配对 / 流结束兜底 / 命令超时兜底」三条路径保证。
      */
     final class StreamThread {
         private static final String[] EMPTY = new String[0];
@@ -875,9 +821,6 @@ public final class ShellTool {
 
         /**
          * 处理一行输出：解析结束标记行并移交缓冲，普通行返回 {@code false} 由调用方入缓冲。
-         * <p>
-         * 仅当标记的 ID、代际与随机 nonce 全部匹配当前在途命令时才算有效标记；
-         * 其余（伪造/陈旧/不匹配）直接丢弃而不回退入缓冲，避免残留/伪造标记污染后续命令输出。
          *
          * @param line    当前读取的行
          * @param isError 是否来自错误输出流
@@ -891,8 +834,7 @@ public final class ShellTool {
             }
             PendingCommand pc = pending.get(marker.id);
             if (pc == null || pc.generation != shellImpl.generation || !pc.nonce.equals(marker.nonce)) {
-                // 非预期命令 / 代际不符 / nonce 不匹配：不是本会话有效命令的标记，
-                // 丢弃该行而非回退入缓冲，避免残留/伪造标记污染后续命令的输出。
+                // 非本会话的有效标记（伪造/陈旧/nonce 不匹配）：丢弃该行而非回退入缓冲，避免污染后续命令输出。
                 return true;
             }
             if (isError) {
@@ -952,10 +894,6 @@ public final class ShellTool {
 
         /**
          * 完成命令：先取消超时任务，再分发监听器回调，最后完成 {@link CompletableFuture} 并清理登记。
-         * <p>
-         * stdout/stderr 两个读取线程以及超时任务可能并发到达，通过 {@code completed} 原子标志
-         * 保证命令只被完整执行一次（回调与清理均只发生一次）；取消超时任务在分发回调之前，
-         * 消除"回调执行期间超时任务误报"的窗口。
          *
          * @param pc     命令数据
          * @param result 组装好的命令结果
@@ -972,21 +910,19 @@ public final class ShellTool {
         }
 
         /**
-         * 按退出码分发 output/error 回调：先全局监听器，后命令专属监听器。
-         * <p>
-         * 回调在读取线程上执行；回调内请勿同步调用 {@link ShellTool#exec()}（会阻塞读取线程自身）。
+         * 按退出码分发 output/error 回调：先全局监听器，后命令专属监听器；回调在读取线程上执行，回调内请勿同步调用 {@link ShellTool#exec()}。
          *
          * @param pc     命令数据
          * @param result 命令结果
          */
         private void dispatchCallbacks(@NonNull PendingCommand pc, @NonNull CommandResult result) {
             boolean success = "0".equals(result.exitCode());
-            if (globalExecListeners != null) {
+            if (sGlobalExecListeners != null) {
                 try {
                     if (success) {
-                        globalExecListeners.output(result.command(), result.exitCode(), result.outputs());
+                        sGlobalExecListeners.output(result.command(), result.exitCode(), result.outputs());
                     } else {
-                        globalExecListeners.error(result.command(), result.exitCode(), result.errors());
+                        sGlobalExecListeners.error(result.command(), result.exitCode(), result.errors());
                     }
                 } catch (Throwable e) {
                     AndroidLog.logW(TAG, "Error during global exec listener callback for command: " + result.command(), e);
@@ -1006,8 +942,7 @@ public final class ShellTool {
         }
 
         /**
-         * 某条流结束时触发：进程异常死亡则上报 brokenPipe 并关闭；进程存活但流已终止
-         * （如命令重定向关闭流）则按会话失效处理，在途命令以失败完成、残留输出交 brokenPipe 诊断。
+         * 某条流结束时触发：进程异常死亡则上报 brokenPipe 并关闭；进程存活但流已终止（如命令重定向关闭流）则按会话失效处理，在途命令以失败完成、残留输出交 brokenPipe 诊断。
          *
          * @param isError  是否错误流结束
          * @param leftover 流结束时残留的未归属输出行

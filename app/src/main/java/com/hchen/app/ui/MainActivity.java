@@ -34,7 +34,6 @@ import com.hchen.app.R;
  * HookTool 示例应用的主界面 Activity。
  *
  * @author 焕晨HChen
- * @see AppCompatActivity
  */
 public class MainActivity extends AppCompatActivity {
     /**

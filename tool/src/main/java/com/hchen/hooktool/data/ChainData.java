@@ -29,11 +29,6 @@ import java.util.function.Function;
 
 /**
  * 链式 Hook 操作的数据载体，封装了一次链式调用所需的完整上下文信息。
- * <p>
- * 该类持有查找类型（{@link ChainType}）、目标方法名、参数类型列表、可执行对象引用、
- * Hook 回调实例（{@link AbsHook}）以及异常处理策略等关键字段。五种构造场景
- * （精确方法/全部同名方法/精确构造函数/全部构造函数/直接使用可执行对象）
- * 分别由各构造方法文档说明。
  *
  * @author 焕晨HChen
  */
@@ -44,28 +39,23 @@ public final class ChainData {
      * 当前链式调用所采用的查找策略类型，运行时据此决定执行哪种方法查找逻辑。
      */
     public ChainType chainType;
-
     /**
      * 查找阶段解析得到的目标可执行对象数组，初始大小为 1。
      * 当使用 {@code findAll} 系列查找方式时，该数组将被替换为所有匹配到的可执行对象。
      */
     public Executable[] executables = new Executable[1];
-
     /**
      * 用户提供的 Hook 回调实现，在目标方法被调用时执行自定义拦截逻辑。
      */
     public AbsHook absHook;
-
     /**
      * 查找阶段捕获的异常对象。若查找过程正常完成则为 {@code null}。
      */
     public Throwable throwable;
-
     /**
      * 用户注册的异常处理函数，用于在查找失败时决定是否抑制异常或执行降级逻辑。
      */
     public Function<Throwable, Boolean> function;
-
     /**
      * 标记是否在查找失败时静默忽略异常。默认为 {@code false}（即不忽略，会向上抛出）。
      */
@@ -77,7 +67,6 @@ public final class ChainData {
      * 目标方法或构造函数的参数类型列表，用于查找阶段的签名匹配。
      */
     public Object[] parameterTypes;
-
     /**
      * 用户直接提供的可执行对象引用，使用此字段时将跳过方法查找阶段。
      */
@@ -183,11 +172,6 @@ public final class ChainData {
 
     @Override
     public int hashCode() {
-        return Objects.hash(
-            chainType,
-            Arrays.deepHashCode(parameterTypes),
-            executable,
-            methodName
-        );
+        return Objects.hash(chainType, Arrays.deepHashCode(parameterTypes), executable, methodName);
     }
 }

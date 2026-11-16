@@ -31,62 +31,36 @@ import io.github.libxposed.api.XposedInterfaceWrapper;
 
 /**
  * 模块运行时数据存储类，集中管理 Xposed 模块的核心运行状态。
- * <p>
- * 采用静态持有者模式，维护 {@link XposedInterfaceWrapper} 接口实例、
- * 目标应用的 {@link ClassLoader} 以及 Xposed 环境标识等关键数据。
- * <p>
- * 通过本类提供的静态方法可便捷访问 Xposed API 版本信息、框架名称与版本号、
- * 远程 SharedPreferences、模块 ApplicationInfo、模块 APK 路径、远程文件列表
- * 以及类加载器等运行时信息。
  *
  * @author 焕晨HChen
- * @see ModuleConfig
- * @see ModuleEntrance
  */
 public final class ModuleData {
-    /**
-     * 在热更新（Hot Reload）流程中，用于保存和恢复宿主应用 ClassLoader 的键名。
-     * <p>
-     * 热更新 {@code onHotReloading} 阶段，{@link ModuleEntrance} 会将当前
-     * {@link #getClassLoader()} 返回的 ClassLoader 以此键存入 {@code Bundle}；
-     * 在 {@code onHotReloaded} 阶段，再以此键从 {@code Bundle} 中取出并恢复，
-     * 确保新代码能继续使用之前正确的类加载器进行反射或 Hook 操作。
-     *
-     * @see ModuleEntrance#onHotReloading(io.github.libxposed.api.XposedModuleInterface.HotReloadingParam)
-     * @see ModuleEntrance#onHotReloaded(io.github.libxposed.api.XposedModuleInterface.HotReloadedParam)
-     */
     public static final String MODULE_HOST_CLASSLOADER = "module_host_classloader";
-    private static volatile boolean isXposedEnvironment;
-    private static volatile XposedInterfaceWrapper wrapper;
-    private static volatile ClassLoader classLoader;
+    private static volatile boolean sIsXposedEnvironment;
+    private static volatile XposedInterfaceWrapper sWrapper;
+    private static volatile ClassLoader sClassLoader;
 
     private ModuleData() {
     }
 
     /**
      * 设置 Xposed 接口包装器实例。
-     * <p>
-     * 包级私有方法，仅供框架内部调用，外部代码不应直接使用。
-     * 仅在 Xposed 环境下才会被调用，故此处同时把 Xposed 环境标识置为 {@code true}。
      *
-     * @param wrapper Xposed 接口包装器实例，不可为 null
+     * @param wrapper Xposed 接口包装器实例
      */
     static void setWrapper(@NonNull XposedInterfaceWrapper wrapper) {
         Objects.requireNonNull(wrapper, "Xposed wrapper must not be null.");
-        ModuleData.wrapper = wrapper;
-        ModuleData.isXposedEnvironment = true;
+        ModuleData.sWrapper = wrapper;
+        ModuleData.sIsXposedEnvironment = true;
     }
 
     /**
      * 设置目标应用的类加载器。
-     * <p>
-     * 该类加载器用于在 Hook 环境中加载目标应用的类，
-     * 须在调用 {@link #getClassLoader()} 之前完成设置。
      *
-     * @param classLoader 目标应用的 ClassLoader 实例，不可为 null
+     * @param classLoader 目标应用的 ClassLoader 实例
      */
     public static void setClassLoader(@NonNull ClassLoader classLoader) {
-        ModuleData.classLoader = classLoader;
+        ModuleData.sClassLoader = classLoader;
     }
 
     /**
@@ -101,8 +75,8 @@ public final class ModuleData {
             throw new IllegalStateException("Please call in the xposed environment.");
         }
 
-        Objects.requireNonNull(wrapper);
-        return wrapper;
+        Objects.requireNonNull(sWrapper);
+        return sWrapper;
     }
 
     /**
@@ -117,7 +91,7 @@ public final class ModuleData {
     /**
      * 获取当前运行的 Xposed 框架名称。
      *
-     * @return 框架名称字符串，例如 "LSPosed"
+     * @return 框架名称字符串
      */
     @NonNull
     public static String getFrameworkName() {
@@ -225,7 +199,7 @@ public final class ModuleData {
      */
     @NonNull
     public static ClassLoader getClassLoader() {
-        ClassLoader cl = classLoader;
+        ClassLoader cl = sClassLoader;
         if (cl == null) {
             throw new IllegalStateException("ClassLoader has not been set. Ensure ModuleData.setClassLoader() is called before use.");
         }
@@ -248,6 +222,6 @@ public final class ModuleData {
      * @return {@code true} 表示处于 Xposed 环境，{@code false} 表示不在 Xposed 环境
      */
     public static boolean isXposedEnvironment() {
-        return isXposedEnvironment;
+        return sIsXposedEnvironment;
     }
 }
