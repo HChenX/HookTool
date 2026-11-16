@@ -36,6 +36,8 @@ import com.hchen.hooktool.data.RangeMode;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Android 设备与 ROM 信息查询工具类。
@@ -64,68 +66,92 @@ public final class DeviceTool {
     private static final String VERSION_PROPERTY_COLOROS = "ro.build.version.oplusrom.display";
     private static final String VERSION_PROPERTY_COLOROS_FULL = "persist.sys.oplus.ota_ver_display";
     private static final String VERSION_PROPERTY_COLOROS_MARKET = "ro.vendor.oplus.market.name";
+    /**
+     * 版本号的首个数字段及其后一段小数，如 {@code "OS3.0"}、{@code "V14.0.5.0"}。
+     */
+    private static final Pattern VERSION_PATTERN = Pattern.compile("(\\d+)(?:\\.(\\d+))?");
+
+    private static final String BRAND_LOWER = Build.BRAND.toLowerCase(Locale.ROOT);
+    private static final String MANUFACTURER_LOWER = Build.MANUFACTURER.toLowerCase(Locale.ROOT);
+    /**
+     * 小米系设备品牌名称数组，包含 {@code "xiaomi"} 和 {@code "redmi"}。
+     */
+    private static final String[] DEVICE_XIAOMI = {"xiaomi", "redmi"};
+    /**
+     * ColorOS 系设备品牌名称数组，包含 {@code "oppo"}、{@code "realme"}、{@code "oneplus"} 和 {@code "oplus"}。
+     */
+    private static final String[] DEVICE_COLOROS = {"oppo", "realme", "oneplus", "oplus"};
+    /**
+     * 三星设备品牌名称数组，包含 {@code "samsung"}。
+     */
+    private static final String[] DEVICE_SAMSUNG = {"samsung"};
 
     /**
      * 读取当前设备的 MIUI 主版本号。
+     * <p>
+     * 兼容 {@code "V150"}、{@code "V125"}、{@code "V12"} 与 {@code "V14.0.5.0"} 等写法，新版本无需维护映射表。
      *
      * @return MIUI 版本号（如 {@code 14f}、{@code 12.5f}），非 MIUI 环境返回 {@code 0f}
      */
     public static float getMiuiVersion() {
-        return switch (getProp(VERSION_PROPERTY_MIUI).trim()) {
-            case "V150" -> 15f;
-            case "V140" -> 14f;
-            case "V130" -> 13f;
-            case "V125" -> 12.5f;
-            case "V12" -> 12f;
-            case "V11" -> 11f;
-            case "V10" -> 10f;
-            default -> 0f;
-        };
+        return Math.max(0f, parseMiuiVersion(getProp(VERSION_PROPERTY_MIUI)));
     }
 
     /**
      * 读取当前设备的 HyperOS（小米澎湃 OS）主版本号。
+     * <p>
+     * 兼容 {@code "OS3.0"}、{@code "OS2.0.201.0"}、{@code "3.0"} 等写法，新版本无需维护映射表。
      *
      * @return HyperOS 版本号（如 {@code 2f}、{@code 3f}），非 HyperOS 环境返回 {@code 0f}
      */
     public static float getHyperOSVersion() {
-        String raw = getProp(VERSION_PROPERTY_HYPER_OS).trim();
-        float os = switch (raw) {
-            case "OS3.0" -> 3f;
-            case "OS2.0" -> 2f;
-            case "OS1.0" -> 1f;
-            default -> 0f;
-        };
-        if (os == 0f) {
-            os = parseVersionFloat(raw.replace("OS", ""));
-        }
-        return os;
+        return Math.max(0f, parseHyperOSVersion(getProp(VERSION_PROPERTY_HYPER_OS)));
     }
 
     /**
-     * 将版本字符串解析为浮点数；支持多段版本串（如 {@code "2.0.201.0"}）取前两段解析，
-     * 解析失败返回 {@code -1f} 表示无法判定。
+     * 解析 MIUI 版本号：兼容带点的完整版本串与紧凑版本码（{@code "V150"} → {@code 15.0}、
+     * {@code "V125"} → {@code 12.5}、{@code "V12"} → {@code 12.0}）。
      *
-     * @param raw 版本字符串
-     * @return 解析得到的版本号；无法解析时返回 {@code -1f}
+     * @param raw 系统属性原始值
+     * @return 解析结果；无法解析时返回 {@code -1f}
      */
-    private static float parseVersionFloat(String raw) {
-        if (TextUtils.isEmpty(raw)) {
+    private static float parseMiuiVersion(@NonNull String raw) {
+        String value = raw.trim();
+        if (!value.isEmpty() && (value.charAt(0) == 'V' || value.charAt(0) == 'v')) {
+            value = value.substring(1).trim();
+        }
+        Matcher matcher = VERSION_PATTERN.matcher(value);
+        if (!matcher.find()) {
             return -1f;
         }
-        try {
-            return Float.parseFloat(raw);
-        } catch (NumberFormatException e) {
-            String[] parts = raw.split("\\.");
-            if (parts.length >= 2) {
-                try {
-                    return Float.parseFloat(parts[0] + "." + parts[1]);
-                } catch (NumberFormatException ignore) {
-                    return -1f;
-                }
-            }
+        String major = matcher.group(1);
+        String minor = matcher.group(2);
+        if (minor != null) {
+            return Float.parseFloat(major + "." + minor);
+        }
+        // 紧凑版本码的最后一位是次版本号：V150 -> 15.0，V125 -> 12.5。
+        if (major.length() >= 3) {
+            return Float.parseFloat(major.substring(0, major.length() - 1)
+                + "." + major.charAt(major.length() - 1));
+        }
+        return Float.parseFloat(major);
+    }
+
+    /**
+     * 解析 HyperOS 版本号：取首个数字段及其后一段小数（{@code "OS3.0"} → {@code 3.0}、
+     * {@code "OS2.0.201.0"} → {@code 2.0}）。
+     *
+     * @param raw 系统属性原始值
+     * @return 解析结果；无法解析时返回 {@code -1f}
+     */
+    private static float parseHyperOSVersion(@NonNull String raw) {
+        Matcher matcher = VERSION_PATTERN.matcher(raw.trim());
+        if (!matcher.find()) {
             return -1f;
         }
+        String major = matcher.group(1);
+        String minor = matcher.group(2);
+        return Float.parseFloat(minor == null ? major : major + "." + minor);
     }
 
     /**
@@ -277,22 +303,33 @@ public final class DeviceTool {
         return mode.matches(parseVersionFloat(v), version);
     }
 
-    // ----------------------- 品牌 / ROM 判定 -------------------------
+    /**
+     * 将版本字符串解析为浮点数；支持多段版本串（如 {@code "2.0.201.0"}）取前两段解析，
+     * 解析失败返回 {@code -1f} 表示无法判定。
+     *
+     * @param raw 版本字符串
+     * @return 解析得到的版本号；无法解析时返回 {@code -1f}
+     */
+    private static float parseVersionFloat(String raw) {
+        if (TextUtils.isEmpty(raw)) {
+            return -1f;
+        }
+        try {
+            return Float.parseFloat(raw);
+        } catch (NumberFormatException e) {
+            String[] parts = raw.split("\\.");
+            if (parts.length >= 2) {
+                try {
+                    return Float.parseFloat(parts[0] + "." + parts[1]);
+                } catch (NumberFormatException ignore) {
+                    return -1f;
+                }
+            }
+            return -1f;
+        }
+    }
 
-    private static final String BRAND_LOWER = Build.BRAND.toLowerCase(Locale.ROOT);
-    private static final String MANUFACTURER_LOWER = Build.MANUFACTURER.toLowerCase(Locale.ROOT);
-    /**
-     * 小米系设备品牌名称数组，包含 {@code "xiaomi"} 和 {@code "redmi"}。
-     */
-    private static final String[] DEVICE_XIAOMI = {"xiaomi", "redmi"};
-    /**
-     * ColorOS 系设备品牌名称数组，包含 {@code "oppo"}、{@code "realme"}、{@code "oneplus"} 和 {@code "oplus"}。
-     */
-    private static final String[] DEVICE_COLOROS = {"oppo", "realme", "oneplus", "oplus"};
-    /**
-     * 三星设备品牌名称数组，包含 {@code "samsung"}。
-     */
-    private static final String[] DEVICE_SAMSUNG = {"samsung"};
+    // ----------------------- 品牌 / ROM 判定 -------------------------
 
     /**
      * 获取小米系品牌名称的不可变列表。
@@ -346,13 +383,11 @@ public final class DeviceTool {
 
     /**
      * 判断当前系统是否为 HyperOS（小米澎湃 OS）。
-     * <p>
-     * 只检查属性是否为空，故版本号解析失败时仍可能返回 {@code true}。
      *
      * @return 当前系统为 HyperOS 时返回 {@code true}
      */
     public static boolean isHyperOS() {
-        return !TextUtils.isEmpty(getProp(VERSION_PROPERTY_HYPER_OS).trim());
+        return getHyperOSVersion() != 0f;
     }
 
     /**

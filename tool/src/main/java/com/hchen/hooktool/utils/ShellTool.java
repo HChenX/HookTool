@@ -278,6 +278,12 @@ public final class ShellTool {
         return sShellImpl.submitCommand(null);
     }
 
+    /**
+     * 异步执行已添加的命令，并仅向本次监听器回调结果。
+     *
+     * @param execListener 本次命令的监听器
+     * @return 命令结果的 {@link CompletableFuture} 句柄
+     */
     @NonNull
     public CompletableFuture<ShellResult> async(@NonNull IExecListener execListener) {
         return sShellImpl.submitCommand(execListener);
@@ -294,6 +300,12 @@ public final class ShellTool {
         return checkRootSync(null);
     }
 
+    /**
+     * 同步检查 Root 权限，并通过监听器回调结果。
+     *
+     * @param execListener 接收 Root 检测结果的监听器
+     * @return 具备 Root 权限返回 {@code true}
+     */
     public static boolean isRootAvailable(@NonNull IExecListener execListener) {
         return checkRootSync(execListener);
     }
@@ -458,50 +470,67 @@ public final class ShellTool {
          * @throws IllegalStateException 当 Shell 流已失效时抛出
          */
         @NonNull
-        private synchronized CompletableFuture<ShellResult> submitCommand(@Nullable IExecListener perCmdListener) {
-            if (!isActive()) {
-                throw new IllegalStateException("Shell stream is dead.");
+        private CompletableFuture<ShellResult> submitCommand(@Nullable IExecListener perCmdListener) {
+            final String cmd;
+            synchronized (this) {
+                if (!isActive()) {
+                    throw new IllegalStateException("Shell stream is dead.");
+                }
+                splicingCommandIfNeeded();
+                cmd = command;
+                command = null;
             }
 
-            splicingCommandIfNeeded();
-            if (command == null) {
+            if (cmd == null) {
                 return CompletableFuture.completedFuture(new ShellResult.Failed(ShellFailureReason.NOT_CONFIGURED));
             }
+
+            // 监听器回调不持锁执行：回调内再调用 ShellTool 时不会与关闭流程互锁。
             if (sGlobalCommandListener != null) {
                 boolean allowed;
                 try {
-                    allowed = sGlobalCommandListener.onCommand(command);
+                    allowed = sGlobalCommandListener.onCommand(cmd);
                 } catch (Throwable e) {
                     // 监听器回调异常隔离：不中断执行，保守拦截该命令。
                     AndroidLog.logW(TAG, "Error during global command listener callback.", e);
                     allowed = false;
                 }
                 if (!allowed) {
-                    command = null;
                     return CompletableFuture.completedFuture(new ShellResult.Failed(ShellFailureReason.INTERCEPTED));
                 }
             }
 
-            String cmd = command;
-            command = null;
-            long id = sNextCommandId.incrementAndGet();
-            // 每命令独立随机 nonce：结束标记前缀不可预测，防止命令输出内容伪造标记截断/污染结果。
-            String nonce = UUID.randomUUID().toString().replace("-", "").substring(0, 8);
-            StreamThread.PendingCommand pc =
-                new StreamThread.PendingCommand(id, generation, cmd, perCmdListener, nonce);
-            streamThread.pending.put(id, pc);
+            final long id;
+            final String nonce;
+            final StreamThread st;
+            final String tokenSnapshot;
+            final StreamThread.PendingCommand pc;
+            synchronized (this) {
+                if (!isActive()) {
+                    return CompletableFuture.completedFuture(new ShellResult.Failed(ShellFailureReason.IO_ERROR));
+                }
+                id = sNextCommandId.incrementAndGet();
+                // 每命令独立随机 nonce：结束标记前缀不可预测，防止命令输出内容伪造标记截断/污染结果。
+                nonce = UUID.randomUUID().toString().replace("-", "").substring(0, 8);
+                st = streamThread;
+                tokenSnapshot = token;
+                pc = new StreamThread.PendingCommand(id, generation, cmd, perCmdListener, nonce);
+                st.pending.put(id, pc);
+            }
+
             String marker = String.format(Locale.ROOT,
                 "__HT_RET=$?; echo HTM_%s_%d_%s,$__HT_RET; echo HTM_%s_%d_%s,$__HT_RET 1>&2; unset __HT_RET",
-                token, id, nonce, token, id, nonce
+                tokenSnapshot, id, nonce, tokenSnapshot, id, nonce
             );
 
+            // 写管道可能阻塞（对端不读时），放在 ShellImpl 监视器之外，避免阻塞 close()。
             synchronized (writeLock) {
                 boolean ok = write("{");
                 ok &= writeAll(cmd.split("\n"));
                 ok &= write("}");
                 ok &= write(marker);
                 if (!ok) {
-                    streamThread.pending.remove(id);
+                    st.pending.remove(id);
                     pc.future.complete(new ShellResult.Failed(ShellFailureReason.IO_ERROR));
                     return pc.future;
                 }
@@ -513,20 +542,23 @@ public final class ShellTool {
 
         @NonNull
         private ShellResult exec() {
-            String cmd = command;
+            String cmd;
+            synchronized (this) {
+                cmd = command;
+            }
             CompletableFuture<ShellResult> future = submitCommand(null);
             try {
                 // 预飞行失败（未添加命令/被拦截）的 future 已处于完成态，get 立即返回。
                 return future.get(EXEC_TIMEOUT_MS, TimeUnit.MILLISECONDS);
             } catch (TimeoutException e) {
-                AndroidLog.logW(TAG, "Shell exec timed out for command: " + cmd, e);
+                AndroidLog.logW(TAG, "Shell exec timed out for command: " + cmd + ".", e);
                 return new ShellResult.Failed(ShellFailureReason.TIMEOUT);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 AndroidLog.logW(TAG, "Shell exec interrupted while waiting for result.", e);
                 return new ShellResult.Failed(ShellFailureReason.INTERRUPTED);
             } catch (ExecutionException e) {
-                AndroidLog.logE(TAG, "Shell exec failed for command: " + cmd, e);
+                AndroidLog.logE(TAG, "Shell exec failed for command: " + cmd + ".", e);
                 return new ShellResult.Failed(ShellFailureReason.IO_ERROR);
             }
         }
@@ -599,7 +631,7 @@ public final class ShellTool {
                 output.flush();
                 return true;
             } catch (IOException e) {
-                AndroidLog.logE(TAG, "Error writing commands to shell stream: " + java.util.Arrays.toString(commands), e);
+                AndroidLog.logE(TAG, "Error writing commands to shell stream: " + java.util.Arrays.toString(commands) + ".", e);
                 return false;
             }
         }
@@ -610,9 +642,12 @@ public final class ShellTool {
                 if (process == null && streamThread == null) {
                     return;
                 }
+                // isActive() 在 closing 为 true 时恒返回 false，必须在置位前判断存活。
+                boolean alive = process != null && process.isAlive()
+                    && streamThread != null && streamThread.isActive();
                 closing = true;
                 try {
-                    if (isActive()) {
+                    if (alive) {
                         synchronized (writeLock) {
                             write("exit");
                         }
@@ -867,7 +902,7 @@ public final class ShellTool {
                 String exitCode = body.substring(comma + 1).trim();
                 return new Marker(id, nonce, exitCode);
             } catch (NumberFormatException e) {
-                AndroidLog.logD(TAG, "Ignoring unparseable shell marker line: " + line, e);
+                AndroidLog.logD(TAG, "Ignoring unparseable shell marker line: " + line + ".", e);
                 return null;
             }
         }

@@ -37,9 +37,6 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author 焕晨HChen
  */
 public final class LogExpand {
-    private LogExpand() {
-    }
-
     /**
      * 日志增强路径配置快照，用于检测配置变更并失效 TAG 缓存。
      */
@@ -52,6 +49,9 @@ public final class LogExpand {
      * TAG 解析结果缓存：键为命中的栈帧全限定类名，值为解析出的标签。
      */
     private static final ConcurrentHashMap<String, String> TAG_CACHE = new ConcurrentHashMap<>();
+
+    private LogExpand() {
+    }
 
     /**
      * 将指定异常的完整堆栈跟踪序列化为字符串。

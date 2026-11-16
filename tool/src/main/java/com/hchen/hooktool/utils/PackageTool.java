@@ -283,7 +283,7 @@ public final class PackageTool {
                     appData.icon = BitmapTool.drawableToBitmap(applicationInfo.loadIcon(pm));
                 } catch (RuntimeException e) {
                     // 图标加载失败只降级为 null，不中断整体转换。
-                    AndroidLog.logW(TAG, "Failed to load icon for package: " + applicationInfo.packageName, e);
+                    AndroidLog.logW(TAG, "Failed to load icon for package: " + applicationInfo.packageName + ".", e);
                     appData.icon = null;
                 }
             }
@@ -291,7 +291,7 @@ public final class PackageTool {
                 appData.label = applicationInfo.loadLabel(pm).toString();
             } catch (RuntimeException e) {
                 // 个别应用资源解析失败（如畸形 label）时降级为 null。
-                AndroidLog.logE(TAG, "Failed to load label for package: " + applicationInfo.packageName, e);
+                AndroidLog.logE(TAG, "Failed to load label for package: " + applicationInfo.packageName + ".", e);
                 appData.label = null;
             }
             appData.packageName = applicationInfo.packageName;

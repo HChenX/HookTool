@@ -34,7 +34,7 @@ import java.util.Objects;
  *
  * @author 焕晨HChen
  */
-public class AppData implements Parcelable {
+public final class AppData implements Parcelable {
     /**
      * 与该应用关联的 {@link PackageInfo} 对象，其中包含完整的包级别元数据信息。
      * 仅当输入为 {@link PackageInfo} 类型时才会被填充，其余输入类型下恒为 {@code null}。
@@ -88,6 +88,18 @@ public class AppData implements Parcelable {
      * 指示该应用当前是否处于启用状态。{@code true} 表示已启用，{@code false} 表示已被停用。
      */
     public boolean isEnabled;
+
+    public static final Creator<AppData> CREATOR = new Creator<AppData>() {
+        @Override
+        public AppData createFromParcel(Parcel in) {
+            return new AppData(in);
+        }
+
+        @Override
+        public AppData[] newArray(int size) {
+            return new AppData[size];
+        }
+    };
 
     public AppData() {
     }
@@ -159,16 +171,4 @@ public class AppData implements Parcelable {
     public int describeContents() {
         return 0;
     }
-
-    public static final Creator<AppData> CREATOR = new Creator<AppData>() {
-        @Override
-        public AppData createFromParcel(Parcel in) {
-            return new AppData(in);
-        }
-
-        @Override
-        public AppData[] newArray(int size) {
-            return new AppData[size];
-        }
-    };
 }

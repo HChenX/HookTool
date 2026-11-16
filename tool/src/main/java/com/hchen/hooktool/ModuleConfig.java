@@ -137,7 +137,7 @@ public final class ModuleConfig {
      * -keepnames class com.hchen.demo.hook.**$*
      * }</pre>
      *
-     * @param paths 需要扫描的包路径数组，支持可变参数
+     * @param paths 需要扫描的包路径集合
      */
     public static void setLogExpandPaths(@NonNull Set<String> paths) {
         ModuleConfig.sLogExpandPaths = new HashSet<>(paths);
@@ -148,7 +148,7 @@ public final class ModuleConfig {
      * <p>
      * 扫描调用栈时会跳过此处指定的类，以排除干扰项并提高 TAG 识别准确性。
      *
-     * @param names 需要忽略的完整类名数组，支持可变参数
+     * @param names 需要忽略的完整类名集合
      */
     public static void setLogExpandIgnoreClassNames(@NonNull Set<String> names) {
         ModuleConfig.sLogExpandIgnoreClassNames = new HashSet<>(names);
@@ -199,9 +199,9 @@ public final class ModuleConfig {
     }
 
     /**
-     * 获取日志增强扫描路径列表。
+     * 获取日志增强扫描路径集合。
      *
-     * @return 扫描路径数组
+     * @return 扫描路径集合
      */
     @NonNull
     public static Set<String> getLogExpandPaths() {
@@ -209,9 +209,9 @@ public final class ModuleConfig {
     }
 
     /**
-     * 获取日志增强扫描时忽略的类名列表。
+     * 获取日志增强扫描时忽略的类名集合。
      *
-     * @return 忽略类名数组
+     * @return 忽略类名集合
      */
     @NonNull
     public static Set<String> getLogExpandIgnoreClassNames() {

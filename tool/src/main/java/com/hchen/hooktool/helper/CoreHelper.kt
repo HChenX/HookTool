@@ -157,24 +157,20 @@ object CoreHelper {
         recompute: (String) -> Optional<T>,
         error: () -> Throwable,
     ): T {
-        while (true) {
-            val cached = map[key]
-            if (cached != null) {
-                if (cached.isEmpty()) throw error()
-                val value = cached.getOrNull()
-                if (value != null) return value
-                val fresh = recompute(key)
-                map.compute(key) { _, _ -> fresh }
-                val freshValue = fresh.getOrNull() ?: throw error()
-                return freshValue
-            }
-            val computed = map.computeIfAbsent(key, recompute)
-            val value = computed.getOrNull()
+        val cached = map[key]
+        if (cached != null) {
+            if (cached.isEmpty()) throw error()
+            val value = cached.getOrNull()
             if (value != null) return value
-            // computeIfAbsent 返回的条目弱引用可能恰好被清除，此处直接抛错兜底。
-            val freshValue = computed.orElseThrow(error)
-            return freshValue
+            val fresh = recompute(key)
+            map.compute(key) { _, _ -> fresh }
+            return fresh.getOrNull() ?: throw error()
         }
+        val computed = map.computeIfAbsent(key, recompute)
+        val value = computed.getOrNull()
+        if (value != null) return value
+        // computeIfAbsent 返回的条目弱引用可能恰好被清除，此处直接抛错兜底。
+        return computed.orElseThrow(error)
     }
 
     /**

@@ -42,6 +42,12 @@ public final class PrefsTool {
     private PrefsTool() {
     }
 
+    /**
+     * 获取模块端默认名称的 SharedPreferences 实例。
+     *
+     * @param context 上下文
+     * @return 默认名称对应的 SharedPreferences 实例
+     */
     @NonNull
     public static SharedPreferences prefs(@NonNull Context context) {
         return prefs(context, "");
@@ -59,6 +65,11 @@ public final class PrefsTool {
         return createSharedPreferences(context, prefsName);
     }
 
+    /**
+     * 在 Xposed 宿主进程中获取模块默认名称的 SharedPreferences 实例。
+     *
+     * @return 跨进程访问的 SharedPreferences 实例
+     */
     @NonNull
     public static SharedPreferences prefs() {
         return prefs("");
@@ -77,7 +88,7 @@ public final class PrefsTool {
 
     private static SharedPreferences createSharedPreferences(@NonNull String prefsName) {
         String resolvedName = initPrefsName(prefsName);
-        String key = ModuleData.getModulePackageName() + resolvedName;
+        String key = ModuleData.getModulePackageName() + "|" + resolvedName;
         return sHostPreferences.computeIfAbsent(key, new Function<String, SharedPreferences>() {
             @Override
             public SharedPreferences apply(String k) {
@@ -88,7 +99,7 @@ public final class PrefsTool {
 
     private static SharedPreferences createSharedPreferences(@NonNull Context context, @NonNull String prefsName) {
         String resolvedName = initPrefsName(prefsName);
-        String key = context.getPackageName() + resolvedName;
+        String key = context.getPackageName() + "|" + resolvedName;
         return sModulePreferences.computeIfAbsent(key, new Function<String, SharedPreferences>() {
             @Override
             public SharedPreferences apply(String k) {
@@ -109,7 +120,8 @@ public final class PrefsTool {
         if (name.isEmpty()) {
             if (ModuleConfig.getPrefsName().isEmpty()) {
                 if (ModuleData.getModulePackageName().isEmpty())
-                    throw new IllegalArgumentException("What prefs name you want use?");
+                    throw new IllegalArgumentException(
+                        "Unable to determine prefs name: call ModuleConfig.setPrefsName() or run in the module process.");
 
                 return ModuleData.getModulePackageName().toLowerCase(Locale.ROOT) + "_prefs";
             }

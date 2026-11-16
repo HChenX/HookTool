@@ -62,6 +62,13 @@ public enum RangeMode {
         };
     }
 
+    /**
+     * 判断整数值是否满足当前比较关系。
+     *
+     * @param actual 实际测量值
+     * @param target 目标比较值
+     * @return 满足比较关系时返回 {@code true}
+     */
     public boolean matches(int actual, int target) {
         return matches((float) actual, (float) target);
     }

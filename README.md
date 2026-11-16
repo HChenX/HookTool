@@ -12,7 +12,7 @@
 <p>简易的 Hook 工具，旨在降低 Hook 编写复杂度</p>
 </div>
 
-# 🔧 使用方法
+### 🔧 使用方法
 
 #### 1. 向项目 settings.gradle 文件添加如下代码
 
@@ -30,24 +30,11 @@ dependencyResolutionManagement {
 
 ```groovy
 dependencies {
-    implementation 'com.github.HChenX:HookTool:3.0.0'
+    compileOnly 'io.github.libxposed:api:102.0.0'
+    implementation 'com.github.HChenX:HookTool:3.2.2'
 }
 ```
 
-#### 3. 同步项目，下载依赖后即可使用
-
-# 💕 以下项目使用了本工具
-
-|      项目名称       |                             项目链接                             |
-|:---------------:|:------------------------------------------------------------:|
-|  AppRetention   |    [AppRetention](https://github.com/HChenX/AppRetention)    |
-| AutoSEffSwitch  |  [AutoSEffSwitch](https://github.com/HChenX/AutoSEffSwitch)  |
-| SwitchFreeForm  |  [SwitchFreeForm](https://github.com/HChenX/SwitchFreeForm)  |
-|  ForegroundPin  |   [ForegroundPin](https://github.com/HChenX/ForegroundPin)   |
-|  ClipboardList  |   [ClipboardList](https://github.com/HChenX/ClipboardList)   |
-| SplitScreenPlus | [SplitScreenPlus](https://github.com/HChenX/SplitScreenPlus) |
-|   SuperLyric    |      [SuperLyric](https://github.com/HChenX/SuperLyric)      |
-
-# 🎉 结语
+### 🎉 结语
 
 - 感谢您使用本工具！Enjoy your day! ♥️

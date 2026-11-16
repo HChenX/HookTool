@@ -45,6 +45,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import io.github.libxposed.api.XposedInterface;
 
@@ -59,6 +60,71 @@ public final class ResInjectTool {
     private static final ConcurrentHashMap<String, Pair<ReplacementType, Object>> sReplacements = new ConcurrentHashMap<>();
     private static final AtomicBoolean sIsInjected = new AtomicBoolean(false);
     private static final AtomicBoolean sIsHooked = new AtomicBoolean(false);
+
+    private static volatile int sStyleNumEntries;
+    private static volatile int sStyleType;
+    private static volatile int sStyleResourceId;
+    /**
+     * 已注册替换规则数，用于 hook 回调热路径的空表短路：非零才进入完整的资源名解析与查找。
+     */
+    private static final AtomicInteger sReplacementCount = new AtomicInteger();
+
+    private static final AbsHook sHookResBefore = new AbsHook() {
+        @Override
+        public void before() {
+            String methodName = null;
+            try {
+                methodName = getExecutable().getName();
+                Object value = getResourceReplacement((Method) getExecutable(), (Resources) getThisObject(), getArgs());
+                if (value != null) {
+                    if ("getDimensionPixelOffset".equals(methodName) || "getDimensionPixelSize".equals(methodName)) {
+                        if (value instanceof Float) value = Math.round((Float) value);
+                    }
+                    setResult(value);
+                }
+            } catch (Throwable t) {
+                XposedLog.logW(TAG, "Failed to replace resource (method: " + methodName + ").", t);
+            }
+        }
+    };
+
+    private static final AbsHook sHookTypedBefore = new AbsHook() {
+        @Override
+        public void before() {
+            String methodName = null;
+            try {
+                int index = (int) getArg(0);
+                index *= sStyleNumEntries;
+                int[] data = (int[]) CoreTool.getField(getThisObject(), "mData");
+                if (data == null) return;
+                // 越界校验：部分 ROM 的 TypedArray 实现或索引异常时避免中断替换逻辑。
+                if (index < 0 || index >= data.length - sStyleResourceId - 1) return;
+
+                int type = data[index + sStyleType];
+                int id = data[index + sStyleResourceId];
+                if (type != TypedValue.TYPE_NULL /* 不为空数据 */ && id != 0 /* 储存的是资源 */) {
+                    methodName = getExecutable().getName();
+                    Resources resources = (Resources) CoreTool.getField(getThisObject(), "mResources");
+                    if (resources == null) return;
+                    Resources.Theme theme = (Resources.Theme) CoreTool.getField(getThisObject(), "mTheme");
+
+                    Object value = getTypedArrayReplacement(resources, theme, id, methodName, getArgs());
+                    if (value != null) {
+                        if (
+                            "getDimensionPixelOffset".equals(methodName) ||
+                                "getDimensionPixelSize".equals(methodName) ||
+                                "getLayoutDimension".equals(methodName)
+                        ) {
+                            if (value instanceof Float) value = Math.round((Float) value);
+                        }
+                        setResult(value);
+                    }
+                }
+            } catch (Throwable t) {
+                XposedLog.logW(TAG, "Failed to replace typed array resource (method: " + methodName + ").", t);
+            }
+        }
+    };
 
     /**
      * 资源替换类型枚举。
@@ -182,7 +248,7 @@ public final class ResInjectTool {
     public static void setResReplacement(@NonNull String packageName, @NonNull String type, @NonNull String resName, int replacementResId) {
         applyHooks();
         sReplacements.put(packageName + ":" + type + "/" + resName, new Pair<>(ReplacementType.ID, replacementResId));
-        sReplacementCount++;
+        sReplacementCount.incrementAndGet();
     }
 
     /**
@@ -198,7 +264,7 @@ public final class ResInjectTool {
     public static void setDensityReplacement(@NonNull String packageName, @NonNull String type, @NonNull String resName, float replacementResValue) {
         applyHooks();
         sReplacements.put(packageName + ":" + type + "/" + resName, new Pair<>(ReplacementType.DENSITY, replacementResValue));
-        sReplacementCount++;
+        sReplacementCount.incrementAndGet();
     }
 
     /**
@@ -214,16 +280,8 @@ public final class ResInjectTool {
     public static void setObjectReplacement(@NonNull String packageName, @NonNull String type, @NonNull String resName, Object replacementResValue) {
         applyHooks();
         sReplacements.put(packageName + ":" + type + "/" + resName, new Pair<>(ReplacementType.OBJECT, replacementResValue));
-        sReplacementCount++;
+        sReplacementCount.incrementAndGet();
     }
-
-    private static volatile int sStyleNumEntries;
-    private static volatile int sStyleType;
-    private static volatile int sStyleResourceId;
-    /**
-     * 已注册替换规则数，用于 hook 回调热路径的空表短路：非零才进入完整的资源名解析与查找。
-     */
-    private static volatile int sReplacementCount;
 
     /**
      * 对 {@link Resources} 和 {@link TypedArray} 的各类资源获取方法进行 hook，使其支持运行时替换。
@@ -297,63 +355,6 @@ public final class ResInjectTool {
         CoreTool.hookMethod(TypedArray.class, "getFraction", int.class, int.class, int.class, float.class, sHookTypedBefore); // float
     }
 
-    private static final AbsHook sHookResBefore = new AbsHook() {
-        @Override
-        public void before() {
-            String methodName = null;
-            try {
-                methodName = getExecutable().getName();
-                Object value = getResourceReplacement((Method) getExecutable(), (Resources) getThisObject(), getArgs());
-                if (value != null) {
-                    if ("getDimensionPixelOffset".equals(methodName) || "getDimensionPixelSize".equals(methodName)) {
-                        if (value instanceof Float) value = Math.round((Float) value);
-                    }
-                    setResult(value);
-                }
-            } catch (Throwable t) {
-                XposedLog.logW(TAG, "Failed to replace resource (method: " + methodName + ").", t);
-            }
-        }
-    };
-
-    private static final AbsHook sHookTypedBefore = new AbsHook() {
-        @Override
-        public void before() {
-            String methodName = null;
-            try {
-                int index = (int) getArg(0);
-                index *= sStyleNumEntries;
-                int[] data = (int[]) CoreTool.getField(getThisObject(), "mData");
-                if (data == null) return;
-                // 越界校验：部分 ROM 的 TypedArray 实现或索引异常时避免中断替换逻辑。
-                if (index < 0 || index >= data.length - sStyleResourceId - 1) return;
-
-                int type = data[index + sStyleType];
-                int id = data[index + sStyleResourceId];
-                if (type != TypedValue.TYPE_NULL /* 不为空数据 */ && id != 0 /* 储存的是资源 */) {
-                    methodName = getExecutable().getName();
-                    Resources resources = (Resources) CoreTool.getField(getThisObject(), "mResources");
-                    if (resources == null) return;
-                    Resources.Theme theme = (Resources.Theme) CoreTool.getField(getThisObject(), "mTheme");
-
-                    Object value = getTypedArrayReplacement(resources, theme, id, methodName, getArgs());
-                    if (value != null) {
-                        if (
-                            "getDimensionPixelOffset".equals(methodName) ||
-                                "getDimensionPixelSize".equals(methodName) ||
-                                "getLayoutDimension".equals(methodName)
-                        ) {
-                            if (value instanceof Float) value = Math.round((Float) value);
-                        }
-                        setResult(value);
-                    }
-                }
-            } catch (Throwable t) {
-                XposedLog.logW(TAG, "Failed to replace typed array resource (method: " + methodName + ").", t);
-            }
-        }
-    };
-
     /**
      * 在已注册的替换规则中查找与指定资源 ID 匹配的规则。
      * <p>
@@ -374,7 +375,7 @@ public final class ResInjectTool {
             resName = res.getResourceEntryName(resId);
         } catch (Throwable e) {
             // 无效 resId 属预期路径，D 级记录便于排查替换未生效。
-            XposedLog.logD(TAG, "Failed to resolve resource name for id: " + resId, e);
+            XposedLog.logD(TAG, "Failed to resolve resource name for id: " + resId + ".", e);
         }
 
         if (packageName == null || resType == null || resName == null) return null;
@@ -399,7 +400,7 @@ public final class ResInjectTool {
      */
     @Nullable
     private static Object getResourceReplacement(@NonNull Method method, @NonNull Resources res, @NonNull Object[] params) {
-        if (sReplacementCount == 0) return null;
+        if (sReplacementCount.get() == 0) return null;
         Pair<ReplacementType, Object> replacement = findReplacement(res, (int) params[0]);
         if (replacement == null) return null;
 
@@ -438,7 +439,7 @@ public final class ResInjectTool {
      */
     @Nullable
     private static Object getTypedArrayReplacement(@NonNull Resources res, @Nullable Resources.Theme theme, int id, @NonNull String methodName, @NonNull Object[] params) {
-        if (sReplacementCount == 0) return null;
+        if (sReplacementCount.get() == 0) return null;
         Pair<ReplacementType, Object> replacement = findReplacement(res, id);
         if (replacement == null) return null;
 

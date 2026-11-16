@@ -65,7 +65,7 @@ public class HookEntrance extends ModuleEntrance {
     @NonNull
     @Override
     public Set<String> skipPackages() {
-        return Set.of("com.miui.contentcatcher");
+        return Set.of();
     }
 
     /**

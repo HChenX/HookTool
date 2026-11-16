@@ -28,6 +28,8 @@ import android.graphics.Rect;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.view.Display;
+import android.view.View;
+import android.view.WindowInsets;
 import android.view.WindowManager;
 
 import androidx.annotation.NonNull;
@@ -42,6 +44,7 @@ import com.hchen.hooktool.log.AndroidLog;
  */
 public final class UiTool {
     private static final String TAG = "UiTool";
+    private static final ThreadLocal<Paint> MEASURE_PAINT = ThreadLocal.withInitial(Paint::new);
 
     private UiTool() {
     }
@@ -162,10 +165,20 @@ public final class UiTool {
      * 获取当前屏幕的字体缩放因子（用户字体大小偏好）。
      *
      * @param context 上下文
-     * @return 字体缩放因子
+     * @return 字体缩放因子（{@code 1.0} 表示标准字体）
+     */
+    public static float getFontScale(@NonNull Context context) {
+        return context.getResources().getConfiguration().fontScale;
+    }
+
+    /**
+     * 获取当前屏幕的缩放密度（{@code density * fontScale}，即 sp 与 px 的换算系数）。
+     *
+     * @param context 上下文
+     * @return 缩放密度
      */
     public static float getScaledDensity(@NonNull Context context) {
-        return context.getResources().getConfiguration().fontScale;
+        return context.getResources().getDisplayMetrics().scaledDensity;
     }
 
     /**
@@ -377,29 +390,25 @@ public final class UiTool {
      * @return 软键盘可见时返回 {@code true}
      */
     public static boolean isKeyboardVisible(@NonNull Activity activity) {
-        Rect rect = new Rect();
-        activity.getWindow().getDecorView().getWindowVisibleDisplayFrame(rect);
-        int screenHeight = activity.getWindow().getDecorView().getRootView().getHeight();
-        return screenHeight - rect.bottom > 0;
+        return getKeyboardHeight(activity) > 0;
     }
 
     /**
-     * 获取当前软键盘的高度（单位：px）。
+     * 获取当前软键盘的高度（单位：px），基于 {@link WindowInsets.Type#ime()}。
      *
      * @param activity 目标 {@link Activity}
      * @return 软键盘高度（px），未弹出时返回 {@code 0}
      */
     public static int getKeyboardHeight(@NonNull Activity activity) {
-        Rect rect = new Rect();
-        activity.getWindow().getDecorView().getWindowVisibleDisplayFrame(rect);
-        int screenHeight = activity.getWindow().getDecorView().getRootView().getHeight();
-        int height = screenHeight - rect.bottom;
-        return Math.max(0, height);
+        View decorView = activity.getWindow().getDecorView();
+        WindowInsets insets = decorView.getRootWindowInsets();
+        if (insets == null) {
+            return 0;
+        }
+        return insets.getInsets(WindowInsets.Type.ime()).bottom;
     }
 
     // ----------------------- 文本测量 -------------------------
-
-    private static final ThreadLocal<Paint> MEASURE_PAINT = ThreadLocal.withInitial(Paint::new);
 
     /**
      * 测量指定文本在给定字号（sp）下的渲染像素宽度。

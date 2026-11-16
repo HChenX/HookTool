@@ -49,9 +49,11 @@ import io.github.libxposed.api.XposedModule;
  * @author 焕晨HChen
  */
 public abstract class ModuleEntrance extends XposedModule {
+    private static final String TAG = "ModuleEntrance";
     private volatile boolean mShouldSkipPackage = false;
     private volatile String mProcessName = "";
     private volatile String mPackageName = "";
+    private volatile HookHandle mHandle;
 
     /**
      * 初始化模块配置的抽象方法。
@@ -62,9 +64,9 @@ public abstract class ModuleEntrance extends XposedModule {
     public abstract void loadConfig();
 
     /**
-     * 返回需要跳过处理的目标包名列表。
+     * 返回需要跳过处理的目标包名集合。
      *
-     * @return 需要跳过的包名数组，默认返回空数组表示不跳过任何包
+     * @return 需要跳过的包名集合，默认返回空集合表示不跳过任何包
      */
     @NonNull
     public Set<String> skipPackages() {
@@ -198,6 +200,10 @@ public abstract class ModuleEntrance extends XposedModule {
 
         mShouldSkipPackage = false;
         mPackageName = param.getPackageName();
+        ClassLoader defaultClassLoader = param.getDefaultClassLoader();
+        if (defaultClassLoader != null) {
+            ModuleData.setClassLoader(defaultClassLoader);
+        }
         handlePackageLoaded(param);
     }
 
@@ -208,6 +214,11 @@ public abstract class ModuleEntrance extends XposedModule {
     public final void onPackageReady(@NonNull PackageReadyParam param) {
         if (mShouldSkipPackage) {
             return;
+        }
+
+        ClassLoader classLoader = param.getClassLoader();
+        if (classLoader != null) {
+            ModuleData.setClassLoader(classLoader);
         }
 
         hookApplication(param);
@@ -241,11 +252,11 @@ public abstract class ModuleEntrance extends XposedModule {
             Map<String, Object> moduleState = handleHotReloading(param.getExtras());
             Map<String, Object> hookState = HookRegistry.reloading(param.getExtras());
 
-            // 跨来源键冲突检测。
+            // 跨来源键冲突检测：冲突时拒绝本次热重载。
             for (String key : hookState.keySet()) {
                 if (moduleState.containsKey(key)) {
-                    AndroidLog.logW("ModuleEntrance",
-                        "Hot reload state key collision, hook state overrides module state: " + key);
+                    AndroidLog.logW(TAG,
+                        "Hot reload state key collision, rejecting hot reload: " + key);
                     return false;
                 }
             }
@@ -260,7 +271,7 @@ public abstract class ModuleEntrance extends XposedModule {
             try {
                 handleHotReloadingFailed(throwable);
             } catch (Throwable failedError) {
-                XposedLog.logW("ModuleEntrance",
+                XposedLog.logW(TAG,
                     "handleHotReloadingFailed() threw an exception, ignored to preserve the original exception.",
                     failedError);
             }
@@ -320,8 +331,6 @@ public abstract class ModuleEntrance extends XposedModule {
         }
     }
 
-    private volatile HookHandle mHandle;
-
     private void hookApplication(@NonNull PackageLoadedParam param) {
         if (param.isFirstPackage()) {
             if (TextUtils.equals(param.getPackageName(), mProcessName)) {
@@ -342,7 +351,7 @@ public abstract class ModuleEntrance extends XposedModule {
                         }
                     );
                 } catch (Throwable e) {
-                    AndroidLog.logW("ModuleEntrance", "Failed to hook Application.attach()", e);
+                    AndroidLog.logW(TAG, "Failed to hook Application.attach().", e);
                 }
             }
         }

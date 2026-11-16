@@ -42,6 +42,7 @@ import io.github.libxposed.api.XposedModuleInterface;
  * @author 焕晨HChen
  */
 public final class HookRegistry {
+    private static final String TAG = "HookRegistry";
     private static final Set<AbsHook> sHooks =
         Collections.synchronizedSet(Collections.newSetFromMap(new WeakHashMap<>()));
     /**
@@ -51,17 +52,6 @@ public final class HookRegistry {
 
     private HookRegistry() {
         throw new AssertionError("No instances!");
-    }
-
-    /**
-     * 将一个 {@link AbsHook} 实例注册到全局注册表中。
-     * <p>
-     * 通常无需手动调用此方法，{@link AbsHook} 的构造器会自动完成注册。
-     *
-     * @param hook 要注册的 {@link AbsHook} 实例
-     */
-    static void register(@NonNull AbsHook hook) {
-        sHooks.add(hook);
     }
 
     /**
@@ -134,25 +124,12 @@ public final class HookRegistry {
         // Phase 2: 自动保存 thisObject，键前缀避免与用户自定义状态键碰撞。
         for (Object o : snapshot) {
             AbsHook hook = (AbsHook) o;
-            if (hook.key != null && hook.thisObject != null) {
-                merged.putIfAbsent(THIS_OBJECT_PREFIX + hook.key, hook.thisObject);
+            if (hook.mKey != null && hook.mThisObject != null) {
+                merged.putIfAbsent(THIS_OBJECT_PREFIX + hook.mKey, hook.mThisObject);
             }
         }
 
         return merged;
-    }
-
-    /**
-     * 获取当前所有活跃钩子的快照数组。
-     * <p>
-     * 调用方应在锁外遍历该数组执行用户回调。
-     *
-     * @return 当前活跃钩子实例的快照数组；若没有活跃钩子则返回长度为 0 的数组
-     */
-    static Object[] hookSnapshot() {
-        synchronized (sHooks) {
-            return sHooks.toArray();
-        }
     }
 
     /**
@@ -165,6 +142,7 @@ public final class HookRegistry {
      * @throws NullPointerException 如果 {@code param} 或
      *                              {@code param.getSavedInstanceState()} 为 {@code null}
      */
+    @SuppressWarnings("unchecked")
     public static void reloaded(@NonNull XposedModuleInterface.HotReloadedParam param) {
         Objects.requireNonNull(param);
         Object[] snapshot = hookSnapshot();
@@ -174,18 +152,42 @@ public final class HookRegistry {
         for (Object o : snapshot) {
             AbsHook hook = (AbsHook) o;
             try {
-                Object savedThisObject = (hook.key != null && !hook.isStatic)
-                    ? inState.get(THIS_OBJECT_PREFIX + hook.key) : null;
+                Object savedThisObject = (hook.mKey != null && !hook.mIsStatic)
+                    ? inState.get(THIS_OBJECT_PREFIX + hook.mKey) : null;
 
-                if (!hook.isStatic) {
-                    if (hook.thisObject != null) savedThisObject = hook.thisObject;
-                    else hook.thisObject = savedThisObject;
+                if (!hook.mIsStatic) {
+                    if (hook.mThisObject != null) savedThisObject = hook.mThisObject;
+                    else hook.mThisObject = savedThisObject;
                 }
                 hook.onHotReloaded(savedThisObject, inState);
             } catch (Throwable e) {
                 // 单个钩子的状态恢复失败不阻断其余钩子，避免热更新后集体半初始化。
-                XposedLog.logW("HookRegistry", "onHotReloaded failed for hook: " + hook, e);
+                XposedLog.logW(TAG, "onHotReloaded failed for hook: " + hook + ".", e);
             }
+        }
+    }
+
+    /**
+     * 将一个 {@link AbsHook} 实例注册到全局注册表中。
+     * <p>
+     * 通常无需手动调用此方法，{@link AbsHook} 的构造器会自动完成注册。
+     *
+     * @param hook 要注册的 {@link AbsHook} 实例
+     */
+    static void register(@NonNull AbsHook hook) {
+        sHooks.add(hook);
+    }
+
+    /**
+     * 获取当前所有活跃钩子的快照数组。
+     * <p>
+     * 调用方应在锁外遍历该数组执行用户回调。
+     *
+     * @return 当前活跃钩子实例的快照数组；若没有活跃钩子则返回长度为 0 的数组
+     */
+    static Object[] hookSnapshot() {
+        synchronized (sHooks) {
+            return sHooks.toArray();
         }
     }
 }

@@ -47,7 +47,7 @@ import java.util.Objects
  * @author 焕晨HChen
  */
 @Suppress("unused")
-open class CoreTool : XposedLog() {
+open class CoreTool protected constructor() : XposedLog() {
     companion object {
         // -------------------------------- class ---------------------------------
         /**
@@ -302,7 +302,7 @@ open class CoreTool : XposedLog() {
         }
 
         /**
-         * 获取当前 [Class] 中声明的全部方法，可选按名称进行过滤。
+         * 获取当前 [Class] 中声明的全部方法（不含桥接与合成方法），可选按名称过滤。
          *
          * @param methodName 用以过滤的方法名称；为 `null` 时不过滤，返回全部方法
          * @return 匹配条件的 [Method] 数组
@@ -313,7 +313,8 @@ open class CoreTool : XposedLog() {
             methodName: String? = null
         ): Array<Method> {
             return this.declaredMethods.filter {
-                methodName?.contentEquals(it.name) ?: true
+                !it.isBridge && !it.isSynthetic &&
+                    (methodName?.contentEquals(it.name) ?: true)
             }.toTypedArray()
         }
 
@@ -562,12 +563,15 @@ open class CoreTool : XposedLog() {
         // -------------------------------- non static ---------------------------------
         /**
          * 通过反射在当前对象上调用指定名称的实例方法。
+         * <p>
+         * Java 传入单个 `null` 实参时请写成 `(Object) null` 或 `new Object[]{null}`。
          *
          * @param methodName 待调用的方法名称
          * @param parameterTypes 方法的参数类型数组，默认为空数组时由框架自动推断
          * @param args 传递给方法的实际参数
          * @return 方法的返回值；当方法返回类型为 `void` 时返回 `null`
          */
+        @Suppress("UNCHECKED_CAST")
         @JvmStatic
         @JvmOverloads
         fun Any.callMethod(
@@ -788,6 +792,7 @@ open class CoreTool : XposedLog() {
          * @param args 传递给构造函数的实际参数
          * @return 创建成功的新实例对象
          */
+        @Suppress("UNCHECKED_CAST")
         @JvmStatic
         @JvmOverloads
         fun Class<*>.newInstance(
@@ -843,6 +848,7 @@ open class CoreTool : XposedLog() {
          * @param args 传递给方法的实际参数
          * @return 方法的返回值；当方法返回类型为 `void` 时返回 `null`
          */
+        @Suppress("UNCHECKED_CAST")
         @JvmStatic
         @JvmOverloads
         fun Class<*>.callStaticMethod(

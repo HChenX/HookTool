@@ -27,7 +27,7 @@ import com.hchen.hooktool.ModuleConfig;
  *
  * @author 焕晨HChen
  */
-public class AndroidLog extends AbstractLog {
+public final class AndroidLog extends AbstractLog {
     /**
      * 本类输出目标单例，供静态门面委托。
      */

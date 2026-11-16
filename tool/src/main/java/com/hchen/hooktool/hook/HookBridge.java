@@ -103,17 +103,17 @@ public final class HookBridge {
     @NonNull
     public XposedInterface.HookHandle intercept(@NonNull AbsHook absHook) {
         Objects.requireNonNull(mBuilder);
-        setPriority(absHook.priority);
-        if (absHook.id != null) {
-            setId(absHook.id);
+        setPriority(absHook.mPriority);
+        if (absHook.mId != null) {
+            setId(absHook.mId);
         }
-        if (absHook.mode != null) {
-            setExceptionMode(absHook.mode);
+        if (absHook.mMode != null) {
+            setExceptionMode(absHook.mMode);
         }
         if (mKey != null) {
             absHook.setKey(mKey);
         }
-        absHook.isStatic = mIsStatic;
+        absHook.mIsStatic = mIsStatic;
         XposedInterface.HookHandle handle = mBuilder.intercept(new XposedInterface.Hooker() {
             @Override
             public Object intercept(@NonNull XposedInterface.Chain chain) throws Throwable {

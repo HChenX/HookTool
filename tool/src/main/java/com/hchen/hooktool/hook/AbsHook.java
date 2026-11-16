@@ -43,26 +43,39 @@ import io.github.libxposed.api.XposedInterface;
  * @author 焕晨HChen
  */
 public abstract class AbsHook {
-    int priority;
-    String id;
-    XposedInterface.ExceptionMode mode;
+    /**
+     * 钩子优先级，数值越小优先级越高。
+     */
+    int mPriority;
+    /**
+     * 钩子唯一标识符，为 {@code null} 表示不参与原子替换。
+     */
+    String mId;
+    /**
+     * 钩子异常处理模式，为 {@code null} 表示使用框架默认行为。
+     */
+    XposedInterface.ExceptionMode mMode;
 
     /**
-     * 当前钩子绑定的声明类名，作为热重载时 {@code thisObject} 的存储键。
+     * 声明类的全限定类名，热重载时用作 {@code mThisObject} 的存储键。
      */
-    String key;
-
+    String mKey;
     /**
-     * 标识当前钩子是否绑定到静态上下文。
+     * 当前钩子是否绑定到静态上下文。
      */
-    boolean isStatic;
-
+    boolean mIsStatic;
     /**
-     * 当前最新一次被拦截的方法调用的宿主对象实例（即 {@code this} 引用）。
-     * <p>
-     * 静态方法钩子恒为 {@code null}，且仅在 {@link #before()} 至 {@link #after()} 之间有效。
+     * 最近一次拦截的宿主对象，仅供热重载保存使用；并发或嵌套拦截时只保留最后一次写入。
      */
-    volatile Object thisObject;
+    volatile Object mThisObject;
+
+    private final ThreadLocal<StateStack> mStackLocal = new ThreadLocal<StateStack>() {
+        @Override
+        protected StateStack initialValue() {
+            return new StateStack();
+        }
+    };
+    private final CopyOnWriteArrayList<XposedInterface.HookHandle> mHandles = new CopyOnWriteArrayList<>();
 
     private static class CallState {
         XposedInterface.Chain originalChain;
@@ -141,14 +154,6 @@ public abstract class AbsHook {
         }
     }
 
-    private final ThreadLocal<StateStack> mStackLocal = new ThreadLocal<StateStack>() {
-        @Override
-        protected StateStack initialValue() {
-            return new StateStack();
-        }
-    };
-    private final CopyOnWriteArrayList<XposedInterface.HookHandle> mHandles = new CopyOnWriteArrayList<>();
-
     /**
      * 钩子拦截的生命周期阶段枚举。
      */
@@ -203,9 +208,9 @@ public abstract class AbsHook {
      * @param mode     钩子异常处理模式；为 {@code null} 表示使用框架默认行为
      */
     public AbsHook(int priority, @Nullable String id, @Nullable XposedInterface.ExceptionMode mode) {
-        this.priority = priority;
-        this.id = id;
-        this.mode = mode;
+        this.mPriority = priority;
+        this.mId = id;
+        this.mMode = mode;
         HookRegistry.register(this);
     }
 
@@ -309,9 +314,9 @@ public abstract class AbsHook {
     /**
      * 获取当前被拦截方法的全部参数。
      * <p>
-     * 若之前已通过 {@link #setArg(int, Object)} 或 {@link #setArgs(Object...)} 修改过参数，则返回修改后的参数值。
+     * 返回副本；修改参数请使用 {@link #setArg(int, Object)} 或 {@link #setArgs(Object...)}。
      *
-     * @return 方法参数数组
+     * @return 方法参数数组的副本
      */
     @NonNull
     public final Object[] getArgs() {
@@ -319,7 +324,7 @@ public abstract class AbsHook {
         if (state.args == null) {
             state.args = state.originalChain.getArgs().toArray(new Object[0]);
         }
-        return state.args;
+        return state.args.clone();
     }
 
     /**
@@ -455,12 +460,12 @@ public abstract class AbsHook {
     /**
      * 设置当前钩子绑定的声明类名作为热重载存储键。
      * <p>
-     * 同一类的所有方法/构造函数共享相同的类级 key，避免热重载时重复保存同一 {@link #thisObject}。
+     * 同一类的所有方法/构造函数共享相同的类级 key，避免热重载时重复保存同一 {@link #mThisObject}。
      *
      * @param key 声明类的全限定类名
      */
     final void setKey(@NonNull String key) {
-        this.key = key;
+        this.mKey = key;
     }
 
     // --- 生命周期管理 ---
@@ -473,7 +478,7 @@ public abstract class AbsHook {
      * @param chain 本次拦截对应的原始调用链
      */
     final void enter(@NonNull XposedInterface.Chain chain) {
-        thisObject = chain.getThisObject();
+        mThisObject = chain.getThisObject();
         Objects.requireNonNull(mStackLocal.get()).push(chain);
     }
 

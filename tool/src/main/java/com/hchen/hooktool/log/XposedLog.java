@@ -29,6 +29,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @author 焕晨HChen
  */
 public class XposedLog extends AbstractLog {
+    private static final String TAG = "XposedLog";
     /**
      * 本类输出目标单例，供静态门面委托。
      */
@@ -178,7 +179,7 @@ public class XposedLog extends AbstractLog {
      * 回落提示仅输出一次，Xposed 环境就绪后自动恢复 Xposed 通道。
      */
     @Override
-    protected void log(int priority, String tag, String message, Throwable throwable) {
+    protected final void log(int priority, String tag, String message, Throwable throwable) {
         if (sFallbackUsed.get() || !ModuleData.isXposedEnvironment()) {
             if (ModuleData.isXposedEnvironment()) {
                 // 环境已就绪但处于回落态：尝试重新走 Xposed 通道，成功则解除回落。
@@ -188,7 +189,7 @@ public class XposedLog extends AbstractLog {
                     return;
                 } catch (Throwable t) {
                     // 仍不可用，继续回落（不再重复打印提示）；保留 D 级痕迹便于排查持续回落。
-                    AndroidLog.logD("XposedLog", "Xposed log proxy still unavailable, staying on fallback.", t);
+                    AndroidLog.logD(TAG, "Xposed log proxy still unavailable, staying on fallback.", t);
                 }
             }
             AndroidLog.output(priority, tag, message, throwable);
@@ -209,7 +210,7 @@ public class XposedLog extends AbstractLog {
      */
     private static void markFallback(Throwable t) {
         if (sFallbackUsed.compareAndSet(false, true)) {
-            AndroidLog.logW("XposedLog", "Falling back to AndroidLog.", t);
+            AndroidLog.logW(TAG, "Falling back to AndroidLog.", t);
         }
     }
 }
