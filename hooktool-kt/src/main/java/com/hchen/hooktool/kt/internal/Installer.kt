@@ -49,15 +49,33 @@ internal object Installer {
     fun install(spec: ClassSpec): HookGroup {
         val group = HookGroup("g" + counter.incrementAndGet())
         group.setReloadHandlers(spec.onReloading, spec.onReloaded)
+        try {
+            installMembers(spec, group)
+            return group
+        } catch (throwable: Throwable) {
+            // 安装中途失败时卸载已生效的 Hook：调用方拿不到句柄，不能留下无法解除的拦截。
+            group.unhook()
+            throw throwable
+        }
+    }
 
+    /**
+     * 解析并安装一个类声明中的全部成员。
+     *
+     * @param spec 记录下来的声明
+     * @param group 本次安装的句柄集合
+     */
+    private fun installMembers(spec: ClassSpec, group: HookGroup) {
         val clazz = try {
             spec.targetClass ?: Reflect.findClass(spec.targetName!!, spec.loader)
         } catch (error: ReflectException) {
             if (spec.missingPolicy == MissingPolicy.STRICT) throw error
-            group.recordMissing(
-                MissingMember(spec.targetName ?: "?", error.kind(), error.message ?: "")
-            )
-            return group
+            if (spec.missingPolicy == MissingPolicy.REPORT) {
+                group.recordMissing(
+                    MissingMember(spec.targetName ?: "?", error.kind(), error.message ?: "")
+                )
+            }
+            return
         }
 
         val installed = HashSet<Executable>()
@@ -74,26 +92,20 @@ internal object Installer {
             val executables = try {
                 resolve(clazz, member, spec.loader)
             } catch (error: ReflectException) {
-                val policy = if (member.optional) MissingPolicy.IGNORE else spec.missingPolicy
-                if (policy == MissingPolicy.STRICT) throw error
-                group.recordMissing(MissingMember(member.label, error.kind(), error.message ?: ""))
+                handleMissing(group, member, spec, error)
                 continue
             }
 
             if (executables.isEmpty()) {
-                if (spec.missingPolicy == MissingPolicy.STRICT) {
-                    throw ReflectException(
+                handleMissing(
+                    group,
+                    member,
+                    spec,
+                    ReflectException(
                         ReflectException.Kind.METHOD_NOT_FOUND,
                         member.label,
                         "No member matched " + member.label,
-                    )
-                }
-                group.recordMissing(
-                    MissingMember(
-                        member.label,
-                        ReflectException.Kind.METHOD_NOT_FOUND,
-                        "No member matched " + member.label,
-                    )
+                    ),
                 )
                 continue
             }
@@ -112,7 +124,27 @@ internal object Installer {
                 observe(member, executable.toGenericString())
             }
         }
-        return group
+    }
+
+    /**
+     * 按成员级 {@code optional} 与类级缺失策略处理无法解析的成员。
+     *
+     * @param group 本次安装的句柄集合
+     * @param member 无法解析的成员
+     * @param spec 记录下来的声明
+     * @param error 解析失败的原因
+     */
+    private fun handleMissing(
+        group: HookGroup,
+        member: MemberSpec,
+        spec: ClassSpec,
+        error: ReflectException,
+    ) {
+        val policy = if (member.optional) MissingPolicy.IGNORE else spec.missingPolicy
+        if (policy == MissingPolicy.STRICT) throw error
+        if (policy == MissingPolicy.REPORT) {
+            group.recordMissing(MissingMember(member.label, error.kind(), error.message ?: ""))
+        }
     }
 
     private fun observe(member: MemberSpec, signature: String) {

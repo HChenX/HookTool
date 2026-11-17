@@ -56,7 +56,7 @@ public final class SystemPropTool {
      */
     private static Object callProp(@NonNull String methodName, @NonNull Class<?>[] types, @NonNull Object... args) {
         try {
-            return Reflect.callStaticMethod(PROP_CLASS, methodName, types, args);
+            return Reflect.callStaticMethodWithTypes(PROP_CLASS, methodName, types, args);
         } catch (Throwable e) {
             AndroidLog.logW(TAG, "SystemProperties." + methodName + "() reflection failed.", e);
             return null;

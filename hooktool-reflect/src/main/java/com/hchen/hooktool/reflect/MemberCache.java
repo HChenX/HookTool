@@ -74,6 +74,18 @@ final class MemberCache<T> {
     }
 
     /**
+     * 判断该键是否已被缓存为查找失败，不构造异常。
+     *
+     * @param owner 成员所属的类
+     * @param key 缓存键
+     * @return 已确定查找失败时返回 {@code true}
+     */
+    boolean isMissing(Class<?> owner, String key) {
+        Slot<T> cached = mapFor(owner).get(key);
+        return cached != null && cached.isEmpty();
+    }
+
+    /**
      * 缓存项，区分未查找与查找失败。
      *
      * @param <T> 成员类型

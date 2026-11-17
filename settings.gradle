@@ -20,14 +20,14 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        maven { url 'https://jitpack.io' }
-        maven { url "https://api.xposed.info/" }
+        maven { url = 'https://jitpack.io' }
+        maven { url = "https://api.xposed.info/" }
     }
 }
 
 rootProject.name = "HookTool"
 
-// 4.0.0 组件库，详见 docs/module-split-proposal.md
+// 4.0.0 组件库，详见 docs/modules.md
 include ':hooktool-reflect'
 include ':hooktool-common'
 include ':hooktool-xposed'

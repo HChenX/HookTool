@@ -89,14 +89,16 @@ hookMethod(Reflect.findClass("com.example.Target"), "check",
 
 ```kotlin
 import com.hchen.hooktool.kt.hook
+import com.hchen.hooktool.kt.resultAs
+import com.hchen.hooktool.kt.thisAs
 
 hook("com.example.Target") {
     method("check", Context::class, Int::class) {
         before { if (enabled) skipWith(true) }
-        after  { result = result }
+        after  { result = resultAs<Boolean>()?.not() }
     }
     constructor(Context::class) {
-        after { (thisObject as? Target)?.init() }
+        after { thisAs<Target>()?.init() }
     }
 }
 ```

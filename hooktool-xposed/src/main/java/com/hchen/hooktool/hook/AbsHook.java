@@ -28,6 +28,7 @@ import androidx.annotation.Nullable;
 import com.hchen.hooktool.log.AndroidLog;
 import com.hchen.hooktool.log.LogExpand;
 
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Executable;
 import java.util.Arrays;
 import java.util.List;
@@ -66,8 +67,10 @@ public abstract class AbsHook {
     boolean mIsStatic;
     /**
      * 最近一次拦截的宿主对象，仅供热重载保存使用；并发或嵌套拦截时只保留最后一次写入。
+     * <p>
+     * 以弱引用持有，避免已销毁的宿主对象被钩子实例长期强引用。
      */
-    volatile Object mThisObject;
+    volatile WeakReference<Object> mThisObject;
 
     private final ThreadLocal<StateStack> mStackLocal = new ThreadLocal<StateStack>() {
         @Override
@@ -424,7 +427,8 @@ public abstract class AbsHook {
     /**
      * 设置当前被拦截方法的待抛出异常。
      * <p>
-     * 设置后该异常将在后续阶段由框架自动抛出，可通过 {@link #getThrowable()} 读取。
+     * 设置后该异常将在后续阶段抛出，可通过 {@link #getThrowable()} 读取。异常能否到达调用方取决于
+     * 框架异常模式：{@code PASSTHROUGH} 会原样抛给调用方，默认的 {@code PROTECTIVE} 只记录日志并继续执行原方法。
      *
      * @param throwable 要设置的异常对象
      */
@@ -509,7 +513,13 @@ public abstract class AbsHook {
      * @param chain 本次拦截对应的原始调用链
      */
     final void enter(@NonNull XposedInterface.Chain chain) {
-        mThisObject = chain.getThisObject();
+        Object thisObject = chain.getThisObject();
+        WeakReference<Object> tracked = mThisObject;
+        if (thisObject == null) {
+            mThisObject = null;
+        } else if (tracked == null || tracked.get() != thisObject) {
+            mThisObject = new WeakReference<>(thisObject);
+        }
         Objects.requireNonNull(mStackLocal.get()).push(chain);
     }
 

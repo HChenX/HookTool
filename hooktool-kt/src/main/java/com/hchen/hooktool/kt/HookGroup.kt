@@ -68,6 +68,8 @@ class HookGroup internal constructor(
     private val installed = ArrayList<String>()
     private val missing = ArrayList<MissingMember>()
 
+    private val statePrefix = STATE_PREFIX + id + ":"
+
     private var onReloadingBlock: ((MutableMap<String, Any?>) -> Unit)? = null
     private var onReloadedBlock: ((Map<String, Any?>) -> Unit)? = null
     private var saved = false
@@ -105,6 +107,8 @@ class HookGroup internal constructor(
         }
         hooks.clear()
         handles.clear()
+        installed.clear()
+        missing.clear()
     }
 
     internal fun add(hook: AbsHook, handle: XposedInterface.HookHandle, signature: String) {
@@ -133,13 +137,13 @@ class HookGroup internal constructor(
     internal fun saveState(state: MutableMap<String, Any?>) {
         val block = onReloadingBlock ?: return
         if (saved) return
-        saved = true
-        restored = false
         val local = HashMap<String, Any?>()
         block(local)
         for ((key, value) in local) {
-            state[STATE_PREFIX + key] = value
+            state[statePrefix + key] = value
         }
+        saved = true
+        restored = false
     }
 
     /**
@@ -150,20 +154,20 @@ class HookGroup internal constructor(
     internal fun restoreState(state: Map<String, Any?>) {
         val block = onReloadedBlock ?: return
         if (restored) return
-        restored = true
-        saved = false
         val local = HashMap<String, Any?>()
         for ((key, value) in state) {
-            if (key.startsWith(STATE_PREFIX)) {
-                local[key.substring(STATE_PREFIX.length)] = value
+            if (key.startsWith(statePrefix)) {
+                local[key.substring(statePrefix.length)] = value
             }
         }
         block(local)
+        restored = true
+        saved = false
     }
 
     internal companion object {
         /**
-         * 状态键前缀。
+         * 状态键的公共前缀，其后拼接分组标识，保证不同分组的状态键互不冲突。
          */
         private const val STATE_PREFIX = "dsl:"
 

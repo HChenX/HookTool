@@ -48,7 +48,7 @@ final class MethodFinder {
      * @return 已设置为可访问的方法
      */
     static Method findExact(Class<?> clazz, String name, Class<?>[] parameterTypes) {
-        String sig = name + "#" + Types.signature(parameterTypes) + "#exact";
+        String sig = exactSignature(name, parameterTypes);
         return CACHE.get(clazz, sig,
             key -> {
                 try {
@@ -71,7 +71,8 @@ final class MethodFinder {
      * @return 已设置为可访问的方法
      */
     static Method findBest(Class<?> clazz, String name, Class<?>[] parameterTypes) {
-        if (allPresent(parameterTypes)) {
+        // 精确签名已知不存在时直接按最佳匹配查找，避免每次调用都构造一次失败异常。
+        if (allPresent(parameterTypes) && !CACHE.isMissing(clazz, exactSignature(name, parameterTypes))) {
             try {
                 return findExact(clazz, name, parameterTypes);
             } catch (ReflectException ignored) {
@@ -113,6 +114,10 @@ final class MethodFinder {
             }
         }
         return sb.append(')').toString();
+    }
+
+    private static String exactSignature(String name, Class<?>[] parameterTypes) {
+        return name + "#" + Types.signature(parameterTypes) + "#exact";
     }
 
     private static boolean allPresent(Class<?>[] parameterTypes) {

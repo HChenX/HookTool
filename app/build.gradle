@@ -3,13 +3,13 @@ plugins {
 }
 
 android {
-    namespace 'com.hchen.app'
+    namespace = 'com.hchen.app'
     compileSdk {
         version = release(37)
     }
 
     defaultConfig {
-        applicationId "com.hchen.app"
+        applicationId = "com.hchen.app"
 
         minSdk 30
         targetSdk 37
@@ -19,13 +19,13 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled = false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 
     buildFeatures {
-        buildConfig true
+        buildConfig = true
     }
 
     compileOptions {

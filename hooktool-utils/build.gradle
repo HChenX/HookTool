@@ -3,7 +3,7 @@ plugins {
 }
 
 android {
-    namespace 'com.hchen.hooktool.util'
+    namespace = 'com.hchen.hooktool.util'
 }
 
 dependencies {

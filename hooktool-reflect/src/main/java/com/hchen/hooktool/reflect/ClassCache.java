@@ -110,21 +110,27 @@ final class ClassCache {
 
     private static Class<?> doFindClass(String className, ClassLoader classLoader) {
         String next = className;
-        int lastDotIndex;
+        int lastDotIndex = -1;
+        Throwable failure = null;
         do {
             Class<?> primitive = PRIMITIVES.get(next);
             if (primitive != null) return primitive;
             try {
                 return Class.forName(toCanonicalName(next), false, classLoader);
             } catch (ClassNotFoundException e) {
+                failure = e;
                 lastDotIndex = next.lastIndexOf('.');
                 if (lastDotIndex != -1) {
                     next = next.substring(0, lastDotIndex) + '$' + next.substring(lastDotIndex + 1);
                 }
+            } catch (LinkageError e) {
+                // 类本身存在但依赖缺失（如宿主删掉了父类）：按查找失败处理，避免绕过可空 API。
+                throw new ReflectException(ReflectException.Kind.CLASS_NOT_FOUND, className,
+                    "Class cannot be linked: " + className, e);
             }
         } while (lastDotIndex != -1);
         throw new ReflectException(ReflectException.Kind.CLASS_NOT_FOUND, className,
-            "Class not found: " + className);
+            "Class not found: " + className, failure);
     }
 
     private static String toCanonicalName(String className) {

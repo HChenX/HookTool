@@ -57,7 +57,7 @@ public final class PrefsTool {
      * 获取模块端指定名称的 {@link SharedPreferences} 实例。
      *
      * @param context   上下文
-     * @param prefsName 偏好文件名称；为空字符串时使用由 {@link ModuleConfig} 或模块包名生成的默认名称
+     * @param prefsName 偏好文件名称；为空字符串时依次回退到 {@link HookConfig#getPrefsName()} 与模块包名
      * @return 指定名称对应的 {@link SharedPreferences} 实例
      */
     @NonNull

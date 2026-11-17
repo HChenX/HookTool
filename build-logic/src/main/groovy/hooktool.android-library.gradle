@@ -27,7 +27,7 @@ android {
     }
 
     buildFeatures {
-        buildConfig false
+        buildConfig = false
     }
 
     testOptions {

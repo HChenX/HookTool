@@ -39,7 +39,7 @@ final class ConstructorFinder {
      * @return 已设置为可访问的构造函数
      */
     static Constructor<?> findExact(Class<?> clazz, Class<?>[] parameterTypes) {
-        String sig = Types.signature(parameterTypes) + "#exact";
+        String sig = exactSignature(parameterTypes);
         return CACHE.get(clazz, sig,
             key -> {
                 try {
@@ -61,7 +61,8 @@ final class ConstructorFinder {
      * @return 已设置为可访问的构造函数
      */
     static Constructor<?> findBest(Class<?> clazz, Class<?>[] parameterTypes) {
-        if (allPresent(parameterTypes)) {
+        // 精确签名已知不存在时直接按最佳匹配查找，避免每次调用都构造一次失败异常。
+        if (allPresent(parameterTypes) && !CACHE.isMissing(clazz, exactSignature(parameterTypes))) {
             try {
                 return findExact(clazz, parameterTypes);
             } catch (ReflectException ignored) {
@@ -86,6 +87,9 @@ final class ConstructorFinder {
             () -> notFound(clazz, parameterTypes));
     }
 
+    private static String exactSignature(Class<?>[] parameterTypes) {
+        return Types.signature(parameterTypes) + "#exact";
+    }
 
     private static boolean allPresent(Class<?>[] parameterTypes) {
         if (parameterTypes == null) return true;

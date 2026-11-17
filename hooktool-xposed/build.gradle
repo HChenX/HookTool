@@ -3,7 +3,7 @@ plugins {
 }
 
 android {
-    namespace 'com.hchen.hooktool.xposed'
+    namespace = 'com.hchen.hooktool.xposed'
 
     defaultConfig {
         consumerProguardFiles 'proguard-rules.pro'

@@ -26,6 +26,7 @@ import androidx.annotation.Nullable;
 import com.hchen.hooktool.entry.ModuleEntrance;
 import com.hchen.hooktool.log.AndroidLog;
 
+import java.lang.ref.WeakReference;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -124,8 +125,9 @@ public final class HookRegistry {
         // 自动保存 thisObject，键前缀避免与其他状态键碰撞。
         for (Object o : snapshot) {
             AbsHook hook = (AbsHook) o;
-            if (hook.mKey != null && hook.mThisObject != null) {
-                merged.putIfAbsent(THIS_OBJECT_PREFIX + hook.mKey, hook.mThisObject);
+            Object thisObject = hook.mThisObject == null ? null : hook.mThisObject.get();
+            if (hook.mKey != null && thisObject != null) {
+                merged.putIfAbsent(THIS_OBJECT_PREFIX + hook.mKey, thisObject);
             }
         }
 
@@ -152,12 +154,17 @@ public final class HookRegistry {
         for (Object o : snapshot) {
             AbsHook hook = (AbsHook) o;
             try {
+                Object tracked = hook.mThisObject == null ? null : hook.mThisObject.get();
                 Object savedThisObject = (hook.mKey != null && !hook.mIsStatic)
                     ? inState.get(THIS_OBJECT_PREFIX + hook.mKey) : null;
 
                 if (!hook.mIsStatic) {
-                    if (hook.mThisObject != null) savedThisObject = hook.mThisObject;
-                    else hook.mThisObject = savedThisObject;
+                    if (tracked != null) {
+                        savedThisObject = tracked;
+                    } else {
+                        hook.mThisObject = savedThisObject == null
+                            ? null : new WeakReference<>(savedThisObject);
+                    }
                 }
                 hook.onHotReloaded(savedThisObject, inState);
             } catch (Throwable e) {

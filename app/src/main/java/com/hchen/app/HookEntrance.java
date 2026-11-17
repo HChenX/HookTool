@@ -90,7 +90,7 @@ public class HookEntrance extends ModuleEntrance {
     @NonNull
     @Override
     public Map<String, Object> handleHotReloading(@Nullable Bundle extras) {
-        DemoHooks.uninstallAll();
+        // 旧 Hook 由框架在 onHotReloaded 前统一解除，此处卸载会让 DSL 状态来不及保存。
         return new HashMap<>();
     }
 

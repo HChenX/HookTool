@@ -167,13 +167,25 @@ public final class ChainTool {
     }
 
     /**
+     * 获取当前的链式数据，拒绝复用已执行过的 {@link ChainHook}。
+     *
+     * @return 当前链式数据
+     * @throws IllegalStateException 当链式数据已被执行并清空时抛出
+     */
+    @NonNull
+    private ChainData requireChainData() {
+        if (mChainData == null) {
+            throw new IllegalStateException("chainData is null; do not reuse ChainHook after hook().");
+        }
+        return mChainData;
+    }
+
+    /**
      * 执行完整的链式 Hook 流程：先查找目标方法或构造函数，随后对其应用 Hook。
      *
      * @throws IllegalStateException 当检测到重复的链式数据时抛出
      */
     private void runChain() {
-        Objects.requireNonNull(mChainData, "chainData is null; do not reuse ChainHook after hook().");
-
         try {
             String chainKey = chainKey(mChainData);
             if (mExecutedKeys.contains(chainKey)) {
@@ -264,7 +276,7 @@ public final class ChainTool {
          * @return 外部 {@link ChainTool} 实例，便于继续链式调用
          */
         public ChainTool hook(@NonNull AbsHook absHook) {
-            mChainData.absHook = absHook;
+            requireChainData().absHook = absHook;
             runChain();
             return ChainTool.this;
         }
@@ -316,7 +328,7 @@ public final class ChainTool {
          * @return 当前 {@link ChainHook} 实例，便于继续链式配置
          */
         public ChainHook onThrow(@NonNull Function<Throwable, Boolean> function) {
-            mChainData.function = function;
+            requireChainData().function = function;
             return this;
         }
 
@@ -326,7 +338,7 @@ public final class ChainTool {
          * @return 当前 {@link ChainHook} 实例，便于继续链式配置
          */
         public ChainHook ignoreThrow() {
-            mChainData.isIgnoreThrow = true;
+            requireChainData().isIgnoreThrow = true;
             return this;
         }
     }

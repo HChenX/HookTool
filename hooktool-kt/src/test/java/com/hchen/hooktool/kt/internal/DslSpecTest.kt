@@ -21,10 +21,12 @@ package com.hchen.hooktool.kt.internal
 import com.hchen.hooktool.kt.ClassScope
 import com.hchen.hooktool.kt.HookGroup
 import com.hchen.hooktool.kt.MissingPolicy
+import com.hchen.hooktool.reflect.ReflectException
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
@@ -145,7 +147,7 @@ class DslSpecTest {
         group.saveState(state)
 
         assertEquals(1, saves)
-        assertEquals(7, state["dsl:count"])
+        assertEquals(7, state["dsl:test:count"])
     }
 
     @Test
@@ -158,11 +160,57 @@ class DslSpecTest {
             observed = state["count"]
         })
 
-        group.restoreState(mapOf("dsl:count" to 7))
-        group.restoreState(mapOf("dsl:count" to 7))
+        group.restoreState(mapOf("dsl:test:count" to 7))
+        group.restoreState(mapOf("dsl:test:count" to 7))
 
         assertEquals(1, restores)
         assertEquals(7, observed)
+    }
+
+    @Test
+    fun groupIgnoresStateOfOtherGroups() {
+        val group = HookGroup("test")
+        var observed: Any? = null
+        group.setReloadHandlers(null, { state ->
+            observed = state["count"]
+        })
+
+        group.restoreState(mapOf("dsl:other:count" to 7))
+        assertEquals(null, observed)
+    }
+
+    @Test
+    fun optionalMemberIsSkippedSilently() {
+        val spec = ClassSpec(null, Stub::class.java, null)
+        ClassScope(spec).method("absent") { optional() }
+
+        val group = Installer.install(spec)
+
+        assertTrue(group.report().installed.isEmpty())
+        assertTrue(group.report().missing.isEmpty())
+    }
+
+    @Test
+    fun reportingPolicyRecordsMissingMember() {
+        val spec = ClassSpec(null, Stub::class.java, null)
+        ClassScope(spec).apply {
+            onMissing(MissingPolicy.REPORT)
+            method("absent") { }
+        }
+
+        val group = Installer.install(spec)
+
+        assertEquals(1, group.report().missing.size)
+    }
+
+    @Test
+    fun strictPolicyRejectsMissingMember() {
+        val spec = ClassSpec(null, Stub::class.java, null)
+        ClassScope(spec).method("absent") { }
+
+        val error = assertThrows(ReflectException::class.java) { Installer.install(spec) }
+
+        assertEquals(ReflectException.Kind.METHOD_NOT_FOUND, error.kind())
     }
 
     @Test
