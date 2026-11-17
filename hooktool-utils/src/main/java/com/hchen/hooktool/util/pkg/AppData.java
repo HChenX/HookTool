@@ -36,8 +36,7 @@ import java.util.Objects;
  */
 public final class AppData implements Parcelable {
     /**
-     * 与该应用关联的 {@link PackageInfo} 对象，其中包含完整的包级别元数据信息。
-     * 仅当输入为 {@link PackageInfo} 类型时才会被填充，其余输入类型下恒为 {@code null}。
+     * 与该应用关联的 {@link PackageInfo} 对象，其中包含完整的包级别元数据信息。仅当输入为 {@link PackageInfo} 类型时才会被填充，其余输入类型下恒为 {@code null}。
      */
     @Nullable
     public PackageInfo packageInfo;
@@ -56,8 +55,7 @@ public final class AppData implements Parcelable {
     /**
      * 应用的图标位图。
      * <p>
-     * 默认不加载；仅在调用方显式传入 {@code loadIcon=true} 时填充。
-     * 该字段不参与 {@link Parcelable} 序列化，跨进程重建后恒为 {@code null}。
+     * 默认不加载；仅在调用方显式传入 {@code loadIcon=true} 时填充。该字段不参与 {@link Parcelable} 序列化，跨进程重建后恒为 {@code null}。
      */
     @Nullable
     public Bitmap icon;
@@ -72,8 +70,7 @@ public final class AppData implements Parcelable {
      */
     public String packageName;
     /**
-     * 应用的版本名称字符串（例如 {@code "1.2.3"}）。同 {@link #packageInfo}，仅当通过
-     * {@link PackageInfo} 获取数据时才会被填充。
+     * 应用的版本名称字符串（例如 {@code "1.2.3"}）。同 {@link #packageInfo}，仅当通过 {@link PackageInfo} 获取数据时才会被填充。
      */
     public String versionName;
     /**

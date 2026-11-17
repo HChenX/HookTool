@@ -427,8 +427,7 @@ public abstract class AbsHook {
     /**
      * 设置当前被拦截方法的待抛出异常。
      * <p>
-     * 设置后该异常将在后续阶段抛出，可通过 {@link #getThrowable()} 读取。异常能否到达调用方取决于
-     * 框架异常模式：{@code PASSTHROUGH} 会原样抛给调用方，默认的 {@code PROTECTIVE} 只记录日志并继续执行原方法。
+     * 设置后该异常将在后续阶段抛出，可通过 {@link #getThrowable()} 读取。异常能否到达调用方取决于框架异常模式：{@code PASSTHROUGH} 会原样抛给调用方，默认的 {@code PROTECTIVE} 只记录日志并继续执行原方法。
      *
      * @param throwable 要设置的异常对象
      */

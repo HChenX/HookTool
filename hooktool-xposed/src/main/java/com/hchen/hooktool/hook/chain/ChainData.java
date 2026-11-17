@@ -39,8 +39,7 @@ final class ChainData {
      */
     ChainType chainType;
     /**
-     * 查找阶段解析得到的目标可执行对象数组，初始大小为 1。
-     * 当使用 {@code findAll} 系列查找方式时，该数组将被替换为所有匹配到的可执行对象。
+     * 查找阶段解析得到的目标可执行对象数组，初始大小为 1。当使用 {@code findAll} 系列查找方式时，该数组将被替换为所有匹配到的可执行对象。
      */
     Executable[] executables = new Executable[1];
     /**

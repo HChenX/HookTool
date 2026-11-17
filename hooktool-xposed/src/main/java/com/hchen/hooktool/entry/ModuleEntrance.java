@@ -66,8 +66,7 @@ public abstract class ModuleEntrance extends XposedModule {
     /**
      * 初始化模块配置的抽象方法。
      * <p>
-     * 子类必须实现此方法，在其中通过 {@link com.hchen.hooktool.config.HookConfig} 的静态方法完成
-     * 日志标签、日志等级、SharedPreferences 名称等基本参数的设置。
+     * 子类必须实现此方法，在其中通过 {@link com.hchen.hooktool.config.HookConfig} 的静态方法完成日志标签、日志等级、SharedPreferences 名称等基本参数的设置。
      */
     public abstract void loadConfig();
 
@@ -114,8 +113,7 @@ public abstract class ModuleEntrance extends XposedModule {
     /**
      * 目标应用 Application 创建时的回调。
      * <p>
-     * 当目标应用的 {@link Application#attach(Context)} 被调用时触发，
-     * 此时应用 {@link Context} 已可用。
+     * 当目标应用的 {@link Application#attach(Context)} 被调用时触发，此时应用 {@link Context} 已可用。
      *
      * @param context 目标应用的上下文对象
      */
@@ -158,8 +156,7 @@ public abstract class ModuleEntrance extends XposedModule {
     /**
      * 判断当前模块是否允许目标应用进行热重载。
      * <p>
-     * 默认返回 {@code true}（允许全部）。子类可覆写此方法，对需要阻止热重载的
-     * 目标包名返回 {@code false}。
+     * 默认返回 {@code true}（允许全部）。子类可覆写此方法，对需要阻止热重载的目标包名返回 {@code false}。
      *
      * @param packageName 目标被 Hook 应用的包名
      * @return {@code true} 允许热重载；{@code false} 拒绝热重载
@@ -252,8 +249,7 @@ public abstract class ModuleEntrance extends XposedModule {
     }
 
     /**
-     * 框架回调入口：热更新准备阶段（旧代码执行）。收集状态并提交，允许/拒绝由
-     * {@link #isHotReloadingAllowed(String)} 决定；状态保存成功后才清空注册表。
+     * 框架回调入口：热更新准备阶段（旧代码执行）。收集状态并提交，允许/拒绝由 {@link #isHotReloadingAllowed(String)} 决定；状态保存成功后才清空注册表。
      */
     @Override
     public final boolean onHotReloading(@NonNull HotReloadingParam param) {
@@ -299,8 +295,7 @@ public abstract class ModuleEntrance extends XposedModule {
     }
 
     /**
-     * 框架回调入口：热更新完成（新代码执行）。恢复 ClassLoader 与配置，先解除旧 Hook
-     * 再分发状态恢复。
+     * 框架回调入口：热更新完成（新代码执行）。恢复 ClassLoader 与配置，先解除旧 Hook 再分发状态恢复。
      */
     @Override
     public final void onHotReloaded(@NonNull HotReloadedParam param) {

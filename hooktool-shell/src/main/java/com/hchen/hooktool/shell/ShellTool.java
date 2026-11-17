@@ -49,30 +49,12 @@ import java.util.concurrent.atomic.AtomicLong;
  * Shell 命令执行工具类。
  * <p>
  * 提供同步与异步两种执行方式，支持 Root 与普通两种模式。
- * <p>
- * 同步执行并判断结果：
  * <pre>{@code
  * ShellTool shell = ShellTool.obtain(true);
  * ShellResult result = shell.cmd("ls /data").exec();
  * if (result instanceof ShellResult.Completed completed && completed.isSuccess()) {
  *     String[] outputs = completed.result().outputs();
- * } else if (result instanceof ShellResult.Failed failed) {
- *     ShellFailureReason reason = failed.reason();
  * }
- * }</pre>
- * 拼接模式适合分段构造同一条命令：
- * <pre>{@code
- * shell.enableSplicingMode()
- *     .cmd("if [[ -d /data ]]; then")
- *     .cmd("  echo exists")
- *     .cmd("fi")
- *     .exec();
- * }</pre>
- * 异步执行：
- * <pre>{@code
- * CompletableFuture<ShellResult> future = shell.cmd("echo hello").async();
- * future.thenAccept(result -> { });
- * ShellTool.close();
  * }</pre>
  *
  * @author 焕晨HChen
@@ -699,8 +681,7 @@ public final class ShellTool {
         }
 
         /**
-         * 处理 Shell 进程异常死亡：保证仅上报一次，完成在途命令并回调 {@code brokenPipe}，随后关闭进程流。
-         * 不会自动重建进程。
+         * 处理 Shell 进程异常死亡：保证仅上报一次，完成在途命令并回调 {@code brokenPipe}，随后关闭进程流。不会自动重建进程。
          *
          * @param leftoverErrors 进程死亡时残留的错误输出行
          */
@@ -737,8 +718,7 @@ public final class ShellTool {
         }
 
         /**
-         * 处理"进程仍存活但某条流已终止"的会话失效（如命令执行 {@code exec >/dev/null} 重定向）：
-         * 在途命令改为以 {@link ShellFailureReason#IO_ERROR} 失败完成，残留输出供 {@code brokenPipe} 回调诊断。
+         * 处理"进程仍存活但某条流已终止"的会话失效（如命令执行 {@code exec >/dev/null} 重定向）：在途命令改为以 {@link ShellFailureReason#IO_ERROR} 失败完成，残留输出供 {@code brokenPipe} 回调诊断。
          *
          * @param leftover 流终止时残留的未归属输出行
          */

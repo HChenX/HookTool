@@ -52,8 +52,7 @@ final class HookBridge {
      * 构造一个新的钩子桥接器实例，并指定类级标识键与静态性。
      *
      * @param builder  用于配置拦截参数并最终创建钩子的 Xposed API 构建器
-     * @param key      声明类的全限定类名，用于热重载时按类去重存储 {@code thisObject}；
-     *                 为 {@code null} 表示不参与热重载的自动状态管理
+     * @param key      声明类的全限定类名，用于热重载时按类去重存储 {@code thisObject}；为 {@code null} 表示不参与热重载的自动状态管理
      * @param isStatic 是否为静态上下文；静态钩子在热重载时不会读取/写入 {@code thisObject}
      */
     HookBridge(@NonNull XposedInterface.HookBuilder builder,

@@ -153,11 +153,9 @@ public final class ChainTool {
     /**
      * 直接以一个已有的 {@link Executable} 对象作为 Hook 目标。
      * <p>
-     * 此方法适用于调用方已通过反射等手段持有目标方法或构造函数引用的场景，
-     * 无需再通过方法名或参数类型进行查找。
+     * 此方法适用于调用方已通过反射等手段持有目标方法或构造函数引用的场景，无需再通过方法名或参数类型进行查找。
      *
-     * @param executable 待 Hook 的可执行对象（{@link java.lang.reflect.Method} 或
-     *                   {@link java.lang.reflect.Constructor}）
+     * @param executable 待 Hook 的可执行对象（{@link java.lang.reflect.Method} 或 {@link java.lang.reflect.Constructor}）
      * @return {@link ChainHook} 实例，用于配置具体的 Hook 行为
      */
     public ChainHook withExecutable(@NonNull Executable executable) {
@@ -235,8 +233,7 @@ public final class ChainTool {
     }
 
     /**
-     * 根据当前 {@link ChainData} 中记录的 {@link ChainType} 类型执行相应的查找操作，
-     * 并将查找到的结果填充到 {@code mChainData.executables} 数组中。
+     * 根据当前 {@link ChainData} 中记录的 {@link ChainType} 类型执行相应的查找操作，并将查找到的结果填充到 {@code mChainData.executables} 数组中。
      */
     private void runFind() {
         try {
@@ -297,8 +294,7 @@ public final class ChainTool {
         /**
          * Hook 目标方法并完全拦截其执行（方法体将不会被执行）。
          * <p>
-         * 对于返回类型为 {@code void} 的方法，调用方将正常返回；
-         * 对于具有返回值的方法，调用方将收到 {@code null}。
+         * 对于返回类型为 {@code void} 的方法，调用方将正常返回；对于具有返回值的方法，调用方将收到 {@code null}。
          *
          * @return 外部 {@link ChainTool} 实例，便于继续链式调用
          */
@@ -321,8 +317,7 @@ public final class ChainTool {
         /**
          * 注册一个异常处理函数，在目标方法或构造函数查找失败时被调用。
          * <p>
-         * 该函数接收捕获到的 {@link Throwable} 对象：返回 {@code true} 表示异常已被妥善处理，
-         * 后续流程将正常退出；返回 {@code false} 则表示异常未被处理，将继续向上抛出。
+         * 该函数接收捕获到的 {@link Throwable} 对象：返回 {@code true} 表示异常已被妥善处理，后续流程将正常退出；返回 {@code false} 则表示异常未被处理，将继续向上抛出。
          *
          * @param function 异常处理函数
          * @return 当前 {@link ChainHook} 实例，便于继续链式配置

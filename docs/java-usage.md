@@ -30,11 +30,11 @@ public class MyEntrance extends ModuleEntrance {
 }
 ```
 
-`ModuleEntrance` 负责把框架回调分发给业务代码，并处理类加载器注入与热更新。
+`ModuleEntrance` 负责分发框架回调、注入类加载器与处理热更新。
 
 ## 业务分包
 
-继承 `AbsModule` 可以把业务按类拆分，每个实例独立管理自己的生命周期：
+继承 `AbsModule` 可按类拆分业务，每个实例独立管理自己的生命周期：
 
 ```java
 public class MyHooks extends AbsModule {
@@ -88,7 +88,7 @@ Hook.doNothing();         // 跳过原方法并返回 null
 Hook.setArg(0, "value");  // 替换指定参数
 ```
 
-目标不存在时使用 `hookMethodIfExists`，返回 `null` 而不抛异常。
+目标不存在时使用 `hookMethodIfExists` 与 `hookConstructorIfExists`，返回 `null` 而不抛异常。
 
 ## Hook 生命周期
 
@@ -99,7 +99,7 @@ Hook.setArg(0, "value");  // 替换指定参数
 | `after()` | 原方法返回后，可替换返回值 |
 | `onThrow(stage, e)` | 任一阶段出错时回调，返回 `true` 表示异常已消费 |
 
-语义差异：
+两条容易混淆的语义：
 
 | 写法 | 原方法 | `after` |
 |---|---|---|
@@ -122,8 +122,8 @@ ChainTool.buildChain(Target.class)
 
 ```java
 Method method = Reflect.findMethod(Target.class, "greet", String.class);
-Invoker<?, Method> invoker = HookInterop.getMethodInvoker(method);
-invoker.setType(Invoker.Type.ORIGIN);
+XposedInterface.Invoker<?, Method> invoker = HookInterop.getMethodInvoker(method);
+invoker.setType(XposedInterface.Invoker.Type.ORIGIN);
 Object result = invoker.invoke(target, "raw");
 
 HookInterop.deoptimize(method);
@@ -140,4 +140,4 @@ Object value = Reflect.callMethod(target, "greet", "world");
 Reflect.setObjectField(target, "secret", "changed");
 ```
 
-查找失败时抛出 `ReflectException`，可通过 `kind()` 区分原因；需要不抛异常的写法时使用 `Reflect.lookupMethod` 等 `lookup` 系列。
+查找失败时抛出 `ReflectException`，可通过 `kind()` 区分原因。需要不抛异常的写法时使用 `Reflect.lookupMethod` 等 `lookup` 系列。

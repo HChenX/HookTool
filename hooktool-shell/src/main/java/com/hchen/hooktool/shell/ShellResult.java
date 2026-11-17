@@ -23,23 +23,7 @@ import androidx.annotation.NonNull;
 /**
  * Shell 命令执行流程的最终结果类型。
  * <p>
- * 使用示例：
- * <pre>{@code
- *         ShellResult result = shellTool.cmd("ls").exec();
- *         if (result instanceof ShellResult.Completed completed) {
- *             boolean ok = completed.isSuccess();
- *             String[] out = completed.result().outputs();
- *         } else if (result instanceof ShellResult.Failed failed) {
- *             switch (failed.reason()) {
- *                 case TIMEOUT:
- *                     // 命令超时
- *                 case IO_ERROR:
- *                     // 流或进程异常
- *                 default:
- *                     // NOT_CONFIGURED / INTERCEPTED / INTERRUPTED ...
- *             }
- *         }
- * }</pre>
+ * 命令执行完毕为 {@link Completed}，流程未能收敛为 {@link Failed}。
  *
  * @author 焕晨HChen
  */

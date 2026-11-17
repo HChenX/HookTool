@@ -64,7 +64,7 @@ AppData[] apps = PackageTool.getAppData(context,
 ## 配置
 
 ```java
-// 宿主进程内读写远程配置（只读）
+// 宿主进程内读取远程配置
 SharedPreferences remote = PrefsTool.prefs();
 
 // 应用进程内使用本地配置
@@ -96,4 +96,4 @@ ResInject.setResReplacement(packageName, "string", "demo_replaced", fakeId);
 ResInject.setDensityReplacement(packageName, "dimen", "demo_dimen", 2.0f);
 ```
 
-调用 `injectModuleRes` 后会 Hook 资源加载流程，替换表在首次设置替换项时生效。
+`injectModuleRes` 注入模块资源并安装资源 Hook，替换规则在首次设置时生效。

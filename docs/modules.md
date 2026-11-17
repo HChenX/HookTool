@@ -1,6 +1,6 @@
 # 模块与依赖
 
-HookTool 4.0.0 按能力拆分为多个库，按需引入。
+HookTool 4.0.0 按能力拆分为多个库，按需引入即可。
 
 ## 模块列表
 
@@ -12,7 +12,7 @@ HookTool 4.0.0 按能力拆分为多个库，按需引入。
 | `hooktool-res` | Java | xposed、reflect | 资源注入 |
 | `hooktool-shell` | Java | common | Shell 命令执行 |
 | `hooktool-utils` | Java | reflect、common | 设备、包、配置、界面工具 |
-| `hooktool-kt` | Kotlin | `hooktool-xposed`、`hooktool-reflect` | Kotlin Hook DSL |
+| `hooktool-kt` | Kotlin | xposed、reflect | Kotlin Hook DSL |
 | `hooktool-bom` | — | — | 版本对齐 |
 
 只有 `hooktool-kt` 会引入 Kotlin 运行时。
@@ -39,14 +39,14 @@ hooktool-utils ──> hooktool-reflect + hooktool-common
 | `hooktool-utils` | reflect、common | 需要反射读取系统字段，并写日志 |
 | `hooktool-kt` | xposed、reflect | DSL 只用到 Hook API 与反射，工具库按需另行引入 |
 
-`hooktool-kt` 不引入 res、shell、utils：需要这些能力时单独添加，避免一个 DSL 把整套工具拖进依赖图。
+`hooktool-kt` 不引入 res、shell、utils，需要这些能力时单独添加。
 
 ## 按场景选择
 
 | 场景 | 依赖 |
 |---|---|
 | 编写完整 Xposed 模块 | `hooktool-xposed` + `hooktool-reflect` |
-| 编写 Kotlin 模块 | `hooktool-xposed` + `hooktool-kt` |
+| 编写 Kotlin 模块 | `hooktool-kt` |
 | 只做反射调用 | `hooktool-reflect` |
 | 只执行 Shell 命令 | `hooktool-shell` |
 | 只读取设备或包信息 | `hooktool-utils` |
@@ -65,4 +65,4 @@ implementation platform('com.github.HChenX.HookTool:hooktool-bom:4.0.0')
 
 `io.github.libxposed:api` 需由使用方自行声明为 `compileOnly`，运行期由框架提供。
 
-每个模块同时发布 `-sources.jar`，在 IDE 中可直接查看源码，无需反编译。
+每个模块同时发布 `-sources.jar`，在 IDE 中可直接查看源码。

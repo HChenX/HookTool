@@ -108,8 +108,7 @@ public final class DeviceTool {
     }
 
     /**
-     * 解析 MIUI 版本号：兼容带点的完整版本串与紧凑版本码（{@code "V150"} → {@code 15.0}、
-     * {@code "V125"} → {@code 12.5}、{@code "V12"} → {@code 12.0}）。
+     * 解析 MIUI 版本号：兼容带点的完整版本串与紧凑版本码（{@code "V150"} → {@code 15.0}、{@code "V125"} → {@code 12.5}、{@code "V12"} → {@code 12.0}）。
      *
      * @param raw 系统属性原始值
      * @return 解析结果；无法解析时返回 {@code -1f}
@@ -137,8 +136,7 @@ public final class DeviceTool {
     }
 
     /**
-     * 解析 HyperOS 版本号：取首个数字段及其后一段小数（{@code "OS3.0"} → {@code 3.0}、
-     * {@code "OS2.0.201.0"} → {@code 2.0}）。
+     * 解析 HyperOS 版本号：取首个数字段及其后一段小数（{@code "OS3.0"} → {@code 3.0}、{@code "OS2.0.201.0"} → {@code 2.0}）。
      *
      * @param raw 系统属性原始值
      * @return 解析结果；无法解析时返回 {@code -1f}
@@ -303,8 +301,7 @@ public final class DeviceTool {
     }
 
     /**
-     * 将版本字符串解析为浮点数；支持多段版本串（如 {@code "2.0.201.0"}）取前两段解析，
-     * 解析失败返回 {@code -1f} 表示无法判定。
+     * 将版本字符串解析为浮点数；支持多段版本串（如 {@code "2.0.201.0"}）取前两段解析，解析失败返回 {@code -1f} 表示无法判定。
      *
      * @param raw 版本字符串
      * @return 解析得到的版本号；无法解析时返回 {@code -1f}

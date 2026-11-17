@@ -139,10 +139,8 @@ public final class HookRegistry {
      * <p>
      * 与 {@link #reloading(Bundle)} 不同，此方法不会清空注册表。
      *
-     * @param param 热重载完成参数，包含之前通过 {@code param.setSavedInstanceState(merged)}
-     *              保存的全局状态快照
-     * @throws NullPointerException 如果 {@code param} 或
-     *                              {@code param.getSavedInstanceState()} 为 {@code null}
+     * @param param 热重载完成参数，包含之前通过 {@code param.setSavedInstanceState(merged)} 保存的全局状态快照
+     * @throws NullPointerException 如果 {@code param} 或 {@code param.getSavedInstanceState()} 为 {@code null}
      */
     @SuppressWarnings("unchecked")
     public static void reloaded(@NonNull XposedModuleInterface.HotReloadedParam param) {

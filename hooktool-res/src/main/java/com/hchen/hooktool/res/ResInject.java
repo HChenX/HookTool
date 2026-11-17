@@ -143,18 +143,12 @@ public final class ResInject {
     /**
      * 将模块的 APK 资源注入到目标应用的资源加载流程中。
      * <p>
-     * 仅首次调用生效；使用前须在模块的 {@code build.gradle} 中配置：
+     * 仅首次调用生效，调用前须在模块的 {@code build.gradle} 中指定资源包前缀。
      * <pre>{@code
-     * // Kotlin Gradle DSL
      * androidResources.additionalParameters("--allow-reserved-package-id", "--package-id", "0x64")
-     *
-     * // Groovy
-     * aaptOptions.additionalParameters '--allow-reserved-package-id', '--package-id', '0x64'
      * }</pre>
-     * {@code 0x64} 为资源 ID 前缀，可自行修改（推荐范围 0x30 至 0x6F）。
      *
-     * @throws IllegalStateException 创建 {@link ResourcesLoader} 或 {@link ParcelFileDescriptor} 失败时抛出；
-     *                               其余任意 {@link Throwable}（如 hook 失败）将原样上抛
+     * @throws IllegalStateException 创建 {@link ResourcesLoader} 或 {@link ParcelFileDescriptor} 失败时抛出；其余任意 {@link Throwable}（如 hook 失败）将原样上抛
      */
     public static void injectModuleRes() {
         if (!sIsInjected.compareAndSet(false, true)) return;

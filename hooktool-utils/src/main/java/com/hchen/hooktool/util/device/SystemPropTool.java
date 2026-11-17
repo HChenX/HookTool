@@ -46,8 +46,7 @@ public final class SystemPropTool {
     }
 
     /**
-     * 统一的反射调用入口：任何反射失败（方法缺失、访问受限等）都捕获并降级为 {@code null}，
-     * 由各 getProp 方法回退到默认值，不向上抛出。
+     * 统一的反射调用入口：任何反射失败（方法缺失、访问受限等）都捕获并降级为 {@code null}，由各 getProp 方法回退到默认值，不向上抛出。
      *
      * @param methodName 目标 SystemProperties 方法名
      * @param types      参数类型数组
@@ -128,8 +127,7 @@ public final class SystemPropTool {
     }
 
     /**
-     * 使用指定的类加载器获取字符串类型的系统属性值。
-     * 用于在特定类加载上下文中访问系统属性，加载或调用失败时返回空字符串。
+     * 使用指定的类加载器获取字符串类型的系统属性值。用于在特定类加载上下文中访问系统属性，加载或调用失败时返回空字符串。
      *
      * @param key         属性名称
      * @param classLoader 用于加载 {@code android.os.SystemProperties} 类的类加载器
@@ -152,8 +150,7 @@ public final class SystemPropTool {
     }
 
     /**
-     * 设置系统属性值。
-     * 普通应用无法生效，只在系统框架进程中可能成功。
+     * 设置系统属性值。普通应用无法生效，只在系统框架进程中可能成功。
      *
      * @param key   属性名称
      * @param value 要设置的属性值

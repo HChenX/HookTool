@@ -1,8 +1,5 @@
-# Consumer rules for every module that depends on hooktool-common.
-#
-# LogExpand derives log tags from stack traces, so line information must survive shrinking.
+# LogExpand 从堆栈推导日志标签，混淆时必须保留行号信息。
 -keepattributes SourceFile,LineNumberTable
 
-# androidx.annotation is a compileOnly dependency: the annotations are present in class files but
-# not on the runtime classpath of consumers.
+# androidx.annotation 为 compileOnly 依赖，使用方的运行期不存在这些注解类。
 -dontwarn androidx.annotation.**

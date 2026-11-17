@@ -71,7 +71,7 @@ method("sum", Int::class, Int::class) {
 }
 ```
 
-语义差异：
+跳过原方法的方式：
 
 | 写法 | 原方法 | `after` |
 |---|---|---|
@@ -89,7 +89,7 @@ method("greet", String::class) {
     }
     after {
         val cost = System.nanoTime() - (data as Long)
-        val name = thisAs<MyTarget>()
+        val target = thisAs<MyTarget>()
     }
 }
 ```
