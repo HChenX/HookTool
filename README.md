@@ -25,7 +25,7 @@
 | `hooktool-kt` | Kotlin | xposed、reflect | Hook DSL |
 | `hooktool-bom` | — | — | 版本对齐 |
 
-只有 `hooktool-kt` 携带 `kotlin-stdlib`，其余 6 个库的 POM 由构建门禁保证不含 Kotlin 依赖。
+只有 `hooktool-kt` 携带 `kotlin-stdlib`，其余 6 个库的发布元数据由构建门禁保证不含 Kotlin 依赖。
 
 ### 使用方法
 
@@ -133,7 +133,7 @@ docs/               使用文档与迁移指引
 ./gradlew :app-java:assembleDebug                # 纯 Java 消费方
 ```
 
-构建内置三条门禁：非 `-kt` 模块不得出现 `.kt` 文件；`hooktool-reflect` 的运行期依赖不得包含 Android 或 libxposed；非 `-kt` 模块的 POM 不得包含 Kotlin 依赖。
+构建内置三条门禁：非 `-kt` 模块不得出现 `.kt` 文件；`hooktool-reflect` 的运行期依赖不得包含 Android 或 libxposed；非 `-kt` 模块的 POM 与 Gradle module metadata 不得包含 Kotlin 依赖。
 
 ### 文档
 

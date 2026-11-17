@@ -1,4 +1,7 @@
+import groovy.json.JsonOutput
+import groovy.json.JsonSlurper
 import org.gradle.api.publish.maven.tasks.GenerateMavenPom
+import org.gradle.api.publish.tasks.GenerateModuleMetadata
 
 plugins {
     id 'maven-publish'
@@ -7,9 +10,9 @@ plugins {
 group = 'com.github.HChenX.HookTool'
 version = rootProject.ext.hooktoolVersion
 
-// AGP 内置的 Kotlin 支持会向所有 Android 模块的 POM 注入 kotlin-stdlib
-// 纯 Java 产物不应声明 Kotlin 运行时依赖，因此生成 POM 后统一移除
-// AGP 在 withXml 动作之后才写入依赖，故不使用 MavenPom.withXml
+// AGP 的内置 Kotlin 支持会向所有 Android 模块注入 kotlin-stdlib。
+// 纯 Java 产物不应声明 Kotlin 运行时，因此在生成 POM 与 module metadata 之后统一移除。
+// 依赖在任务主体执行完之后才写入，所以改写必须放在 doLast 中。
 def kotlinModule = project.name.endsWith('-kt')
 
 if (!kotlinModule) {
@@ -27,21 +30,44 @@ if (!kotlinModule) {
         }
     }
 
-    // 校验 POM 中不含 Kotlin 依赖
-    def pomFileProvider = layout.buildDirectory.file('publications/release/pom-default.xml')
-    def verifyPom = tasks.register('verifyPomHasNoKotlin') {
-        group = 'verification'
-        description = '校验产物的 POM 中不存在 Kotlin 依赖。'
-        dependsOn 'generatePomFileForReleasePublication'
-        doLast {
-            def pomFile = pomFileProvider.get().asFile
-            if (!pomFile.exists()) {
-                throw new GradleException("Missing generated POM for '${project.name}': " + pomFile)
+    tasks.withType(GenerateModuleMetadata).configureEach { task ->
+        task.doLast {
+            def file = task.outputFile.get().asFile
+            if (!file.exists()) return
+            def json = new JsonSlurper().parseText(file.getText('UTF-8'))
+            boolean removed = false
+            json.variants.each { variant ->
+                def dependencies = variant.dependencies
+                if (dependencies instanceof List) {
+                    if (dependencies.removeAll { it instanceof Map && it.group == 'org.jetbrains.kotlin' }) {
+                        removed = true
+                    }
+                }
             }
-            if (pomFile.getText('UTF-8').contains('org.jetbrains.kotlin')) {
-                throw new GradleException("Module '${project.name}' publishes a Kotlin dependency: " + pomFile)
+            if (removed) {
+                file.setText(JsonOutput.prettyPrint(JsonOutput.toJson(json)), 'UTF-8')
             }
         }
     }
-    tasks.named('check') { dependsOn verifyPom }
+
+    // 校验发布产物中不含 Kotlin 依赖。
+    def pomFileProvider = layout.buildDirectory.file('publications/release/pom-default.xml')
+    def moduleFileProvider = layout.buildDirectory.file('publications/release/module.json')
+    def verifyMetadata = tasks.register('verifyNoKotlinMetadata') {
+        group = 'verification'
+        description = '校验发布产物的元数据中不存在 Kotlin 依赖。'
+        dependsOn 'generatePomFileForReleasePublication', 'generateMetadataFileForReleasePublication'
+        doLast {
+            [pomFileProvider.get().asFile, moduleFileProvider.get().asFile].each { file ->
+                if (!file.exists()) {
+                    throw new GradleException("Missing publish metadata for '${project.name}': " + file)
+                }
+                if (file.getText('UTF-8').contains('org.jetbrains.kotlin')) {
+                    throw new GradleException("Module '${project.name}' publishes a Kotlin dependency: " + file)
+                }
+            }
+        }
+    }
+
+    tasks.named('check') { dependsOn verifyMetadata }
 }
