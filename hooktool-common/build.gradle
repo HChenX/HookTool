@@ -1,0 +1,15 @@
+plugins {
+    id 'hooktool.android-library'
+}
+
+android {
+    namespace 'com.hchen.hooktool.common'
+
+    defaultConfig {
+        consumerProguardFiles 'proguard-rules.pro'
+    }
+}
+
+dependencies {
+    compileOnly libs.annotation
+}

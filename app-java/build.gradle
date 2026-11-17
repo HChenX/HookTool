@@ -1,0 +1,35 @@
+plugins {
+    alias(libs.plugins.android.library)
+}
+
+// 组件库的纯 Java 消费方，只依赖叶子库
+// 不引入 hooktool-xposed，因此没有 libxposed；不引入 hooktool-kt，因此没有 Kotlin 运行时
+// 该模块用于校验组件拆分的结果
+android {
+    namespace 'com.hchen.appjava'
+    compileSdk {
+        version = release(37)
+    }
+
+    defaultConfig {
+        minSdk 30
+        aarMetadata {
+            minCompileSdk = 30
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
+    }
+
+    buildFeatures {
+        buildConfig false
+    }
+}
+
+dependencies {
+    implementation project(':hooktool-reflect')
+    implementation project(':hooktool-shell')
+    implementation project(':hooktool-utils')
+}

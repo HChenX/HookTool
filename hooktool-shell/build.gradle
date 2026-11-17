@@ -1,0 +1,12 @@
+plugins {
+    id 'hooktool.android-library'
+}
+
+android {
+    namespace 'com.hchen.hooktool.shell'
+}
+
+dependencies {
+    implementation project(':hooktool-common')
+    compileOnly libs.annotation
+}

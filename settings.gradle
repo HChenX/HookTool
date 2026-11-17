@@ -1,4 +1,5 @@
 pluginManagement {
+    includeBuild("build-logic")
     repositories {
         google {
             content {
@@ -25,5 +26,18 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "HookTool"
-include ':tool'
+
+// 4.0.0 组件库，详见 docs/module-split-proposal.md
+include ':hooktool-reflect'
+include ':hooktool-common'
+include ':hooktool-xposed'
+include ':hooktool-res'
+include ':hooktool-shell'
+include ':hooktool-utils'
+include ':hooktool-kt'
+include ':hooktool-bom'
+
 include ':app'
+
+// 纯 Java 消费方，用于校验组件拆分结果。
+include ':app-java'

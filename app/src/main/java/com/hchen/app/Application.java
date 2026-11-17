@@ -20,7 +20,7 @@ package com.hchen.app;
 
 import androidx.annotation.NonNull;
 
-import com.hchen.hooktool.ModuleConfig;
+import com.hchen.hooktool.config.HookConfig;
 import com.hchen.hooktool.log.AndroidLog;
 
 import io.github.libxposed.service.XposedService;
@@ -41,9 +41,9 @@ public class Application extends android.app.Application
     @Override
     public void onCreate() {
         super.onCreate();
-        ModuleConfig.setLogTag("TestDemo");
-        ModuleConfig.setLogLevel(ModuleConfig.LOG_D);
-        ModuleConfig.setPrefsName("test_demo_prefs");
+        HookConfig.setLogTag("TestDemo");
+        HookConfig.setLogLevel(HookConfig.LOG_D);
+        HookConfig.setPrefsName("test_demo_prefs");
 
         XposedServiceHelper.registerListener(this);
     }

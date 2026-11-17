@@ -1,0 +1,15 @@
+plugins {
+    id 'hooktool.java-library'
+}
+
+dependencies {
+    // 仅编译期使用，不进入产物依赖
+    compileOnly libs.annotation
+
+    testImplementation libs.junit.jupiter
+    testRuntimeOnly libs.junit.platform.launcher
+}
+
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
+}

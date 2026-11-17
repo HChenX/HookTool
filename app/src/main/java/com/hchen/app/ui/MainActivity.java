@@ -20,6 +20,8 @@ package com.hchen.app.ui;
 
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Button;
+import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.Nullable;
@@ -29,32 +31,35 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.hchen.app.R;
+import com.hchen.app.demo.DemoRunner;
 
 /**
- * HookTool 示例应用的主界面 Activity。
+ * 示例应用主界面。
  *
  * @author 焕晨HChen
  */
 public class MainActivity extends AppCompatActivity {
-    /**
-     * 初始化主界面并应用 Edge-to-Edge 边到边布局。
-     *
-     * @param savedInstanceState 保存的实例状态，可为 {@code null}
-     */
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         getWindow().setNavigationBarContrastEnforced(false);
-
         setContentView(R.layout.activity_main);
+
         View root = findViewById(R.id.main);
         if (root != null) {
-            ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
+            ViewCompat.setOnApplyWindowInsetsListener(root, (view, insets) -> {
                 Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-                v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+                view.setPadding(systemBars.left, systemBars.top, systemBars.right,
+                    systemBars.bottom);
                 return insets;
             });
+        }
+
+        TextView result = findViewById(R.id.result);
+        Button run = findViewById(R.id.run);
+        if (run != null && result != null) {
+            run.setOnClickListener(view -> result.setText(DemoRunner.run()));
         }
     }
 }

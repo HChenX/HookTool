@@ -1,0 +1,27 @@
+plugins {
+    id 'hooktool.android-library'
+}
+
+android {
+    namespace 'com.hchen.hooktool.kt'
+}
+
+dependencies {
+    api project(':hooktool-reflect')
+    api project(':hooktool-common')
+    api project(':hooktool-xposed')
+    api project(':hooktool-res')
+    api project(':hooktool-shell')
+    api project(':hooktool-utils')
+    compileOnly libs.annotation
+    // 公开接口会传递 Hook 句柄与调用链，编译期需要框架 API
+    // 运行期由宿主框架提供，与 hooktool-xposed 一致
+    compileOnly libs.xposed
+
+    testImplementation libs.junit.jupiter
+    testRuntimeOnly libs.junit.platform.launcher
+}
+
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
+}

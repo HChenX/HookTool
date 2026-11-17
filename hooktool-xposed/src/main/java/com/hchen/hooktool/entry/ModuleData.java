@@ -1,0 +1,238 @@
+/*
+ * This file is part of HookTool.
+ *
+ * HookTool is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation; either version 2.1 of the License, or
+ * (at your option) any later version.
+ *
+ * HookTool is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with HookTool. If not, see <https://www.gnu.org/licenses/lgpl-2.1>.
+ *
+ * Copyright (C) 2024–2026 HChenX
+ */
+package com.hchen.hooktool.entry;
+
+import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
+import android.os.ParcelFileDescriptor;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import java.io.FileNotFoundException;
+import java.util.Objects;
+
+import io.github.libxposed.api.XposedInterfaceWrapper;
+
+/**
+ * 模块运行时数据存储类，集中管理 Xposed 模块的核心运行状态。
+ *
+ * @author 焕晨HChen
+ */
+public final class ModuleData {
+    public static final String MODULE_HOST_CLASSLOADER = "module_host_classloader";
+    private static volatile boolean sIsXposedEnvironment;
+    private static volatile XposedInterfaceWrapper sWrapper;
+    private static volatile ClassLoader sClassLoader;
+
+    private ModuleData() {
+    }
+
+    /**
+     * 设置 Xposed 接口包装器实例。
+     *
+     * @param wrapper Xposed 接口包装器实例
+     */
+    static void setWrapper(@NonNull XposedInterfaceWrapper wrapper) {
+        Objects.requireNonNull(wrapper, "Xposed wrapper must not be null.");
+        ModuleData.sWrapper = wrapper;
+        ModuleData.sIsXposedEnvironment = true;
+    }
+
+    /**
+     * 设置目标应用的类加载器。
+     *
+     * @param classLoader 目标应用的 ClassLoader 实例
+     */
+    public static void setClassLoader(@NonNull ClassLoader classLoader) {
+        ModuleData.sClassLoader = classLoader;
+    }
+
+    /**
+     * 获取当前的 Xposed 接口包装器实例。
+     *
+     * @return 已设置的 XposedInterfaceWrapper 实例
+     * @throws IllegalStateException 当前未处于 Xposed 运行环境时抛出
+     */
+    @NonNull
+    public static XposedInterfaceWrapper getWrapper() {
+        if (!isXposedEnvironment()) {
+            throw new IllegalStateException("Please call in the xposed environment.");
+        }
+
+        Objects.requireNonNull(sWrapper);
+        return sWrapper;
+    }
+
+    /**
+     * 获取当前 Xposed 框架的 API 版本号。
+     *
+     * @return API 版本号整数值
+     */
+    public static int getApiVersion() {
+        return getWrapper().getApiVersion();
+    }
+
+    /**
+     * 获取当前运行的 Xposed 框架名称。
+     *
+     * @return 框架名称字符串
+     */
+    @NonNull
+    public static String getFrameworkName() {
+        return getWrapper().getFrameworkName();
+    }
+
+    /**
+     * 获取当前运行的 Xposed 框架版本描述。
+     *
+     * @return 框架版本描述字符串
+     */
+    @NonNull
+    public static String getFrameworkVersion() {
+        return getWrapper().getFrameworkVersion();
+    }
+
+    /**
+     * 获取当前运行的 Xposed 框架版本号。
+     *
+     * @return 框架版本号长整型值
+     */
+    public static long getFrameworkVersionCode() {
+        return getWrapper().getFrameworkVersionCode();
+    }
+
+    /**
+     * 获取当前 Xposed 框架的属性标志位。
+     *
+     * @return 框架属性值
+     */
+    public static long getFrameworkProperties() {
+        return getWrapper().getFrameworkProperties();
+    }
+
+    /**
+     * 获取指定名称的远程 SharedPreferences 实例。
+     * <p>
+     * 可用于跨进程访问模块的 SharedPreferences 数据。
+     *
+     * @param name SharedPreferences 文件名称
+     * @return 对应名称的远程 SharedPreferences 实例
+     */
+    @NonNull
+    public static SharedPreferences getRemotePreferences(@NonNull String name) {
+        return getWrapper().getRemotePreferences(name);
+    }
+
+    /**
+     * 获取当前模块的 {@link ApplicationInfo} 信息。
+     *
+     * @return 模块的 ApplicationInfo 实例
+     */
+    @NonNull
+    public static ApplicationInfo getModuleApplicationInfo() {
+        return getWrapper().getModuleApplicationInfo();
+    }
+
+    /**
+     * 获取当前模块的包名。
+     *
+     * @return 模块包名字符串
+     */
+    @NonNull
+    public static String getModulePackageName() {
+        return getWrapper().getModuleApplicationInfo().packageName;
+    }
+
+    /**
+     * 获取当前模块 APK 文件的绝对路径。
+     *
+     * @return 模块 APK 路径字符串
+     */
+    @NonNull
+    public static String getModulePath() {
+        return getWrapper().getModuleApplicationInfo().sourceDir;
+    }
+
+    /**
+     * 列出远程文件系统中所有可用的文件名。
+     *
+     * @return 远程文件名数组
+     */
+    @NonNull
+    public static String[] listRemoteFiles() {
+        return getWrapper().listRemoteFiles();
+    }
+
+    /**
+     * 以文件描述符方式打开指定的远程文件。
+     *
+     * @param name 要打开的远程文件名称
+     * @return 远程文件对应的 {@link ParcelFileDescriptor} 文件描述符
+     * @throws FileNotFoundException 指定名称的远程文件不存在时抛出
+     */
+    @NonNull
+    public static ParcelFileDescriptor openRemoteFile(@NonNull String name) throws FileNotFoundException {
+        return getWrapper().openRemoteFile(name);
+    }
+
+    /**
+     * 获取目标应用的类加载器。
+     *
+     * @return 目标应用的 ClassLoader 实例
+     * @throws IllegalStateException 类加载器尚未通过 {@link #setClassLoader(ClassLoader)} 设置时抛出
+     */
+    @NonNull
+    public static ClassLoader getClassLoader() {
+        ClassLoader cl = sClassLoader;
+        if (cl == null) {
+            throw new IllegalStateException("ClassLoader has not been set. Ensure ModuleData.setClassLoader() is called before use.");
+        }
+        return cl;
+    }
+
+    /**
+     * 获取目标应用的类加载器，未设置时返回 {@code null} 而不抛出异常。
+     *
+     * @return 已设置的 ClassLoader，或 {@code null}
+     */
+    @Nullable
+    public static ClassLoader getClassLoaderOrNull() {
+        return sClassLoader;
+    }
+
+    /**
+     * 获取 Java 系统类加载器。
+     *
+     * @return 系统 ClassLoader 实例
+     */
+    @NonNull
+    public static ClassLoader getSystemClassLoader() {
+        return ClassLoader.getSystemClassLoader();
+    }
+
+    /**
+     * 判断当前是否运行在 Xposed 框架环境中。
+     *
+     * @return {@code true} 表示处于 Xposed 环境，{@code false} 表示不在 Xposed 环境
+     */
+    public static boolean isXposedEnvironment() {
+        return sIsXposedEnvironment;
+    }
+}

@@ -1,0 +1,73 @@
+/*
+ * This file is part of HookTool.
+ *
+ * HookTool is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation; either version 2.1 of the License, or
+ * (at your option) any later version.
+ *
+ * HookTool is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with HookTool. If not, see <https://www.gnu.org/licenses/lgpl-2.1>.
+ *
+ * Copyright (C) 2024–2026 HChenX
+ */
+package com.hchen.hooktool.kt.internal
+
+import com.hchen.hooktool.hook.AbsHook
+import com.hchen.hooktool.kt.HookGroup
+import com.hchen.hooktool.kt.Stage
+
+import android.os.Bundle
+
+import io.github.libxposed.api.XposedInterface
+
+/**
+ * DSL 使用的 Hook 实现。
+ *
+ * @author 焕晨HChen
+ */
+internal class DslHook(
+    private val spec: MemberSpec,
+    private val group: HookGroup,
+) : AbsHook(spec.priority ?: XposedInterface.PRIORITY_DEFAULT, spec.id, null) {
+
+    override fun before() {
+        val block = spec.before ?: return
+        block(FrameImpl(this, Stage.BEFORE, null))
+    }
+
+    override fun proceed(chain: XposedInterface.Chain): Any? {
+        val block = spec.proceed ?: return super.proceed(chain)
+        return block(FrameImpl(this, Stage.PROCEED, chain))
+    }
+
+    override fun after() {
+        val block = spec.after ?: return
+        block(FrameImpl(this, Stage.AFTER, null))
+    }
+
+    override fun onThrow(stage: StageEnum, e: Throwable): Boolean {
+        val block = spec.onThrow ?: return false
+        val mapped = when (stage) {
+            StageEnum.BEFORE -> Stage.BEFORE
+            StageEnum.PROCEED -> Stage.PROCEED
+            StageEnum.AFTER -> Stage.AFTER
+        }
+        val frame = FrameImpl(this, mapped, null)
+        val consumed = block(frame, e)
+        return frame.isRecovered || consumed
+    }
+
+    override fun onHotReloading(extras: Bundle?, state: MutableMap<String, Any?>) {
+        group.saveState(state)
+    }
+
+    override fun onHotReloaded(thisObject: Any?, inState: MutableMap<String, Any?>) {
+        group.restoreState(inState)
+    }
+}

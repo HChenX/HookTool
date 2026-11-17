@@ -1,0 +1,28 @@
+plugins {
+    id 'java-platform'
+    id 'maven-publish'
+}
+
+group = 'com.github.HChenX.HookTool'
+version = rootProject.ext.hooktoolVersion
+
+dependencies {
+    constraints {
+        api project(':hooktool-reflect')
+        api project(':hooktool-common')
+        api project(':hooktool-xposed')
+        api project(':hooktool-res')
+        api project(':hooktool-shell')
+        api project(':hooktool-utils')
+        api project(':hooktool-kt')
+    }
+}
+
+publishing {
+    publications {
+        release(MavenPublication) {
+            from components.javaPlatform
+            artifactId = 'hooktool-bom'
+        }
+    }
+}

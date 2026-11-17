@@ -4,6 +4,9 @@ plugins {
     alias(libs.plugins.android.library) apply false
 }
 
+ext.hooktoolVersion = '4.0.0'
+ext.hooktoolVersionCode = 2027030100
+
 task clean(type: Delete) {
-    delete rootProject.buildDir
+    delete rootProject.layout.buildDirectory
 }

@@ -1,0 +1,66 @@
+plugins {
+    id 'com.android.library'
+    id 'hooktool.publish'
+}
+
+android {
+    compileSdk {
+        version = release(37)
+    }
+
+    defaultConfig {
+        minSdk 30
+        aarMetadata {
+            minCompileSdk = 30
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
+    }
+
+    publishing {
+        singleVariant('release') {
+            withSourcesJar()
+            withJavadocJar()
+        }
+    }
+
+    buildFeatures {
+        buildConfig false
+    }
+
+    testOptions {
+        unitTests {
+            returnDefaultValues = true
+        }
+    }
+}
+
+// hooktool-kt 是唯一允许包含 Kotlin 源码的模块
+if (!project.name.endsWith('-kt')) {
+    def verifyNoKotlin = tasks.register('verifyNoKotlinSources') {
+        group = 'verification'
+        description = '校验 Java 模块中不存在 Kotlin 源码。'
+        doLast {
+            def offenders = fileTree(projectDir) { include 'src/**/*.kt' }.files
+            if (!offenders.isEmpty()) {
+                throw new GradleException("Module '${project.name}' must stay Java-only, move these files to hooktool-kt: " +
+                    offenders.collect { it.name }.join(', '))
+            }
+        }
+    }
+
+    tasks.named('check') { dependsOn verifyNoKotlin }
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                from components.release
+            }
+        }
+    }
+}

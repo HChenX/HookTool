@@ -1,0 +1,39 @@
+plugins {
+    id 'java-library'
+    id 'hooktool.publish'
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+    withSourcesJar()
+    withJavadocJar()
+}
+
+publishing {
+    publications {
+        release(MavenPublication) {
+            from components.java
+        }
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 21
+}
+
+// 校验该模块只包含 Java 源码
+def verifyNoKotlin = tasks.register('verifyNoKotlinSources') {
+    group = 'verification'
+    description = '校验 Java 模块中不存在 Kotlin 源码。'
+    doLast {
+        def offenders = fileTree(projectDir) { include 'src/**/*.kt' }.files
+        if (!offenders.isEmpty()) {
+            throw new GradleException("Module '${project.name}' must stay Java-only, move these files to hooktool-kt: " +
+                offenders.collect { it.name }.join(', '))
+        }
+    }
+}
+
+tasks.named('check') { dependsOn verifyNoKotlin }

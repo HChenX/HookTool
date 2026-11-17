@@ -1,0 +1,27 @@
+plugins {
+    id 'hooktool.android-library'
+}
+
+android {
+    namespace 'com.hchen.hooktool.xposed'
+
+    defaultConfig {
+        consumerProguardFiles 'proguard-rules.pro'
+    }
+}
+
+dependencies {
+    implementation project(':hooktool-reflect')
+    implementation project(':hooktool-common')
+    compileOnly libs.annotation
+
+    compileOnly libs.xposed
+
+    testImplementation libs.junit.jupiter
+    testImplementation libs.xposed
+    testRuntimeOnly libs.junit.platform.launcher
+}
+
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
+}

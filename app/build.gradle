@@ -43,5 +43,11 @@ dependencies {
     implementation libs.activity
     implementation libs.constraintlayout
 
-    implementation(project(':tool'))
+    implementation project(':hooktool-xposed')
+    implementation project(':hooktool-reflect')
+    implementation project(':hooktool-common')
+    implementation project(':hooktool-res')
+    implementation project(':hooktool-shell')
+    implementation project(':hooktool-utils')
+    implementation project(':hooktool-kt')
 }
