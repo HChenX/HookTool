@@ -11,8 +11,8 @@ android {
 }
 
 dependencies {
+    api project(':hooktool-common')
     implementation project(':hooktool-reflect')
-    implementation project(':hooktool-common')
     compileOnly libs.annotation
 
     compileOnly libs.xposed

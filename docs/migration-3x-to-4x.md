@@ -21,17 +21,18 @@ compileOnly     'io.github.libxposed:api:102.0.0'
 
 ```
 com.hchen.hooktool.config   HookConfig（原 ModuleConfig）
-com.hchen.hooktool.log      AbstractLog / AndroidLog / LogExpand / Timing
+com.hchen.hooktool.log      AndroidLog / LogExpand
 com.hchen.hooktool.host     HostEnv / Host
 com.hchen.hooktool.result   ResultData / IDecomposer
 com.hchen.hooktool.reflect  Reflect / ReflectEnv / ReflectException / Lookup / Throwables
-com.hchen.hooktool.hook     AbsHook / Hook / HookBridge / HookRegistry / HookInterop / HookLog
-com.hchen.hooktool.hook.chain  ChainTool / ChainData / ChainType
-com.hchen.hooktool.entry    ModuleEntrance / AbsModule / ModuleData / XposedHost
+com.hchen.hooktool.hook     AbsHook / Hook / HookRegistry / HookInterop
+com.hchen.hooktool.hook.chain  ChainTool（ChainData、ChainType 为包级）
+com.hchen.hooktool.entry    ModuleEntrance / AbsModule / ModuleData
 com.hchen.hooktool.res      ResInject
 com.hchen.hooktool.shell    ShellTool / ShellResult / CommandResult / ShellFailureReason / I*Listener
 com.hchen.hooktool.util.ui     UiTool / BitmapTool
 com.hchen.hooktool.util.device DeviceTool / SystemPropTool / RangeMode
+com.hchen.hooktool.util     Timing
 com.hchen.hooktool.util.pkg    PackageTool / AppData / IAppDataGetter
 com.hchen.hooktool.util.prefs  PrefsTool
 com.hchen.hooktool.kt       Kotlin Hook DSL

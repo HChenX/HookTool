@@ -1,5 +1,10 @@
 # 工具库
 
+```groovy
+implementation 'com.github.HChenX.HookTool:hooktool-utils:4.0.0'
+implementation 'com.github.HChenX.HookTool:hooktool-shell:4.0.0'
+```
+
 ## Shell
 
 ```java

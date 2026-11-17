@@ -18,11 +18,11 @@
 |---|---|---|---|
 | `hooktool-reflect` | Java | 无 | 反射内核，纯 JVM，可在任何项目使用 |
 | `hooktool-common` | Java | 无 | 配置、日志、HostEnv SPI、ResultData |
-| `hooktool-xposed` | Java | reflect, common, `compileOnly` libxposed | Hook 引擎 + 模块入口生命周期 |
+| `hooktool-xposed` | Java | common（`api`）、reflect（`implementation`）、`compileOnly` libxposed | Hook 引擎 + 模块入口生命周期 |
 | `hooktool-res` | Java | xposed, reflect | 资源注入 |
 | `hooktool-shell` | Java | common | Shell 会话与命令 |
 | `hooktool-utils` | Java | reflect, common | 设备/ROM、UI 尺寸、包信息、跨进程配置 |
-| `hooktool-kt` | **Kotlin** | 以上全部（`api`） | Hook DSL，语法糖层 |
+| `hooktool-kt` | **Kotlin** | `hooktool-xposed`、`hooktool-reflect` | Hook DSL，语法糖层 |
 | `hooktool-bom` | — | — | 版本对齐 |
 
 只有 `hooktool-kt` 携带 `kotlin-stdlib`。其余 6 个库是纯 Java 产物，**POM 中不含任何 Kotlin 依赖**（由构建门禁强制保证）。
@@ -46,11 +46,12 @@ dependencyResolutionManagement {
 
 ```groovy
 dependencies {
-    // 写完整的 Xposed 模块：入口 + Hook 引擎（自动带入 reflect / common）
+    // 写完整的 Xposed 模块：入口 + Hook 引擎（自动带入 common）
     implementation 'com.github.HChenX.HookTool:hooktool-xposed:4.0.0'
+    implementation 'com.github.HChenX.HookTool:hooktool-reflect:4.0.0'
 
-    // Kotlin 用户再加语法糖层
-    implementation 'com.github.HChenX.HookTool:hooktool-kt:4.0.0'
+    // Kotlin 用户改用语法糖层，它会带上 xposed、reflect 与 common
+    // implementation 'com.github.HChenX.HookTool:hooktool-kt:4.0.0'
 
     // 其余按需挑选
     // implementation 'com.github.HChenX.HookTool:hooktool-res:4.0.0'
@@ -129,7 +130,7 @@ docs/               设计文档与迁移指引
 ./gradlew :app-java:assembleDebug                # 纯 Java 消费方
 ```
 
-构建内置三条门禁：非 `-kt` 模块不得出现 `.kt` 文件；`hooktool-reflect` 不得依赖 Android / libxposed；非 `-kt` 模块的 POM 不得包含 Kotlin 依赖。
+构建内置三条门禁：非 `-kt` 模块不得出现 `.kt` 文件；`hooktool-reflect` 的运行期依赖不得包含 Android 或 libxposed；非 `-kt` 模块的 POM 不得包含 Kotlin 依赖。
 
 ### 📚 文档
 

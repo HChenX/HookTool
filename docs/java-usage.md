@@ -4,8 +4,11 @@
 
 ```groovy
 implementation 'com.github.HChenX.HookTool:hooktool-xposed:4.0.0'
+implementation 'com.github.HChenX.HookTool:hooktool-reflect:4.0.0'
 compileOnly     'io.github.libxposed:api:102.0.0'
 ```
+
+`hooktool-xposed` 已带上 `hooktool-common`，可直接使用 `HookConfig` 与 `AndroidLog`。
 
 ## 模块入口
 

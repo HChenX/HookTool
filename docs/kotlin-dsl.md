@@ -3,10 +3,11 @@
 ## 引入依赖
 
 ```groovy
-implementation 'com.github.HChenX.HookTool:hooktool-xposed:4.0.0'
 implementation 'com.github.HChenX.HookTool:hooktool-kt:4.0.0'
 compileOnly     'io.github.libxposed:api:102.0.0'
 ```
+
+`hooktool-kt` 已带上 `hooktool-xposed`、`hooktool-reflect` 与 `hooktool-common`，无需重复声明。
 
 ## 基本用法
 

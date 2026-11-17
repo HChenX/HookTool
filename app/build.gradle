@@ -10,7 +10,7 @@ android {
 
     defaultConfig {
         applicationId "com.hchen.app"
-        // 与 tool 模块同步提升：tool 的 minSdk 已提升至 30
+
         minSdk 30
         targetSdk 37
         versionCode 1

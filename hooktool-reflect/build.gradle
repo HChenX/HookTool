@@ -13,3 +13,23 @@ dependencies {
 tasks.withType(Test).configureEach {
     useJUnitPlatform()
 }
+
+// 校验反射内核不引入 Android 或框架依赖
+def verifyNoFrameworkDeps = tasks.register('verifyNoFrameworkDeps') {
+    group = 'verification'
+    description = '校验 hooktool-reflect 不依赖 Android 或 libxposed。'
+    doLast {
+        def forbidden = configurations.runtimeClasspath.resolvedConfiguration.resolvedArtifacts.findAll { artifact ->
+            def id = artifact.moduleVersion.id
+            id.group == 'io.github.libxposed' ||
+                id.group.startsWith('androidx.') ||
+                id.group.startsWith('com.android.')
+        }
+        if (!forbidden.isEmpty()) {
+            throw new GradleException('hooktool-reflect must stay framework free: ' +
+                forbidden.collect { it.moduleVersion.id }.join(', '))
+        }
+    }
+}
+
+tasks.named('check') { dependsOn verifyNoFrameworkDeps }
