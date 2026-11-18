@@ -142,7 +142,7 @@ class DslSpecTest {
             state["count"] = 7
         }, null)
 
-        val state = HashMap<String, Any?>()
+        val state = mutableMapOf<String, Any?>()
         group.saveState(state)
         group.saveState(state)
 

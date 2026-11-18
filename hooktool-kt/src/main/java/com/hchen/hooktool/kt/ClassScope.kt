@@ -23,6 +23,7 @@ import com.hchen.hooktool.kt.internal.MemberKind
 import com.hchen.hooktool.kt.internal.MemberSpec
 
 import java.lang.reflect.Method
+import kotlin.reflect.KClass
 
 /**
  * 目标类的声明作用域。
@@ -103,7 +104,7 @@ class ClassScope internal constructor(internal val spec: ClassSpec) {
     /**
      * 设置热更新后的状态恢复逻辑。
      *
-     * @param block 读取 {@link onReloading} 保存的状态
+     * @param block 读取 [onReloading] 保存的状态
      */
     fun onReloaded(block: (Map<String, Any?>) -> Unit) {
         spec.onReloaded = block
@@ -124,21 +125,20 @@ class ClassScope internal constructor(internal val spec: ClassSpec) {
     }
 
     private fun buildLabel(kind: MemberKind, name: String?, params: Array<out Any>): String {
-        if (kind == MemberKind.CLINIT) return "<clinit>"
-        if (kind == MemberKind.ALL_METHODS) return "*"
-        if (kind == MemberKind.PREDICATE_METHODS) return "methods{predicate}"
         val owner = spec.targetName ?: spec.targetClass?.name ?: "?"
         val paramsText = params.joinToString(",") { tokenToString(it) }
-        return if (kind == MemberKind.CONSTRUCTOR) {
-            "$owner.<init>($paramsText)"
-        } else {
-            "$owner#$name($paramsText)"
+        return when (kind) {
+            MemberKind.CLINIT -> "<clinit>"
+            MemberKind.ALL_METHODS -> "*"
+            MemberKind.PREDICATE_METHODS -> "methods{predicate}"
+            MemberKind.CONSTRUCTOR -> "$owner.<init>($paramsText)"
+            MemberKind.METHOD -> "$owner#$name($paramsText)"
         }
     }
 
     private fun tokenToString(token: Any): String = when (token) {
         is Class<*> -> token.name
-        is kotlin.reflect.KClass<*> -> token.java.name
+        is KClass<*> -> token.java.name
         is String -> token
         else -> token.toString()
     }

@@ -63,12 +63,12 @@ class HookGroup internal constructor(
      */
     val id: String,
 ) {
-    private val hooks = ArrayList<AbsHook>()
-    private val handles = ArrayList<XposedInterface.HookHandle>()
-    private val installed = ArrayList<String>()
-    private val missing = ArrayList<MissingMember>()
+    private val hooks = mutableListOf<AbsHook>()
+    private val handles = mutableListOf<XposedInterface.HookHandle>()
+    private val installed = mutableListOf<String>()
+    private val missing = mutableListOf<MissingMember>()
 
-    private val statePrefix = STATE_PREFIX + id + ":"
+    private val statePrefix = "$STATE_PREFIX$id:"
 
     private var onReloadingBlock: ((MutableMap<String, Any?>) -> Unit)? = null
     private var onReloadedBlock: ((Map<String, Any?>) -> Unit)? = null
@@ -137,10 +137,10 @@ class HookGroup internal constructor(
     internal fun saveState(state: MutableMap<String, Any?>) {
         val block = onReloadingBlock ?: return
         if (saved) return
-        val local = HashMap<String, Any?>()
+        val local = mutableMapOf<String, Any?>()
         block(local)
         for ((key, value) in local) {
-            state[statePrefix + key] = value
+            state["$statePrefix$key"] = value
         }
         saved = true
         restored = false
@@ -154,10 +154,10 @@ class HookGroup internal constructor(
     internal fun restoreState(state: Map<String, Any?>) {
         val block = onReloadedBlock ?: return
         if (restored) return
-        val local = HashMap<String, Any?>()
+        val local = mutableMapOf<String, Any?>()
         for ((key, value) in state) {
             if (key.startsWith(statePrefix)) {
-                local[key.substring(statePrefix.length)] = value
+                local[key.removePrefix(statePrefix)] = value
             }
         }
         block(local)

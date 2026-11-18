@@ -30,7 +30,7 @@ public class MyEntrance extends ModuleEntrance {
 }
 ```
 
-`ModuleEntrance` 负责分发框架回调、注入类加载器与处理热更新。
+`ModuleEntrance` 负责分发框架回调、注入类加载器与处理热更新；回调不做去重，同一包重复触发时需要自行保证安装逻辑幂等。
 
 ## 业务分包
 

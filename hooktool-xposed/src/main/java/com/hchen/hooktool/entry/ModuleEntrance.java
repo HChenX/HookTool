@@ -36,7 +36,6 @@ import com.hchen.hooktool.reflect.Throwables;
 
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -57,11 +56,6 @@ public abstract class ModuleEntrance extends XposedModule {
     private volatile String mProcessName = "";
     private volatile String mPackageName = "";
     private volatile HookHandle mHandle;
-    /**
-     * 已分发过 {@code onPackageReady} 的包名。
-     */
-    private final Set<String> mDeliveredPackages =
-        Collections.synchronizedSet(new HashSet<>());
 
     /**
      * 初始化模块配置的抽象方法。
@@ -223,13 +217,6 @@ public abstract class ModuleEntrance extends XposedModule {
             return;
         }
 
-        // 框架可能重复回调同一包，重复安装会导致每个调用被拦截两次。
-        if (!mDeliveredPackages.add(param.getPackageName())) {
-            AndroidLog.logW(TAG, "onPackageReady delivered twice for " + param.getPackageName()
-                + ", skipping hook installation.");
-            return;
-        }
-
         ClassLoader classLoader = param.getClassLoader();
         if (classLoader != null) {
             ModuleData.setClassLoader(classLoader);
@@ -304,7 +291,6 @@ public abstract class ModuleEntrance extends XposedModule {
             mProcessName = param.getProcessName();
             ModuleData.setWrapper(this);
             Host.set(new XposedHost(this));
-            mDeliveredPackages.clear();
 
             loadConfig();
 

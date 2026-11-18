@@ -47,7 +47,7 @@ internal object Installer {
      * @return 整个代码块的句柄
      */
     fun install(spec: ClassSpec): HookGroup {
-        val group = HookGroup("g" + counter.incrementAndGet())
+        val group = HookGroup("g${counter.incrementAndGet()}")
         group.setReloadHandlers(spec.onReloading, spec.onReloaded)
         try {
             installMembers(spec, group)
@@ -78,14 +78,14 @@ internal object Installer {
             return
         }
 
-        val installed = HashSet<Executable>()
+        val installed = mutableSetOf<Executable>()
 
         for (member in spec.members) {
             if (member.kind == MemberKind.CLINIT) {
                 val hook = DslHook(member, group)
                 val handle = Hook.hookClassInitializer(clazz, hook)
-                group.add(hook, handle, clazz.name + ".<clinit>")
-                logInstall(member, clazz.name + ".<clinit>")
+                group.add(hook, handle, "${clazz.name}.<clinit>")
+                logInstall(member, "${clazz.name}.<clinit>")
                 continue
             }
 
@@ -104,7 +104,7 @@ internal object Installer {
                     ReflectException(
                         ReflectException.Kind.METHOD_NOT_FOUND,
                         member.label,
-                        "No member matched " + member.label,
+                        "No member matched ${member.label}",
                     ),
                 )
                 continue
@@ -115,7 +115,7 @@ internal object Installer {
                     throw ReflectException(
                         ReflectException.Kind.DUPLICATE,
                         member.label,
-                        "Member declared twice in the same hook block: " + executable.toGenericString(),
+                        "Member declared twice in the same hook block: ${executable.toGenericString()}",
                     )
                 }
                 val hook = DslHook(member, group)
@@ -127,7 +127,7 @@ internal object Installer {
     }
 
     /**
-     * 按成员级 {@code optional} 与类级缺失策略处理无法解析的成员。
+     * 按成员级 `optional` 与类级缺失策略处理无法解析的成员。
      *
      * @param group 本次安装的句柄集合
      * @param member 无法解析的成员
@@ -148,7 +148,7 @@ internal object Installer {
     }
 
     private fun logInstall(member: MemberSpec, signature: String) {
-        if (member.logInstall) AndroidLog.logI(TAG, "Hooked " + signature)
+        if (member.logInstall) AndroidLog.logI(TAG, "Hooked $signature")
     }
 
     private fun resolve(
@@ -186,7 +186,7 @@ internal object Installer {
                 else -> throw ReflectException(
                     ReflectException.Kind.PARAM_MISMATCH,
                     member.label,
-                    "Parameter tokens must be KClass, Class or a class name String, but were " + token.javaClass.name,
+                    "Parameter tokens must be KClass, Class or a class name String, but were ${token.javaClass.name}",
                 )
             }
         }.toTypedArray()

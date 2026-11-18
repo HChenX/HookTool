@@ -45,11 +45,11 @@ class DslHooks : DemoHook {
                 logInstall()
                 before {
                     callCount++
-                    AndroidLog.logD(TAG, "greet 参数: " + argAs<String>(0))
+                    AndroidLog.logD(TAG, "greet 参数: ${argAs<String>(0)}")
                     setArg(0, "dsl")
                 }
                 after {
-                    AndroidLog.logD(TAG, "greet 返回值: " + resultAs<String>())
+                    AndroidLog.logD(TAG, "greet 返回值: ${resultAs<String>()}")
                 }
             }
 
@@ -84,7 +84,7 @@ class DslHooks : DemoHook {
 
         groups += hook(Target::class.java) {
             methods({ method -> method.name.startsWith("describe") }) {
-                before { AndroidLog.logD(TAG, "批量拦截: " + method.name) }
+                before { AndroidLog.logD(TAG, "批量拦截: ${method.name}") }
             }
         }
 
@@ -103,7 +103,7 @@ class DslHooks : DemoHook {
 
         for (group in groups) {
             for (missing in group.report().missing) {
-                AndroidLog.logW(TAG, "未安装: " + missing.target)
+                AndroidLog.logW(TAG, "未安装: ${missing.target}")
             }
         }
     }

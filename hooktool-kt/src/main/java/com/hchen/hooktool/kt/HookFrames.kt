@@ -65,14 +65,14 @@ interface HookFrame {
 }
 
 /**
- * {@code before} 代码块的作用域。
+ * `before` 代码块的作用域。
  *
  * @author 焕晨HChen
  */
 @HookDsl
 interface BeforeScope : HookFrame {
     /**
-     * 跳过原方法并返回 null，同时不执行 {@code after}。
+     * 跳过原方法并返回 null，同时不执行 `after`。
      */
     fun skip()
 
@@ -92,7 +92,7 @@ interface BeforeScope : HookFrame {
 }
 
 /**
- * {@code proceed} 代码块的作用域。
+ * `proceed` 代码块的作用域。
  *
  * @author 焕晨HChen
  */
@@ -116,7 +116,7 @@ interface ProceedScope : HookFrame {
 }
 
 /**
- * {@code after} 代码块的作用域。
+ * `after` 代码块的作用域。
  *
  * @author 焕晨HChen
  */
@@ -128,13 +128,13 @@ interface AfterScope : HookFrame {
     var result: Any?
 
     /**
-     * {@code proceed} 阶段未被消费的异常。
+     * `proceed` 阶段未被消费的异常。
      */
     val throwable: Throwable?
 }
 
 /**
- * {@code onThrow} 代码块的作用域。
+ * `onThrow` 代码块的作用域。
  *
  * @author 焕晨HChen
  */

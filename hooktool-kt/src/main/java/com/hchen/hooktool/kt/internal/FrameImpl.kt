@@ -42,7 +42,7 @@ internal class FrameImpl(
     private var recovered = false
 
     /**
-     * 是否调用过 {@link recoverWith}。
+     * 是否调用过 [recoverWith]。
      */
     val isRecovered: Boolean
         get() = recovered
@@ -58,9 +58,7 @@ internal class FrameImpl(
 
     override fun arg(index: Int): Any? = hook.getArg(index)
 
-    override fun setArg(index: Int, value: Any?) {
-        hook.setArg(index, value)
-    }
+    override fun setArg(index: Int, value: Any?) = hook.setArg(index, value)
 
     override var data: Any?
         get() = hook.frameData
@@ -68,17 +66,11 @@ internal class FrameImpl(
             hook.frameData = value
         }
 
-    override fun skip() {
-        hook.setResult(null)
-    }
+    override fun skip() = hook.setResult(null)
 
-    override fun skipWith(value: Any?) {
-        hook.setResult(value)
-    }
+    override fun skipWith(value: Any?) = hook.setResult(value)
 
-    override fun throwIt(throwable: Throwable) {
-        hook.setThrowable(throwable)
-    }
+    override fun throwIt(throwable: Throwable) = hook.setThrowable(throwable)
 
     override fun proceed(): Any? = requireChain().proceed()
 

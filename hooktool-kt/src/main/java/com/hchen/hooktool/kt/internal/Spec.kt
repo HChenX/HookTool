@@ -72,7 +72,7 @@ internal class ClassSpec(
     val loader: ClassLoader?,
 ) {
     var missingPolicy: MissingPolicy = MissingPolicy.STRICT
-    val members = ArrayList<MemberSpec>()
+    val members = mutableListOf<MemberSpec>()
     var onReloading: ((MutableMap<String, Any?>) -> Unit)? = null
     var onReloaded: ((Map<String, Any?>) -> Unit)? = null
 }

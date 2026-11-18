@@ -74,7 +74,7 @@ enum class MissingPolicy {
     IGNORE,
 
     /**
-     * 跳过该成员并记录到 {@link HookGroup#report}。
+     * 跳过该成员并记录到 [HookGroup.report]。
      */
     REPORT,
 }

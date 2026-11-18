@@ -39,7 +39,7 @@ class MemberScope internal constructor(private val member: MemberSpec) {
     /**
      * 设置执行原方法的代码块。
      * <p>
-     * 返回值作为方法结果，{@code after} 仍会执行。
+     * 返回值作为方法结果，`after` 仍会执行。
      *
      * @param block 拦截逻辑
      */
