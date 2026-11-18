@@ -115,6 +115,7 @@ final class HookBridge {
         absHook.mIsStatic = mIsStatic;
         XposedInterface.HookHandle handle = mBuilder.intercept(new XposedInterface.Hooker() {
             @Override
+            @Nullable
             public Object intercept(@NonNull XposedInterface.Chain chain) throws Throwable {
                 absHook.enter(chain);
 

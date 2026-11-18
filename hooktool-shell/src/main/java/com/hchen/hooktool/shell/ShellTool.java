@@ -360,6 +360,8 @@ public final class ShellTool {
 
     /**
      * Shell 流内部实现类。
+     *
+     * @author 焕晨HChen
      */
     final class ShellImpl {
         private final Object writeLock = new Object();
@@ -798,6 +800,8 @@ public final class ShellTool {
 
     /**
      * Shell 标准输出和错误输出的读取线程管理类。
+     *
+     * @author 焕晨HChen
      */
     final class StreamThread {
         private static final String[] EMPTY = new String[0];
@@ -1037,6 +1041,8 @@ public final class ShellTool {
 
         /**
          * 命令结束标记的解析结果。
+         *
+         * @author 焕晨HChen
          */
         private static final class Marker {
             final long id;
@@ -1053,6 +1059,8 @@ public final class ShellTool {
 
         /**
          * 单条命令的待处理数据：持有独立的 {@link CompletableFuture}、随机 nonce 与收集缓冲。
+         *
+         * @author 焕晨HChen
          */
         static final class PendingCommand {
             final long id;

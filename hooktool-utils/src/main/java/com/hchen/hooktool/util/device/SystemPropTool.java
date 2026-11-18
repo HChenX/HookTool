@@ -19,6 +19,7 @@
 package com.hchen.hooktool.util.device;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.hchen.hooktool.log.AndroidLog;
 import com.hchen.hooktool.reflect.Reflect;
@@ -108,7 +109,8 @@ public final class SystemPropTool {
      * @param def 属性不存在或读取失败时的默认值
      * @return 属性的字符串值
      */
-    public static String getProp(@NonNull String key, String def) {
+    @Nullable
+    public static String getProp(@NonNull String key, @Nullable String def) {
         if (PROP_CLASS == null) return def;
         Object v = callProp("get", new Class[]{String.class, String.class}, key, def);
         return v instanceof String s ? s : def;
@@ -120,6 +122,7 @@ public final class SystemPropTool {
      * @param key 属性名称
      * @return 属性的字符串值，不存在时为空字符串
      */
+    @NonNull
     public static String getProp(@NonNull String key) {
         if (PROP_CLASS == null) return "";
         Object v = callProp("get", new Class[]{String.class}, key);
@@ -133,7 +136,8 @@ public final class SystemPropTool {
      * @param classLoader 用于加载 {@code android.os.SystemProperties} 类的类加载器
      * @return 属性的字符串值，不存在时为空字符串
      */
-    public static String getProp(@NonNull String key, ClassLoader classLoader) {
+    @NonNull
+    public static String getProp(@NonNull String key, @Nullable ClassLoader classLoader) {
         try {
             Class<?> propClass = Reflect.findClass("android.os.SystemProperties", classLoader);
             Object v = Reflect.callStaticMethodWithTypes(
@@ -155,7 +159,7 @@ public final class SystemPropTool {
      * @param key   属性名称
      * @param value 要设置的属性值
      */
-    public static void setProp(@NonNull String key, String value) {
+    public static void setProp(@NonNull String key, @Nullable String value) {
         if (PROP_CLASS == null) return;
         callProp("set", new Class[]{String.class, String.class}, key, value);
     }

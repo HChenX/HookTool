@@ -77,6 +77,7 @@ public final class ChainTool {
      * @param classPath 目标类的全限定名，例如 {@code "com.example.MyClass"}
      * @return 已绑定目标类的 {@link ChainTool} 实例
      */
+    @NonNull
     public static ChainTool buildChain(@NonNull String classPath) {
         return new ChainTool(findClass(classPath));
     }
@@ -88,7 +89,8 @@ public final class ChainTool {
      * @param classLoader 用于加载目标类的类加载器，传入 {@code null} 时将使用默认行为
      * @return 已绑定目标类的 {@link ChainTool} 实例
      */
-    public static ChainTool buildChain(@NonNull String classPath, ClassLoader classLoader) {
+    @NonNull
+    public static ChainTool buildChain(@NonNull String classPath, @Nullable ClassLoader classLoader) {
         return new ChainTool(findClass(classPath, classLoader));
     }
 
@@ -98,6 +100,7 @@ public final class ChainTool {
      * @param clazz 目标类的 {@link Class} 对象
      * @return 已绑定目标类的 {@link ChainTool} 实例
      */
+    @NonNull
     public static ChainTool buildChain(@NonNull Class<?> clazz) {
         return new ChainTool(clazz);
     }
@@ -109,6 +112,7 @@ public final class ChainTool {
      * @param parameterTypes 方法的形参类型列表，每个元素可以是 {@link Class} 对象或表示基本类型名称的字符串
      * @return {@link ChainHook} 实例，用于配置具体的 Hook 行为
      */
+    @NonNull
     public ChainHook findMethod(@NonNull String methodName, @NonNull Object... parameterTypes) {
         this.mChainData = new ChainData(methodName, parameterTypes);
         return mChainHook;
@@ -122,6 +126,7 @@ public final class ChainTool {
      * @param methodName 待查找的方法名称
      * @return {@link ChainHook} 实例，用于配置具体的 Hook 行为
      */
+    @NonNull
     public ChainHook findAllMethod(@NonNull String methodName) {
         this.mChainData = new ChainData(methodName);
         return mChainHook;
@@ -133,6 +138,7 @@ public final class ChainTool {
      * @param parameterTypes 构造函数的形参类型列表，每个元素可以是 {@link Class} 对象或表示基本类型名称的字符串
      * @return {@link ChainHook} 实例，用于配置具体的 Hook 行为
      */
+    @NonNull
     public ChainHook findConstructor(@NonNull Object... parameterTypes) {
         this.mChainData = new ChainData(parameterTypes);
         return mChainHook;
@@ -145,6 +151,7 @@ public final class ChainTool {
      *
      * @return {@link ChainHook} 实例，用于配置具体的 Hook 行为
      */
+    @NonNull
     public ChainHook findAllConstructor() {
         this.mChainData = new ChainData();
         return mChainHook;
@@ -158,6 +165,7 @@ public final class ChainTool {
      * @param executable 待 Hook 的可执行对象（{@link java.lang.reflect.Method} 或 {@link java.lang.reflect.Constructor}）
      * @return {@link ChainHook} 实例，用于配置具体的 Hook 行为
      */
+    @NonNull
     public ChainHook withExecutable(@NonNull Executable executable) {
         Objects.requireNonNull(executable, "Executable must not be null.");
         this.mChainData = new ChainData(executable);
@@ -261,6 +269,8 @@ public final class ChainTool {
 
     /**
      * 链式钩子内部类，为已定位的方法或构造函数提供多种 Hook 策略配置。
+     *
+     * @author 焕晨HChen
      */
     public final class ChainHook {
         private ChainHook() {
@@ -272,6 +282,7 @@ public final class ChainTool {
          * @param absHook 自定义的 Hook 回调实现
          * @return 外部 {@link ChainTool} 实例，便于继续链式调用
          */
+        @NonNull
         public ChainTool hook(@NonNull AbsHook absHook) {
             requireChainData().absHook = absHook;
             runChain();
@@ -298,6 +309,7 @@ public final class ChainTool {
          *
          * @return 外部 {@link ChainTool} 实例，便于继续链式调用
          */
+        @NonNull
         public ChainTool doNothing() {
             return hook(Hook.doNothing());
         }
@@ -322,6 +334,7 @@ public final class ChainTool {
          * @param function 异常处理函数
          * @return 当前 {@link ChainHook} 实例，便于继续链式配置
          */
+        @NonNull
         public ChainHook onThrow(@NonNull Function<Throwable, Boolean> function) {
             requireChainData().function = function;
             return this;
@@ -332,6 +345,7 @@ public final class ChainTool {
          *
          * @return 当前 {@link ChainHook} 实例，便于继续链式配置
          */
+        @NonNull
         public ChainHook ignoreThrow() {
             requireChainData().isIgnoreThrow = true;
             return this;

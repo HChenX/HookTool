@@ -33,6 +33,8 @@ import java.util.Objects;
 public class ReflectException extends RuntimeException {
     /**
      * 失败原因分类。
+     *
+     * @author 焕晨HChen
      */
     public enum Kind {
         /**

@@ -18,6 +18,8 @@
  */
 package com.hchen.hooktool.util;
 
+import androidx.annotation.NonNull;
+
 import java.time.Duration;
 import java.time.Instant;
 
@@ -36,7 +38,7 @@ public final class Timing {
      * @param action 待执行的代码块
      * @return 耗时毫秒数
      */
-    public static long measure(Runnable action) {
+    public static long measure(@NonNull Runnable action) {
         Instant start = Instant.now();
         action.run();
         return Duration.between(start, Instant.now()).toMillis();

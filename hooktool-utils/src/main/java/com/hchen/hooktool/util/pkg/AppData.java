@@ -86,13 +86,15 @@ public final class AppData implements Parcelable {
      */
     public boolean isEnabled;
 
+    @NonNull
     public static final Creator<AppData> CREATOR = new Creator<AppData>() {
         @Override
-        public AppData createFromParcel(Parcel in) {
+        public AppData createFromParcel(@NonNull Parcel in) {
             return new AppData(in);
         }
 
         @Override
+        @NonNull
         public AppData[] newArray(int size) {
             return new AppData[size];
         }

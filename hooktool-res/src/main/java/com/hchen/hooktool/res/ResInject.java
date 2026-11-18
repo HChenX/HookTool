@@ -104,7 +104,7 @@ public final class ResInject {
 
                 int type = data[index + sStyleType];
                 int id = data[index + sStyleResourceId];
-                if (type != TypedValue.TYPE_NULL /* 不为空数据 */ && id != 0 /* 储存的是资源 */) {
+                if (type != TypedValue.TYPE_NULL /* 数据非空 */ && id != 0 /* 储存的是资源 */) {
                     methodName = getExecutable().getName();
                     Resources resources = (Resources) Reflect.getObjectField(getThisObject(), "mResources");
                     if (resources == null) return;
@@ -130,6 +130,8 @@ public final class ResInject {
 
     /**
      * 资源替换类型枚举。
+     *
+     * @author 焕晨HChen
      */
     private enum ReplacementType {
         ID,
@@ -273,7 +275,8 @@ public final class ResInject {
      * @param resName             资源名称
      * @param replacementResValue 用作替换的任意对象
      */
-    public static void setObjectReplacement(@NonNull String packageName, @NonNull String type, @NonNull String resName, Object replacementResValue) {
+    public static void setObjectReplacement(@NonNull String packageName, @NonNull String type,
+                                             @NonNull String resName, @Nullable Object replacementResValue) {
         applyHooks();
         sReplacements.put(packageName + ":" + type + "/" + resName, new Pair<>(ReplacementType.OBJECT, replacementResValue));
         sReplacementCount.incrementAndGet();

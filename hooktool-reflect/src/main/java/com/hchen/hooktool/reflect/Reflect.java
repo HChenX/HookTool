@@ -204,8 +204,7 @@ public final class Reflect {
     @NonNull
     public static Method findMethodExact(@NonNull Class<?> clazz, @NonNull String methodName,
                                          @NonNull Object... parameterTypes) {
-        Class<?>[] resolved = ParameterTokens.resolve(clazz.getClassLoader(), parameterTypes);
-        return MethodFinder.findExact(clazz, methodName, resolved);
+        return findMethodExactWithLoader(clazz, clazz.getClassLoader(), methodName, parameterTypes);
     }
 
     /**
@@ -222,9 +221,16 @@ public final class Reflect {
                                          @NonNull String methodName,
                                          @NonNull Object... parameterTypes) {
         Class<?> clazz = findClass(className, classLoader);
-        Class<?>[] resolved = ParameterTokens.resolve(
-            classLoader != null ? classLoader : clazz.getClassLoader(), parameterTypes);
-        return MethodFinder.findExact(clazz, methodName, resolved);
+        return findMethodExactWithLoader(clazz, classLoader != null ? classLoader : clazz.getClassLoader(),
+            methodName, parameterTypes);
+    }
+
+    @NonNull
+    static Method findMethodExactWithLoader(@NonNull Class<?> clazz, @Nullable ClassLoader classLoader,
+                                            @NonNull String methodName,
+                                            @NonNull Object... parameterTypes) {
+        return MethodFinder.findExact(clazz, methodName,
+            ParameterTokens.resolve(classLoader, parameterTypes));
     }
 
     /**
@@ -425,8 +431,7 @@ public final class Reflect {
     @NonNull
     public static Constructor<?> findConstructorExact(@NonNull Class<?> clazz,
                                                       @NonNull Object... parameterTypes) {
-        Class<?>[] resolved = ParameterTokens.resolve(clazz.getClassLoader(), parameterTypes);
-        return ConstructorFinder.findExact(clazz, resolved);
+        return findConstructorExactWithLoader(clazz, clazz.getClassLoader(), parameterTypes);
     }
 
     /**
@@ -442,9 +447,15 @@ public final class Reflect {
                                                       @Nullable ClassLoader classLoader,
                                                       @NonNull Object... parameterTypes) {
         Class<?> clazz = findClass(className, classLoader);
-        Class<?>[] resolved = ParameterTokens.resolve(
+        return findConstructorExactWithLoader(clazz,
             classLoader != null ? classLoader : clazz.getClassLoader(), parameterTypes);
-        return ConstructorFinder.findExact(clazz, resolved);
+    }
+
+    @NonNull
+    static Constructor<?> findConstructorExactWithLoader(@NonNull Class<?> clazz,
+                                                         @Nullable ClassLoader classLoader,
+                                                         @NonNull Object... parameterTypes) {
+        return ConstructorFinder.findExact(clazz, ParameterTokens.resolve(classLoader, parameterTypes));
     }
 
     /**
@@ -622,9 +633,8 @@ public final class Reflect {
     public static Object callMethodWithTypes(@NonNull Object target, @NonNull String methodName,
                                              @NonNull Class<?>[] parameterTypes,
                                              @NonNull Object... args) {
-        Method method = MethodFinder.findBest(target.getClass(), methodName,
-            resolveTypes(parameterTypes, args));
-        return invoke(method, target, args);
+        return invoke(findMethodBestMatch(target.getClass(), methodName, parameterTypes, args),
+            target, args);
     }
 
     /**
@@ -699,8 +709,7 @@ public final class Reflect {
                                                    @NonNull String methodName,
                                                    @NonNull Class<?>[] parameterTypes,
                                                    @NonNull Object... args) {
-        Method method = MethodFinder.findBest(clazz, methodName, resolveTypes(parameterTypes, args));
-        return invoke(method, null, args);
+        return invoke(findMethodBestMatch(clazz, methodName, parameterTypes, args), null, args);
     }
 
     /**
@@ -779,13 +788,7 @@ public final class Reflect {
      */
     @Nullable
     public static Object getObjectField(@NonNull Object target, @NonNull String fieldName) {
-        Field field = FieldFinder.find(target.getClass(), fieldName);
-        try {
-            return field.get(target);
-        } catch (IllegalAccessException e) {
-            throw new ReflectException(ReflectException.Kind.OTHER, fieldName,
-                "Cannot read field " + fieldName + ": " + e.getMessage(), e);
-        }
+        return getObjectField(FieldFinder.find(target.getClass(), fieldName), target);
     }
 
     /**
@@ -797,13 +800,7 @@ public final class Reflect {
      */
     public static void setObjectField(@NonNull Object target, @NonNull String fieldName,
                                       @Nullable Object value) {
-        Field field = FieldFinder.find(target.getClass(), fieldName);
-        try {
-            field.set(target, value);
-        } catch (IllegalAccessException e) {
-            throw new ReflectException(ReflectException.Kind.OTHER, fieldName,
-                "Cannot write field " + fieldName + ": " + e.getMessage(), e);
-        }
+        setObjectField(FieldFinder.find(target.getClass(), fieldName), target, value);
     }
 
     /**
@@ -898,13 +895,7 @@ public final class Reflect {
     @Nullable
     public static Object getStaticObjectField(@NonNull Class<?> clazz,
                                               @NonNull String fieldName) {
-        Field field = requireStatic(clazz, fieldName);
-        try {
-            return field.get(null);
-        } catch (IllegalAccessException e) {
-            throw new ReflectException(ReflectException.Kind.OTHER, fieldName,
-                "Cannot read field " + fieldName + ": " + e.getMessage(), e);
-        }
+        return getStaticObjectField(FieldFinder.find(clazz, fieldName));
     }
 
     /**
@@ -930,13 +921,7 @@ public final class Reflect {
      */
     public static void setStaticObjectField(@NonNull Class<?> clazz, @NonNull String fieldName,
                                             @Nullable Object value) {
-        Field field = requireStatic(clazz, fieldName);
-        try {
-            field.set(null, value);
-        } catch (IllegalAccessException e) {
-            throw new ReflectException(ReflectException.Kind.OTHER, fieldName,
-                "Cannot write field " + fieldName + ": " + e.getMessage(), e);
-        }
+        setStaticObjectField(FieldFinder.find(clazz, fieldName), value);
     }
 
     @NonNull
@@ -957,16 +942,6 @@ public final class Reflect {
         return field;
     }
 
-    @NonNull
-    private static Field requireStatic(@NonNull Class<?> clazz, @NonNull String fieldName) {
-        Field field = FieldFinder.find(clazz, fieldName);
-        if (!Modifier.isStatic(field.getModifiers())) {
-            throw new IllegalArgumentException("Expected static field, but " + clazz.getName()
-                + "#" + fieldName + " is an instance field.");
-        }
-        return field;
-    }
-
     /**
      * 读取实例字段，字段不存在时返回 null。
      *
@@ -978,10 +953,10 @@ public final class Reflect {
     public static Object getObjectFieldIfExists(@NonNull Object target,
                                                 @NonNull String fieldName) {
         Field field = FieldFinder.findOrNull(target.getClass(), fieldName);
-        if (field == null) return null;
+        if (field == null || Modifier.isStatic(field.getModifiers())) return null;
         try {
-            return field.get(target);
-        } catch (IllegalAccessException e) {
+            return getObjectField(field, target);
+        } catch (ReflectException e) {
             return null;
         }
     }
@@ -999,8 +974,8 @@ public final class Reflect {
         Field field = FieldFinder.findOrNull(clazz, fieldName);
         if (field == null || !Modifier.isStatic(field.getModifiers())) return null;
         try {
-            return field.get(null);
-        } catch (IllegalAccessException e) {
+            return getStaticObjectField(field);
+        } catch (ReflectException e) {
             return null;
         }
     }
@@ -1131,8 +1106,7 @@ public final class Reflect {
     public static Object newInstanceWithTypes(@NonNull Class<?> clazz,
                                               @NonNull Class<?>[] parameterTypes,
                                               @NonNull Object... args) {
-        Constructor<?> constructor = ConstructorFinder.findBest(clazz, resolveTypes(parameterTypes, args));
-        return instantiate(constructor, args);
+        return instantiateWithTypes(clazz, resolveTypes(parameterTypes, args), args);
     }
 
     /**
@@ -1163,6 +1137,13 @@ public final class Reflect {
                                      @NonNull Object... args) {
         constructor.setAccessible(true);
         return instantiate(constructor, args);
+    }
+
+    @NonNull
+    private static Object instantiateWithTypes(@NonNull Class<?> clazz,
+                                               @NonNull Class<?>[] parameterTypes,
+                                               @NonNull Object[] args) {
+        return instantiate(ConstructorFinder.findBest(clazz, parameterTypes), args);
     }
 
     @NonNull

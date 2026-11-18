@@ -89,6 +89,8 @@ final class MemberCache<T> {
      * 缓存项，区分未查找与查找失败。
      *
      * @param <T> 成员类型
+     *
+     * @author 焕晨HChen
      */
     static final class Slot<T> {
         private static final Slot<?> EMPTY = new Slot<>(null);

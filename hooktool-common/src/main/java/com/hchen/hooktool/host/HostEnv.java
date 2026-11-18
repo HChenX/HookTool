@@ -52,7 +52,7 @@ public interface HostEnv {
     /**
      * 获取目标应用的类加载器。
      *
-     * @return 类加载器，不在宿主进程时可为 null
+     * @return 类加载器
      */
     @Nullable
     ClassLoader defaultClassLoader();

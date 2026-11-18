@@ -32,6 +32,8 @@ public sealed interface ShellResult {
      * 命令已正常执行完毕并产出数据的变体。
      *
      * @param result 单条命令的完整执行数据记录
+     *
+     * @author 焕晨HChen
      */
     record Completed(@NonNull CommandResult result) implements ShellResult {
         /**
@@ -48,6 +50,8 @@ public sealed interface ShellResult {
      * shell 执行流程未能正常完成的变体。
      *
      * @param reason 流程失败原因分类
+     *
+     * @author 焕晨HChen
      */
     record Failed(@NonNull ShellFailureReason reason) implements ShellResult {
     }

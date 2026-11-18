@@ -352,4 +352,24 @@ class ReflectTest {
         assertThrows(ReflectException.class,
             () -> Reflect.findMethodExact(Fixtures.Child.class, "absent"));
     }
+
+    // ---------------------------- field kind ----------------------------
+
+    @Test
+    void nameAccessorRejectsStaticField() {
+        Fixtures.Child child = new Fixtures.Child();
+
+        assertThrows(IllegalArgumentException.class, () -> Reflect.getObjectField(child, "CONST"));
+        assertThrows(IllegalArgumentException.class, () -> Reflect.setObjectField(child, "CONST", "x"));
+        assertNull(Reflect.getObjectFieldIfExists(child, "CONST"));
+    }
+
+    @Test
+    void classAccessorRejectsInstanceField() {
+        assertThrows(IllegalArgumentException.class,
+            () -> Reflect.getStaticObjectField(Fixtures.Child.class, "count"));
+        assertThrows(IllegalArgumentException.class,
+            () -> Reflect.setStaticObjectField(Fixtures.Child.class, "count", 1));
+        assertNull(Reflect.getStaticObjectFieldIfExists(Fixtures.Child.class, "count"));
+    }
 }

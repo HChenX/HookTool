@@ -48,6 +48,8 @@ public abstract class AbsModule {
 
     /**
      * 模块生命周期阶段。
+     *
+     * @author 焕晨HChen
      */
     public enum LifecycleStage {
         MODULE_LOADED, PACKAGE_LOADED, PACKAGE_READY,
@@ -101,7 +103,7 @@ public abstract class AbsModule {
     /**
      * 热更新准备回调。
      *
-     * @param extras 附加数据，可为 null
+     * @param extras 附加数据
      * @return 待保存的状态
      */
     @NonNull
@@ -218,7 +220,7 @@ public abstract class AbsModule {
     /**
      * 分发热更新准备事件。
      *
-     * @param extras 附加数据，可为 null
+     * @param extras 附加数据
      * @return 收集到的状态
      */
     @NonNull

@@ -31,9 +31,7 @@ public interface IExecListener {
     /**
      * 标准输出（stdout）的回调方法。
      * <p>
-     * 当 Shell 命令以退出码 {@code 0} 结束时触发此回调，输出内容以字符串数组形式传递，每个元素代表一行输出。
-     * <p>
-     * 注意：该回调对同步命令与异步命令均会触发（异步命令结果可通过 {@code Future} 或本回调获取）。
+     * 当 Shell 命令以退出码 {@code 0} 结束时触发，同步与异步命令都会回调；输出内容以字符串数组形式传递，每个元素代表一行输出。
      *
      * @param command  已执行的 Shell 命令字符串
      * @param exitCode 命令的退出码字符串
@@ -45,9 +43,7 @@ public interface IExecListener {
     /**
      * 标准错误输出（stderr）的回调方法。
      * <p>
-     * 当 Shell 命令以非 {@code 0} 退出码结束时触发此回调，错误信息以字符串数组形式传递，每个元素代表一行错误信息。
-     * <p>
-     * 注意：该回调对同步命令与异步命令均会触发。
+     * 当 Shell 命令以非 {@code 0} 退出码结束时触发，同步与异步命令都会回调；错误信息以字符串数组形式传递，每个元素代表一行错误信息。
      *
      * @param command  已执行的 Shell 命令字符串
      * @param exitCode 命令的退出码字符串

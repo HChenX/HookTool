@@ -74,6 +74,7 @@ public abstract class AbsHook {
 
     private final ThreadLocal<StateStack> mStackLocal = new ThreadLocal<StateStack>() {
         @Override
+        @NonNull
         protected StateStack initialValue() {
             return new StateStack();
         }
@@ -165,6 +166,8 @@ public abstract class AbsHook {
 
     /**
      * 钩子拦截的生命周期阶段枚举。
+     *
+     * @author 焕晨HChen
      */
     public enum Stage {
         /**
@@ -240,6 +243,7 @@ public abstract class AbsHook {
      * @return 原方法的执行结果
      * @throws Throwable 原方法执行过程中可能抛出的任意异常
      */
+    @Nullable
     public Object proceed(@NonNull XposedInterface.Chain chain) throws Throwable {
         return callProceed();
     }
@@ -637,6 +641,8 @@ public abstract class AbsHook {
 
     /**
      * 内部调用链实现，对原始 {@link XposedInterface.Chain} 进行包装。
+     *
+     * @author 焕晨HChen
      */
     @SuppressWarnings("ClassCanBeRecord")
     private static class InnerChain implements XposedInterface.Chain {
@@ -653,6 +659,7 @@ public abstract class AbsHook {
         }
 
         @Override
+        @Nullable
         public Object getThisObject() {
             return state.originalChain.getThisObject();
         }
@@ -664,26 +671,31 @@ public abstract class AbsHook {
         }
 
         @Override
+        @Nullable
         public Object getArg(int index) throws IndexOutOfBoundsException, ClassCastException {
             return state.isArgsChanged ? state.args[index] : state.originalChain.getArg(index);
         }
 
         @Override
+        @Nullable
         public Object proceed() throws Throwable {
             return state.isArgsChanged ? state.originalChain.proceed(state.args) : state.originalChain.proceed();
         }
 
         @Override
+        @Nullable
         public Object proceed(@NonNull Object[] args) throws Throwable {
             return state.originalChain.proceed(args);
         }
 
         @Override
+        @Nullable
         public Object proceedWith(@NonNull Object thisObject) throws Throwable {
             return state.originalChain.proceedWith(thisObject);
         }
 
         @Override
+        @Nullable
         public Object proceedWith(@NonNull Object thisObject, @NonNull Object[] args) throws Throwable {
             return state.originalChain.proceedWith(thisObject, args);
         }

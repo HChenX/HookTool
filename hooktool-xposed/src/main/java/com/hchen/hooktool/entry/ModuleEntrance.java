@@ -202,10 +202,8 @@ public abstract class ModuleEntrance extends XposedModule {
         mShouldSkipPackage = false;
         mPackageName = param.getPackageName();
         ClassLoader defaultClassLoader = param.getDefaultClassLoader();
-        if (defaultClassLoader != null) {
-            ModuleData.setClassLoader(defaultClassLoader);
-            ReflectEnv.setDefaultClassLoader(defaultClassLoader);
-        }
+        ModuleData.setClassLoader(defaultClassLoader);
+        ReflectEnv.setDefaultClassLoader(defaultClassLoader);
         handlePackageLoaded(param);
     }
 
@@ -219,10 +217,8 @@ public abstract class ModuleEntrance extends XposedModule {
         }
 
         ClassLoader classLoader = param.getClassLoader();
-        if (classLoader != null) {
-            ModuleData.setClassLoader(classLoader);
-            ReflectEnv.setDefaultClassLoader(classLoader);
-        }
+        ModuleData.setClassLoader(classLoader);
+        ReflectEnv.setDefaultClassLoader(classLoader);
 
         hookApplication(param);
         handlePackageReady(param);
@@ -235,10 +231,8 @@ public abstract class ModuleEntrance extends XposedModule {
     public final void onSystemServerStarting(@NonNull SystemServerStartingParam param) {
         // 在 system_server 中本回调取代 onPackageLoaded 与 onPackageReady 的首个阶段，类加载器只能从这里取得。
         ClassLoader classLoader = param.getClassLoader();
-        if (classLoader != null) {
-            ModuleData.setClassLoader(classLoader);
-            ReflectEnv.setDefaultClassLoader(classLoader);
-        }
+        ModuleData.setClassLoader(classLoader);
+        ReflectEnv.setDefaultClassLoader(classLoader);
         handleSystemServerStarting(param);
     }
 
