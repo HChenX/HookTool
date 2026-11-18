@@ -107,6 +107,7 @@ public final class ShellTool {
      * 使用当前通过 {@link #setRoot(boolean)} 设定的模式启动 Shell 进程。
      *
      * @return {@link ShellTool} 单例实例
+     * @throws IllegalStateException 启动 Shell 进程失败时抛出（例如无 root 权限执行 su）
      */
     @NonNull
     public static ShellTool obtain() {
@@ -218,6 +219,7 @@ public final class ShellTool {
      *
      * @param cmd 命令字符串
      * @return {@link ShellTool} 单例实例，支持链式调用
+     * @throws IllegalStateException Shell 流已失效时抛出
      */
     @NonNull
     public ShellTool cmd(@NonNull String cmd) {
@@ -376,36 +378,76 @@ public final class ShellTool {
         private ShellImpl() {
         }
 
-        private synchronized void init() {
+        private void init() {
             if (isActive()) return;
-            validateShellCommands();
 
-            closing = false;
-            brokenReported.set(false);
-            command = null;
-            isSplicingMode = false;
-            splicingCommands.clear();
-
-            Process newProcess = null;
-            try {
-                newProcess = Runtime.getRuntime().exec(sIsRoot ? sShellCommands[0] : sShellCommands[1]);
-                DataOutputStream newOs = new DataOutputStream(newProcess.getOutputStream());
-                token = UUID.randomUUID().toString().replace("-", "").substring(0, 8);
-                generation++;
-                process = newProcess;
-                os = newOs;
-                streamThread = new StreamThread(this, newProcess.getInputStream(), newProcess.getErrorStream());
-                streamThread.start();
-            } catch (IOException e) {
-                // 已创建的进程在此销毁，避免子进程与管道泄漏。
-                if (newProcess != null) {
-                    newProcess.destroy();
-                }
-                process = null;
-                os = null;
-                streamThread = null;
-                throw new IllegalStateException("Error initializing shell stream.", e);
+            // 旧会话可能因某条流结束而失效但进程仍存活，必须先释放，否则重复初始化会泄漏子进程与读取线程。
+            StreamThread stale = detachStaleSession();
+            if (stale != null) {
+                // 读取线程的等待放在监视器之外。
+                stale.close();
             }
+
+            synchronized (this) {
+                if (isActive()) return;
+                validateShellCommands();
+
+                closing = false;
+                brokenReported.set(false);
+                command = null;
+                isSplicingMode = false;
+                splicingCommands.clear();
+
+                Process newProcess = null;
+                try {
+                    newProcess = Runtime.getRuntime().exec(sIsRoot ? sShellCommands[0] : sShellCommands[1]);
+                    DataOutputStream newOs = new DataOutputStream(newProcess.getOutputStream());
+                    token = UUID.randomUUID().toString().replace("-", "").substring(0, 8);
+                    generation++;
+                    process = newProcess;
+                    os = newOs;
+                    streamThread = new StreamThread(this, newProcess.getInputStream(), newProcess.getErrorStream());
+                    streamThread.start();
+                } catch (IOException e) {
+                    // 已创建的进程在此销毁，避免子进程与管道泄漏。
+                    if (newProcess != null) {
+                        newProcess.destroy();
+                    }
+                    process = null;
+                    os = null;
+                    streamThread = null;
+                    throw new IllegalStateException("Error initializing shell stream.", e);
+                }
+            }
+        }
+
+        /**
+         * 摘除已失效的旧会话并释放其进程与输出流。
+         *
+         * @return 旧会话的读取线程，无旧会话时返回 {@code null}
+         */
+        @Nullable
+        private synchronized StreamThread detachStaleSession() {
+            if (process == null && os == null && streamThread == null) {
+                return null;
+            }
+            StreamThread stale = streamThread;
+            Process oldProcess = process;
+            DataOutputStream oldOs = os;
+            process = null;
+            os = null;
+            streamThread = null;
+            if (oldProcess != null) {
+                oldProcess.destroy();
+            }
+            if (oldOs != null) {
+                try {
+                    oldOs.close();
+                } catch (IOException e) {
+                    AndroidLog.logW(TAG, "Error closing stale shell output stream.", e);
+                }
+            }
+            return stale;
         }
 
         private void validateShellCommands() {
@@ -437,15 +479,14 @@ public final class ShellTool {
          * 统一提交命令入口：将当前待执行命令（或拼接结果）写入 Shell 流并返回结果句柄。
          *
          * @param perCmdListener 本次命令专属监听器，可为 {@code null}
-         * @return 命令结果句柄；无待执行命令或被拦截时返回已完成的失败结果
-         * @throws IllegalStateException 当 Shell 流已失效时抛出
+         * @return 命令结果句柄；无待执行命令、被拦截或 Shell 流已失效时返回已完成的失败结果
          */
         @NonNull
         private CompletableFuture<ShellResult> submitCommand(@Nullable IExecListener perCmdListener) {
             final String cmd;
             synchronized (this) {
                 if (!isActive()) {
-                    throw new IllegalStateException("Shell stream is dead.");
+                    return CompletableFuture.completedFuture(new ShellResult.Failed(ShellFailureReason.IO_ERROR));
                 }
                 splicingCommandIfNeeded();
                 cmd = command;
@@ -608,67 +649,74 @@ public final class ShellTool {
         }
 
         private void close() {
-            StreamThread st;
+            final Process oldProcess;
+            final DataOutputStream oldOs;
+            final StreamThread st;
+            final boolean alive;
             synchronized (this) {
                 if (process == null && streamThread == null) {
                     return;
                 }
                 // isActive() 在 closing 为 true 时恒返回 false，必须在置位前判断存活。
-                boolean alive = process != null && process.isAlive()
+                alive = process != null && process.isAlive()
                     && streamThread != null && streamThread.isActive();
-                closing = true;
-                try {
-                    if (alive) {
-                        synchronized (writeLock) {
-                            write("exit");
-                        }
-                    }
-
-                    if (process != null) {
-                        try {
-                            process.waitFor(3, TimeUnit.SECONDS);
-                        } catch (InterruptedException e) {
-                            Thread.currentThread().interrupt();
-                        }
-                        process.destroy();
-                        try {
-                            process.waitFor(1, TimeUnit.SECONDS);
-                        } catch (InterruptedException e) {
-                            Thread.currentThread().interrupt();
-                        }
-                    }
-
-                    if (os != null) {
-                        try {
-                            os.close();
-                        } catch (IOException e) {
-                            AndroidLog.logE(TAG, "Error closing shell output stream.", e);
-                        }
-                    }
-
-                    if (streamThread != null) {
-                        for (StreamThread.PendingCommand pc : streamThread.pending.values()) {
-                            if (!pc.future.isDone()) {
-                                pc.future.complete(
-                                    new ShellResult.Failed(ShellFailureReason.IO_ERROR));
-                            }
-                            if (pc.timeoutTask != null) {
-                                pc.timeoutTask.cancel(false);
-                            }
-                        }
-                    }
-                } finally {
-                    process = null;
-                    os = null;
-                    command = null;
-                    isSplicingMode = false;
-                    splicingCommands.clear();
-                }
+                oldProcess = process;
+                oldOs = os;
                 st = streamThread;
+                closing = true;
+                process = null;
+                os = null;
+                command = null;
+                isSplicingMode = false;
+                splicingCommands.clear();
                 streamThread = null;
             }
-            // 在 ShellImpl monitor 之外 join 读取线程：避免与读取线程内的 onBrokenPipe→close() 互等（持锁 join 会造成 3 秒停顿）。
+
+            // 以下操作会在管道上阻塞或等待子进程，必须在监视器之外完成，否则会话里任何调用都会被一起挂住。
+            if (alive && oldOs != null) {
+                try {
+                    synchronized (writeLock) {
+                        oldOs.write("exit".getBytes(StandardCharsets.UTF_8));
+                        oldOs.write(LINE_BREAK);
+                        oldOs.flush();
+                    }
+                } catch (IOException e) {
+                    AndroidLog.logW(TAG, "Error sending exit command to shell stream.", e);
+                }
+            }
+
+            if (oldProcess != null) {
+                try {
+                    oldProcess.waitFor(3, TimeUnit.SECONDS);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+                oldProcess.destroy();
+                try {
+                    oldProcess.waitFor(1, TimeUnit.SECONDS);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+
+            if (oldOs != null) {
+                try {
+                    oldOs.close();
+                } catch (IOException e) {
+                    AndroidLog.logE(TAG, "Error closing shell output stream.", e);
+                }
+            }
+
             if (st != null) {
+                for (StreamThread.PendingCommand pc : st.pending.values()) {
+                    if (!pc.future.isDone()) {
+                        pc.future.complete(new ShellResult.Failed(ShellFailureReason.IO_ERROR));
+                    }
+                    if (pc.timeoutTask != null) {
+                        pc.timeoutTask.cancel(false);
+                    }
+                }
+                // 同样在监视器之外 join 读取线程，避免与读取线程内的 onBrokenPipe 互等。
                 st.close();
             }
         }
@@ -690,12 +738,10 @@ public final class ShellTool {
                 return;
             }
             StreamThread st = streamThread;
+            List<String> inFlight = new ArrayList<>();
             if (st != null) {
-                List<String> inFlight = new ArrayList<>();
                 for (StreamThread.PendingCommand pc : st.pending.values()) {
                     inFlight.add(pc.command);
-                }
-                for (StreamThread.PendingCommand pc : st.pending.values()) {
                     if (!pc.future.isDone()) {
                         pc.future.complete(new ShellResult.Failed(ShellFailureReason.IO_ERROR));
                     }
@@ -703,18 +749,19 @@ public final class ShellTool {
                         pc.timeoutTask.cancel(false);
                     }
                 }
-                if (sGlobalExecListeners != null) {
-                    try {
-                        sGlobalExecListeners.brokenPipe(
-                            "Incorrect shell code causing pipeline rupture. In-flight commands: " + inFlight,
-                            leftoverErrors
-                        );
-                    } catch (Throwable e) {
-                        AndroidLog.logE(TAG, "Error during brokenPipe callback.", e);
-                    }
+            }
+            // 先关闭会话再回调：回调里重新 obtain() 建好的会话不会被随后的关闭逻辑销毁。
+            close();
+            if (st != null && sGlobalExecListeners != null) {
+                try {
+                    sGlobalExecListeners.brokenPipe(
+                        "Incorrect shell code causing pipeline rupture. In-flight commands: " + inFlight,
+                        leftoverErrors
+                    );
+                } catch (Throwable e) {
+                    AndroidLog.logE(TAG, "Error during brokenPipe callback.", e);
                 }
             }
-            close();
         }
 
         /**
@@ -952,7 +999,8 @@ public final class ShellTool {
          * @param leftover 流结束时残留的未归属输出行
          */
         private void onStreamEof(boolean isError, @NonNull String[] leftover) {
-            if (shellImpl.closing) {
+            // 会话已被摘除或替换时，迟到的流结束不能再影响新会话。
+            if (shellImpl.closing || shellImpl.streamThread != this) {
                 return;
             }
             Process process = shellImpl.process;

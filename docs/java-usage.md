@@ -50,6 +50,27 @@ public class MyHooks extends AbsModule {
 }
 ```
 
+`AbsModule` 不接收框架回调，需要在入口里创建实例并转发，否则 `onPackageReady` 永远不会执行：
+
+```java
+private final MyHooks myHooks = new MyHooks();
+
+@Override
+public void handlePackageReady(@NonNull PackageReadyParam param) {
+    myHooks.handlePackageReady(param);
+}
+
+@Override
+public Map<String, Object> handleHotReloading(@Nullable Bundle extras) {
+    return myHooks.handleHotReloading(extras);
+}
+
+@Override
+public void handleHotReloaded(@NonNull HotReloadedParam param, @NonNull ClassLoader classLoader) {
+    myHooks.handleHotReloaded(param);
+}
+```
+
 ## 安装 Hook
 
 `Hook` 是按名称安装 Hook 的门面，`hookMethod`、`hookConstructor` 的可变参数末尾固定为 `AbsHook` 实例，类名与 `Class` 两种写法等价。

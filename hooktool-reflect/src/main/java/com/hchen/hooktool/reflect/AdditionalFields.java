@@ -25,6 +25,9 @@ import java.util.WeakHashMap;
  * 附加字段存储。
  * <p>
  * 用于在不修改类定义的前提下为对象附加额外字段。
+ * <p>
+ * 键按 {@code equals} 匹配，重写 equals 的对象（如 String、Uri）会被视为同一个目标。
+ * 值若直接或间接引用键，该条目不会被回收，需要调用方自行调用 {@link #remove(Object, String)}。
  *
  * @author 焕晨HChen
  */

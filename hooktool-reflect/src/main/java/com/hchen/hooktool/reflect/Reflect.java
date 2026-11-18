@@ -363,17 +363,7 @@ public final class Reflect {
                                              @NonNull String methodName,
                                              @NonNull Class<?>[] parameterTypes,
                                              @NonNull Object[] args) {
-        if (parameterTypes.length != args.length) {
-            throw new IllegalArgumentException("parameterTypes size (" + parameterTypes.length
-                + ") must match args size (" + args.length + ")");
-        }
-        Class<?>[] resolved = parameterTypes.clone();
-        for (int i = 0; i < resolved.length; i++) {
-            if (resolved[i] == null && args[i] != null) {
-                resolved[i] = args[i].getClass();
-            }
-        }
-        return MethodFinder.findBest(clazz, methodName, resolved);
+        return MethodFinder.findBest(clazz, methodName, resolveTypes(parameterTypes, args));
     }
 
     /**
@@ -632,7 +622,8 @@ public final class Reflect {
     public static Object callMethodWithTypes(@NonNull Object target, @NonNull String methodName,
                                              @NonNull Class<?>[] parameterTypes,
                                              @NonNull Object... args) {
-        Method method = MethodFinder.findBest(target.getClass(), methodName, parameterTypes);
+        Method method = MethodFinder.findBest(target.getClass(), methodName,
+            resolveTypes(parameterTypes, args));
         return invoke(method, target, args);
     }
 
@@ -708,7 +699,7 @@ public final class Reflect {
                                                    @NonNull String methodName,
                                                    @NonNull Class<?>[] parameterTypes,
                                                    @NonNull Object... args) {
-        Method method = MethodFinder.findBest(clazz, methodName, parameterTypes);
+        Method method = MethodFinder.findBest(clazz, methodName, resolveTypes(parameterTypes, args));
         return invoke(method, null, args);
     }
 
@@ -729,6 +720,29 @@ public final class Reflect {
                                                    @NonNull Class<?>[] parameterTypes,
                                                    @NonNull Object... args) {
         return callStaticMethodWithTypes(findClass(className, classLoader), methodName, parameterTypes, args);
+    }
+
+    /**
+     * 校验显式参数类型与实参个数一致，并用实参类型补全为 null 的槽位。
+     *
+     * @param parameterTypes 声明的参数类型，元素可为 null
+     * @param args           实参
+     * @return 补全后的参数类型数组
+     */
+    @NonNull
+    private static Class<?>[] resolveTypes(@NonNull Class<?>[] parameterTypes,
+                                           @NonNull Object[] args) {
+        if (parameterTypes.length != args.length) {
+            throw new IllegalArgumentException("parameterTypes size (" + parameterTypes.length
+                + ") must match args size (" + args.length + ")");
+        }
+        Class<?>[] resolved = parameterTypes.clone();
+        for (int i = 0; i < resolved.length; i++) {
+            if (resolved[i] == null && args[i] != null) {
+                resolved[i] = args[i].getClass();
+            }
+        }
+        return resolved;
     }
 
     @Nullable
@@ -813,7 +827,7 @@ public final class Reflect {
      * @return 字段值
      */
     @Nullable
-    public static Object getObjectField(@NonNull Field field, @Nullable Object target) {
+    public static Object getObjectField(@NonNull Field field, @NonNull Object target) {
         Field resolved = requireInstanceField(field);
         try {
             return resolved.get(target);
@@ -830,7 +844,7 @@ public final class Reflect {
      * @param target 目标对象
      * @param value  字段值
      */
-    public static void setObjectField(@NonNull Field field, @Nullable Object target,
+    public static void setObjectField(@NonNull Field field, @NonNull Object target,
                                       @Nullable Object value) {
         Field resolved = requireInstanceField(field);
         try {
@@ -1117,7 +1131,7 @@ public final class Reflect {
     public static Object newInstanceWithTypes(@NonNull Class<?> clazz,
                                               @NonNull Class<?>[] parameterTypes,
                                               @NonNull Object... args) {
-        Constructor<?> constructor = ConstructorFinder.findBest(clazz, parameterTypes);
+        Constructor<?> constructor = ConstructorFinder.findBest(clazz, resolveTypes(parameterTypes, args));
         return instantiate(constructor, args);
     }
 

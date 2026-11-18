@@ -19,7 +19,6 @@
 package com.hchen.hooktool.reflect;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 
 /**
  * 字段查找工具。
@@ -96,8 +95,8 @@ final class FieldFinder {
 
     private static Field findInterfaceFieldRecursive(Class<?> iface, String fieldName) {
         try {
-            Field field = iface.getDeclaredField(fieldName);
-            if (Modifier.isStatic(field.getModifiers())) return field;
+            // 接口字段按 JLS 9.3 必然是 public static final，无需再判断修饰符。
+            return iface.getDeclaredField(fieldName);
         } catch (NoSuchFieldException ignored) {
             // 继续查找父接口
         }

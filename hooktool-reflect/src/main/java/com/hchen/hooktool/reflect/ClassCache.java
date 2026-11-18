@@ -86,7 +86,10 @@ final class ClassCache {
         WeakReference<Class<?>> cached = CACHE.get(key);
         if (cached != null) {
             Class<?> value = cached.get();
-            if (value != null && value.getClassLoader() == loader) return value;
+            // 由 bootstrap 加载的类不记录加载器，任何请求加载器解析到的都是同一个类。
+            if (value != null && (value.getClassLoader() == null || value.getClassLoader() == loader)) {
+                return value;
+            }
         }
         Class<?> clazz = doFindClass(className, loader);
         CACHE.put(key, new WeakReference<>(clazz));

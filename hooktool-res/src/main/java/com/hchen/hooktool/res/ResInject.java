@@ -234,7 +234,7 @@ public final class ResInject {
     /**
      * 注册一条资源 ID 替换规则。
      * <p>
-     * 当目标应用访问指定资源时，将其重定向到模块提供的替换资源 ID，并在首次调用时自动触发 hook 注入。
+     * 当目标应用访问指定资源时，将其重定向到模块提供的替换资源 ID；调用前必须先执行 {@link #injectModuleRes()}。
      *
      * @param packageName      目标应用包名；使用 {@code "*"} 可匹配所有应用
      * @param type             资源类型（如 {@code "drawable"}、{@code "string"}、{@code "color"} 等）
@@ -294,9 +294,9 @@ public final class ResInject {
         }
         try {
             // 先解析 TypedArray 内部常量，失败时尚未注册任何 hook。
-            sStyleNumEntries = (int) Reflect.getStaticObjectField(TypedArray.class, "sStyleNumEntries");
-            sStyleType = (int) Reflect.getStaticObjectField(TypedArray.class, "sStyleType");
-            sStyleResourceId = (int) Reflect.getStaticObjectField(TypedArray.class, "sStyleResourceId");
+            sStyleNumEntries = (int) Reflect.getStaticObjectField(TypedArray.class, "STYLE_NUM_ENTRIES");
+            sStyleType = (int) Reflect.getStaticObjectField(TypedArray.class, "STYLE_TYPE");
+            sStyleResourceId = (int) Reflect.getStaticObjectField(TypedArray.class, "STYLE_RESOURCE_ID");
             if (sStyleNumEntries <= 0) {
                 throw new IllegalStateException("Failed to read STYLE_NUM_ENTRIES from TypedArray.");
             }

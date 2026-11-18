@@ -19,6 +19,7 @@
 package com.hchen.hooktool.entry;
 
 import android.content.SharedPreferences;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -67,7 +68,9 @@ final class XposedHost implements HostEnv {
                 sFallbackUsed.set(false);
                 return;
             } catch (Throwable t) {
-                AndroidLog.logD(TAG, "Xposed log proxy still unavailable, staying on fallback.", t);
+                // 回退路径不能再经 AndroidLog 的 logX，那会重新进入本方法。
+                AndroidLog.output(Log.DEBUG, TAG,
+                    "Xposed log proxy still unavailable, staying on fallback: " + t, null);
             }
             AndroidLog.output(priority, tag, message, throwable);
             return;
@@ -82,7 +85,8 @@ final class XposedHost implements HostEnv {
 
     private static void markFallback(Throwable throwable) {
         if (sFallbackUsed.compareAndSet(false, true)) {
-            AndroidLog.logW(TAG, "Falling back to AndroidLog.", throwable);
+            AndroidLog.output(Log.WARN, TAG,
+                "Xposed log proxy unavailable, falling back to AndroidLog.", throwable);
         }
     }
 

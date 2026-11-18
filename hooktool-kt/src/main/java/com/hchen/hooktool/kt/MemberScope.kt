@@ -75,7 +75,7 @@ class MemberScope internal constructor(private val member: MemberSpec) {
     }
 
     /**
-     * 设置 Hook 优先级，数值越小越先执行。
+     * 设置 Hook 优先级，数值越大越先执行，与框架默认值 50 比较。
      *
      * @param priority 优先级
      */

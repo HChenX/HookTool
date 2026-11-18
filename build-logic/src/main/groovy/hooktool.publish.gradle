@@ -60,7 +60,11 @@ if (!kotlinModule) {
                 if (!file.exists()) {
                     throw new GradleException("Missing publish metadata for '${project.name}': " + file)
                 }
-                if (file.getText('UTF-8').contains('org.jetbrains.kotlin')) {
+                // 精确匹配依赖组名：kotlinx 等以 org.jetbrains.kotlin 开头的组属于合法依赖。
+                String text = file.getText('UTF-8')
+                boolean hasKotlinDependency = text.contains('<groupId>org.jetbrains.kotlin</groupId>')
+                        || text.contains('"group": "org.jetbrains.kotlin"')
+                if (hasKotlinDependency) {
                     throw new GradleException("Module '${project.name}' publishes a Kotlin dependency: " + file)
                 }
             }

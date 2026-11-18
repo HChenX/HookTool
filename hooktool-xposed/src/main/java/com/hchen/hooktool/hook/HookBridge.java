@@ -87,7 +87,7 @@ final class HookBridge {
     /**
      * 将钩子优先级设置到底层构建器中。
      *
-     * @param priority 优先级数值，值越小优先级越高
+     * @param priority 优先级数值，越大越先执行
      */
     private void setPriority(int priority) {
         mBuilder.setPriority(priority);

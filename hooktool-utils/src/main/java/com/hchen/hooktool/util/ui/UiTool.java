@@ -25,6 +25,7 @@ import android.content.res.Resources;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.Rect;
+import android.os.Build;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.view.Display;
@@ -145,8 +146,11 @@ public final class UiTool {
      */
     public static float px2spFloat(@NonNull Context context, float pxValue) {
         DisplayMetrics dm = context.getResources().getDisplayMetrics();
-        float fontScale = context.getResources().getConfiguration().fontScale;
-        return pxValue / (dm.density * fontScale);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            // API 34 起字体缩放可能非线性，必须用系统提供的反向换算，否则与 sp2pxFloat 不再互逆。
+            return TypedValue.deriveDimension(TypedValue.COMPLEX_UNIT_SP, pxValue, dm);
+        }
+        return pxValue / (dm.density * context.getResources().getConfiguration().fontScale);
     }
 
     // ----------------------- 屏幕信息 -------------------------
@@ -172,7 +176,9 @@ public final class UiTool {
     }
 
     /**
-     * 获取当前屏幕的缩放密度（{@code density * fontScale}，即 sp 与 px 的换算系数）。
+     * 获取当前屏幕的缩放密度（{@code density * fontScale}）。
+     * <p>
+     * 该值仅在字体的线性缩放下等于 sp 与 px 的换算系数，API 34 起请改用 {@link #sp2pxFloat} 与 {@link #px2spFloat} 互转。
      *
      * @param context 上下文
      * @return 缩放密度

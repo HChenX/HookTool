@@ -279,9 +279,9 @@ public final class ChainTool {
         }
 
         /**
-         * Hook 目标方法并将其返回值替换为指定的结果。
+         * Hook 目标方法并直接返回指定结果。
          * <p>
-         * 原方法体会照常执行，但调用方最终收到的返回值会被替换为 {@code result}。
+         * 原方法体与 {@code after} 阶段都不会执行。
          *
          * @param result 要返回给调用方的结果对象，允许为 {@code null}
          * @return 外部 {@link ChainTool} 实例，便于继续链式调用

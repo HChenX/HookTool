@@ -234,8 +234,7 @@ public abstract class AbsModule {
                     "onThrow() threw an exception, ignored to preserve the original exception.",
                     onThrowError);
             }
-            Throwables.throwIt(throwable);
-            return new HashMap<>();
+            return Throwables.throwIt(throwable);
         }
     }
 

@@ -3,6 +3,7 @@
 ```groovy
 implementation 'com.github.HChenX.HookTool:hooktool-utils:4.0.0'
 implementation 'com.github.HChenX.HookTool:hooktool-shell:4.0.0'
+implementation 'com.github.HChenX.HookTool:hooktool-res:4.0.0'   // 资源替换
 ```
 
 ## Shell
@@ -86,6 +87,14 @@ byte[] bytes = BitmapTool.bitmapToBytes(bitmap);
 ```
 
 ## 资源替换
+
+注入前必须在模块的 `build.gradle` 中指定资源包 ID，否则注入失败：
+
+```groovy
+android {
+    androidResources.additionalParameters("--allow-reserved-package-id", "--package-id", "0x64")
+}
+```
 
 ```java
 ResInject.injectModuleRes();

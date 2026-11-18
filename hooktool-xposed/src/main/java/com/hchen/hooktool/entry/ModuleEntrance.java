@@ -52,6 +52,7 @@ import io.github.libxposed.api.XposedModule;
  */
 public abstract class ModuleEntrance extends XposedModule {
     private static final String TAG = "ModuleEntrance";
+    private static final String STATE_PACKAGE_NAME = "module_entrance_package";
     private volatile boolean mShouldSkipPackage = false;
     private volatile String mProcessName = "";
     private volatile String mPackageName = "";
@@ -228,10 +229,16 @@ public abstract class ModuleEntrance extends XposedModule {
     }
 
     /**
-     * 框架回调入口：系统服务进程启动。直接分发业务回调。
+     * 框架回调入口：系统服务进程启动。记录 system_server 的类加载器后分发业务回调。
      */
     @Override
     public final void onSystemServerStarting(@NonNull SystemServerStartingParam param) {
+        // 在 system_server 中本回调取代 onPackageLoaded 与 onPackageReady 的首个阶段，类加载器只能从这里取得。
+        ClassLoader classLoader = param.getClassLoader();
+        if (classLoader != null) {
+            ModuleData.setClassLoader(classLoader);
+            ReflectEnv.setDefaultClassLoader(classLoader);
+        }
         handleSystemServerStarting(param);
     }
 
@@ -264,6 +271,8 @@ public abstract class ModuleEntrance extends XposedModule {
             merged.putAll(moduleState);
             merged.putAll(hookState);
             merged.put(ModuleData.MODULE_HOST_CLASSLOADER, classLoader);
+            // 热更新不会重放包回调，包名随状态传给新代码，否则拒绝策略会拿到空包名。
+            merged.put(STATE_PACKAGE_NAME, mPackageName);
 
             param.setSavedInstanceState(merged);
             HookRegistry.clear();
@@ -276,13 +285,12 @@ public abstract class ModuleEntrance extends XposedModule {
                     "handleHotReloadingFailed() threw an exception, ignored to preserve the original exception.",
                     failedError);
             }
-            Throwables.throwIt(throwable);
-            return false;
+            return Throwables.throwIt(throwable);
         }
     }
 
     /**
-     * 框架回调入口：热更新完成（新代码执行）。恢复 ClassLoader 与配置，先解除旧 Hook 再分发状态恢复。
+     * 框架回调入口：热更新完成（新代码执行）。恢复 ClassLoader、包名与配置，先解除旧 Hook 再分发状态恢复。
      */
     @Override
     public final void onHotReloaded(@NonNull HotReloadedParam param) {
@@ -310,6 +318,11 @@ public abstract class ModuleEntrance extends XposedModule {
             // 回写默认 ClassLoader，使 handleHotReloaded 及后续反射默认类加载 API 可用。
             ModuleData.setClassLoader(classLoader);
             ReflectEnv.setDefaultClassLoader(classLoader);
+
+            Object packageName = map.get(STATE_PACKAGE_NAME);
+            if (packageName instanceof String name && !name.isEmpty()) {
+                mPackageName = name;
+            }
 
             // 先解除旧 Hook，杜绝与新注册 Hook 的并存双执行窗口。
             unhookAll(oldHandles);

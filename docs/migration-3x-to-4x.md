@@ -10,7 +10,8 @@ implementation 'com.github.HChenX:HookTool:3.2.2'
 
 // 4.x
 implementation 'com.github.HChenX.HookTool:hooktool-xposed:4.0.0'
-implementation 'com.github.HChenX.HookTool:hooktool-kt:4.0.0'   // Kotlin 用户追加
+implementation 'com.github.HChenX.HookTool:hooktool-reflect:4.0.0'  // 直接使用 Reflect 时必须显式引入
+implementation 'com.github.HChenX.HookTool:hooktool-kt:4.0.0'       // Kotlin 用户追加
 compileOnly     'io.github.libxposed:api:102.0.0'
 ```
 
@@ -53,6 +54,12 @@ com.hchen.hooktool.kt            Kotlin Hook DSL
 | `ShellTool` / `ShellResult` / `CommandResult` / `ShellFailureReason` / `IExecListener` / `ICommandListener` | `com.hchen.hooktool.shell.*` |
 | `ResultData` / `IDecomposer` | `com.hchen.hooktool.result.*` |
 | `core.CoreTool` | 撤销，见下表 |
+| `ModuleEntrance.initModuleConfig()` | `loadConfig()` |
+| `ignorePackages(): String[]` | `skipPackages(): Set<String>` |
+| `AbsModule.StageEnum` | `AbsModule.LifecycleStage` |
+| `AbsModule.tag` | `AbsModule.TAG` |
+| `ModuleConfig.setShowHookSuccessLog(boolean)` | `HookConfig.setHookSuccessLogEnabled(boolean)` |
+| `ModuleConfig.setLogExpandPaths(String...)` | `HookConfig.setLogExpandPaths(Set<String>)` |
 
 ## 4. CoreTool 替换表
 
@@ -95,6 +102,8 @@ public class MyHook extends AbsModule {
 // 4.x
 import static com.hchen.hooktool.hook.Hook.hookMethod;
 import static com.hchen.hooktool.reflect.Reflect.setObjectField;
+
+import com.hchen.hooktool.reflect.Reflect;
 
 public class MyHook extends AbsModule {
     void install() {

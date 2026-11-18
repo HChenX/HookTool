@@ -56,7 +56,7 @@ hook(MyTarget::class.java) {
 | 选项 | 作用 |
 |---|---|
 | `id("name")` | Hook 标识，热重载时用于原子替换 |
-| `priority(60)` | 执行优先级，数值越小越先执行 |
+| `priority(60)` | 执行优先级，数值越大越先执行，默认 50 |
 | `logInstall()` | 安装成功后输出一行日志 |
 | `optional()` | 该成员解析失败时静默跳过 |
 

@@ -45,7 +45,7 @@ import io.github.libxposed.api.XposedInterface;
  */
 public abstract class AbsHook {
     /**
-     * 钩子优先级，数值越小优先级越高。
+     * 钩子优先级，数值越大越先执行，默认值为 {@link XposedInterface#PRIORITY_DEFAULT}。
      */
     int mPriority;
     /**
@@ -212,7 +212,7 @@ public abstract class AbsHook {
     /**
      * 完整参数的钩子实例构造器。
      *
-     * @param priority 钩子优先级，数值越小优先级越高
+     * @param priority 钩子优先级，数值越大越先执行
      * @param id       钩子唯一标识符，用于在相同可执行对象上原子替换旧 Hook；为 {@code null} 表示不关心后续替换
      * @param mode     钩子异常处理模式；为 {@code null} 表示使用框架默认行为
      */
