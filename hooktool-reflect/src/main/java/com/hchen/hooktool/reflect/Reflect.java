@@ -21,6 +21,7 @@ package com.hchen.hooktool.reflect;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -678,7 +679,7 @@ public final class Reflect {
     @Nullable
     public static Object callMethod(@NonNull Method method, @Nullable Object target,
                                     @NonNull Object... args) {
-        method.setAccessible(true);
+        ensureAccessible(method);
         return invoke(method, target, args);
     }
 
@@ -691,7 +692,7 @@ public final class Reflect {
      */
     @Nullable
     public static Object callStaticMethod(@NonNull Method method, @NonNull Object... args) {
-        method.setAccessible(true);
+        ensureAccessible(method);
         return invoke(method, null, args);
     }
 
@@ -929,7 +930,7 @@ public final class Reflect {
         if (Modifier.isStatic(field.getModifiers())) {
             throw new IllegalArgumentException("Expected instance field, but " + field + " is static.");
         }
-        field.setAccessible(true);
+        ensureAccessible(field);
         return field;
     }
 
@@ -938,7 +939,7 @@ public final class Reflect {
         if (!Modifier.isStatic(field.getModifiers())) {
             throw new IllegalArgumentException("Expected static field, but " + field + " is an instance field.");
         }
-        field.setAccessible(true);
+        ensureAccessible(field);
         return field;
     }
 
@@ -1135,8 +1136,19 @@ public final class Reflect {
     @NonNull
     public static Object newInstance(@NonNull Constructor<?> constructor,
                                      @NonNull Object... args) {
-        constructor.setAccessible(true);
+        ensureAccessible(constructor);
         return instantiate(constructor, args);
+    }
+
+    /**
+     * 确保成员可访问，仅在尚未放开访问检查时设置一次。
+     *
+     * @param member 待处理的成员
+     */
+    @SuppressWarnings("deprecation")
+    private static void ensureAccessible(@NonNull AccessibleObject member) {
+        if (member.isAccessible()) return;
+        member.setAccessible(true);
     }
 
     @NonNull
