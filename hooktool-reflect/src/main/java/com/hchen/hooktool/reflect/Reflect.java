@@ -144,6 +144,53 @@ public final class Reflect {
         }
     }
 
+    /**
+     * 沿继承链与接口树查找字段。
+     *
+     * @param className 目标类名
+     * @param classLoader 解析类名使用的类加载器
+     * @param fieldName 字段名
+     * @return 已设置为可访问的字段
+     */
+    @NonNull
+    public static Field findField(@NonNull String className, @Nullable ClassLoader classLoader,
+                                  @NonNull String fieldName) {
+        return findField(findClass(className, classLoader), fieldName);
+    }
+
+    /**
+     * 查找字段，类或字段不存在时返回 null。
+     *
+     * @param className 目标类名
+     * @param classLoader 解析类名使用的类加载器
+     * @param fieldName 字段名
+     * @return 字段或 null
+     */
+    @Nullable
+    public static Field findFieldIfExists(@NonNull String className, @Nullable ClassLoader classLoader,
+                                          @NonNull String fieldName) {
+        Class<?> clazz = findClassIfExists(className, classLoader);
+        return clazz == null ? null : findFieldIfExists(clazz, fieldName);
+    }
+
+    /**
+     * 查找字段，失败时返回带原因的结果。
+     *
+     * @param className 目标类名
+     * @param classLoader 解析类名使用的类加载器
+     * @param fieldName 字段名
+     * @return 查找结果
+     */
+    @NonNull
+    public static Lookup<Field> lookupField(@NonNull String className, @Nullable ClassLoader classLoader,
+                                            @NonNull String fieldName) {
+        Lookup<Class<?>> clazz = lookupClass(className, classLoader);
+        if (!clazz.isPresent()) {
+            return Lookup.failed(clazz.error());
+        }
+        return lookupField(clazz.get(), fieldName);
+    }
+
     // --------------------------- method exact ---------------------------
 
     /**
@@ -156,7 +203,7 @@ public final class Reflect {
      */
     @NonNull
     public static Method findMethodExact(@NonNull Class<?> clazz, @NonNull String methodName,
-                                    @NonNull Object... parameterTypes) {
+                                         @NonNull Object... parameterTypes) {
         Class<?>[] resolved = ParameterTokens.resolve(clazz.getClassLoader(), parameterTypes);
         return MethodFinder.findExact(clazz, methodName, resolved);
     }
@@ -172,8 +219,8 @@ public final class Reflect {
      */
     @NonNull
     public static Method findMethodExact(@NonNull String className, @Nullable ClassLoader classLoader,
-                                    @NonNull String methodName,
-                                    @NonNull Object... parameterTypes) {
+                                         @NonNull String methodName,
+                                         @NonNull Object... parameterTypes) {
         Class<?> clazz = findClass(className, classLoader);
         Class<?>[] resolved = ParameterTokens.resolve(
             classLoader != null ? classLoader : clazz.getClassLoader(), parameterTypes);
@@ -190,7 +237,7 @@ public final class Reflect {
      */
     @NonNull
     static Method findMethodExactWithTypes(@NonNull Class<?> clazz, @NonNull String methodName,
-                                      @NonNull Class<?>... parameterTypes) {
+                                           @NonNull Class<?>... parameterTypes) {
         return MethodFinder.findExact(clazz, methodName,
             parameterTypes == null ? new Class<?>[0] : parameterTypes);
     }
@@ -205,7 +252,7 @@ public final class Reflect {
      */
     @Nullable
     public static Method findMethodExactIfExists(@NonNull Class<?> clazz, @NonNull String methodName,
-                                            @NonNull Object... parameterTypes) {
+                                                 @NonNull Object... parameterTypes) {
         try {
             return findMethodExact(clazz, methodName, parameterTypes);
         } catch (ReflectException e) {
@@ -224,9 +271,9 @@ public final class Reflect {
      */
     @Nullable
     public static Method findMethodExactIfExists(@NonNull String className,
-                                            @Nullable ClassLoader classLoader,
-                                            @NonNull String methodName,
-                                            @NonNull Object... parameterTypes) {
+                                                 @Nullable ClassLoader classLoader,
+                                                 @NonNull String methodName,
+                                                 @NonNull Object... parameterTypes) {
         try {
             return findMethodExact(className, classLoader, methodName, parameterTypes);
         } catch (ReflectException e) {
@@ -250,6 +297,25 @@ public final class Reflect {
         } catch (ReflectException e) {
             return Lookup.failed(e);
         }
+    }
+
+    /**
+     * 按精确参数类型在指定类名中查找方法，失败时返回带原因的结果。
+     *
+     * @param className 目标类名
+     * @param classLoader 解析类名使用的类加载器
+     * @param methodName 方法名
+     * @param parameterTypes 精确参数类型
+     * @return 查找结果
+     */
+    @NonNull
+    public static Lookup<Method> lookupMethod(@NonNull String className, @Nullable ClassLoader classLoader,
+                                              @NonNull String methodName, @NonNull Class<?>... parameterTypes) {
+        Lookup<Class<?>> clazz = lookupClass(className, classLoader);
+        if (!clazz.isPresent()) {
+            return Lookup.failed(clazz.error());
+        }
+        return lookupMethod(clazz.get(), methodName, parameterTypes);
     }
 
     // --------------------------- method best ----------------------------
@@ -310,6 +376,53 @@ public final class Reflect {
         return MethodFinder.findBest(clazz, methodName, resolved);
     }
 
+    /**
+     * 查找与给定参数类型最匹配的方法。
+     *
+     * @param className 目标类名
+     * @param classLoader 解析类名使用的类加载器
+     * @param methodName 方法名
+     * @param parameterTypes 目标参数类型，元素可为 null
+     * @return 已设置为可访问的方法
+     */
+    @NonNull
+    public static Method findMethodBestMatch(@NonNull String className, @Nullable ClassLoader classLoader,
+                                             @NonNull String methodName, @NonNull Class<?>... parameterTypes) {
+        return findMethodBestMatch(findClass(className, classLoader), methodName, parameterTypes);
+    }
+
+    /**
+     * 根据实参值查找最匹配的方法。
+     *
+     * @param className 目标类名
+     * @param classLoader 解析类名使用的类加载器
+     * @param methodName 方法名
+     * @param args 实参，元素为 null 表示任意类型
+     * @return 已设置为可访问的方法
+     */
+    @NonNull
+    public static Method findMethodByArgs(@NonNull String className, @Nullable ClassLoader classLoader,
+                                          @NonNull String methodName, @NonNull Object... args) {
+        return findMethodByArgs(findClass(className, classLoader), methodName, args);
+    }
+
+    /**
+     * 查找最匹配的方法，参数类型中的 null 由实参类型补全。
+     *
+     * @param className 目标类名
+     * @param classLoader 解析类名使用的类加载器
+     * @param methodName 方法名
+     * @param parameterTypes 声明的参数类型，元素可为 null
+     * @param args 实参
+     * @return 已设置为可访问的方法
+     */
+    @NonNull
+    public static Method findMethodBestMatch(@NonNull String className, @Nullable ClassLoader classLoader,
+                                             @NonNull String methodName, @NonNull Class<?>[] parameterTypes,
+                                             @NonNull Object[] args) {
+        return findMethodBestMatch(findClass(className, classLoader), methodName, parameterTypes, args);
+    }
+
     // ------------------------- constructor exact ------------------------
 
     /**
@@ -321,7 +434,7 @@ public final class Reflect {
      */
     @NonNull
     public static Constructor<?> findConstructorExact(@NonNull Class<?> clazz,
-                                                 @NonNull Object... parameterTypes) {
+                                                      @NonNull Object... parameterTypes) {
         Class<?>[] resolved = ParameterTokens.resolve(clazz.getClassLoader(), parameterTypes);
         return ConstructorFinder.findExact(clazz, resolved);
     }
@@ -336,8 +449,8 @@ public final class Reflect {
      */
     @NonNull
     public static Constructor<?> findConstructorExact(@NonNull String className,
-                                                 @Nullable ClassLoader classLoader,
-                                                 @NonNull Object... parameterTypes) {
+                                                      @Nullable ClassLoader classLoader,
+                                                      @NonNull Object... parameterTypes) {
         Class<?> clazz = findClass(className, classLoader);
         Class<?>[] resolved = ParameterTokens.resolve(
             classLoader != null ? classLoader : clazz.getClassLoader(), parameterTypes);
@@ -353,7 +466,7 @@ public final class Reflect {
      */
     @NonNull
     static Constructor<?> findConstructorExactWithTypes(@NonNull Class<?> clazz,
-                                                   @NonNull Class<?>... parameterTypes) {
+                                                        @NonNull Class<?>... parameterTypes) {
         return ConstructorFinder.findExact(clazz,
             parameterTypes == null ? new Class<?>[0] : parameterTypes);
     }
@@ -367,7 +480,7 @@ public final class Reflect {
      */
     @Nullable
     public static Constructor<?> findConstructorExactIfExists(@NonNull Class<?> clazz,
-                                                         @NonNull Object... parameterTypes) {
+                                                              @NonNull Object... parameterTypes) {
         try {
             return findConstructorExact(clazz, parameterTypes);
         } catch (ReflectException e) {
@@ -385,8 +498,8 @@ public final class Reflect {
      */
     @Nullable
     public static Constructor<?> findConstructorExactIfExists(@NonNull String className,
-                                                         @Nullable ClassLoader classLoader,
-                                                         @NonNull Object... parameterTypes) {
+                                                              @Nullable ClassLoader classLoader,
+                                                              @NonNull Object... parameterTypes) {
         try {
             return findConstructorExact(className, classLoader, parameterTypes);
         } catch (ReflectException e) {
@@ -409,6 +522,25 @@ public final class Reflect {
         } catch (ReflectException e) {
             return Lookup.failed(e);
         }
+    }
+
+    /**
+     * 按精确参数类型在指定类名中查找构造函数，失败时返回带原因的结果。
+     *
+     * @param className 目标类名
+     * @param classLoader 解析类名使用的类加载器
+     * @param parameterTypes 精确参数类型
+     * @return 查找结果
+     */
+    @NonNull
+    public static Lookup<Constructor<?>> lookupConstructor(@NonNull String className,
+                                                           @Nullable ClassLoader classLoader,
+                                                           @NonNull Class<?>... parameterTypes) {
+        Lookup<Class<?>> clazz = lookupClass(className, classLoader);
+        if (!clazz.isPresent()) {
+            return Lookup.failed(clazz.error());
+        }
+        return lookupConstructor(clazz.get(), parameterTypes);
     }
 
     // ------------------------- constructor best -------------------------
@@ -438,6 +570,36 @@ public final class Reflect {
     public static Constructor<?> findConstructorByArgs(@NonNull Class<?> clazz,
                                                        @NonNull Object... args) {
         return ConstructorFinder.findBest(clazz, typesOf(args));
+    }
+
+    /**
+     * 在指定类名中查找与给定参数类型最匹配的构造函数。
+     *
+     * @param className 目标类名
+     * @param classLoader 解析类名使用的类加载器
+     * @param parameterTypes 目标参数类型，元素可为 null
+     * @return 已设置为可访问的构造函数
+     */
+    @NonNull
+    public static Constructor<?> findConstructorBestMatch(@NonNull String className,
+                                                          @Nullable ClassLoader classLoader,
+                                                          @NonNull Class<?>... parameterTypes) {
+        return findConstructorBestMatch(findClass(className, classLoader), parameterTypes);
+    }
+
+    /**
+     * 根据实参值在指定类名中查找最匹配的构造函数。
+     *
+     * @param className 目标类名
+     * @param classLoader 解析类名使用的类加载器
+     * @param args 实参
+     * @return 已设置为可访问的构造函数
+     */
+    @NonNull
+    public static Constructor<?> findConstructorByArgs(@NonNull String className,
+                                                       @Nullable ClassLoader classLoader,
+                                                       @NonNull Object... args) {
+        return findConstructorByArgs(findClass(className, classLoader), args);
     }
 
     // ------------------------------ calls -------------------------------
@@ -490,6 +652,21 @@ public final class Reflect {
     }
 
     /**
+     * 按类名调用静态方法，参数类型取自实参。
+     *
+     * @param className 目标类名
+     * @param classLoader 解析类名使用的类加载器
+     * @param methodName 方法名
+     * @param args 实参
+     * @return 调用结果，void 方法返回 null
+     */
+    @Nullable
+    public static Object callStaticMethod(@NonNull String className, @Nullable ClassLoader classLoader,
+                                          @NonNull String methodName, @NonNull Object... args) {
+        return callStaticMethod(findClass(className, classLoader), methodName, args);
+    }
+
+    /**
      * 调用已解析的实例方法。
      *
      * @param method 已解析的方法
@@ -533,6 +710,25 @@ public final class Reflect {
                                                    @NonNull Object... args) {
         Method method = MethodFinder.findBest(clazz, methodName, parameterTypes);
         return invoke(method, null, args);
+    }
+
+    /**
+     * 按类名使用显式参数类型调用静态方法。
+     *
+     * @param className 目标类名
+     * @param classLoader 解析类名使用的类加载器
+     * @param methodName 方法名
+     * @param parameterTypes 声明的参数类型
+     * @param args 实参
+     * @return 调用结果，void 方法返回 null
+     */
+    @Nullable
+    public static Object callStaticMethodWithTypes(@NonNull String className,
+                                                   @Nullable ClassLoader classLoader,
+                                                   @NonNull String methodName,
+                                                   @NonNull Class<?>[] parameterTypes,
+                                                   @NonNull Object... args) {
+        return callStaticMethodWithTypes(findClass(className, classLoader), methodName, parameterTypes, args);
     }
 
     @Nullable
@@ -594,6 +790,19 @@ public final class Reflect {
             throw new ReflectException(ReflectException.Kind.OTHER, fieldName,
                 "Cannot write field " + fieldName + ": " + e.getMessage(), e);
         }
+    }
+
+    /**
+     * 按类名写入静态字段。
+     *
+     * @param className 目标类名
+     * @param classLoader 解析类名使用的类加载器
+     * @param fieldName 字段名
+     * @param value 字段值
+     */
+    public static void setStaticObjectField(@NonNull String className, @Nullable ClassLoader classLoader,
+                                            @NonNull String fieldName, @Nullable Object value) {
+        setStaticObjectField(findClass(className, classLoader), fieldName, value);
     }
 
     /**
@@ -682,6 +891,20 @@ public final class Reflect {
             throw new ReflectException(ReflectException.Kind.OTHER, fieldName,
                 "Cannot read field " + fieldName + ": " + e.getMessage(), e);
         }
+    }
+
+    /**
+     * 按类名读取静态字段。
+     *
+     * @param className 目标类名
+     * @param classLoader 解析类名使用的类加载器
+     * @param fieldName 字段名
+     * @return 字段值
+     */
+    @Nullable
+    public static Object getStaticObjectField(@NonNull String className, @Nullable ClassLoader classLoader,
+                                              @NonNull String fieldName) {
+        return getStaticObjectField(findClass(className, classLoader), fieldName);
     }
 
     /**
@@ -778,7 +1001,22 @@ public final class Reflect {
     @Nullable
     public static Object getStaticObjectFieldIfExists(@NonNull String className,
                                                       @NonNull String fieldName) {
-        Class<?> clazz = findClassIfExists(className, null);
+        return getStaticObjectFieldIfExists(className, null, fieldName);
+    }
+
+    /**
+     * 按类名读取静态字段，类或字段不存在时返回 null。
+     *
+     * @param className 目标类名
+     * @param classLoader 解析类名使用的类加载器
+     * @param fieldName 字段名
+     * @return 字段值或 null
+     */
+    @Nullable
+    public static Object getStaticObjectFieldIfExists(@NonNull String className,
+                                                      @Nullable ClassLoader classLoader,
+                                                      @NonNull String fieldName) {
+        Class<?> clazz = findClassIfExists(className, classLoader);
         return clazz == null ? null : getStaticObjectFieldIfExists(clazz, fieldName);
     }
 
@@ -811,6 +1049,33 @@ public final class Reflect {
         return clazz.getDeclaredConstructors();
     }
 
+    /**
+     * 获取指定类名中声明的全部方法，跳过桥接方法与合成方法。
+     *
+     * @param className 目标类名
+     * @param classLoader 解析类名使用的类加载器
+     * @param methodName 方法名过滤，为 null 时不过滤
+     * @return 匹配的方法数组
+     */
+    @NonNull
+    public static Method[] findAllMethod(@NonNull String className, @Nullable ClassLoader classLoader,
+                                         @Nullable String methodName) {
+        return findAllMethod(findClass(className, classLoader), methodName);
+    }
+
+    /**
+     * 获取指定类名中声明的全部构造函数。
+     *
+     * @param className 目标类名
+     * @param classLoader 解析类名使用的类加载器
+     * @return 构造函数数组
+     */
+    @NonNull
+    public static Constructor<?>[] findAllConstructor(@NonNull String className,
+                                                      @Nullable ClassLoader classLoader) {
+        return findAllConstructor(findClass(className, classLoader));
+    }
+
     // --------------------------- new instance ---------------------------
 
     /**
@@ -827,6 +1092,20 @@ public final class Reflect {
     }
 
     /**
+     * 使用指定类名与最匹配的构造函数创建实例。
+     *
+     * @param className 目标类名
+     * @param classLoader 解析类名使用的类加载器
+     * @param args 构造参数
+     * @return 新实例
+     */
+    @NonNull
+    public static Object newInstance(@NonNull String className, @Nullable ClassLoader classLoader,
+                                     @NonNull Object... args) {
+        return newInstance(findClass(className, classLoader), args);
+    }
+
+    /**
      * 使用显式参数类型创建实例。
      *
      * @param clazz 目标类
@@ -840,6 +1119,22 @@ public final class Reflect {
                                               @NonNull Object... args) {
         Constructor<?> constructor = ConstructorFinder.findBest(clazz, parameterTypes);
         return instantiate(constructor, args);
+    }
+
+    /**
+     * 使用指定类名与显式参数类型创建实例。
+     *
+     * @param className 目标类名
+     * @param classLoader 解析类名使用的类加载器
+     * @param parameterTypes 声明的参数类型
+     * @param args 构造参数
+     * @return 新实例
+     */
+    @NonNull
+    public static Object newInstanceWithTypes(@NonNull String className, @Nullable ClassLoader classLoader,
+                                              @NonNull Class<?>[] parameterTypes,
+                                              @NonNull Object... args) {
+        return newInstanceWithTypes(findClass(className, classLoader), parameterTypes, args);
     }
 
     /**

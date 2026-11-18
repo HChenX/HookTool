@@ -52,7 +52,7 @@ public class MyHooks extends AbsModule {
 
 ## 安装 Hook
 
-`Hook` 是安装门面，参数列表的最后一个元素固定为 `AbsHook` 实例。
+`Hook` 是按名称安装 Hook 的门面，`hookMethod`、`hookConstructor` 的可变参数末尾固定为 `AbsHook` 实例，类名与 `Class` 两种写法等价。
 
 ```java
 import static com.hchen.hooktool.hook.Hook.hookMethod;
@@ -88,7 +88,7 @@ Hook.doNothing();         // 跳过原方法并返回 null
 Hook.setArg(0, "value");  // 替换指定参数
 ```
 
-已持有 `Method` 或 `Constructor` 时用 `Hook.hook(executable, hook)` 直接安装。
+已持有 `Method` 或 `Constructor` 时用 `Hook.hook(executable, hook)` 直接安装；`hookAllMethod`、`hookAllConstructor`、`hookClassInitializer` 同样支持类名写法。
 
 目标不存在时使用 `hookMethodIfExists` 与 `hookConstructorIfExists`，返回 `null` 而不抛异常。
 
@@ -129,6 +129,10 @@ invoker.setType(XposedInterface.Invoker.Type.ORIGIN);
 Object result = invoker.invoke(target, "raw");
 
 HookInterop.deoptimize(method);
+
+// 按类与参数类型直接取调用器
+XposedInterface.CtorInvoker<?> ctorInvoker =
+    HookInterop.getConstructorInvoker(Target.class, String.class);
 ```
 
 ## 反射
@@ -142,6 +146,15 @@ Object value = Reflect.callMethod(target, "greet", "world");
 Reflect.setObjectField(target, "secret", "changed");
 ```
 
+查找、构造、字段访问与静态调用都同时接受 `Class` 与类名，类名写法会顺带完成解析：
+
+```java
+Method method = Reflect.findMethodExact("com.example.Target", loader, "greet", String.class);
+Field field = Reflect.findField("com.example.Target", loader, "secret");
+Target instance = (Target) Reflect.newInstance("com.example.Target", loader, 1, 2);
+Object created = Reflect.callStaticMethod("com.example.Target", loader, "create", "arg");
+```
+
 已持有 `Method`、`Constructor` 或 `Field` 时直接传入即可，不必再按名称查一次：
 
 ```java
@@ -153,3 +166,5 @@ Reflect.setObjectField(field, target, "changed");
 ```
 
 查找失败时抛出 `ReflectException`，可通过 `kind()` 区分原因。需要不抛异常的写法时使用 `Reflect.lookupMethod` 等 `lookup` 系列。
+
+同一套约定贯穿 `Hook`：既可按类名或 `Class` 描述目标，也可直接传入已解析的 `Executable`。

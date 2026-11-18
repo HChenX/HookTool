@@ -146,4 +146,4 @@ A: 这是引擎语义，`before` 中调用 `setResult` 会同时跳过原方法�
 
 Q: 依赖里还有 `kotlin-stdlib`？
 
-A: 只可能来自 `hooktool-kt` 或你自己的 Kotlin 代码。6 个 Java 模块的 POM 已由构建门禁保证无 Kotlin 依赖。
+A: 只可能来自 `hooktool-kt` 或你自己的 Kotlin 代码。6 个 Java 模块的发布元数据已由构建门禁保证无 Kotlin 依赖。

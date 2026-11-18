@@ -9,7 +9,7 @@ HookTool 4.0.0 按能力拆分为多个库，按需引入即可。
 | `hooktool-reflect` | Java | 无 | 反射查找与调用，纯 JVM |
 | `hooktool-common` | Java | 无 | 配置、日志、宿主环境接口 |
 | `hooktool-xposed` | Java | reflect、common、libxposed | Hook 引擎与模块入口 |
-| `hooktool-res` | Java | xposed、reflect | 资源注入 |
+| `hooktool-res` | Java | xposed、reflect、common | 资源注入 |
 | `hooktool-shell` | Java | common | Shell 命令执行 |
 | `hooktool-utils` | Java | reflect、common | 设备、包、配置、界面工具 |
 | `hooktool-kt` | Kotlin | xposed、reflect | Kotlin Hook DSL |

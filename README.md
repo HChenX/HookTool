@@ -9,7 +9,7 @@
 ![language](https://img.shields.io/badge/language-java%20%2F%20kotlin-purple)
 
 <p>简易的 Hook 工具，旨在降低 Hook 编写复杂度</p>
-<p><b>4.0.0 起按能力拆分为多个组件库，按需引入即可。</b></p>
+<p>4.0.0 起按能力拆分为多个组件库，按需引入即可。</p>
 </div>
 
 ### 组件库

@@ -90,10 +90,12 @@ byte[] bytes = BitmapTool.bitmapToBytes(bitmap);
 ```java
 ResInject.injectModuleRes();
 
-int fakeId = ResInject.createFakeResId(resources, android.R.string.ok);
+// 直接返回指定对象
 ResInject.setObjectReplacement(packageName, "string", "demo_replaced", "替换文本");
-ResInject.setResReplacement(packageName, "string", "demo_replaced", fakeId);
+// 按屏幕密度换算尺寸
 ResInject.setDensityReplacement(packageName, "dimen", "demo_dimen", 2.0f);
+// 重定向到模块内的资源
+ResInject.setResReplacement(packageName, "drawable", "demo_icon", R.drawable.module_icon);
 ```
 
-`injectModuleRes` 注入模块资源并安装资源 Hook，替换规则在首次设置时生效。
+规则按 `包名:类型/资源名` 匹配，包名传 `*` 可命中所有应用。`setResReplacement` 的目标 ID 必须是注入模块资源后能解析到的模块资源。

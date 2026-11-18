@@ -269,6 +269,32 @@ class ReflectTest {
         assertEquals(1, Reflect.removeAdditionalStaticField(Fixtures.Child.class, "s"));
     }
 
+    // ---------------------------- by class name -------------------------
+
+    @Test
+    void findsMembersByClassName() {
+        String className = Fixtures.Child.class.getName();
+        ClassLoader loader = getClass().getClassLoader();
+
+        Field count = Reflect.findField(className, loader, "count");
+        Fixtures.Child child = (Fixtures.Child) Reflect.newInstance(className, loader);
+        assertEquals(7, Reflect.getObjectField(count, child));
+
+        assertEquals(1, Reflect.findAllMethod(className, loader, "greet").length);
+        assertEquals(2, Reflect.findAllConstructor(className, loader).length);
+        assertEquals("const", Reflect.getStaticObjectField(className, loader, "CONST"));
+    }
+
+    @Test
+    void lookupByMissingClassNameCarriesKind() {
+        ClassLoader loader = getClass().getClassLoader();
+        Lookup<Method> lookup = Reflect.lookupMethod("com.example.Absent", loader, "run");
+
+        assertFalse(lookup.isPresent());
+        assertEquals(ReflectException.Kind.CLASS_NOT_FOUND, lookup.error().kind());
+        assertNull(Reflect.findFieldIfExists("com.example.Absent", loader, "name"));
+    }
+
     // --------------------------- resolved members ------------------------
 
     @Test

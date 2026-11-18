@@ -81,6 +81,22 @@ public final class HookInterop {
         return ModuleData.getWrapper().getInvoker(constructor);
     }
 
+    /**
+     * 按参数类型获取构造函数调用器。
+     *
+     * @param clazz 声明类
+     * @param parameterTypes 参数类型
+     * @param <T> 实例类型
+     * @return 构造函数调用器
+     */
+    @NonNull
+    @SuppressWarnings("unchecked")
+    public static <T> XposedInterface.CtorInvoker<T> getConstructorInvoker(
+        @NonNull Class<T> clazz, @NonNull Object... parameterTypes) {
+        return getConstructorInvoker(
+            (Constructor<T>) Reflect.findConstructorExact(clazz, parameterTypes));
+    }
+
     // ---------------------------- deoptimize -----------------------------
 
     /**
