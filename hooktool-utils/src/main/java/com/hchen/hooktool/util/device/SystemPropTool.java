@@ -20,8 +20,8 @@ package com.hchen.hooktool.util.device;
 
 import androidx.annotation.NonNull;
 
-import com.hchen.hooktool.reflect.Reflect;
 import com.hchen.hooktool.log.AndroidLog;
+import com.hchen.hooktool.reflect.Reflect;
 
 /**
  * Android 系统属性（SystemProperties）操作工具类。

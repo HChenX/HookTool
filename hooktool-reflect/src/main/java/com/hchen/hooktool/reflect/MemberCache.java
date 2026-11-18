@@ -45,10 +45,10 @@ final class MemberCache<T> {
     /**
      * 获取缓存的成员，弱引用被回收时重新查找。
      *
-     * @param owner 成员所属的类
-     * @param key 缓存键
+     * @param owner     成员所属的类
+     * @param key       缓存键
      * @param recompute 缓存缺失时的查找逻辑
-     * @param error 缓存为空时生成失败异常
+     * @param error     缓存为空时生成失败异常
      * @return 解析出的成员
      */
     T get(Class<?> owner, String key,
@@ -77,7 +77,7 @@ final class MemberCache<T> {
      * 判断该键是否已被缓存为查找失败，不构造异常。
      *
      * @param owner 成员所属的类
-     * @param key 缓存键
+     * @param key   缓存键
      * @return 已确定查找失败时返回 {@code true}
      */
     boolean isMissing(Class<?> owner, String key) {
@@ -103,7 +103,7 @@ final class MemberCache<T> {
          * 创建持有有效值的缓存项。
          *
          * @param value 缓存值
-         * @param <T> 成员类型
+         * @param <T>   成员类型
          * @return 缓存项
          */
         static <T> Slot<T> of(T value) {

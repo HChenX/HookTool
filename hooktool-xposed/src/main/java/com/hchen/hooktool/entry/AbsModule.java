@@ -136,7 +136,7 @@ public abstract class AbsModule {
     /**
      * 生命周期回调抛出异常时触发。
      *
-     * @param stage 发生异常的阶段
+     * @param stage     发生异常的阶段
      * @param throwable 异常信息
      */
     protected void onThrow(@NonNull LifecycleStage stage, @NonNull Throwable throwable) {

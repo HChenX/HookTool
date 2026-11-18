@@ -32,8 +32,8 @@ import android.os.UserHandle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.hchen.hooktool.reflect.Reflect;
 import com.hchen.hooktool.log.AndroidLog;
+import com.hchen.hooktool.reflect.Reflect;
 import com.hchen.hooktool.util.ui.BitmapTool;
 
 import java.util.List;

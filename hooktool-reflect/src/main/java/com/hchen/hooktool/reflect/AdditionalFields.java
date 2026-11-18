@@ -38,8 +38,8 @@ final class AdditionalFields {
      * 设置附加字段。
      *
      * @param target 目标对象
-     * @param key 字段键
-     * @param value 字段值
+     * @param key    字段键
+     * @param value  字段值
      * @return 该键原有的值
      */
     static Object set(Object target, String key, Object value) {
@@ -53,7 +53,7 @@ final class AdditionalFields {
      * 读取附加字段。
      *
      * @param target 目标对象
-     * @param key 字段键
+     * @param key    字段键
      * @return 字段值，不存在时返回 null
      */
     static Object get(Object target, String key) {
@@ -68,7 +68,7 @@ final class AdditionalFields {
      * 移除附加字段。
      *
      * @param target 目标对象
-     * @param key 字段键
+     * @param key    字段键
      * @return 被移除的值，不存在时返回 null
      */
     static Object remove(Object target, String key) {

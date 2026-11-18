@@ -46,7 +46,7 @@ if (!project.name.endsWith('-kt')) {
             def offenders = fileTree(projectDir) { include 'src/**/*.kt' }.files
             if (!offenders.isEmpty()) {
                 throw new GradleException("Module '${project.name}' must stay Java-only, move these files to hooktool-kt: " +
-                    offenders.collect { it.name }.join(', '))
+                        offenders.collect { it.name }.join(', '))
             }
         }
     }

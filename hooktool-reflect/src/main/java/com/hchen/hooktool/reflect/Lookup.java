@@ -44,7 +44,7 @@ public final class Lookup<T> {
      * 创建成功结果。
      *
      * @param value 解析结果
-     * @param <T> 结果类型
+     * @param <T>   结果类型
      * @return 成功结果
      */
     @NonNull
@@ -56,7 +56,7 @@ public final class Lookup<T> {
      * 创建失败结果。
      *
      * @param error 失败原因
-     * @param <T> 结果类型
+     * @param <T>   结果类型
      * @return 失败结果
      */
     @NonNull

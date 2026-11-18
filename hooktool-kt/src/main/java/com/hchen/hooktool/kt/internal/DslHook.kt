@@ -18,13 +18,11 @@
  */
 package com.hchen.hooktool.kt.internal
 
+import android.os.Bundle
 import com.hchen.hooktool.hook.AbsHook
 import com.hchen.hooktool.kt.HookGroup
-import com.hchen.hooktool.kt.Stage as DslStage
-
-import android.os.Bundle
-
 import io.github.libxposed.api.XposedInterface
+import com.hchen.hooktool.kt.Stage as DslStage
 
 /**
  * DSL 使用的 Hook 实现。

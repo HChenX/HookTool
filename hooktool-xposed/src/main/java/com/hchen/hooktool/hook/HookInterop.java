@@ -56,8 +56,8 @@ public final class HookInterop {
     /**
      * 按名称获取方法调用器。
      *
-     * @param clazz 声明类
-     * @param methodName 方法名
+     * @param clazz          声明类
+     * @param methodName     方法名
      * @param parameterTypes 参数类型
      * @return 方法调用器
      */
@@ -72,7 +72,7 @@ public final class HookInterop {
      * 获取构造函数调用器。
      *
      * @param constructor 目标构造函数
-     * @param <T> 实例类型
+     * @param <T>         实例类型
      * @return 构造函数调用器
      */
     @NonNull
@@ -84,9 +84,9 @@ public final class HookInterop {
     /**
      * 按参数类型获取构造函数调用器。
      *
-     * @param clazz 声明类
+     * @param clazz          声明类
      * @param parameterTypes 参数类型
-     * @param <T> 实例类型
+     * @param <T>            实例类型
      * @return 构造函数调用器
      */
     @NonNull
@@ -112,8 +112,8 @@ public final class HookInterop {
     /**
      * 按名称对方法执行去优化。
      *
-     * @param clazz 声明类
-     * @param methodName 方法名
+     * @param clazz          声明类
+     * @param methodName     方法名
      * @param parameterTypes 参数类型
      */
     public static void deoptimizeMethod(@NonNull Class<?> clazz, @NonNull String methodName,
@@ -136,7 +136,7 @@ public final class HookInterop {
     /**
      * 按参数类型对构造函数执行去优化。
      *
-     * @param clazz 声明类
+     * @param clazz          声明类
      * @param parameterTypes 参数类型
      */
     public static void deoptimizeConstructor(@NonNull Class<?> clazz,

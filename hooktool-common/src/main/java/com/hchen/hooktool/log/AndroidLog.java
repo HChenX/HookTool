@@ -42,9 +42,9 @@ public final class AndroidLog {
      * <p>
      * 供默认宿主环境与框架日志回落使用，业务代码请改用 {@code logX} 系列方法。
      *
-     * @param priority 日志优先级
-     * @param tag 自定义标签
-     * @param message 已格式化的消息
+     * @param priority  日志优先级
+     * @param tag       自定义标签
+     * @param message   已格式化的消息
      * @param throwable 异常信息
      */
     public static void output(int priority, @NonNull String tag, @NonNull String message,
@@ -76,7 +76,7 @@ public final class AndroidLog {
     /**
      * 输出错误日志。
      *
-     * @param tag 自定义标签
+     * @param tag     自定义标签
      * @param message 日志正文
      */
     public static void logE(@NonNull String tag, @NonNull String message) {
@@ -86,7 +86,7 @@ public final class AndroidLog {
     /**
      * 输出带异常的错误日志。
      *
-     * @param tag 自定义标签
+     * @param tag       自定义标签
      * @param throwable 异常信息
      */
     public static void logE(@NonNull String tag, @NonNull Throwable throwable) {
@@ -96,8 +96,8 @@ public final class AndroidLog {
     /**
      * 输出带正文与异常的错误日志。
      *
-     * @param tag 自定义标签
-     * @param message 日志正文
+     * @param tag       自定义标签
+     * @param message   日志正文
      * @param throwable 异常信息
      */
     public static void logE(@NonNull String tag, @NonNull String message,
@@ -110,7 +110,7 @@ public final class AndroidLog {
     /**
      * 输出警告日志。
      *
-     * @param tag 自定义标签
+     * @param tag     自定义标签
      * @param message 日志正文
      */
     public static void logW(@NonNull String tag, @NonNull String message) {
@@ -120,7 +120,7 @@ public final class AndroidLog {
     /**
      * 输出带异常的警告日志。
      *
-     * @param tag 自定义标签
+     * @param tag       自定义标签
      * @param throwable 异常信息
      */
     public static void logW(@NonNull String tag, @NonNull Throwable throwable) {
@@ -130,8 +130,8 @@ public final class AndroidLog {
     /**
      * 输出带正文与异常的警告日志。
      *
-     * @param tag 自定义标签
-     * @param message 日志正文
+     * @param tag       自定义标签
+     * @param message   日志正文
      * @param throwable 异常信息
      */
     public static void logW(@NonNull String tag, @NonNull String message,
@@ -144,7 +144,7 @@ public final class AndroidLog {
     /**
      * 输出信息日志。
      *
-     * @param tag 自定义标签
+     * @param tag     自定义标签
      * @param message 日志正文
      */
     public static void logI(@NonNull String tag, @NonNull String message) {
@@ -154,7 +154,7 @@ public final class AndroidLog {
     /**
      * 输出带异常的信息日志。
      *
-     * @param tag 自定义标签
+     * @param tag       自定义标签
      * @param throwable 异常信息
      */
     public static void logI(@NonNull String tag, @NonNull Throwable throwable) {
@@ -164,8 +164,8 @@ public final class AndroidLog {
     /**
      * 输出带正文与异常的信息日志。
      *
-     * @param tag 自定义标签
-     * @param message 日志正文
+     * @param tag       自定义标签
+     * @param message   日志正文
      * @param throwable 异常信息
      */
     public static void logI(@NonNull String tag, @NonNull String message,
@@ -178,7 +178,7 @@ public final class AndroidLog {
     /**
      * 输出调试日志。
      *
-     * @param tag 自定义标签
+     * @param tag     自定义标签
      * @param message 日志正文
      */
     public static void logD(@NonNull String tag, @NonNull String message) {
@@ -188,7 +188,7 @@ public final class AndroidLog {
     /**
      * 输出带异常的调试日志。
      *
-     * @param tag 自定义标签
+     * @param tag       自定义标签
      * @param throwable 异常信息
      */
     public static void logD(@NonNull String tag, @NonNull Throwable throwable) {
@@ -198,8 +198,8 @@ public final class AndroidLog {
     /**
      * 输出带正文与异常的调试日志。
      *
-     * @param tag 自定义标签
-     * @param message 日志正文
+     * @param tag       自定义标签
+     * @param message   日志正文
      * @param throwable 异常信息
      */
     public static void logD(@NonNull String tag, @NonNull String message,

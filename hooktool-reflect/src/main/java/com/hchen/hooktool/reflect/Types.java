@@ -75,7 +75,7 @@ final class Types {
      * 判断源类型数组能否逐一赋值给目标类型数组。
      *
      * @param from 源类型数组，元素可为 null
-     * @param to 目标类型数组
+     * @param to   目标类型数组
      * @return 全部可赋值时返回 true
      */
     static boolean isAssignable(Class<?>[] from, Class<?>[] to) {
@@ -95,7 +95,7 @@ final class Types {
      * 判断源类型能否赋值给目标类型，包含装箱与基本类型加宽。
      *
      * @param from 源类型
-     * @param to 目标类型
+     * @param to   目标类型
      * @return 可赋值时返回 true
      */
     static boolean isAssignable(Class<?> from, Class<?> to) {
@@ -162,7 +162,7 @@ final class Types {
     /**
      * 计算运行时类型转换为声明参数类型的代价。
      *
-     * @param srcType 运行时类型，可为 null
+     * @param srcType  运行时类型，可为 null
      * @param destType 声明的参数类型
      * @return 转换代价，不兼容时返回 {@link Float#MAX_VALUE}
      */
@@ -223,8 +223,8 @@ final class Types {
      * 比较两个候选参数列表与目标参数的匹配程度。
      *
      * @param candidate 候选参数类型
-     * @param current 当前最优参数类型
-     * @param wanted 目标参数类型，元素可为 null
+     * @param current   当前最优参数类型
+     * @param wanted    目标参数类型，元素可为 null
      * @return 候选更优时返回负数
      */
     static int compareFit(Class<?>[] candidate, Class<?>[] current, Class<?>[] wanted) {

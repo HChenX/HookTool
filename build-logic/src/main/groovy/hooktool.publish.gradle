@@ -1,7 +1,5 @@
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
-import org.gradle.api.publish.maven.tasks.GenerateMavenPom
-import org.gradle.api.publish.tasks.GenerateModuleMetadata
 
 plugins {
     id 'maven-publish'
@@ -22,8 +20,8 @@ if (!kotlinModule) {
             if (!pomFile.exists()) return
             def original = pomFile.getText('UTF-8')
             def cleaned = original.replaceAll(
-                /(?s)\s*<dependency>\s*<groupId>org\.jetbrains\.kotlin<\/groupId>.*?<\/dependency>/,
-                '')
+                    /(?s)\s*<dependency>\s*<groupId>org\.jetbrains\.kotlin<\/groupId>.*?<\/dependency>/,
+                    '')
             if (cleaned != original) {
                 pomFile.setText(cleaned, 'UTF-8')
             }

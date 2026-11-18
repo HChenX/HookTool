@@ -42,8 +42,8 @@ final class MethodFinder {
     /**
      * 按精确参数类型查找方法。
      *
-     * @param clazz 查找起点类
-     * @param name 方法名
+     * @param clazz          查找起点类
+     * @param name           方法名
      * @param parameterTypes 精确参数类型
      * @return 已设置为可访问的方法
      */
@@ -65,8 +65,8 @@ final class MethodFinder {
     /**
      * 按最匹配的参数类型查找方法。
      *
-     * @param clazz 查找起点类
-     * @param name 方法名
+     * @param clazz          查找起点类
+     * @param name           方法名
      * @param parameterTypes 目标参数类型，元素可为 null 表示任意
      * @return 已设置为可访问的方法
      */

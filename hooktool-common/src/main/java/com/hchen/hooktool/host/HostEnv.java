@@ -41,9 +41,9 @@ public interface HostEnv {
     /**
      * 输出一行日志。
      *
-     * @param priority 日志优先级
-     * @param tag 自定义标签
-     * @param message 已格式化的消息
+     * @param priority  日志优先级
+     * @param tag       自定义标签
+     * @param message   已格式化的消息
      * @param throwable 异常信息
      */
     void log(int priority, @NonNull String tag, @NonNull String message,

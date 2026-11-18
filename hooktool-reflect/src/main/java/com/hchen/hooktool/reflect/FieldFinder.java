@@ -37,7 +37,7 @@ final class FieldFinder {
     /**
      * 查找指定名称的字段。
      *
-     * @param clazz 目标类
+     * @param clazz     目标类
      * @param fieldName 字段名
      * @return 已设置为可访问的字段
      */
@@ -60,7 +60,7 @@ final class FieldFinder {
     /**
      * 查找指定名称的字段，不存在时返回 null。
      *
-     * @param clazz 目标类
+     * @param clazz     目标类
      * @param fieldName 字段名
      * @return 字段或 null
      */

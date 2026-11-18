@@ -56,7 +56,7 @@ public final class Hook {
      * 对已解析的方法或构造函数安装 Hook。
      *
      * @param executable 目标方法或构造函数
-     * @param absHook Hook 实现
+     * @param absHook    Hook 实现
      * @return 已安装的 Hook 句柄
      */
     @NonNull
@@ -90,8 +90,8 @@ public final class Hook {
     /**
      * 对方法安装 Hook。
      *
-     * @param clazz 目标类
-     * @param methodName 方法名
+     * @param clazz                 目标类
+     * @param methodName            方法名
      * @param parameterTypesAndHook 参数类型，最后一个元素为 {@link AbsHook}
      * @return 已安装的 Hook 句柄
      */
@@ -107,9 +107,9 @@ public final class Hook {
     /**
      * 对指定类名中的方法安装 Hook。
      *
-     * @param className 目标类名
-     * @param classLoader 解析类名使用的类加载器
-     * @param methodName 方法名
+     * @param className             目标类名
+     * @param classLoader           解析类名使用的类加载器
+     * @param methodName            方法名
      * @param parameterTypesAndHook 参数类型，最后一个元素为 {@link AbsHook}
      * @return 已安装的 Hook 句柄
      */
@@ -125,8 +125,8 @@ public final class Hook {
     /**
      * 对方法安装 Hook，目标不存在时返回 null。
      *
-     * @param clazz 目标类
-     * @param methodName 方法名
+     * @param clazz                 目标类
+     * @param methodName            方法名
      * @param parameterTypesAndHook 参数类型，最后一个元素为 {@link AbsHook}
      * @return Hook 句柄或 null
      */
@@ -144,9 +144,9 @@ public final class Hook {
     /**
      * 对指定类名中的方法安装 Hook，目标不存在时返回 null。
      *
-     * @param className 目标类名
-     * @param classLoader 解析类名使用的类加载器
-     * @param methodName 方法名
+     * @param className             目标类名
+     * @param classLoader           解析类名使用的类加载器
+     * @param methodName            方法名
      * @param parameterTypesAndHook 参数类型，最后一个元素为 {@link AbsHook}
      * @return Hook 句柄或 null
      */
@@ -167,7 +167,7 @@ public final class Hook {
     /**
      * 对构造函数安装 Hook。
      *
-     * @param clazz 目标类
+     * @param clazz                 目标类
      * @param parameterTypesAndHook 参数类型，最后一个元素为 {@link AbsHook}
      * @return 已安装的 Hook 句柄
      */
@@ -182,8 +182,8 @@ public final class Hook {
     /**
      * 对指定类名中的构造函数安装 Hook。
      *
-     * @param className 目标类名
-     * @param classLoader 解析类名使用的类加载器
+     * @param className             目标类名
+     * @param classLoader           解析类名使用的类加载器
      * @param parameterTypesAndHook 参数类型，最后一个元素为 {@link AbsHook}
      * @return 已安装的 Hook 句柄
      */
@@ -197,7 +197,7 @@ public final class Hook {
     /**
      * 对构造函数安装 Hook，目标不存在时返回 null。
      *
-     * @param clazz 目标类
+     * @param clazz                 目标类
      * @param parameterTypesAndHook 参数类型，最后一个元素为 {@link AbsHook}
      * @return Hook 句柄或 null
      */
@@ -214,8 +214,8 @@ public final class Hook {
     /**
      * 对指定类名中的构造函数安装 Hook，目标不存在时返回 null。
      *
-     * @param className 目标类名
-     * @param classLoader 解析类名使用的类加载器
+     * @param className             目标类名
+     * @param classLoader           解析类名使用的类加载器
      * @param parameterTypesAndHook 参数类型，最后一个元素为 {@link AbsHook}
      * @return Hook 句柄或 null
      */
@@ -235,9 +235,9 @@ public final class Hook {
     /**
      * 对同名方法全部安装 Hook。
      *
-     * @param clazz 目标类
+     * @param clazz      目标类
      * @param methodName 方法名
-     * @param absHook 所有重载共用的 Hook 实现
+     * @param absHook    所有重载共用的 Hook 实现
      * @return 已安装的 Hook 句柄数组
      */
     @NonNull
@@ -256,10 +256,10 @@ public final class Hook {
     /**
      * 对指定类名中的同名方法全部安装 Hook。
      *
-     * @param className 目标类名
+     * @param className   目标类名
      * @param classLoader 解析类名使用的类加载器
-     * @param methodName 方法名
-     * @param absHook 所有重载共用的 Hook 实现
+     * @param methodName  方法名
+     * @param absHook     所有重载共用的 Hook 实现
      * @return 已安装的 Hook 句柄数组
      */
     @NonNull
@@ -273,7 +273,7 @@ public final class Hook {
     /**
      * 对类中声明的构造函数全部安装 Hook。
      *
-     * @param clazz 目标类
+     * @param clazz   目标类
      * @param absHook 所有构造函数共用的 Hook 实现
      * @return 已安装的 Hook 句柄数组
      */
@@ -290,9 +290,9 @@ public final class Hook {
     /**
      * 对指定类名中的构造函数全部安装 Hook。
      *
-     * @param className 目标类名
+     * @param className   目标类名
      * @param classLoader 解析类名使用的类加载器
-     * @param absHook 所有构造函数共用的 Hook 实现
+     * @param absHook     所有构造函数共用的 Hook 实现
      * @return 已安装的 Hook 句柄数组
      */
     @NonNull
@@ -305,7 +305,7 @@ public final class Hook {
     /**
      * 对类的静态初始化器安装 Hook。
      *
-     * @param clazz 目标类
+     * @param clazz   目标类
      * @param absHook Hook 实现
      * @return 已安装的 Hook 句柄
      */
@@ -328,9 +328,9 @@ public final class Hook {
     /**
      * 对指定类名中的静态初始化器安装 Hook。
      *
-     * @param className 目标类名
+     * @param className   目标类名
      * @param classLoader 解析类名使用的类加载器
-     * @param absHook Hook 实现
+     * @param absHook     Hook 实现
      * @return 已安装的 Hook 句柄
      */
     @NonNull

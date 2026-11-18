@@ -75,7 +75,7 @@ final class ClassCache {
     /**
      * 加载指定名字的类。
      *
-     * @param className 类名，支持基本类型与数组写法
+     * @param className   类名，支持基本类型与数组写法
      * @param classLoader 类加载器，为 null 时使用默认值
      * @return 加载到的类
      * @throws ReflectException 类不存在时抛出
@@ -96,7 +96,7 @@ final class ClassCache {
     /**
      * 加载指定名字的类，失败时返回空结果。
      *
-     * @param className 类名
+     * @param className   类名
      * @param classLoader 类加载器，为 null 时使用默认值
      * @return 查找结果
      */

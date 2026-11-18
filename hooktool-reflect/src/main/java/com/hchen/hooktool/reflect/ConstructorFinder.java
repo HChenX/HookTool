@@ -34,7 +34,7 @@ final class ConstructorFinder {
     /**
      * 按精确参数类型查找构造函数。
      *
-     * @param clazz 目标类
+     * @param clazz          目标类
      * @param parameterTypes 精确参数类型
      * @return 已设置为可访问的构造函数
      */
@@ -56,7 +56,7 @@ final class ConstructorFinder {
     /**
      * 按最匹配的参数类型查找构造函数。
      *
-     * @param clazz 目标类
+     * @param clazz          目标类
      * @param parameterTypes 目标参数类型，元素可为 null
      * @return 已设置为可访问的构造函数
      */
@@ -74,7 +74,8 @@ final class ConstructorFinder {
             key -> {
                 Constructor<?> best = null;
                 for (Constructor<?> candidate : clazz.getDeclaredConstructors()) {
-                    if (!Types.isAssignable(parameterTypes, candidate.getParameterTypes())) continue;
+                    if (!Types.isAssignable(parameterTypes, candidate.getParameterTypes()))
+                        continue;
                     if (best == null || Types.compareFit(candidate.getParameterTypes(),
                         best.getParameterTypes(), parameterTypes) < 0) {
                         best = candidate;

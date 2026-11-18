@@ -33,8 +33,8 @@ public final class Throwables {
      * 原样抛出指定异常，不做包装。
      *
      * @param throwable 待抛出的异常
-     * @param <T> 返回值占位类型
-     * @param <E> 抛出异常的类型
+     * @param <T>       返回值占位类型
+     * @param <E>       抛出异常的类型
      * @return 不会返回
      * @throws E 始终抛出
      */

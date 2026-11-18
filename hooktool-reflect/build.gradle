@@ -22,12 +22,12 @@ def verifyNoFrameworkDeps = tasks.register('verifyNoFrameworkDeps') {
         def forbidden = configurations.runtimeClasspath.resolvedConfiguration.resolvedArtifacts.findAll { artifact ->
             def id = artifact.moduleVersion.id
             id.group == 'io.github.libxposed' ||
-                id.group.startsWith('androidx.') ||
-                id.group.startsWith('com.android.')
+                    id.group.startsWith('androidx.') ||
+                    id.group.startsWith('com.android.')
         }
         if (!forbidden.isEmpty()) {
             throw new GradleException('hooktool-reflect must stay framework free: ' +
-                forbidden.collect { it.moduleVersion.id }.join(', '))
+                    forbidden.collect { it.moduleVersion.id }.join(', '))
         }
     }
 }
