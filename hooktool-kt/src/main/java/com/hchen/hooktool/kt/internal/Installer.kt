@@ -83,9 +83,9 @@ internal object Installer {
         for (member in spec.members) {
             if (member.kind == MemberKind.CLINIT) {
                 val hook = DslHook(member, group)
-                val handle = Hook.installClassInitializer(clazz, hook)
+                val handle = Hook.hookClassInitializer(clazz, hook)
                 group.add(hook, handle, clazz.name + ".<clinit>")
-                observe(member, clazz.name + ".<clinit>")
+                logInstall(member, clazz.name + ".<clinit>")
                 continue
             }
 
@@ -119,9 +119,9 @@ internal object Installer {
                     )
                 }
                 val hook = DslHook(member, group)
-                val handle = Hook.install(executable, hook)
+                val handle = Hook.hook(executable, hook)
                 group.add(hook, handle, executable.toGenericString())
-                observe(member, executable.toGenericString())
+                logInstall(member, executable.toGenericString())
             }
         }
     }
@@ -147,8 +147,8 @@ internal object Installer {
         }
     }
 
-    private fun observe(member: MemberSpec, signature: String) {
-        if (member.observe) AndroidLog.logI(TAG, "Hooked " + signature)
+    private fun logInstall(member: MemberSpec, signature: String) {
+        if (member.logInstall) AndroidLog.logI(TAG, "Hooked " + signature)
     }
 
     private fun resolve(

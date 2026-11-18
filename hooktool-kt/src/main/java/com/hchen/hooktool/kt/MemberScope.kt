@@ -86,8 +86,8 @@ class MemberScope internal constructor(private val member: MemberSpec) {
     /**
      * 安装成功时输出一行日志。
      */
-    fun observe() {
-        member.observe = true
+    fun logInstall() {
+        member.logInstall = true
     }
 
     /**

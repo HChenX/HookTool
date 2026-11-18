@@ -65,7 +65,7 @@ public final class HookInterop {
     public static XposedInterface.Invoker<?, Method> getMethodInvoker(@NonNull Class<?> clazz,
                                                                       @NonNull String methodName,
                                                                       @NonNull Object... parameterTypes) {
-        return getMethodInvoker(Reflect.findMethod(clazz, methodName, parameterTypes));
+        return getMethodInvoker(Reflect.findMethodExact(clazz, methodName, parameterTypes));
     }
 
     /**
@@ -102,7 +102,7 @@ public final class HookInterop {
      */
     public static void deoptimizeMethod(@NonNull Class<?> clazz, @NonNull String methodName,
                                         @NonNull Object... parameterTypes) {
-        deoptimize(Reflect.findMethod(clazz, methodName, parameterTypes));
+        deoptimize(Reflect.findMethodExact(clazz, methodName, parameterTypes));
     }
 
     /**
@@ -125,7 +125,7 @@ public final class HookInterop {
      */
     public static void deoptimizeConstructor(@NonNull Class<?> clazz,
                                              @NonNull Object... parameterTypes) {
-        deoptimize(Reflect.findConstructor(clazz, parameterTypes));
+        deoptimize(Reflect.findConstructorExact(clazz, parameterTypes));
     }
 
     /**

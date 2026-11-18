@@ -95,7 +95,7 @@ class HookGroup internal constructor(
     fun unhook() {
         for (hook in hooks) {
             try {
-                hook.unhookSelf()
+                hook.unhook()
             } catch (_: IllegalStateException) {
                 // 该成员尚未安装
             } catch (throwable: Throwable) {

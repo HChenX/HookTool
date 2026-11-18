@@ -264,7 +264,7 @@ public abstract class ModuleEntrance extends XposedModule {
 
             Map<String, Object> merged = new HashMap<>();
             Map<String, Object> moduleState = handleHotReloading(param.getExtras());
-            Map<String, Object> hookState = HookRegistry.reloading(param.getExtras());
+            Map<String, Object> hookState = HookRegistry.saveState(param.getExtras());
 
             // 跨来源键冲突检测：冲突时拒绝本次热重载。
             for (String key : hookState.keySet()) {
@@ -329,7 +329,7 @@ public abstract class ModuleEntrance extends XposedModule {
             unhookAll(oldHandles);
 
             handleHotReloaded(param, classLoader);
-            HookRegistry.reloaded(param);
+            HookRegistry.restoreState(param);
         } finally {
             // 任何路径都确保旧 Hook 被解除。
             unhookAll(oldHandles);

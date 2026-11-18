@@ -42,7 +42,7 @@ class DslHooks : DemoHook {
             method("greet", String::class) {
                 id("dsl-greet")
                 priority(60)
-                observe()
+                logInstall()
                 before {
                     callCount++
                     AndroidLog.logD(TAG, "greet 参数: " + argAs<String>(0))
@@ -57,7 +57,7 @@ class DslHooks : DemoHook {
                 after { AndroidLog.logD(TAG, "构造完成") }
             }
 
-            clinit {
+            classInitializer {
                 after { AndroidLog.logD(TAG, "静态初始化块执行完成") }
             }
 

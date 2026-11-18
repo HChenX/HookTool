@@ -64,7 +64,7 @@ public final class JavaConsumer {
      * @return 方法的声明类名与方法名
      */
     public static String lookupSample() {
-        Method method = Reflect.findMethod(Thread.class, "getName");
+        Method method = Reflect.findMethodExact(Thread.class, "getName");
         return method.getDeclaringClass().getName() + "#" + method.getName();
     }
 }

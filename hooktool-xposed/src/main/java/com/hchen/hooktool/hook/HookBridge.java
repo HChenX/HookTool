@@ -122,7 +122,7 @@ final class HookBridge {
                     try {
                         absHook.before();
                     } catch (Throwable throwable) {
-                        if (!absHook.onThrow(AbsHook.StageEnum.BEFORE, throwable)) {
+                        if (!absHook.onThrow(AbsHook.Stage.BEFORE, throwable)) {
                             absHook.setNonActiveThrowable(throwable);
                         }
                     }
@@ -140,7 +140,7 @@ final class HookBridge {
                         Object result = absHook.proceed(absHook.getChain());
                         absHook.setOriginalResult(result);
                     } catch (Throwable throwable) {
-                        if (!absHook.onThrow(AbsHook.StageEnum.PROCEED, throwable)) {
+                        if (!absHook.onThrow(AbsHook.Stage.PROCEED, throwable)) {
                             absHook.setNonActiveThrowable(throwable);
                         }
                     }
@@ -148,7 +148,7 @@ final class HookBridge {
                     try {
                         absHook.after();
                     } catch (Throwable throwable) {
-                        if (!absHook.onThrow(AbsHook.StageEnum.AFTER, throwable)) {
+                        if (!absHook.onThrow(AbsHook.Stage.AFTER, throwable)) {
                             absHook.setNonActiveThrowable(throwable);
                         }
                     }

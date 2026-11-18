@@ -38,7 +38,7 @@ group.unhook()
 |---|---|
 | `method(name, vararg params)` | 精确参数匹配的方法 |
 | `constructor(vararg params)` | 构造函数 |
-| `clinit` | 静态初始化块 |
+| `classInitializer` | 静态初始化块 |
 | `allMethods` | 全部已声明方法 |
 | `methods(predicate)` | 满足条件的方法 |
 

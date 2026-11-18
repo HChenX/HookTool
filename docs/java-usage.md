@@ -88,6 +88,8 @@ Hook.doNothing();         // 跳过原方法并返回 null
 Hook.setArg(0, "value");  // 替换指定参数
 ```
 
+已持有 `Method` 或 `Constructor` 时用 `Hook.hook(executable, hook)` 直接安装。
+
 目标不存在时使用 `hookMethodIfExists` 与 `hookConstructorIfExists`，返回 `null` 而不抛异常。
 
 ## Hook 生命周期
@@ -121,7 +123,7 @@ ChainTool.buildChain(Target.class)
 ## 调用器与去优化
 
 ```java
-Method method = Reflect.findMethod(Target.class, "greet", String.class);
+Method method = Reflect.findMethodExact(Target.class, "greet", String.class);
 XposedInterface.Invoker<?, Method> invoker = HookInterop.getMethodInvoker(method);
 invoker.setType(XposedInterface.Invoker.Type.ORIGIN);
 Object result = invoker.invoke(target, "raw");
@@ -135,9 +137,19 @@ HookInterop.deoptimize(method);
 
 ```java
 Class<?> clazz = Reflect.findClass("com.example.Target");
-Method method = Reflect.findMethod(clazz, "greet", String.class);
+Method method = Reflect.findMethodExact(clazz, "greet", String.class);
 Object value = Reflect.callMethod(target, "greet", "world");
 Reflect.setObjectField(target, "secret", "changed");
+```
+
+已持有 `Method`、`Constructor` 或 `Field` 时直接传入即可，不必再按名称查一次：
+
+```java
+Reflect.callMethod(method, target, "world");
+Reflect.callStaticMethod(staticMethod, 1, 2);
+Target instance = (Target) Reflect.newInstance(constructor, 1, 2);
+Object secret = Reflect.getObjectField(field, target);
+Reflect.setObjectField(field, target, "changed");
 ```
 
 查找失败时抛出 `ReflectException`，可通过 `kind()` 区分原因。需要不抛异常的写法时使用 `Reflect.lookupMethod` 等 `lookup` 系列。

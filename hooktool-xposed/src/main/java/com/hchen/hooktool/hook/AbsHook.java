@@ -166,7 +166,7 @@ public abstract class AbsHook {
     /**
      * 钩子拦截的生命周期阶段枚举。
      */
-    public enum StageEnum {
+    public enum Stage {
         /**
          * 前置拦截阶段，即原方法被调用之前。
          */
@@ -259,7 +259,7 @@ public abstract class AbsHook {
      * @param e     被捕获的异常对象
      * @return {@code true} 表示异常已被处理，{@code false} 表示交由框架继续处理
      */
-    public boolean onThrow(@NonNull StageEnum stage, @NonNull Throwable e) {
+    public boolean onThrow(@NonNull Stage stage, @NonNull Throwable e) {
         return false;
     }
 
@@ -483,7 +483,7 @@ public abstract class AbsHook {
     /**
      * 将钩子句柄注册到内部管理列表中。
      * <p>
-     * 注册后的句柄可供 {@link #unhookSelf()} 使用，以便一次性解除所有钩子。
+     * 注册后的句柄可供 {@link #unhook()} 使用，以便一次性解除所有钩子。
      *
      * @param handle 框架返回的钩子句柄
      */
@@ -585,7 +585,7 @@ public abstract class AbsHook {
      *
      * @throws IllegalStateException 当钩子尚未生效（句柄列表为空）时调用此方法将抛出
      */
-    final public void unhookSelf() {
+    final public void unhook() {
         if (mHandles.isEmpty()) {
             throw new IllegalStateException("Hook handle is not initialized. Cannot unhook before the hook is applied.");
         }
@@ -620,8 +620,8 @@ public abstract class AbsHook {
      *
      * @return 格式化的调用信息字符串
      */
-    @NonNull final public String observeCall() {
-        return HookLog.observe(this);
+    @NonNull final public String describeCall() {
+        return HookLog.describe(this);
     }
 
     @NonNull

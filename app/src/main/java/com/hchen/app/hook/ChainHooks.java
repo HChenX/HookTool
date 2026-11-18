@@ -69,7 +69,7 @@ public final class ChainHooks implements DemoHook {
         };
         mHooks.add(executableHook);
         ChainTool.buildChain(Target.class)
-            .withExecutable(Reflect.findMethod(Target.class, "add", int.class, int.class))
+            .withExecutable(Reflect.findMethodExact(Target.class, "add", int.class, int.class))
             .hook(executableHook);
     }
 
@@ -77,7 +77,7 @@ public final class ChainHooks implements DemoHook {
     public void uninstall() {
         for (AbsHook hook : mHooks) {
             try {
-                hook.unhookSelf();
+                hook.unhook();
             } catch (IllegalStateException ignored) {
                 // 该 Hook 未生效
             }

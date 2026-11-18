@@ -43,7 +43,7 @@ public final class InteropHooks {
      */
     public static void run() {
         try {
-            Method method = Reflect.findMethod(Target.class, "greet", String.class);
+            Method method = Reflect.findMethodExact(Target.class, "greet", String.class);
             XposedInterface.Invoker<?, Method> invoker = HookInterop.getMethodInvoker(method);
             invoker.setType(XposedInterface.Invoker.Type.ORIGIN);
             Object result = invoker.invoke(new Target(), "origin");

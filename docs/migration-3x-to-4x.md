@@ -59,12 +59,12 @@ com.hchen.hooktool.kt            Kotlin Hook DSL
 | 3.x | 4.x |
 |---|---|
 | `"cls".findClass()` / `findClassIfExists` | `Reflect.findClass(...)` / `findClassIfExists(...)` |
-| `"cls".findMethod(name, ...)` | `Reflect.findMethod(clazz, name, tokens...)` |
+| `"cls".findMethod(name, ...)` | `Reflect.findMethodExact(clazz, name, tokens...)` |
 | `clazz.findAllMethod(name)` | `Reflect.findAllMethod(clazz, name)` |
 | `"cls".hookMethod(name, ..., hook)` | `Hook.hookMethod(clazz, name, ..., hook)` |
 | `"cls".hookConstructor(..., hook)` | `Hook.hookConstructor(clazz, ..., hook)` |
 | `clazz.hookClassInitializer(hook)` | `Hook.hookClassInitializer(clazz, hook)` |
-| `executable.hook(hook)` | `Hook.install(executable, hook)` |
+| `executable.hook(hook)` | `Hook.hook(executable, hook)` |
 | `returnResult(v)` / `doNothing()` / `setArg(i, v)` | `Hook.returnResult(v)` / `Hook.doNothing()` / `Hook.setArg(i, v)` |
 | `obj.getField(n)` / `obj.setField(n, v)` | `Reflect.getObjectField(obj, n)` / `Reflect.setObjectField(obj, n, v)` |
 | `clazz.getStaticField(n)` | `Reflect.getStaticObjectField(clazz, n)` |
@@ -118,7 +118,7 @@ hook("com.x.Y") {
 
 ```java
 try {
-    Reflect.findMethod(clazz, "gone");
+    Reflect.findMethodExact(clazz, "gone");
 } catch (ReflectException e) {
     switch (e.kind()) {
         case METHOD_NOT_FOUND: ...

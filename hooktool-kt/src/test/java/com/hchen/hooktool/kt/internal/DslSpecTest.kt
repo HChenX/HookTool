@@ -62,7 +62,7 @@ class DslSpecTest {
     fun recordsConstructorAndClinit() {
         val spec = spec {
             constructor(String::class) { }
-            clinit { }
+            classInitializer { }
         }
         assertEquals(MemberKind.CONSTRUCTOR, spec.members[0].kind)
         assertTrue(spec.members[0].label.contains("<init>"))
@@ -107,7 +107,7 @@ class DslSpecTest {
                 onThrow { false }
                 id("hooked")
                 priority(10)
-                observe()
+                logInstall()
                 optional()
             }
         }
@@ -118,7 +118,7 @@ class DslSpecTest {
         assertNotNull(member.onThrow)
         assertEquals("hooked", member.id)
         assertEquals(10, member.priority)
-        assertTrue(member.observe)
+        assertTrue(member.logInstall)
         assertTrue(member.optional)
     }
 

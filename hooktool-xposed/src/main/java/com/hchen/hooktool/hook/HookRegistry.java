@@ -103,7 +103,7 @@ public final class HookRegistry {
      * @throws IllegalStateException 当不同实例填写的 {@link Map} 中存在重复的键时抛出
      */
     @NonNull
-    public static Map<String, Object> reloading(@Nullable Bundle extras) {
+    public static Map<String, Object> saveState(@Nullable Bundle extras) {
         Object[] snapshot = hookSnapshot();
 
         Map<String, Object> merged = new HashMap<>();
@@ -137,13 +137,13 @@ public final class HookRegistry {
     /**
      * 触发所有已注册钩子的热重载完成阶段，将之前保存的状态快照分发给各实例。
      * <p>
-     * 与 {@link #reloading(Bundle)} 不同，此方法不会清空注册表。
+     * 与 {@link #saveState(Bundle)} 不同，此方法不会清空注册表。
      *
      * @param param 热重载完成参数，包含之前通过 {@code param.setSavedInstanceState(merged)} 保存的全局状态快照
      * @throws NullPointerException 如果 {@code param} 或 {@code param.getSavedInstanceState()} 为 {@code null}
      */
     @SuppressWarnings("unchecked")
-    public static void reloaded(@NonNull XposedModuleInterface.HotReloadedParam param) {
+    public static void restoreState(@NonNull XposedModuleInterface.HotReloadedParam param) {
         Objects.requireNonNull(param);
         Object[] snapshot = hookSnapshot();
         Map<String, Object> inState = (Map<String, Object>) param.getSavedInstanceState();

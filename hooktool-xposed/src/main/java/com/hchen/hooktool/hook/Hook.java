@@ -41,7 +41,8 @@ import io.github.libxposed.api.XposedInterface;
 /**
  * Hook 安装门面。
  * <p>
- * 参数列表的最后一个元素固定为 {@link AbsHook} 实例。
+ * 按类名或 {@link Class} 查找目标并安装 Hook，可变参数的最后一个元素固定为 {@link AbsHook} 实例。
+ * 已持有 {@link Method} 或 {@link Constructor} 时直接用 {@link #hook(Executable, AbsHook)}。
  *
  * @author 焕晨HChen
  */
@@ -49,18 +50,18 @@ public final class Hook {
     private Hook() {
     }
 
-    // ------------------------------ install ------------------------------
+    // ------------------------------- hook --------------------------------
 
     /**
-     * 对已解析的可执行对象安装 Hook。
+     * 对已解析的方法或构造函数安装 Hook。
      *
      * @param executable 目标方法或构造函数
      * @param absHook Hook 实现
      * @return 已安装的 Hook 句柄
      */
     @NonNull
-    public static XposedInterface.HookHandle install(@NonNull Executable executable,
-                                                     @NonNull AbsHook absHook) {
+    public static XposedInterface.HookHandle hook(@NonNull Executable executable,
+                                                  @NonNull AbsHook absHook) {
         XposedInterface.HookHandle handle;
         try {
             handle = new HookBridge(
@@ -75,31 +76,8 @@ public final class Hook {
         return handle;
     }
 
-    /**
-     * 对类的静态初始化器安装 Hook。
-     *
-     * @param clazz 目标类
-     * @param absHook Hook 实现
-     * @return 已安装的 Hook 句柄
-     */
-    @NonNull
-    public static XposedInterface.HookHandle installClassInitializer(@NonNull Class<?> clazz,
-                                                                     @NonNull AbsHook absHook) {
-        XposedInterface.HookHandle handle;
-        try {
-            handle = new HookBridge(
-                ModuleData.getWrapper().hookClassInitializer(clazz),
-                clazz.getName(), true
-            ).intercept(absHook);
-        } catch (Throwable throwable) {
-            return Throwables.throwIt(throwable);
-        }
-        logSuccess(clazz);
-        return handle;
-    }
-
     private static void logSuccess(Object target) {
-        if (!HookConfig.isShowHookSuccessLog()) return;
+        if (!HookConfig.isHookSuccessLogEnabled()) return;
         try {
             AndroidLog.logI(LogExpand.getTag(), "Success to hook: " + target);
         } catch (Throwable ignored) {
@@ -123,7 +101,7 @@ public final class Hook {
                                                         @NonNull Object... parameterTypesAndHook) {
         AbsHook hook = extractHook(parameterTypesAndHook);
         Object[] tokens = dropLast(parameterTypesAndHook);
-        return install(Reflect.findMethod(clazz, methodName, tokens), hook);
+        return hook(Reflect.findMethodExact(clazz, methodName, tokens), hook);
     }
 
     /**
@@ -198,7 +176,7 @@ public final class Hook {
                                                              @NonNull Object... parameterTypesAndHook) {
         AbsHook hook = extractHook(parameterTypesAndHook);
         Object[] tokens = dropLast(parameterTypesAndHook);
-        return install(Reflect.findConstructor(clazz, tokens), hook);
+        return hook(Reflect.findConstructorExact(clazz, tokens), hook);
     }
 
     /**
@@ -270,9 +248,26 @@ public final class Hook {
         for (Method method : clazz.getDeclaredMethods()) {
             if (method.isBridge() || method.isSynthetic()) continue;
             if (!method.getName().equals(methodName)) continue;
-            handles.add(install(method, absHook));
+            handles.add(hook(method, absHook));
         }
         return handles.toArray(new XposedInterface.HookHandle[0]);
+    }
+
+    /**
+     * 对指定类名中的同名方法全部安装 Hook。
+     *
+     * @param className 目标类名
+     * @param classLoader 解析类名使用的类加载器
+     * @param methodName 方法名
+     * @param absHook 所有重载共用的 Hook 实现
+     * @return 已安装的 Hook 句柄数组
+     */
+    @NonNull
+    public static XposedInterface.HookHandle[] hookAllMethod(@NonNull String className,
+                                                             @Nullable ClassLoader classLoader,
+                                                             @NonNull String methodName,
+                                                             @NonNull AbsHook absHook) {
+        return hookAllMethod(Reflect.findClass(className, classLoader), methodName, absHook);
     }
 
     /**
@@ -287,9 +282,24 @@ public final class Hook {
                                                                   @NonNull AbsHook absHook) {
         List<XposedInterface.HookHandle> handles = new ArrayList<>();
         for (Constructor<?> constructor : clazz.getDeclaredConstructors()) {
-            handles.add(install(constructor, absHook));
+            handles.add(hook(constructor, absHook));
         }
         return handles.toArray(new XposedInterface.HookHandle[0]);
+    }
+
+    /**
+     * 对指定类名中的构造函数全部安装 Hook。
+     *
+     * @param className 目标类名
+     * @param classLoader 解析类名使用的类加载器
+     * @param absHook 所有构造函数共用的 Hook 实现
+     * @return 已安装的 Hook 句柄数组
+     */
+    @NonNull
+    public static XposedInterface.HookHandle[] hookAllConstructor(@NonNull String className,
+                                                                  @Nullable ClassLoader classLoader,
+                                                                  @NonNull AbsHook absHook) {
+        return hookAllConstructor(Reflect.findClass(className, classLoader), absHook);
     }
 
     /**
@@ -302,7 +312,32 @@ public final class Hook {
     @NonNull
     public static XposedInterface.HookHandle hookClassInitializer(@NonNull Class<?> clazz,
                                                                   @NonNull AbsHook absHook) {
-        return installClassInitializer(clazz, absHook);
+        XposedInterface.HookHandle handle;
+        try {
+            handle = new HookBridge(
+                ModuleData.getWrapper().hookClassInitializer(clazz),
+                clazz.getName(), true
+            ).intercept(absHook);
+        } catch (Throwable throwable) {
+            return Throwables.throwIt(throwable);
+        }
+        logSuccess(clazz);
+        return handle;
+    }
+
+    /**
+     * 对指定类名中的静态初始化器安装 Hook。
+     *
+     * @param className 目标类名
+     * @param classLoader 解析类名使用的类加载器
+     * @param absHook Hook 实现
+     * @return 已安装的 Hook 句柄
+     */
+    @NonNull
+    public static XposedInterface.HookHandle hookClassInitializer(@NonNull String className,
+                                                                  @Nullable ClassLoader classLoader,
+                                                                  @NonNull AbsHook absHook) {
+        return hookClassInitializer(Reflect.findClass(className, classLoader), absHook);
     }
 
     // ----------------------------- factories -----------------------------

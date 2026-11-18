@@ -60,7 +60,7 @@ class ClassScope internal constructor(internal val spec: ClassSpec) {
      * @param block Hook 配置
      * @return 该声明的句柄
      */
-    fun clinit(block: MemberScope.() -> Unit): MemberRef =
+    fun classInitializer(block: MemberScope.() -> Unit): MemberRef =
         declare(MemberKind.CLINIT, null, emptyArray(), null, block)
 
     /**

@@ -39,7 +39,7 @@ final class HookLog {
      * @return 格式化后的描述信息
      */
     @NonNull
-    static String observe(@NonNull AbsHook hook) {
+    static String describe(@NonNull AbsHook hook) {
         try {
             Object[] args = hook.getArgs();
             String declaringClass = hook.getExecutable().getDeclaringClass().getName();
@@ -70,7 +70,7 @@ final class HookLog {
                 .append("\u2514\u2500 Return: ").append(safeToString(hook.getResult()));
             return log.toString();
         } catch (Throwable t) {
-            return "observeCall failed: " + t;
+            return "describeCall failed: " + t;
         }
     }
 

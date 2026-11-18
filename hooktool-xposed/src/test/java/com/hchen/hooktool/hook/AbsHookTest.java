@@ -344,8 +344,8 @@ class AbsHookTest {
             }
 
             @Override
-            public boolean onThrow(StageEnum stage, Throwable e) {
-                return stage == StageEnum.PROCEED;
+            public boolean onThrow(Stage stage, Throwable e) {
+                return stage == Stage.PROCEED;
             }
 
             @Override
@@ -456,20 +456,20 @@ class AbsHookTest {
     }
 
     @Test
-    void unhookSelfFailsWithoutHandle() {
+    void unhookFailsWithoutHandle() {
         AbsHook hook = new AbsHook() {
         };
-        assertThrows(IllegalStateException.class, hook::unhookSelf);
+        assertThrows(IllegalStateException.class, hook::unhook);
         assertEquals(0, hook.getHookHandles().length);
     }
 
     @Test
-    void observeCallDescribesInvocation() throws Throwable {
+    void describeCallDescribesInvocation() throws Throwable {
         final String[] text = new String[1];
         AbsHook hook = new AbsHook() {
             @Override
             public void after() {
-                text[0] = observeCall();
+                text[0] = describeCall();
             }
         };
         FakeBuilder builder = install(hook);

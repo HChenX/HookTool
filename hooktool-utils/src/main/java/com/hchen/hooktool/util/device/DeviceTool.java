@@ -363,7 +363,7 @@ public final class DeviceTool {
      * @return 属于小米品牌设备时返回 {@code true}
      */
     public static boolean isXiaomi() {
-        return isRightRom(DEVICE_XIAOMI);
+        return isBrand(DEVICE_XIAOMI);
     }
 
     /**
@@ -394,7 +394,7 @@ public final class DeviceTool {
      * @return 当前设备为 ColorOS 系品牌时返回 {@code true}
      */
     public static boolean isColorOS() {
-        return isRightRom(DEVICE_COLOROS);
+        return isBrand(DEVICE_COLOROS);
     }
 
     /**
@@ -403,7 +403,7 @@ public final class DeviceTool {
      * @return 属于三星设备时返回 {@code true}
      */
     public static boolean isSamsung() {
-        return isRightRom(DEVICE_SAMSUNG);
+        return isBrand(DEVICE_SAMSUNG);
     }
 
     /**
@@ -412,7 +412,7 @@ public final class DeviceTool {
      * @param names 待匹配的品牌名称关键字列表（可变参数）
      * @return 品牌或制造商名称与任意关键字精确匹配时返回 {@code true}；传入空列表时返回 {@code false}
      */
-    public static boolean isRightRom(@NonNull final String... names) {
+    public static boolean isBrand(@NonNull String... names) {
         for (String name : names) {
             if (name == null) {
                 continue;

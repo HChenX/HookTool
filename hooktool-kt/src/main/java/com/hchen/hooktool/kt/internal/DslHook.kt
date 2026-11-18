@@ -20,7 +20,7 @@ package com.hchen.hooktool.kt.internal
 
 import com.hchen.hooktool.hook.AbsHook
 import com.hchen.hooktool.kt.HookGroup
-import com.hchen.hooktool.kt.Stage
+import com.hchen.hooktool.kt.Stage as DslStage
 
 import android.os.Bundle
 
@@ -38,25 +38,25 @@ internal class DslHook(
 
     override fun before() {
         val block = spec.before ?: return
-        block(FrameImpl(this, Stage.BEFORE, null))
+        block(FrameImpl(this, DslStage.BEFORE, null))
     }
 
     override fun proceed(chain: XposedInterface.Chain): Any? {
         val block = spec.proceed ?: return super.proceed(chain)
-        return block(FrameImpl(this, Stage.PROCEED, chain))
+        return block(FrameImpl(this, DslStage.PROCEED, chain))
     }
 
     override fun after() {
         val block = spec.after ?: return
-        block(FrameImpl(this, Stage.AFTER, null))
+        block(FrameImpl(this, DslStage.AFTER, null))
     }
 
-    override fun onThrow(stage: StageEnum, e: Throwable): Boolean {
+    override fun onThrow(stage: AbsHook.Stage, e: Throwable): Boolean {
         val block = spec.onThrow ?: return false
         val mapped = when (stage) {
-            StageEnum.BEFORE -> Stage.BEFORE
-            StageEnum.PROCEED -> Stage.PROCEED
-            StageEnum.AFTER -> Stage.AFTER
+            AbsHook.Stage.BEFORE -> DslStage.BEFORE
+            AbsHook.Stage.PROCEED -> DslStage.PROCEED
+            AbsHook.Stage.AFTER -> DslStage.AFTER
         }
         val frame = FrameImpl(this, mapped, null)
         val consumed = block(frame, e)

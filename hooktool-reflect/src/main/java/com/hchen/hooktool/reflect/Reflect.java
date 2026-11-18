@@ -155,7 +155,7 @@ public final class Reflect {
      * @return 已设置为可访问的方法
      */
     @NonNull
-    public static Method findMethod(@NonNull Class<?> clazz, @NonNull String methodName,
+    public static Method findMethodExact(@NonNull Class<?> clazz, @NonNull String methodName,
                                     @NonNull Object... parameterTypes) {
         Class<?>[] resolved = ParameterTokens.resolve(clazz.getClassLoader(), parameterTypes);
         return MethodFinder.findExact(clazz, methodName, resolved);
@@ -171,7 +171,7 @@ public final class Reflect {
      * @return 已设置为可访问的方法
      */
     @NonNull
-    public static Method findMethod(@NonNull String className, @Nullable ClassLoader classLoader,
+    public static Method findMethodExact(@NonNull String className, @Nullable ClassLoader classLoader,
                                     @NonNull String methodName,
                                     @NonNull Object... parameterTypes) {
         Class<?> clazz = findClass(className, classLoader);
@@ -189,7 +189,7 @@ public final class Reflect {
      * @return 已设置为可访问的方法
      */
     @NonNull
-    static Method findMethodWithTypes(@NonNull Class<?> clazz, @NonNull String methodName,
+    static Method findMethodExactWithTypes(@NonNull Class<?> clazz, @NonNull String methodName,
                                       @NonNull Class<?>... parameterTypes) {
         return MethodFinder.findExact(clazz, methodName,
             parameterTypes == null ? new Class<?>[0] : parameterTypes);
@@ -204,10 +204,10 @@ public final class Reflect {
      * @return 方法或 null
      */
     @Nullable
-    public static Method findMethodIfExists(@NonNull Class<?> clazz, @NonNull String methodName,
+    public static Method findMethodExactIfExists(@NonNull Class<?> clazz, @NonNull String methodName,
                                             @NonNull Object... parameterTypes) {
         try {
-            return findMethod(clazz, methodName, parameterTypes);
+            return findMethodExact(clazz, methodName, parameterTypes);
         } catch (ReflectException e) {
             return null;
         }
@@ -223,12 +223,12 @@ public final class Reflect {
      * @return 方法或 null
      */
     @Nullable
-    public static Method findMethodIfExists(@NonNull String className,
+    public static Method findMethodExactIfExists(@NonNull String className,
                                             @Nullable ClassLoader classLoader,
                                             @NonNull String methodName,
                                             @NonNull Object... parameterTypes) {
         try {
-            return findMethod(className, classLoader, methodName, parameterTypes);
+            return findMethodExact(className, classLoader, methodName, parameterTypes);
         } catch (ReflectException e) {
             return null;
         }
@@ -246,7 +246,7 @@ public final class Reflect {
     public static Lookup<Method> lookupMethod(@NonNull Class<?> clazz, @NonNull String methodName,
                                               @NonNull Class<?>... parameterTypes) {
         try {
-            return Lookup.of(findMethodWithTypes(clazz, methodName, parameterTypes));
+            return Lookup.of(findMethodExactWithTypes(clazz, methodName, parameterTypes));
         } catch (ReflectException e) {
             return Lookup.failed(e);
         }
@@ -293,10 +293,10 @@ public final class Reflect {
      * @return 已设置为可访问的方法
      */
     @NonNull
-    public static Method findMethodBestMatchWithTypes(@NonNull Class<?> clazz,
-                                                      @NonNull String methodName,
-                                                      @NonNull Class<?>[] parameterTypes,
-                                                      @NonNull Object[] args) {
+    public static Method findMethodBestMatch(@NonNull Class<?> clazz,
+                                             @NonNull String methodName,
+                                             @NonNull Class<?>[] parameterTypes,
+                                             @NonNull Object[] args) {
         if (parameterTypes.length != args.length) {
             throw new IllegalArgumentException("parameterTypes size (" + parameterTypes.length
                 + ") must match args size (" + args.length + ")");
@@ -320,7 +320,7 @@ public final class Reflect {
      * @return 已设置为可访问的构造函数
      */
     @NonNull
-    public static Constructor<?> findConstructor(@NonNull Class<?> clazz,
+    public static Constructor<?> findConstructorExact(@NonNull Class<?> clazz,
                                                  @NonNull Object... parameterTypes) {
         Class<?>[] resolved = ParameterTokens.resolve(clazz.getClassLoader(), parameterTypes);
         return ConstructorFinder.findExact(clazz, resolved);
@@ -335,7 +335,7 @@ public final class Reflect {
      * @return 已设置为可访问的构造函数
      */
     @NonNull
-    public static Constructor<?> findConstructor(@NonNull String className,
+    public static Constructor<?> findConstructorExact(@NonNull String className,
                                                  @Nullable ClassLoader classLoader,
                                                  @NonNull Object... parameterTypes) {
         Class<?> clazz = findClass(className, classLoader);
@@ -352,7 +352,7 @@ public final class Reflect {
      * @return 已设置为可访问的构造函数
      */
     @NonNull
-    static Constructor<?> findConstructorWithTypes(@NonNull Class<?> clazz,
+    static Constructor<?> findConstructorExactWithTypes(@NonNull Class<?> clazz,
                                                    @NonNull Class<?>... parameterTypes) {
         return ConstructorFinder.findExact(clazz,
             parameterTypes == null ? new Class<?>[0] : parameterTypes);
@@ -366,10 +366,10 @@ public final class Reflect {
      * @return 构造函数或 null
      */
     @Nullable
-    public static Constructor<?> findConstructorIfExists(@NonNull Class<?> clazz,
+    public static Constructor<?> findConstructorExactIfExists(@NonNull Class<?> clazz,
                                                          @NonNull Object... parameterTypes) {
         try {
-            return findConstructor(clazz, parameterTypes);
+            return findConstructorExact(clazz, parameterTypes);
         } catch (ReflectException e) {
             return null;
         }
@@ -384,11 +384,11 @@ public final class Reflect {
      * @return 构造函数或 null
      */
     @Nullable
-    public static Constructor<?> findConstructorIfExists(@NonNull String className,
+    public static Constructor<?> findConstructorExactIfExists(@NonNull String className,
                                                          @Nullable ClassLoader classLoader,
                                                          @NonNull Object... parameterTypes) {
         try {
-            return findConstructor(className, classLoader, parameterTypes);
+            return findConstructorExact(className, classLoader, parameterTypes);
         } catch (ReflectException e) {
             return null;
         }
@@ -405,7 +405,7 @@ public final class Reflect {
     public static Lookup<Constructor<?>> lookupConstructor(@NonNull Class<?> clazz,
                                                            @NonNull Class<?>... parameterTypes) {
         try {
-            return Lookup.of(findConstructorWithTypes(clazz, parameterTypes));
+            return Lookup.of(findConstructorExactWithTypes(clazz, parameterTypes));
         } catch (ReflectException e) {
             return Lookup.failed(e);
         }
@@ -490,6 +490,34 @@ public final class Reflect {
     }
 
     /**
+     * 调用已解析的实例方法。
+     *
+     * @param method 已解析的方法
+     * @param target 目标对象
+     * @param args 实参
+     * @return 调用结果，void 方法返回 null
+     */
+    @Nullable
+    public static Object callMethod(@NonNull Method method, @Nullable Object target,
+                                    @NonNull Object... args) {
+        method.setAccessible(true);
+        return invoke(method, target, args);
+    }
+
+    /**
+     * 调用已解析的静态方法。
+     *
+     * @param method 已解析的静态方法
+     * @param args 实参
+     * @return 调用结果，void 方法返回 null
+     */
+    @Nullable
+    public static Object callStaticMethod(@NonNull Method method, @NonNull Object... args) {
+        method.setAccessible(true);
+        return invoke(method, null, args);
+    }
+
+    /**
      * 使用显式参数类型调用静态方法。
      *
      * @param clazz 声明类
@@ -569,6 +597,75 @@ public final class Reflect {
     }
 
     /**
+     * 读取已解析的实例字段。
+     *
+     * @param field 已解析的字段
+     * @param target 目标对象
+     * @return 字段值
+     */
+    @Nullable
+    public static Object getObjectField(@NonNull Field field, @Nullable Object target) {
+        Field resolved = requireInstanceField(field);
+        try {
+            return resolved.get(target);
+        } catch (IllegalAccessException e) {
+            throw new ReflectException(ReflectException.Kind.OTHER, resolved.getName(),
+                "Cannot read field " + resolved.getName() + ": " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 写入已解析的实例字段。
+     *
+     * @param field 已解析的字段
+     * @param target 目标对象
+     * @param value 字段值
+     */
+    public static void setObjectField(@NonNull Field field, @Nullable Object target,
+                                      @Nullable Object value) {
+        Field resolved = requireInstanceField(field);
+        try {
+            resolved.set(target, value);
+        } catch (IllegalAccessException e) {
+            throw new ReflectException(ReflectException.Kind.OTHER, resolved.getName(),
+                "Cannot write field " + resolved.getName() + ": " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 读取已解析的静态字段。
+     *
+     * @param field 已解析的字段
+     * @return 字段值
+     */
+    @Nullable
+    public static Object getStaticObjectField(@NonNull Field field) {
+        Field resolved = requireStaticField(field);
+        try {
+            return resolved.get(null);
+        } catch (IllegalAccessException e) {
+            throw new ReflectException(ReflectException.Kind.OTHER, resolved.getName(),
+                "Cannot read field " + resolved.getName() + ": " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 写入已解析的静态字段。
+     *
+     * @param field 已解析的字段
+     * @param value 字段值
+     */
+    public static void setStaticObjectField(@NonNull Field field, @Nullable Object value) {
+        Field resolved = requireStaticField(field);
+        try {
+            resolved.set(null, value);
+        } catch (IllegalAccessException e) {
+            throw new ReflectException(ReflectException.Kind.OTHER, resolved.getName(),
+                "Cannot write field " + resolved.getName() + ": " + e.getMessage(), e);
+        }
+    }
+
+    /**
      * 读取静态字段。
      *
      * @param clazz 声明类
@@ -603,6 +700,24 @@ public final class Reflect {
             throw new ReflectException(ReflectException.Kind.OTHER, fieldName,
                 "Cannot write field " + fieldName + ": " + e.getMessage(), e);
         }
+    }
+
+    @NonNull
+    private static Field requireInstanceField(@NonNull Field field) {
+        if (Modifier.isStatic(field.getModifiers())) {
+            throw new IllegalArgumentException("Expected instance field, but " + field + " is static.");
+        }
+        field.setAccessible(true);
+        return field;
+    }
+
+    @NonNull
+    private static Field requireStaticField(@NonNull Field field) {
+        if (!Modifier.isStatic(field.getModifiers())) {
+            throw new IllegalArgumentException("Expected static field, but " + field + " is an instance field.");
+        }
+        field.setAccessible(true);
+        return field;
     }
 
     @NonNull
@@ -724,6 +839,20 @@ public final class Reflect {
                                               @NonNull Class<?>[] parameterTypes,
                                               @NonNull Object... args) {
         Constructor<?> constructor = ConstructorFinder.findBest(clazz, parameterTypes);
+        return instantiate(constructor, args);
+    }
+
+    /**
+     * 使用已解析的构造函数创建实例。
+     *
+     * @param constructor 已解析的构造函数
+     * @param args 构造参数
+     * @return 新实例
+     */
+    @NonNull
+    public static Object newInstance(@NonNull Constructor<?> constructor,
+                                     @NonNull Object... args) {
+        constructor.setAccessible(true);
         return instantiate(constructor, args);
     }
 

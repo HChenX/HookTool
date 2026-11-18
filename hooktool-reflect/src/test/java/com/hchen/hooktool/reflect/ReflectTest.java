@@ -127,26 +127,26 @@ class ReflectTest {
 
     @Test
     void findsMethodWithClassTokens() {
-        Method method = Reflect.findMethod(Fixtures.Child.class, "greet", String.class);
+        Method method = Reflect.findMethodExact(Fixtures.Child.class, "greet", String.class);
         assertNotNull(method);
         assertTrue(method.isAccessible());
     }
 
     @Test
     void findsMethodWithNameTokens() {
-        Method method = Reflect.findMethod(Fixtures.Child.class, "greet", "java.lang.String");
+        Method method = Reflect.findMethodExact(Fixtures.Child.class, "greet", "java.lang.String");
         assertEquals("greet", method.getName());
     }
 
     @Test
     void findsInheritedMethod() {
-        Method method = Reflect.findMethod(Fixtures.Child.class, "overload", String.class);
+        Method method = Reflect.findMethodExact(Fixtures.Child.class, "overload", String.class);
         assertEquals(Fixtures.Parent.class, method.getDeclaringClass());
     }
 
     @Test
     void findsInterfaceDefaultMethod() {
-        Method method = Reflect.findMethod(Fixtures.Child.class, "hello");
+        Method method = Reflect.findMethodExact(Fixtures.Child.class, "hello");
         assertEquals("default", Reflect.callMethod(new Fixtures.Child(), "hello"));
         assertEquals(Fixtures.HasDefault.class, method.getDeclaringClass());
     }
@@ -154,9 +154,9 @@ class ReflectTest {
     @Test
     void missingMethodCarriesKind() {
         ReflectException error = assertThrows(ReflectException.class,
-            () -> Reflect.findMethod(Fixtures.Child.class, "nope"));
+            () -> Reflect.findMethodExact(Fixtures.Child.class, "nope"));
         assertEquals(ReflectException.Kind.METHOD_NOT_FOUND, error.kind());
-        assertNull(Reflect.findMethodIfExists(Fixtures.Child.class, "nope"));
+        assertNull(Reflect.findMethodExactIfExists(Fixtures.Child.class, "nope"));
     }
 
     @Test
@@ -192,7 +192,7 @@ class ReflectTest {
 
     @Test
     void fillsNullSlotsFromArguments() {
-        Method method = Reflect.findMethodBestMatchWithTypes(Fixtures.Child.class, "overload",
+        Method method = Reflect.findMethodBestMatch(Fixtures.Child.class, "overload",
             new Class<?>[]{null}, new Object[]{"x"});
         assertEquals(String.class, method.getParameterTypes()[0]);
     }
@@ -208,14 +208,14 @@ class ReflectTest {
     @Test
     void missingConstructorCarriesKind() {
         ReflectException error = assertThrows(ReflectException.class,
-            () -> Reflect.findConstructor(Fixtures.Child.class, String.class));
+            () -> Reflect.findConstructorExact(Fixtures.Child.class, String.class));
         assertEquals(ReflectException.Kind.CONSTRUCTOR_NOT_FOUND, error.kind());
     }
 
     @Test
     void honoursParameterTypeTokens() {
         ReflectException error = assertThrows(ReflectException.class,
-            () -> Reflect.findMethod(Fixtures.Child.class, "greet", 42));
+            () -> Reflect.findMethodExact(Fixtures.Child.class, "greet", 42));
         assertEquals(ReflectException.Kind.PARAM_MISMATCH, error.kind());
     }
 
@@ -269,20 +269,61 @@ class ReflectTest {
         assertEquals(1, Reflect.removeAdditionalStaticField(Fixtures.Child.class, "s"));
     }
 
+    // --------------------------- resolved members ------------------------
+
+    @Test
+    void callsWithResolvedMethod() {
+        Fixtures.Child child = new Fixtures.Child();
+        Method greet = Reflect.findMethodExact(Fixtures.Child.class, "greet", String.class);
+        assertEquals("hi world", Reflect.callMethod(greet, child, "world"));
+
+        Method add = Reflect.findMethodExact(Fixtures.Child.class, "add", int.class, int.class);
+        assertEquals(3, Reflect.callStaticMethod(add, 1, 2));
+    }
+
+    @Test
+    void createsInstanceWithResolvedConstructor() {
+        Constructor<?> constructor = Reflect.findConstructorExact(Fixtures.Child.class, int.class);
+        Fixtures.Child child = (Fixtures.Child) Reflect.newInstance(constructor, 5);
+        assertEquals(5, child.count);
+    }
+
+    @Test
+    void accessesFieldsWithResolvedField() {
+        Fixtures.Child child = new Fixtures.Child();
+        Field count = Reflect.findField(Fixtures.Child.class, "count");
+        assertEquals(7, Reflect.getObjectField(count, child));
+
+        Reflect.setObjectField(count, child, 9);
+        assertEquals(9, child.count);
+
+        Field constant = Reflect.findField(Fixtures.Child.class, "CONST");
+        assertEquals("const", Reflect.getStaticObjectField(constant));
+    }
+
+    @Test
+    void rejectsFieldOfWrongKind() {
+        Field count = Reflect.findField(Fixtures.Child.class, "count");
+        assertThrows(IllegalArgumentException.class, () -> Reflect.getStaticObjectField(count));
+
+        Field constant = Reflect.findField(Fixtures.Child.class, "CONST");
+        assertThrows(IllegalArgumentException.class, () -> Reflect.getObjectField(constant, new Fixtures.Child()));
+    }
+
     // ------------------------------ caching ------------------------------
 
     @Test
     void cachesResolvedMembers() {
-        Method first = Reflect.findMethod(Fixtures.Child.class, "greet", String.class);
-        Method second = Reflect.findMethod(Fixtures.Child.class, "greet", String.class);
+        Method first = Reflect.findMethodExact(Fixtures.Child.class, "greet", String.class);
+        Method second = Reflect.findMethodExact(Fixtures.Child.class, "greet", String.class);
         assertSame(first, second);
     }
 
     @Test
     void cachesNegativeResults() {
         assertThrows(ReflectException.class,
-            () -> Reflect.findMethod(Fixtures.Child.class, "absent"));
+            () -> Reflect.findMethodExact(Fixtures.Child.class, "absent"));
         assertThrows(ReflectException.class,
-            () -> Reflect.findMethod(Fixtures.Child.class, "absent"));
+            () -> Reflect.findMethodExact(Fixtures.Child.class, "absent"));
     }
 }

@@ -58,7 +58,7 @@ internal class MemberSpec(
     var onThrow: (ThrowScope.(Throwable) -> Boolean)? = null
     var id: String? = null
     var priority: Int? = null
-    var observe: Boolean = false
+    var logInstall: Boolean = false
 }
 
 /**

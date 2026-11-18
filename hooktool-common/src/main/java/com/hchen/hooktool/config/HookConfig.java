@@ -43,7 +43,7 @@ public final class HookConfig {
     private static volatile Set<String> sLogExpandPaths;
     @NonNull
     private static volatile Set<String> sLogExpandIgnoreClassNames;
-    private static volatile boolean sShowHookSuccessLog;
+    private static volatile boolean sHookSuccessLogEnabled;
 
     /**
      * 错误等级，仅输出错误。
@@ -73,7 +73,7 @@ public final class HookConfig {
         sPrefsName = "";
         sLogExpandPaths = Collections.emptySet();
         sLogExpandIgnoreClassNames = Collections.emptySet();
-        sShowHookSuccessLog = false;
+        sHookSuccessLogEnabled = false;
     }
 
     private HookConfig() {
@@ -133,10 +133,10 @@ public final class HookConfig {
     /**
      * 设置是否输出 Hook 成功日志。
      *
-     * @param show 输出时传入 true
+     * @param enabled 输出时传入 true
      */
-    public static void setShowHookSuccessLog(boolean show) {
-        sShowHookSuccessLog = show;
+    public static void setHookSuccessLogEnabled(boolean enabled) {
+        sHookSuccessLogEnabled = enabled;
     }
 
     /**
@@ -194,7 +194,7 @@ public final class HookConfig {
      *
      * @return 已开启时返回 true
      */
-    public static boolean isShowHookSuccessLog() {
-        return sShowHookSuccessLog;
+    public static boolean isHookSuccessLogEnabled() {
+        return sHookSuccessLogEnabled;
     }
 }

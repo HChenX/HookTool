@@ -50,7 +50,7 @@ public class HookEntrance extends ModuleEntrance {
         HookConfig.setLogLevel(HookConfig.LOG_D);
         HookConfig.setPrefsName("hooktool_demo_prefs");
         HookConfig.setLogExpandPaths(Set.of("com.hchen.app.hook"));
-        HookConfig.setShowHookSuccessLog(true);
+        HookConfig.setHookSuccessLogEnabled(true);
     }
 
     @NonNull

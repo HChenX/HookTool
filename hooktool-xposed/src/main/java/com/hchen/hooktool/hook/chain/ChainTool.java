@@ -209,7 +209,7 @@ public final class ChainTool {
                 return;
             }
             for (Executable executable : mChainData.executables) {
-                Hook.install(executable, mChainData.absHook);
+                Hook.hook(executable, mChainData.absHook);
             }
             mExecutedKeys.add(chainKey);
         } finally {
@@ -242,13 +242,13 @@ public final class ChainTool {
                     mChainData.executables[0] = mChainData.executable;
                 }
                 case FIND_METHOD -> {
-                    mChainData.executables[0] = Reflect.findMethod(mClazz, mChainData.methodName, mChainData.parameterTypes);
+                    mChainData.executables[0] = Reflect.findMethodExact(mClazz, mChainData.methodName, mChainData.parameterTypes);
                 }
                 case FIND_ALL_METHOD -> {
                     mChainData.executables = Reflect.findAllMethod(mClazz, mChainData.methodName);
                 }
                 case FIND_CONSTRUCTOR -> {
-                    mChainData.executables[0] = Reflect.findConstructor(mClazz, mChainData.parameterTypes);
+                    mChainData.executables[0] = Reflect.findConstructorExact(mClazz, mChainData.parameterTypes);
                 }
                 case FIND_ALL_CONSTRUCTOR -> {
                     mChainData.executables = Reflect.findAllConstructor(mClazz);
