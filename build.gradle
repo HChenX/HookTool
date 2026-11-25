@@ -5,7 +5,7 @@ plugins {
 }
 
 ext.hooktoolVersion = '4.0.0'
-ext.hooktoolVersionCode = 2027030100
+ext.hooktoolVersionCode = 2026112500
 
 task clean(type: Delete) {
     delete rootProject.layout.buildDirectory
