@@ -1,5 +1,5 @@
 [versions]
-agp = "9.5.2"
+agp = "9.5.3"
 xposed = "102.0.0"
 service = "102.0.0"
 appcompat = "1.8.0"
